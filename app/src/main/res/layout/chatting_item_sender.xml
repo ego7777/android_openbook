@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="end">
+
+    <TextView
+        android:id="@+id/chatting_sender_read"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="읽음"
+        android:layout_marginTop="20dp"
+        android:layout_marginEnd="10dp"/>
+
+    <TextView
+        android:id="@+id/chatting_sender_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="time"
+        android:layout_marginTop="20dp"/>
+
+    <TextView
+        android:layout_margin="20dp"
+        android:id="@+id/chatting_sender_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="20dp"
+        android:text="안녕하세요"
+        android:autoSizeTextType="uniform"
+        android:autoSizeMaxTextSize="25sp"
+        android:textColor="@color/black"
+        android:background="@drawable/radius_50dp"
+        android:backgroundTint="@color/light_gray"/>
+
+
+</LinearLayout>

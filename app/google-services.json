@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "520510988286",
+    "project_id": "openbook-1668423339433",
+    "storage_bucket": "openbook-1668423339433.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:520510988286:android:85c2856d5cb98ae2992aaf",
+        "android_client_info": {
+          "package_name": "com.example.openbook"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "520510988286-oesoaggkgb8ml3njcaghelbtabvlih34.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.openbook",
+            "certificate_hash": "5c2c39520bac27678c424a65ac738215b53553a4"
+          }
+        },
+        {
+          "client_id": "520510988286-3sg5fe6u6mqomc51o18aust414hjjnl6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBZ5GqhIp4JJKfDc0rV2gy6Q36Hnh8pjFY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "520510988286-3sg5fe6u6mqomc51o18aust414hjjnl6.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

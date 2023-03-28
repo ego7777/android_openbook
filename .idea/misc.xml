@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DesignSurface">
+    <option name="filePathToZoomLevelMap">
+      <map>
+        <entry key="../../../../layout/custom_preview.xml" value="0.1" />
+        <entry key="app/src/main/res/drawable/border_grat.xml" value="0.1" />
+        <entry key="app/src/main/res/drawable/border_gray.xml" value="0.1" />
+        <entry key="app/src/main/res/drawable/button_round.xml" value="0.1655" />
+        <entry key="app/src/main/res/drawable/button_round_darkgray.xml" value="0.1225" />
+        <entry key="app/src/main/res/drawable/button_round_red.xml" value="0.11" />
+        <entry key="app/src/main/res/drawable/call_server_red.xml" value="0.23" />
+        <entry key="app/src/main/res/drawable/ic_baseline_dehaze_24.xml" value="0.1635" />
+        <entry key="app/src/main/res/drawable/ic_baseline_dehaze_48.xml" value="0.1635" />
+        <entry key="app/src/main/res/drawable/ic_launcher_background.xml" value="0.139" />
+        <entry key="app/src/main/res/drawable/line_divider.xml" value="0.1" />
+        <entry key="app/src/main/res/drawable/my_table_border.xml" value="0.1" />
+        <entry key="app/src/main/res/drawable/radius_10dp_lime.xml" value="0.209" />
+        <entry key="app/src/main/res/drawable/radius_10dp_white.xml" value="0.2015" />
+        <entry key="app/src/main/res/drawable/radius_30dp.xml" value="0.209" />
+        <entry key="app/src/main/res/drawable/radius_50dp.xml" value="0.1" />
+        <entry key="app/src/main/res/drawable/ridus_10dp_gray.xml" value="0.1" />
+        <entry key="app/src/main/res/drawable/ridus_10dp_solid_gray.xml" value="0.1825" />
+        <entry key="app/src/main/res/drawable/ridus_10dp_white.xml" value="0.1" />
+        <entry key="app/src/main/res/drawable/statement_border.xml" value="0.1" />
+        <entry key="app/src/main/res/drawable/table_boder_order.xml" value="0.1" />
+        <entry key="app/src/main/res/drawable/table_border.xml" value="0.1725" />
+        <entry key="app/src/main/res/drawable/table_border_click.xml" value="0.1325" />
+        <entry key="app/src/main/res/drawable/table_select.xml" value="0.1085" />
+        <entry key="app/src/main/res/drawable/table_unpress.xml" value="0.1085" />
+        <entry key="app/src/main/res/layout/activity_main.xml" value="0.20742753623188406" />
+        <entry key="app/src/main/res/layout/appbar.xml" value="0.289044289044289" />
+        <entry key="app/src/main/res/layout/call_gridview_item.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/call_listview_item.xml" value="0.1243209360635186" />
+        <entry key="app/src/main/res/layout/call_server.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/cart_listview_item.xml" value="0.25" />
+        <entry key="app/src/main/res/layout/chatting.xml" value="0.335" />
+        <entry key="app/src/main/res/layout/chatting_item_receive.xml" value="0.25" />
+        <entry key="app/src/main/res/layout/chatting_item_recieve.xml" value="0.2302810516772439" />
+        <entry key="app/src/main/res/layout/chatting_item_sender.xml" value="0.2302810516772439" />
+        <entry key="app/src/main/res/layout/header.xml" value="0.12376237623762376" />
+        <entry key="app/src/main/res/layout/intro.xml" value="0.1318359375" />
+        <entry key="app/src/main/res/layout/intro2.xml" value="0.12479095458984375" />
+        <entry key="app/src/main/res/layout/line_layout.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/login.xml" value="0.25" />
+        <entry key="app/src/main/res/layout/menu.xml" value="0.165" />
+        <entry key="app/src/main/res/layout/menu2.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/menu_gridview_item.xml" value="0.10416666666666667" />
+        <entry key="app/src/main/res/layout/menu_item_temp.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/menu_list.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/menu_lust.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/notification.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/order_complete.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/popup.xml" value="0.25423431396484375" />
+        <entry key="app/src/main/res/layout/send_heart.xml" value="0.2302810516772439" />
+        <entry key="app/src/main/res/layout/send_heart_dlg.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/side_listview_item.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/signup.xml" value="0.14821138514088925" />
+        <entry key="app/src/main/res/layout/table.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/table_gridview_item.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/table_infomation.xml" value="0.1" />
+        <entry key="app/src/main/res/menu/sidebar.xml" value="0.15442708333333333" />
+        <entry key="app/src/main/res/xml/theme_start.xml" value="0.22076155938349953" />
+      </map>
+    </option>
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="Android Studio default JDK" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/build/classes" />
+  </component>
+  <component name="ProjectType">
+    <option name="id" value="Android" />
+  </component>
+  <component name="VisualizationToolProject">
+    <option name="state">
+      <ProjectState>
+        <option name="scale" value="0.1" />
+      </ProjectState>
+    </option>
+  </component>
+</project>

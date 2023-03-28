@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="@color/black">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="1150dp"
+                android:layout_height="wrap_content"
+                android:text="직원호출 - 무엇을 도와드릴까요?"
+                android:textColor="@color/black"
+                android:background="@color/lime"
+                android:textSize="25sp"
+                android:padding="20dp"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:id="@+id/call_server_close"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="X 닫기"
+                android:textStyle="bold"
+                android:textColor="@color/black"
+                android:background="@color/lime"
+                android:padding="20dp"
+                android:textSize="25dp"/>
+
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginTop="30dp"
+                android:orientation="vertical"
+                android:layout_marginStart="50dp">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/request_item"
+                    android:layout_width="800dp"
+                    android:layout_height="600dp"
+
+                    android:layout_marginBottom="30dp"
+                    android:layout_marginEnd="50dp"/>
+
+                <TextView
+                    android:id="@+id/call_server"
+                    android:layout_width="700dp"
+                    android:layout_height="wrap_content"
+                    android:text="직원만 호출하기"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:padding="10dp"
+                    android:textSize="30sp"
+                    android:textStyle="bold"
+                    android:background="@drawable/radius_10dp_lime"
+                    android:textColor="@color/black"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/radius_10dp_lime"
+                android:backgroundTint="@color/white"
+                android:layout_marginTop="30dp">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/request_item_cart"
+                    android:layout_width="350dp"
+                    android:layout_height="560dp"
+                    android:layout_marginBottom="30dp"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:layout_marginBottom="20dp">
+
+                    <TextView
+                        android:id="@+id/requst_delete_all"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="전체삭제"
+                        android:textColor="@color/black"
+                        android:textStyle="bold"
+                        android:textSize="20sp"
+                        android:background="@drawable/radius_10dp_white"
+                        android:backgroundTint="@color/salmon"
+                        android:padding="10dp"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"/>
+
+                    <TextView
+                        android:id="@+id/please"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="10dp"
+                        android:text="요청하기"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:background="@drawable/radius_10dp_lime"
+                        android:textColor="@color/black"
+                        android:paddingStart="40dp"
+                        android:paddingEnd="40dp"
+                        android:layout_marginStart="40dp"/>
+
+                </LinearLayout>
+
+
+            </LinearLayout>
+
+
+
+        </LinearLayout>
+
+
+
+
+
+
+    </LinearLayout>
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+
