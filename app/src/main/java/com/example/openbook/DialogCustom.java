@@ -117,10 +117,8 @@ public class DialogCustom {
                 .setPositiveButton("확인", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        FCM fcm = new FCM();
-                        Log.d(TAG, "야발 다 죽인다");
-                        fcm.chattingRequest(clickTable, get_id);
-                        Log.d(TAG, "시발....개같은거");
+                        SendNotification sendNotification = new SendNotification();
+                        sendNotification.requestChatting(clickTable, get_id);
 
                     }
                 })

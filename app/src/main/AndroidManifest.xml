@@ -24,6 +24,7 @@
         android:hardwareAccelerated="true">
 
         <service android:name=".FCM"
+            android:enabled="true"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT"/>

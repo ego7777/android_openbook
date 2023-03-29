@@ -37,6 +37,7 @@ import com.example.openbook.UserData;
 import com.example.openbook.View.CartList;
 import com.example.openbook.View.MenuList;
 import com.example.openbook.View.SideList;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -91,7 +92,7 @@ public class Menu extends AppCompatActivity {
     SideListViewAdapter sideAdapter;
 
     Task<String> task;
-    FCM fcm;
+
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -109,13 +110,11 @@ public class Menu extends AppCompatActivity {
 
         get_id = getIntent().getStringExtra("id");
 
-        if(get_id.length()>0){
+        if (get_id.length() > 0) {
             table_number.setText(get_id);
-        }else{
+        } else {
             table_number.setText(get_id);
         }
-
-        task = FirebaseMessaging.getInstance().getToken();
 
 
         TextView cart_header = findViewById(R.id.cart_header);
@@ -129,12 +128,19 @@ public class Menu extends AppCompatActivity {
         super.onStart();
         //액티비티가 사용자에게 보여질 때, 사용자와 상호작용 X
 
+        FCM fcm = new FCM();
         /**
          * 로그인을 성공하면 id, tocken을 firebase realtime db에 저장
          */
-
-        fcm = new FCM();
-        fcm.saveToken(get_id, task);
+        Task<String> token = FirebaseMessaging.getInstance().getToken();
+        token.addOnCompleteListener(new OnCompleteListener<String>() {
+            @Override
+            public void onComplete(@NonNull Task<String> task) {
+                if (task.isSuccessful()) {
+                    fcm.saveToken(get_id, task.getResult());
+                }
+            }
+        });
 
 
         table = findViewById(R.id.table);
@@ -159,7 +165,7 @@ public class Menu extends AppCompatActivity {
          * 안주
          */
         menuGrid = findViewById(R.id.menu_grid);
-        menuGrid.setLayoutManager(new GridLayoutManager(this,3));
+        menuGrid.setLayoutManager(new GridLayoutManager(this, 3));
         menuGrid.addItemDecoration(new menu_recyclerview_deco(Menu.this));
 
         menuAdapter = new MenuAdapter();
@@ -168,7 +174,7 @@ public class Menu extends AppCompatActivity {
         menuGrid.setAdapter(menuAdapter);
 
         int img[] = {R.drawable.salad, R.drawable.soup, R.drawable.dish, R.drawable.burger, R.drawable.ramen, R.drawable.pasta,
-                R.drawable.beer_mug, R.drawable.beer, R.drawable.soju,R.drawable.cocktail,0,0,
+                R.drawable.beer_mug, R.drawable.beer, R.drawable.soju, R.drawable.cocktail, 0, 0,
                 R.drawable.nachos, R.drawable.tteokbokki, R.drawable.fries};
 
         String menu_name[] = {
@@ -189,14 +195,13 @@ public class Menu extends AppCompatActivity {
                 "감자튀김",
         };
 
-        int menu_price[] = {9000, 15000, 18000, 9000, 8000, 15000,4500, 5000, 5000, 6000, 0,0,5000, 6000, 5000};
+        int menu_price[] = {9000, 15000, 18000, 9000, 8000, 15000, 4500, 5000, 5000, 6000, 0, 0, 5000, 6000, 5000};
 
 
-
-        for(int i=0; i<img.length; i++){
-            if(i==10 || i==11){
-                menuLists.add(new MenuList(0,null, 0, 0));
-            }else{
+        for (int i = 0; i < img.length; i++) {
+            if (i == 10 || i == 11) {
+                menuLists.add(new MenuList(0, null, 0, 0));
+            } else {
                 menuLists.add(new MenuList(img[i], menu_name[i], menu_price[i], 1));
             }
         }
@@ -204,21 +209,15 @@ public class Menu extends AppCompatActivity {
         menuAdapter.setAdapterItem(menuLists);
 
 
-
-
-
-
-
-
         /**
          * 사이드 네비게이션
          */
-        navigation  = findViewById(R.id.navigation);
+        navigation = findViewById(R.id.navigation);
         sideAdapter = new SideListViewAdapter();
 
         String side[] = {"메인안주", "주류", "사이드", "직원호출", "결제(test)"};
 
-        for(int i =0; i<side.length; i++){
+        for (int i = 0; i < side.length; i++) {
             sideAdapter.addItem(new SideList(side[i]));
         }
         navigation.setAdapter(sideAdapter);
@@ -231,13 +230,12 @@ public class Menu extends AppCompatActivity {
 
         editor = pref.edit();
 
-        String getName = pref.getString("name","");
+        String getName = pref.getString("name", "");
         String getCount = pref.getString("count", "");
         String getPrice = pref.getString("price", "");
 
 
-
-        if(!getName.isEmpty()){
+        if (!getName.isEmpty()) {
             String splitName[] = getName.split("###");
             String splitCount[] = getCount.split("###");
             String splitPrice[] = getPrice.split("###");
@@ -247,23 +245,21 @@ public class Menu extends AppCompatActivity {
             int changePrice[] = new int[splitPrice.length];
 
 
-            for(int i=0; i<splitName.length; i++){
+            for (int i = 0; i < splitName.length; i++) {
 
                 changeCount[i] = Integer.parseInt(splitCount[i]);
                 changePrice[i] = Integer.parseInt(splitPrice[i]);
 
-                cartLists.add(new CartList(splitName[i], changePrice[i],changeCount[i], 1));
-                totalPrice = totalPrice + changePrice[i]*changeCount[i];
+                cartLists.add(new CartList(splitName[i], changePrice[i], changeCount[i], 1));
+                totalPrice = totalPrice + changePrice[i] * changeCount[i];
             }
 
             cartAdapter.setAdapterItem(cartLists);
-            orderPrice.setText(String.valueOf("합계: "+totalPrice+" 원"));
+            orderPrice.setText(String.valueOf("합계: " + totalPrice + " 원"));
         }
 
 
     } //onStart()
-
-
 
 
     @Override
@@ -297,7 +293,7 @@ public class Menu extends AppCompatActivity {
                 int add = cartLists.get(position).getMenu_count() + 1;
                 cartLists.get(position).setMenu_count(add);
                 totalPrice = totalPrice + cartLists.get(position).getMenu_price();
-                orderPrice.setText("합계: " + String.valueOf(totalPrice)  +"원");
+                orderPrice.setText("합계: " + String.valueOf(totalPrice) + "원");
                 cartAdapter.setAdapterItem(cartLists);
                 sharedPreference();
 
@@ -305,16 +301,16 @@ public class Menu extends AppCompatActivity {
 
             @Override
             public void onMinusClick(View view, int position) {
-                int minus = cartLists.get(position).getMenu_count()-1;
+                int minus = cartLists.get(position).getMenu_count() - 1;
                 totalPrice = totalPrice - cartLists.get(position).getMenu_price();
 
-                if(minus==0){
+                if (minus == 0) {
                     cartLists.remove(position);
-                }else{
+                } else {
                     cartLists.get(position).setMenu_count(minus);
                 }
 
-                orderPrice.setText("합계: " + String.valueOf(totalPrice)  +"원");
+                orderPrice.setText("합계: " + String.valueOf(totalPrice) + "원");
 
 
                 cartAdapter.setAdapterItem(cartLists);
@@ -326,8 +322,8 @@ public class Menu extends AppCompatActivity {
             public void onDeleteClick(View view, int position) {
                 int delete_count = cartLists.get(position).getMenu_count();
                 int delete_price = cartLists.get(position).getMenu_price();
-                totalPrice = totalPrice - (delete_price*delete_count);
-                orderPrice.setText("합계: " + String.valueOf(totalPrice)  +"원");
+                totalPrice = totalPrice - (delete_price * delete_count);
+                orderPrice.setText("합계: " + String.valueOf(totalPrice) + "원");
 
                 cartLists.remove(position);
 
@@ -360,18 +356,18 @@ public class Menu extends AppCompatActivity {
                 //포지션 값이 초기값이면 새롭게 추가하고, 아니면 개수만 올려서 다시 적용
                 if (pos == 1000) {
                     cartLists.add(new CartList(name, price, 1, 1));
-                }else {
+                } else {
                     menuCount = cartLists.get(pos).getMenu_count() + 1;
                     cartLists.get(pos).setMenu_count(menuCount);
                 }
 
                 cartAdapter.setAdapterItem(cartLists);
 
-                pos=1000;
+                pos = 1000;
 
 
                 totalPrice = totalPrice + price;
-                orderPrice.setText(String.valueOf("합계: "+ totalPrice +" 원"));
+                orderPrice.setText(String.valueOf("합계: " + totalPrice + " 원"));
 
                 sharedPreference();
 
@@ -383,20 +379,20 @@ public class Menu extends AppCompatActivity {
             @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void onItemClick(View view, String where) {
-                if(where.equals("메인안주")){
+                if (where.equals("메인안주")) {
                     menuGrid.smoothScrollToPosition(0);
 
-                }else if(where.equals("주류")) {
+                } else if (where.equals("주류")) {
                     menuGrid.smoothScrollToPosition(9);
 
-                }else if(where.equals("사이드")){
+                } else if (where.equals("사이드")) {
                     menuGrid.smoothScrollToPosition(12);
 
-                }else if(where.equals("직원호출")){
+                } else if (where.equals("직원호출")) {
                     Intent intent = new Intent(Menu.this, CallServer.class);
                     startActivity(intent);
 
-                }else if(where.equals("결제(test)")){
+                } else if (where.equals("결제(test)")) {
 
                     /**
                      /1. 로컬db 내용을 서버에 전달해서 저장
@@ -428,10 +424,10 @@ public class Menu extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                if(cartLists.size()==0){
+                if (cartLists.size() == 0) {
                     dialogCustom.HandlerAlertDialog(Menu.this, "메뉴가 존재하지 않습니다.");
 
-                }else {
+                } else {
 
                     RequestBody formBody = new FormBody.Builder()
                             .add("json", getJson(get_id, cartLists))
@@ -462,7 +458,7 @@ public class Menu extends AppCompatActivity {
                                     try {
                                         String body = response.body().string();
 
-                                        if(body.equals("주문완료")){
+                                        if (body.equals("주문완료")) {
                                             orderCk = true;
                                             cartLists = new ArrayList<>();
                                             cartAdapter.setAdapterItem(cartLists);
@@ -470,7 +466,7 @@ public class Menu extends AppCompatActivity {
                                             orderPrice.setText("");
 
 
-                                        }else{
+                                        } else {
                                             orderCk = false;
                                             Toast.makeText(getApplicationContext(), "서버에 문제가 발생하였습니다." +
                                                     "\n잠시 후 다시 주문해주세요.", Toast.LENGTH_LONG).show();
@@ -514,7 +510,7 @@ public class Menu extends AppCompatActivity {
                     }, 1000);
 
 
-                    if(infoCk == false){
+                    if (infoCk == false) {
                         infoCk = true;
                         orderCk = true;
                         dialogCustom.moveActivity(Menu.this,
@@ -530,25 +526,23 @@ public class Menu extends AppCompatActivity {
     }
 
 
-
-    public void sharedPreference(){
+    public void sharedPreference() {
 
         String name_temp = null;
-        String count_temp =null;
+        String count_temp = null;
         String price_temp = null;
 
 
+        for (int i = 0; i < cartLists.size(); i++) {
 
-        for(int i=0; i<cartLists.size(); i++){
-
-            if(name_temp == null){
+            if (name_temp == null) {
                 name_temp = cartLists.get(i).getMenu_name() + "###";
-                count_temp = cartLists.get(i).getMenu_count()+"###";
-                price_temp = cartLists.get(i).getMenu_price()+"###";
-            }else{
+                count_temp = cartLists.get(i).getMenu_count() + "###";
+                price_temp = cartLists.get(i).getMenu_price() + "###";
+            } else {
                 name_temp = name_temp + cartLists.get(i).getMenu_name() + "###";
-                count_temp = count_temp + cartLists.get(i).getMenu_count()+"###";
-                price_temp = price_temp + cartLists.get(i).getMenu_price()+"###";
+                count_temp = count_temp + cartLists.get(i).getMenu_count() + "###";
+                price_temp = price_temp + cartLists.get(i).getMenu_price() + "###";
             }
 
         }
@@ -562,7 +556,7 @@ public class Menu extends AppCompatActivity {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    public String getJson(String get_id, ArrayList<CartList> list){
+    public String getJson(String get_id, ArrayList<CartList> list) {
         JSONObject obj = new JSONObject();
         try {
             JSONArray jArray = new JSONArray();//배열이 필요할때
