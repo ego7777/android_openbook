@@ -40,7 +40,7 @@ public class SendNotification {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 String pushToken = (String) snapshot.getValue();
 
-                Log.d(TAG, "onDataChange: " + pushToken);
+//                Log.d(TAG, "pushToken: " + pushToken);
 
 
                 try {
@@ -50,23 +50,25 @@ public class SendNotification {
 
                     notification.put("title", get_id);
                     notification.put("body", get_id + "에서 채팅을 요청하였습니다.");
-                    root.put("to", pushToken);
+//                    root.put("to", pushToken);
+//                    root.put("project_id", "520510988286");
                     root.put("notification", notification);
-                    message.put("message", root);
+//                    message.put("message", root);
 
-                    Log.d(TAG, "request :" + message.toString());
+//                    Log.d(TAG, "request :" + root.toString());
 
 
                     RequestBody formBody = new FormBody.Builder().
-                            add("message", message.toString()).build();
+                            add("to",pushToken).
+                            add("notification", notification.toString()).
+                            build();
 
                     Request httpRequest = new Request.Builder()
-                            .url("https://fcm.googleapis.com/fcm/send")
+                            .url("http://3.36.255.141/fcmPush.php")
                             .addHeader("Authorization", "key=" + SERVER_KEY)
-                            .addHeader("Content-Type", "application/json")
-                            .addHeader("Accept", "application/json")
                             .post(formBody)
                             .build();
+
 
                     OkHttpClient okHttpClient = new OkHttpClient();
 
@@ -79,9 +81,9 @@ public class SendNotification {
 
                         @Override
                         public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                            Log.d(TAG, "onResponse: \n" + response);
+                            Log.d(TAG, "response: \n" + response);
 
-                            Log.d(TAG, "onResponse body: " + response.body().string());
+                            Log.d(TAG, "body: " + response.body().string());
                         }
                     });
 
