@@ -230,6 +230,9 @@ public class Table extends AppCompatActivity {
                         if (list[i] == clickTable) {
 
 
+
+
+
                             alertDialog.chattingRequest(Table.this,
                                     clickTable + "번 테이블과 채팅을 하시겠습니까?" +
                                             "\n<추신> 채팅 전 테이블 정보를 입력하는 것을 추천드립니다!", "table" + clickTable, get_id);
@@ -271,6 +274,12 @@ public class Table extends AppCompatActivity {
                 /**
                  * 사진을 누르면 돈내고 사진 깔거냐고 물어보기
                  */
+
+                if(true){
+                    //진짜 사진을 조회해서 보여주고
+                }else {
+                    //결제해서 오픈하도록 유도
+                }
 
 
                 ImageView table_info_img = dlg.findViewById(R.id.table_info_img);

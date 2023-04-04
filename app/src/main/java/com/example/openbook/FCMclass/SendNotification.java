@@ -1,4 +1,4 @@
-package com.example.openbook;
+package com.example.openbook.FCMclass;
 
 import android.util.Log;
 
@@ -40,27 +40,19 @@ public class SendNotification {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 String pushToken = (String) snapshot.getValue();
 
-//                Log.d(TAG, "pushToken: " + pushToken);
-
 
                 try {
-                    JSONObject message = new JSONObject();
-                    JSONObject root = new JSONObject();
+
                     JSONObject notification = new JSONObject();
 
                     notification.put("title", get_id);
-                    notification.put("body", get_id + "에서 채팅을 요청하였습니다.");
-//                    root.put("to", pushToken);
-//                    root.put("project_id", "520510988286");
-                    root.put("notification", notification);
-//                    message.put("message", root);
-
-//                    Log.d(TAG, "request :" + root.toString());
-
+                    notification.put("body", get_id + "에서 채팅을 요청하였습니다. 수락하시겠습니까?");
+                    notification.put("clickTable", clickTable);
 
                     RequestBody formBody = new FormBody.Builder().
                             add("to",pushToken).
                             add("notification", notification.toString()).
+                            add("clickTable", clickTable).
                             build();
 
                     Request httpRequest = new Request.Builder()

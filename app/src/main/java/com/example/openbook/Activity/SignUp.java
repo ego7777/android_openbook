@@ -16,6 +16,7 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.openbook.DialogCustom;
 import com.example.openbook.R;
 
 import java.io.IOException;
@@ -68,6 +69,8 @@ public class SignUp extends AppCompatActivity {
 
         TextView id_overlap_ck = findViewById(R.id.id_overlap_ck);
         TextView pw_ck = findViewById(R.id.pw_ck);
+
+        DialogCustom dlg = new DialogCustom();
 
         /**
          * 비밀번호 암호화 하세유...!!!!
@@ -204,27 +207,39 @@ public class SignUp extends AppCompatActivity {
                 Log.d(TAG, "matcher_phone1 : " + matcher_phone);
 
                 if (id.getText().toString().isEmpty()) {
-                    showDialog("아이디를 입력해주세요.");
+
+                    dlg.showAlertDialog(SignUp.this, "아이디를 입력해주세요.");
+
                 }else if (pw.getText().toString().isEmpty()) {
-                    showDialog("비밀번호를 입력해주세요.");
+
+                    dlg.showAlertDialog(SignUp.this, "비밀번호를 입력해주세요.");
+
                 }else if (phone.getText().toString().isEmpty()) {
-                    showDialog("핸드폰 번호를 입력해주세요.");
+
+                    dlg.showAlertDialog(SignUp.this, "핸드폰 번호를 입력해주세요.");
+
                 }else if (email.getText().toString().isEmpty()) {
-                    showDialog("이메일을 입력해주세요.");
+                    dlg.showAlertDialog(SignUp.this,"이메일을 입력해주세요.");
+
                 }else if (!pw.getText().toString().equals(pw_confirm.getText().toString())) {
-                    showDialog("비밀번호가 일치하지 않습니다.");
+                    dlg.showAlertDialog(SignUp.this,"비밀번호가 일치하지 않습니다.");
+
                 }else if(overlapCk.equals("1") ) {
-                    showDialog("사용할 수 없는 아이디 입니다.");
+                    dlg.showAlertDialog(SignUp.this,"사용할 수 없는 아이디 입니다.");
+
                 }else if(overlapCk.equals("0")) {
-                    showDialog("아이디 중복확인을 해주세요.");
+                    dlg.showAlertDialog(SignUp.this,"아이디 중복확인을 해주세요.");
+
                 }else if(!matcher_phone){
-                    showDialog("핸드폰 번호를 형식에 맞게 입력해주세요.");
+                    dlg.showAlertDialog(SignUp.this,"핸드폰 번호를 형식에 맞게 입력해주세요.");
+
 
                     Log.d(TAG, "phoneCk2 : " + phoneCk);
                     Log.d(TAG, "matcher_phone2 :" + matcher_phone);
 
                 }else if(!matcher_email){
-                    showDialog("이메일을 형식에 맞게 입력해주세요.");
+                    dlg.showAlertDialog(SignUp.this,"이메일을 형식에 맞게 입력해주세요.");
+
                     Log.d(TAG, "email.getText : " + emailCk);
                     Log.d(TAG, "matcher_email :" + matcher_email);
                 }else{
@@ -293,25 +308,7 @@ public class SignUp extends AppCompatActivity {
 
 
 
-    public void showDialog(String text){
-        /**
-         * popup
-         */
-        dlg = new Dialog(SignUp.this);
-        dlg.setContentView(R.layout.popup);
-        dlg.show();
 
-        TextView textSet = dlg.findViewById(R.id.popup_textSet);
-        Button popup_back = dlg.findViewById(R.id.popup_back);
-
-        textSet.setText(text);
-        popup_back.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                dlg.dismiss();
-            }
-        });
-    }
 
 
 

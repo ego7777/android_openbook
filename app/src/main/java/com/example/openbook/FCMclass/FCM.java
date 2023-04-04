@@ -1,62 +1,35 @@
-package com.example.openbook;
+package com.example.openbook.FCMclass;
 
-import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
-import android.os.Message;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.RemoteViews;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 
-import com.example.openbook.Activity.Menu;
+import com.example.openbook.Activity.PopUp;
 import com.example.openbook.Chatting.ChattingUI;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
+import com.example.openbook.R;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 
-import com.google.firebase.iid.FirebaseInstanceIdReceiver;
-import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.IOException;
-
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.FormBody;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 
 
 public class FCM extends FirebaseMessagingService {
 
     String TAG = "FCM";
 
-    @Override
-    public void onSendError(@NonNull String msgId, @NonNull Exception exception) {
-        super.onSendError(msgId, exception);
-        Log.d(TAG, "onSendError id: " + msgId);
-        Log.d(TAG, "onSendError e: " + exception);
-    }
 
 
     public void saveToken(String id, String token) {
@@ -88,6 +61,7 @@ public class FCM extends FirebaseMessagingService {
         // 푸시메시지 수신시 할 작업을 작성
 
         Log.d(TAG, "From: " + message.getFrom());
+       
 
         // Check if message contains a notification payload.
         if (message.getNotification() != null) {
@@ -95,18 +69,57 @@ public class FCM extends FirebaseMessagingService {
             Log.d(TAG, "Message Notification Title : " + message.getNotification().getTitle());
             showNotification(message.getNotification().getTitle(),
                     message.getNotification().getBody());
-        }else if(!message.getData().isEmpty()){
-            Log.d(TAG, "onMessageReceived: " + message.getData().get("title"));
+        }else if(message.getData() != null){
+            Log.d(TAG, "onMessageReceived title: " + message.getData().get("title"));
+            Log.d(TAG, "onMessageReceived body: " + message.getData().get("body"));
+            Log.d(TAG, "onMessageReceived clickTable: " +message.getData().get("clickTable"));
+
+
+            Handler mHandler = new Handler(Looper.getMainLooper());
+            mHandler.postDelayed(new Runnable() {
+                @RequiresApi(api = Build.VERSION_CODES.Q)
+                @Override
+                public void run() {
+                    showData(message.getData().get("title"), message.getData().get("body"), message.getData().get("clickTable"));
+                }
+            },0);
+
+
         }
 
 
     }
 
 
+
+
+    @RequiresApi(api = Build.VERSION_CODES.Q)
+    public void showData(String title, String body, String clickTable){
+        //popupActivity를 만들어서 띄우자
+        Intent intent = new Intent(this, PopUp.class);
+        intent.putExtra("notificationTitle", title);
+        intent.putExtra("notificationBody", body);
+        intent.putExtra("notificationClickTable", clickTable);
+
+
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+
+        try {
+            pendingIntent.send();
+
+        } catch (PendingIntent.CanceledException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
+
+
     @RequiresApi(api = Build.VERSION_CODES.O)
     public void showNotification(String title, String message) {
         //팝업 터치시 이동할 액티비티를 지정합니다.
-
 
         Intent intent = new Intent(this, ChattingUI.class);
         //알림 채널 아이디 : 본인 하고싶으신대로...
