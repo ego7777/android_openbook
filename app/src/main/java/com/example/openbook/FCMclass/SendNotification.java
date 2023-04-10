@@ -33,7 +33,7 @@ public class SendNotification {
 
     String SERVER_KEY = "AAAAeTDfX_4:APA91bE0yKHvTCbVRoytfsstBn8XP9DzKdqnAFosy9HuClDrsMADaYASreReO5ra_YDdOPPiBpkE05GqaR0ULWupUbB_nNCUXftjsO7VVAVafdcGUK0Qn6HnQOBSV9BMriJshN1eQ9KF";
 
-    public void requestChatting(String clickTable, String get_id) {
+    public void requestChatting(String clickTable, String get_id, String message) {
         DatabaseReference mRootRef = FirebaseDatabase.getInstance().getReference();
         mRootRef.child(clickTable).child("fcmToken").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -46,7 +46,7 @@ public class SendNotification {
                     JSONObject notification = new JSONObject();
 
                     notification.put("title", get_id);
-                    notification.put("body", get_id + "에서 채팅을 요청하였습니다. 수락하시겠습니까?");
+                    notification.put("body", get_id + message);
                     notification.put("clickTable", clickTable);
 
                     RequestBody formBody = new FormBody.Builder().
@@ -95,5 +95,7 @@ public class SendNotification {
 
     }
 
+    public void requestAccept(String clickTable, String get_id, String message){
 
+    }
 }

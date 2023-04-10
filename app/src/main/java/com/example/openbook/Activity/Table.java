@@ -1,6 +1,7 @@
 package com.example.openbook.Activity;
 
 import android.app.Dialog;
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -17,6 +18,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.openbook.Adapter.TableAdapter;
+import com.example.openbook.Chatting.ChattingUI;
 import com.example.openbook.DialogCustom;
 import com.example.openbook.ImageLoadTask;
 import com.example.openbook.QRcode.MakeQR;
@@ -63,6 +65,8 @@ public class Table extends AppCompatActivity {
 
     int myTable;
     String get_id;
+    boolean chattingAgree = false;
+    boolean orderCk = false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -70,6 +74,8 @@ public class Table extends AppCompatActivity {
         setContentView(R.layout.table);
 
         get_id = getIntent().getStringExtra("id");
+        orderCk = getIntent().getBooleanExtra("orderCk", false);
+        Log.d(TAG, "orderCk :" + orderCk);
 
         TextView table_num = findViewById(R.id.table_number);
         table_num.setText(get_id);
@@ -124,6 +130,8 @@ public class Table extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         Log.d(TAG, "onStart: ");
+
+        chattingAgree = getIntent().getBooleanExtra("chattingAgree", false);
 
 //        myTable = Integer.parseInt(get_id.replace("table", ""));
 
@@ -229,35 +237,35 @@ public class Table extends AppCompatActivity {
                     for (int i = 0; i < list.length; i++) {
                         if (list[i] == clickTable) {
 
+                            if(chattingAgree == false){
+                                alertDialog.chattingRequest(Table.this,
+                                        clickTable + "번 테이블과 채팅을 하시겠습니까?" +
+                                                "\n<추신> 채팅 전 테이블 정보를 입력하는 것을 추천드립니다!",
+                                        "table" + clickTable, get_id);
+                                Log.d(TAG, "채팅 신청");
 
-
-
-
-                            alertDialog.chattingRequest(Table.this,
-                                    clickTable + "번 테이블과 채팅을 하시겠습니까?" +
-                                            "\n<추신> 채팅 전 테이블 정보를 입력하는 것을 추천드립니다!", "table" + clickTable, get_id);
-                            Log.d(TAG, "채팅 신청");
+                            }else if(chattingAgree == true){
+                                Intent intent = new Intent(Table.this, ChattingUI.class);
+                                intent.putExtra("tableNumber", clickTable);
+                                intent.putExtra("id", get_id);
+                                intent.putExtra("chattingAgree", chattingAgree);
+                                startActivity(intent);
+                            }
 
                             break; // 얘가 안된다 망할..^^
 
-//                            Intent intent = new Intent(Table.this, ChattingUI.class);
-//                            intent.putExtra("tableNumber", clickTable);
-//                            intent.putExtra("id", get_id);
-//                            startActivity(intent);
+//
                         }else{
 
                             alertDialog.showAlertDialog(Table.this,
                                     "비어있는 테이블이거나 아직 주문하지 않은 테이블 입니다.");
                         }
-                    }
+                    }//for 끝
 
-                }
-//
+                } // if-else  list.length>0 끝
 
-            }
-
-
-        });
+            } // onClick
+        }); //setOnClickListener
 
 
 
@@ -309,7 +317,7 @@ public class Table extends AppCompatActivity {
                         }
 
                         @Override
-                        public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                        public void onResponse(@NonNull Call call, @NonNull Response response) {
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
@@ -354,7 +362,7 @@ public class Table extends AppCompatActivity {
                         }
 
                         @Override
-                        public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                        public void onResponse(@NonNull Call call, @NonNull Response response) {
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {

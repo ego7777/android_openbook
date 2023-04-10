@@ -20,8 +20,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.openbook.Activity.Table;
 import com.example.openbook.Adapter.ChattingAdapter;
 import com.example.openbook.Activity.Menu;
+import com.example.openbook.FCMclass.SendNotification;
 import com.example.openbook.R;
 import com.example.openbook.View.ChattingList;
 
@@ -59,7 +61,7 @@ public class ChattingUI extends AppCompatActivity {
     ServiceHandler mServiceHandler;
     HandlerThread thread;
 
-    Boolean loop = true;
+    boolean loop = true;
 
     public static final int MSG_CONNECT = 1;
     public static final int MSG_RECEIVE = 2;
@@ -74,6 +76,7 @@ public class ChattingUI extends AppCompatActivity {
 
     BufferedWriter networkWrite = null;
     updateUI updateUI;
+    boolean chattingAgree = false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -82,8 +85,9 @@ public class ChattingUI extends AppCompatActivity {
 
         table_num = getIntent().getIntExtra("tableNumber",0);
         get_id = getIntent().getStringExtra("id");
-        clientSocket = (ClientSocket) getIntent().getSerializableExtra("clientSocket");
-
+//        clientSocket = (ClientSocket) getIntent().getSerializableExtra("clientSocket");
+        chattingAgree = getIntent().getBooleanExtra("chattingAgree", false);
+        Log.d(TAG, "chattingAgree :" + chattingAgree);
 
         version ++;
 
@@ -92,6 +96,9 @@ public class ChattingUI extends AppCompatActivity {
 
         clientSocket = new ClientSocket("3.36.255.141", 7777, get_id);
         clientSocket.start();
+        Log.d(TAG, "socket :" + clientSocket.socket.isConnected());
+
+
 
         /**
          * AppBar 설정
@@ -102,6 +109,7 @@ public class ChattingUI extends AppCompatActivity {
             public void onClick(View v) {
                 Intent intent = new Intent(getApplicationContext(), Menu.class);
                 intent.putExtra("id", get_id);
+                intent.putExtra("chattingAgree", chattingAgree);
                 startActivity(intent);
             }
         });
@@ -164,8 +172,13 @@ public class ChattingUI extends AppCompatActivity {
         chatting_view.requestFocus(chatLists.size());
 
         if(clientSocket.socket.isConnected()){
+            Log.d(TAG, "onCreate: ");
             updateUI = new updateUI();
+            Log.d(TAG, "onCreate: ???");
             updateUI.start();
+            Log.d(TAG, "???");
+        }else{
+            Log.d(TAG, "clientSocket.NotConnected :" + clientSocket.socket.isConnected());
         }
 
 
@@ -250,7 +263,14 @@ public class ChattingUI extends AppCompatActivity {
         chat_back.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                finish();
+                Intent intent = new Intent(ChattingUI.this, Table.class);
+                intent.putExtra("id", get_id);
+                intent.putExtra("orderCk", true);
+                intent.putExtra("chattingAgree", chattingAgree);
+                Log.d(TAG, "intent chattingAgree :" + chattingAgree);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
+
             }
         });
 
@@ -293,6 +313,7 @@ public class ChattingUI extends AppCompatActivity {
             switch (msg.what){
                 case MSG_SEND:
                     try{
+                        Log.d(TAG, "clientSocket.socket :" +clientSocket.socket.isConnected());
                         networkWrite = new BufferedWriter
                                 (new OutputStreamWriter(clientSocket.socket.getOutputStream()));
 
@@ -344,6 +365,7 @@ public class ChattingUI extends AppCompatActivity {
             while (loop) {
                 try {
                     String line = networkReader.readLine();
+                    Log.d(TAG, "run: " + line);
 
                     //서버로부터 FIN 패킷(서버로 연결된 세션의 종료를 알리는 패킷)을 수신하면 read() 메소드는 null을 반환
                     if (line == null)

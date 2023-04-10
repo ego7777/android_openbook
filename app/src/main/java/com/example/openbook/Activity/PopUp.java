@@ -15,6 +15,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.example.openbook.Chatting.ChattingUI;
+import com.example.openbook.FCMclass.SendNotification;
 import com.example.openbook.R;
 
 public class PopUp extends Activity {
@@ -22,6 +23,9 @@ public class PopUp extends Activity {
     String TAG = "POPUP_Activity";
     String get_id;
     int tableNumber;
+    boolean agree = false;
+    String title;
+    String body;
 
 
     @Override
@@ -33,8 +37,8 @@ public class PopUp extends Activity {
         TextView popup_title = findViewById(R.id.popup_title);
         TextView popup_body = findViewById(R.id.popup_body);
 
-        String title = getIntent().getStringExtra("notificationTitle");
-        String body = getIntent().getStringExtra("notificationBody");
+        title = getIntent().getStringExtra("notificationTitle");
+        body = getIntent().getStringExtra("notificationBody");
         get_id = getIntent().getStringExtra("notificationClickTable");
 
         popup_title.setText(title);
@@ -50,22 +54,55 @@ public class PopUp extends Activity {
         super.onResume();
 
         Button popup_yes = findViewById(R.id.popup_button_yes);
-        popup_yes.setOnClickListener(new View.OnClickListener() {
-            @RequiresApi(api = Build.VERSION_CODES.O)
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(PopUp.this, ChattingUI.class);
-                intent.putExtra("id", get_id);
-                intent.putExtra("tableNumber", tableNumber);
-                startActivity(intent);
-                finish();
-            }
-        });
+
+
+        if(body.contains("요청")){
+            popup_yes.setOnClickListener(new View.OnClickListener() {
+                @RequiresApi(api = Build.VERSION_CODES.O)
+                @Override
+                public void onClick(View v) {
+                    Log.d(TAG, "요청포함");
+                    // 여기서 yes를 누르면 그 후로는 바로 chatUI로 넘어가게 해야함
+                    SendNotification sendNotification = new SendNotification();
+                    sendNotification.requestChatting(title,get_id, "에서 채팅을 수락하였습니다.");
+
+                    agree = true;
+                    Intent intent = new Intent(PopUp.this, ChattingUI.class);
+                    intent.putExtra("id", get_id);
+                    intent.putExtra("tableNumber", tableNumber);
+                    intent.putExtra("chattingAgree", agree);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    startActivity(intent);
+                    finish();
+
+                }
+            });
+        }else if(body.contains("수락")){
+            popup_yes.setOnClickListener(new View.OnClickListener() {
+                @RequiresApi(api = Build.VERSION_CODES.O)
+                @Override
+                public void onClick(View v) {
+                    Log.d(TAG, "수락포함");
+                    agree = true;
+                    Intent intent = new Intent(PopUp.this, ChattingUI.class);
+                    intent.putExtra("id", get_id);
+                    intent.putExtra("tableNumber", tableNumber);
+                    intent.putExtra("chattingAgree", agree);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    startActivity(intent);
+                    finish();
+                }
+            });
+
+        }
+
+
 
         Button popup_no = findViewById(R.id.popup_button_no);
         popup_no.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                agree = false;
                 finish();
             }
         });

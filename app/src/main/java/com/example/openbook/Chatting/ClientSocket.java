@@ -1,29 +1,22 @@
 package com.example.openbook.Chatting;
-import android.content.Intent;
+
 import android.os.Build;
-import android.os.Handler;
-import android.os.HandlerThread;
-import android.os.Looper;
-import android.os.Message;
-import android.os.Parcel;
-import android.os.Parcelable;
+
 import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
-import com.example.openbook.View.ChattingList;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.ObjectOutputStream;
+
 import java.io.OutputStreamWriter;
 import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
-import java.time.format.DateTimeFormatter;
 
 
 public class ClientSocket extends Thread implements Serializable {
@@ -54,13 +47,15 @@ public class ClientSocket extends Thread implements Serializable {
         super.run();
         //
         try {
-            //1. 클라이언트 소켓생성
+            /**
+             * 1. 클라이언트 소켓생성
+             */
             socket = new Socket();
             socket.setSoTimeout(connection_timeout);
             socket.setSoLinger(true, connection_timeout);
 
 
-            /* 2. 소켓 연결
+            /** 2. 소켓 연결
             /블록모드로 작동하는 connect() 메소드에서 반환되면 서버와 정상적으로 연결된 것
             */
             socket.connect(socketAddress, connection_timeout);
@@ -69,6 +64,8 @@ public class ClientSocket extends Thread implements Serializable {
             //3. 데이터 입출력 메소드 설정
             OutputStreamWriter o = new OutputStreamWriter(socket.getOutputStream());
             //outputStream: 출력 스트림
+
+
             networkWrite = new BufferedWriter(o);
             Log.d(TAG, "run: " + networkWrite);
             //bufferedReader : 버퍼를 사용한 출력
@@ -110,7 +107,6 @@ public class ClientSocket extends Thread implements Serializable {
             Log.d(TAG, "quit: e" + e);
         }
     }
-
 
 
 }

@@ -5,6 +5,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
@@ -19,9 +20,12 @@ import com.example.openbook.Activity.PopUp;
 import com.example.openbook.Chatting.ChattingUI;
 
 import com.example.openbook.R;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
@@ -29,7 +33,26 @@ import com.google.firebase.messaging.RemoteMessage;
 public class FCM extends FirebaseMessagingService {
 
     String TAG = "FCM";
+    String get_id;
 
+
+    @Override
+    protected Intent getStartCommandIntent(Intent originalIntent) {
+
+        get_id = originalIntent.getStringExtra("get_id");
+
+        Task<String> token = FirebaseMessaging.getInstance().getToken();
+        token.addOnCompleteListener(new OnCompleteListener<String>() {
+            @Override
+            public void onComplete(@NonNull Task<String> task) {
+                if (task.isSuccessful()) {
+                    saveToken(get_id, task.getResult());
+                }
+            }
+        });
+
+        return super.getStartCommandIntent(originalIntent);
+    }
 
 
     public void saveToken(String id, String token) {

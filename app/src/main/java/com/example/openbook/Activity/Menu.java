@@ -67,6 +67,7 @@ public class Menu extends AppCompatActivity {
 
     boolean orderCk = false;
     boolean infoCk = false;
+    boolean chattingAgree = false;
 
     ArrayList<MenuList> menuLists;
     ArrayList<CartList> cartLists;
@@ -88,15 +89,19 @@ public class Menu extends AppCompatActivity {
     ListView navigation;
     SideListViewAdapter sideAdapter;
 
-    Task<String> task;
-
-
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.menu2);
 
+        get_id = getIntent().getStringExtra("id");
+
+
+        /**
+         * 로그인을 성공하면 id, token을 firebase realtime db에 저장
+         */
         Intent fcm = new Intent(getApplicationContext(), FCM.class);
+        fcm.putExtra("get_id", get_id);
         startService(fcm);
 
 
@@ -105,13 +110,15 @@ public class Menu extends AppCompatActivity {
          */
         TextView table_number = findViewById(R.id.table_number);
 
-        get_id = getIntent().getStringExtra("id");
+
+        chattingAgree = getIntent().getBooleanExtra("chattingAgree", false);
 
         if (get_id.length() > 0) {
             table_number.setText(get_id);
         } else {
             table_number.setText(get_id);
         }
+        Log.d(TAG, "onCreate: ");
 
 
         TextView cart_header = findViewById(R.id.cart_header);
@@ -124,21 +131,6 @@ public class Menu extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         //액티비티가 사용자에게 보여질 때, 사용자와 상호작용 X
-
-        FCM fcm = new FCM();
-        /**
-         * 로그인을 성공하면 id, tocken을 firebase realtime db에 저장
-         */
-        Task<String> token = FirebaseMessaging.getInstance().getToken();
-        token.addOnCompleteListener(new OnCompleteListener<String>() {
-            @Override
-            public void onComplete(@NonNull Task<String> task) {
-                if (task.isSuccessful()) {
-                    fcm.saveToken(get_id, task.getResult());
-                }
-            }
-        });
-
 
         table = findViewById(R.id.table);
 
@@ -274,9 +266,9 @@ public class Menu extends AppCompatActivity {
                 Intent intent = new Intent(getApplicationContext(), Table.class);
                 intent.putExtra("id", get_id);
                 intent.putExtra("orderCk", orderCk);
+                intent.putExtra("chattingAgree", chattingAgree);
 //                intent.putExtra("clientSocket", clientSocket);
                 startActivity(intent);
-//                overridePendingTransition(0, 0);
             }
         });
 

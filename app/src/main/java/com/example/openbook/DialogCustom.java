@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Handler;
+import android.util.Log;
 
 import com.example.openbook.Activity.Table;
 import com.example.openbook.FCMclass.SendNotification;
@@ -103,16 +104,20 @@ public class DialogCustom {
                                     public void onClick(DialogInterface dialog, int which) {
                                         //프로필 조회권 주고
                                         SendNotification sendNotification = new SendNotification();
-                                        sendNotification.requestChatting(clickTable, get_id);
+                                        sendNotification.requestChatting(clickTable, get_id,"에서 채팅을 요청하였습니다. 수락하시겠습니까?");
+                                        dialog.dismiss();
                                     }
                                 })
                                 .setNegativeButton("아니오", new DialogInterface.OnClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
                                         SendNotification sendNotification = new SendNotification();
-                                        sendNotification.requestChatting(clickTable, get_id);
+                                        sendNotification.requestChatting(clickTable, get_id,"에서 채팅을 요청하였습니다. 수락하시겠습니까?");
+                                        dialog.dismiss();
                                     }
                                 }).setIcon(R.drawable.heart);
+                        AlertDialog alertDialog2 = builder.create();
+                        alertDialog2.show();
                     }
                 })
                 .setNegativeButton("취소", new DialogInterface.OnClickListener() {
