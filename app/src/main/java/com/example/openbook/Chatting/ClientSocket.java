@@ -19,6 +19,7 @@ import java.net.Socket;
 import java.net.SocketAddress;
 
 
+@RequiresApi(api = Build.VERSION_CODES.O)
 public class ClientSocket extends Thread implements Serializable {
 
     private final String TAG = "ClientSocket";
@@ -30,6 +31,7 @@ public class ClientSocket extends Thread implements Serializable {
 //    Boolean loop;
     String get_id;
     Socket socket;
+
 
 
 
@@ -59,6 +61,7 @@ public class ClientSocket extends Thread implements Serializable {
             /블록모드로 작동하는 connect() 메소드에서 반환되면 서버와 정상적으로 연결된 것
             */
             socket.connect(socketAddress, connection_timeout);
+            Log.d(TAG, "소켓 연결 : " + socket.isConnected());
 
 
             //3. 데이터 입출력 메소드 설정
@@ -81,14 +84,20 @@ public class ClientSocket extends Thread implements Serializable {
             networkWrite.write(get_id+"_table");
             networkWrite.newLine();
             networkWrite.flush();
+            Log.d(TAG, "id flush");
 
 //            loop = true;
+//            Message toMain = chattingUI.mMainHandler.obtainMessage();
+//            toMain.what = MSG_CONNECT;
+//            chattingUI.mMainHandler.sendMessage(toMain);
+//            Log.d(TAG, "접속 보내는거? ");
 
 
 
         } catch (Exception e) {
 //            loop = false;
             Log.d(TAG, "소켓을 생성하지 못했습니다.");
+            Log.d(TAG, "Exception " + e);
 
         }
 
@@ -100,6 +109,7 @@ public class ClientSocket extends Thread implements Serializable {
             if(socket != null){
                 socket.close();
                 socket = null;
+                Log.d(TAG, "quit: ");
             }
 
 

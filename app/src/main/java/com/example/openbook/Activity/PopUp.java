@@ -15,6 +15,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.example.openbook.Chatting.ChattingUI;
+import com.example.openbook.Chatting.Client;
 import com.example.openbook.FCMclass.SendNotification;
 import com.example.openbook.R;
 
@@ -67,7 +68,10 @@ public class PopUp extends Activity {
                     sendNotification.requestChatting(title,get_id, "에서 채팅을 수락하였습니다.");
 
                     agree = true;
-                    Intent intent = new Intent(PopUp.this, ChattingUI.class);
+//                    Intent intent = new Intent(PopUp.this, ChattingUI.class);
+                    Intent intent = new Intent(PopUp.this, Client.class);
+
+
                     intent.putExtra("id", get_id);
                     intent.putExtra("tableNumber", tableNumber);
                     intent.putExtra("chattingAgree", agree);
@@ -84,7 +88,8 @@ public class PopUp extends Activity {
                 public void onClick(View v) {
                     Log.d(TAG, "수락포함");
                     agree = true;
-                    Intent intent = new Intent(PopUp.this, ChattingUI.class);
+//                    Intent intent = new Intent(PopUp.this, ChattingUI.class);
+                    Intent intent = new Intent(PopUp.this, Client.class);
                     intent.putExtra("id", get_id);
                     intent.putExtra("tableNumber", tableNumber);
                     intent.putExtra("chattingAgree", agree);

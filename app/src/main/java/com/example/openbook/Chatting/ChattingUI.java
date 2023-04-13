@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.InterruptedIOException;
 import java.io.OutputStreamWriter;
+import java.net.Socket;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -93,10 +94,6 @@ public class ChattingUI extends AppCompatActivity {
 
         dbHelper = new DBHelper(ChattingUI.this,  version);
         sqLiteDatabase = dbHelper.getWritableDatabase();
-
-        clientSocket = new ClientSocket("3.36.255.141", 7777, get_id);
-        clientSocket.start();
-        Log.d(TAG, "socket :" + clientSocket.socket.isConnected());
 
 
 
@@ -166,20 +163,12 @@ public class ChattingUI extends AppCompatActivity {
             }
         }
 
-        Log.d(TAG, "getSenderData : " + res.toString());
+//        Log.d(TAG, "getSenderData : " + res.toString());
 
         chattingAdapter.setAdapterItem(chatLists);
         chatting_view.requestFocus(chatLists.size());
 
-        if(clientSocket.socket.isConnected()){
-            Log.d(TAG, "onCreate: ");
-            updateUI = new updateUI();
-            Log.d(TAG, "onCreate: ???");
-            updateUI.start();
-            Log.d(TAG, "???");
-        }else{
-            Log.d(TAG, "clientSocket.NotConnected :" + clientSocket.socket.isConnected());
-        }
+
 
 
 
@@ -203,6 +192,18 @@ public class ChattingUI extends AppCompatActivity {
                 switch (msg.what){
                     case MSG_CONNECT:
                         m = "정상적으로 서버에 접속하였습니다.";
+
+
+                        if(clientSocket.socket.isConnected()){
+                            updateUI = new updateUI();
+                            updateUI.start();
+                            Log.d(TAG, "UI update Thread 시작");
+
+                        }else{
+                            Log.d(TAG, "시발 소켓 나가리:" + clientSocket.socket.isConnected());
+
+                        }
+
                         break;
 
                     case MSG_CLIENT_STOP:
@@ -300,6 +301,27 @@ public class ChattingUI extends AppCompatActivity {
         });
 
 
+        if(clientSocket == null){
+            try{
+                clientSocket = new ClientSocket("3.36.255.141", 7777, get_id);
+                clientSocket.start();
+                loop = true;
+
+                Message toMain = mMainHandler.obtainMessage();
+                toMain.what = MSG_CONNECT;
+                mMainHandler.sendMessage(toMain);
+
+            }catch (Exception e){
+                loop = false;
+                Log.d(TAG, "clientSocket 연결 오류 :" + e);
+            }
+
+        }
+
+
+
+
+
     }
 
     class ServiceHandler extends Handler {
@@ -313,7 +335,6 @@ public class ChattingUI extends AppCompatActivity {
             switch (msg.what){
                 case MSG_SEND:
                     try{
-                        Log.d(TAG, "clientSocket.socket :" +clientSocket.socket.isConnected());
                         networkWrite = new BufferedWriter
                                 (new OutputStreamWriter(clientSocket.socket.getOutputStream()));
 
@@ -336,7 +357,7 @@ public class ChattingUI extends AppCompatActivity {
                 case MSG_CLIENT_STOP: case MSG_SERVER_STOP:
                     //quit 메소드 호출
                     clientSocket.quit();
-//                    Log.d(TAG, "handleMessage: quit");
+                    Log.d(TAG, "handleMessage: quit");
                     clientSocket = null;
                     break;
             }
@@ -348,19 +369,32 @@ public class ChattingUI extends AppCompatActivity {
 
         BufferedReader networkReader;
 
-        {
-            try {
-                networkReader = new BufferedReader(
-                        new InputStreamReader(clientSocket.socket.getInputStream()));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+//        {
+//            try {
+//                Log.d(TAG, "UI socket 연결 :" + clientSocket.socket.isConnected());
+//                networkReader = new BufferedReader(
+//                        new InputStreamReader(clientSocket.socket.getInputStream()));
+//
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
 
 
         @Override
         public void run() {
             super.run();
+
+
+            try {
+                networkReader = new BufferedReader(
+                        new InputStreamReader(clientSocket.socket.getInputStream()));
+                Log.d(TAG, "networkReader :" + networkReader.ready());
+                Log.d(TAG, "UI socket 연결 :" + clientSocket.socket.isConnected());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
 
             while (loop) {
                 try {

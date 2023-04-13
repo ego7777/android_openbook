@@ -21,6 +21,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.openbook.Activity.Table;
 import com.example.openbook.Adapter.ChattingAdapter;
 import com.example.openbook.Activity.Menu;
 import com.example.openbook.R;
@@ -78,6 +79,7 @@ public class Client extends AppCompatActivity {
     String get_id;
     int table_num;
     String time;
+    boolean chattingAgree = false;
 
     ChattingAdapter chattingAdapter;
     RecyclerView chatting_view;
@@ -100,7 +102,8 @@ public class Client extends AppCompatActivity {
         //table_num : 내가 대화하려고 하는 채팅방 번호
         table_num = getIntent().getIntExtra("tableNumber",0);
         get_id = getIntent().getStringExtra("id");
-        Log.d(TAG, "table num: " + table_num);
+        chattingAgree = getIntent().getBooleanExtra("chattingAgree", false);
+        Log.d(TAG, "chattingAgree :" + chattingAgree);
 
         version ++;
 
@@ -311,7 +314,13 @@ public class Client extends AppCompatActivity {
         chat_back.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                finish();
+                Intent intent = new Intent(Client.this, Table.class);
+                intent.putExtra("id", get_id);
+                intent.putExtra("orderCk", true);
+                intent.putExtra("chattingAgree", chattingAgree);
+                Log.d(TAG, "intent chattingAgree :" + chattingAgree);
+//                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
             }
         });
 
@@ -361,11 +370,10 @@ public class Client extends AppCompatActivity {
 
 
 
-
     public class SocketClient extends Thread {
         SocketAddress socketAddress;
         String line;
-        final int connection_timeout = 6000;
+        final int connection_timeout = 999999;
 
 
         public SocketClient(String ip, int port) {
@@ -433,14 +441,17 @@ public class Client extends AppCompatActivity {
                     line = networkReader.readLine();
 
                     //서버로부터 FIN 패킷(서버로 연결된 세션의 종료를 알리는 패킷)을 수신하면 read() 메소드는 null을 반환
-                    if (line == null)
-                        break;
+//                    if (line == null)
+//                        break;
 
                     Runnable showUpdate = new Runnable() {
                         @Override
                         public void run() {
 
+                            Log.d(TAG, "client line :" + line);
+
                             String temp[] = line.split("_");
+
 //                            int chatListLast = 0;
 
                             if(temp[0].equals("read")){
@@ -481,7 +492,7 @@ public class Client extends AppCompatActivity {
 
                     mMainHandler.post(showUpdate);
 
-                } catch (InterruptedIOException e) {
+
 
                 } catch (IOException e) {
                     Log.d(TAG, "run: e " + e);
