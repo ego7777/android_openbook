@@ -8,13 +8,32 @@
     android:gravity="center"
     android:background="@color/black">
 
-    <ImageView
-        android:id="@+id/table_info_img"
-        android:layout_width="400dp"
-        android:layout_height="400dp"
-        android:layout_gravity="center"
-        android:scaleType="fitCenter"
-        android:src ="@drawable/soju"/>
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:id="@+id/table_info_img"
+            android:layout_width="400dp"
+            android:layout_height="400dp"
+            android:layout_gravity="center"
+            android:scaleType="fitCenter"
+            android:src ="@drawable/soju"/>
+
+        <TextView
+            android:id="@+id/table_info_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="프로필을 확인하시려면 \n클릭해주세요!\n:)"
+            android:textColor="@color/white"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:textSize="30sp"
+            android:textStyle="bold"/>
+
+    </FrameLayout>
+
+
 
     <TextView
         android:id="@+id/statement"

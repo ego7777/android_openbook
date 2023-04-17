@@ -311,6 +311,7 @@ public class Menu extends AppCompatActivity {
             public void onDeleteClick(View view, int position) {
                 int delete_count = cartLists.get(position).getMenu_count();
                 int delete_price = cartLists.get(position).getMenu_price();
+
                 totalPrice = totalPrice - (delete_price * delete_count);
                 orderPrice.setText("합계: " + String.valueOf(totalPrice) + "원");
 
@@ -595,5 +596,11 @@ public class Menu extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         Log.d(TAG, "onStop: ");
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d(TAG, "onPause: ");
     }
 }

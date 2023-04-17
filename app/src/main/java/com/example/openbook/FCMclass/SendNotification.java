@@ -33,7 +33,7 @@ public class SendNotification {
 
     String SERVER_KEY = "AAAAeTDfX_4:APA91bE0yKHvTCbVRoytfsstBn8XP9DzKdqnAFosy9HuClDrsMADaYASreReO5ra_YDdOPPiBpkE05GqaR0ULWupUbB_nNCUXftjsO7VVAVafdcGUK0Qn6HnQOBSV9BMriJshN1eQ9KF";
 
-    public void requestChatting(String clickTable, String get_id, String message) {
+    public void requestChatting(String clickTable, String get_id, String ticket, String message) {
         DatabaseReference mRootRef = FirebaseDatabase.getInstance().getReference();
         mRootRef.child(clickTable).child("fcmToken").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -48,6 +48,7 @@ public class SendNotification {
                     notification.put("title", get_id);
                     notification.put("body", get_id + message);
                     notification.put("clickTable", clickTable);
+                    notification.put("ticket", ticket);
 
                     RequestBody formBody = new FormBody.Builder().
                             add("to",pushToken).

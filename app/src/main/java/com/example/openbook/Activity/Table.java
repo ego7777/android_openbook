@@ -2,6 +2,7 @@ package com.example.openbook.Activity;
 
 import android.app.Dialog;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -18,6 +19,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.openbook.Adapter.TableAdapter;
+import com.example.openbook.BlurImage;
 import com.example.openbook.Chatting.ChattingUI;
 import com.example.openbook.DialogCustom;
 import com.example.openbook.ImageLoadTask;
@@ -67,6 +69,7 @@ public class Table extends AppCompatActivity {
     String get_id;
     boolean chattingAgree = false;
     boolean orderCk = false;
+    String ticket = "noTicket";
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -76,6 +79,9 @@ public class Table extends AppCompatActivity {
         get_id = getIntent().getStringExtra("id");
         orderCk = getIntent().getBooleanExtra("orderCk", false);
         Log.d(TAG, "orderCk :" + orderCk);
+
+        ticket = getIntent().getStringExtra("profileTicket");
+        Log.d(TAG, "profileTicket" + ticket);
 
         TextView table_num = findViewById(R.id.table_number);
         table_num.setText(get_id);
@@ -279,16 +285,6 @@ public class Table extends AppCompatActivity {
                 dlg.setContentView(R.layout.table_infomation);
                 dlg.show();
 
-                /**
-                 * 사진을 누르면 돈내고 사진 깔거냐고 물어보기
-                 */
-
-                if(true){
-                    //진짜 사진을 조회해서 보여주고
-                }else {
-                    //결제해서 오픈하도록 유도
-                }
-
 
                 ImageView table_info_img = dlg.findViewById(R.id.table_info_img);
                 TextView statement = dlg.findViewById(R.id.statement);
@@ -338,8 +334,17 @@ public class Table extends AppCompatActivity {
                                                     + jsonObject.getString("img");
                                             Log.d(TAG, "url :" + url);
 
-                                            ImageLoadTask task = new ImageLoadTask(url,table_info_img);
+                                            /**
+                                             * 사진을 누르면 돈내고 사진 깔거냐고 물어보기
+                                             */
+
+
+                                            ImageLoadTask task = new ImageLoadTask(Table.this, true, url,table_info_img);
+
+
+
                                             task.execute();
+
                                             statement.setText(jsonObject.getString("statement"));
                                             table_info_gender.setText(jsonObject.getString("gender"));
                                             table_info_member.setText(jsonObject.getString("guestNum"));
@@ -380,8 +385,21 @@ public class Table extends AppCompatActivity {
                                             JSONObject jsonObject = new JSONObject(body);
 
                                             String url = "http://3.36.255.141/image/"+ jsonObject.getString("img");
-                                            ImageLoadTask task = new ImageLoadTask(url,table_info_img);
+
+
+                                            ImageLoadTask task;
+
+                                            Log.d(TAG, "ticket :" + ticket);
+
+
+                                            task = new ImageLoadTask(Table.this, false, url,table_info_img);
+                                            Log.d(TAG, "아 제발 진짜 왜그래 :" + ticket);
+
+
+//                                            ImageLoadTask task = new ImageLoadTask(Table.this, true,url,table_info_img);
                                             task.execute();
+
+
                                             statement.setText(jsonObject.getString("statement"));
                                             table_info_gender.setText(jsonObject.getString("gender"));
                                             table_info_member.setText(jsonObject.getString("guestNum"));
@@ -398,6 +416,20 @@ public class Table extends AppCompatActivity {
                     });
 
                 }
+
+
+                /**
+                 * 이미지 클릭시 조회권 구매하기
+                 */
+                table_info_img.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                       //팝업이 나오고
+                        alertDialog.buyProfileTicket(Table.this,
+                               "프로필 조회권을 구매하시겠습니까?\n** 프로필 조회권 2000원",
+                               get_id);
+                    }
+                });
 
                 table_info_close.setOnClickListener(new View.OnClickListener() {
                     @Override

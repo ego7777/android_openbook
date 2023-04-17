@@ -96,14 +96,17 @@ public class FCM extends FirebaseMessagingService {
             Log.d(TAG, "onMessageReceived title: " + message.getData().get("title"));
             Log.d(TAG, "onMessageReceived body: " + message.getData().get("body"));
             Log.d(TAG, "onMessageReceived clickTable: " +message.getData().get("clickTable"));
-
+            Log.d(TAG, "onMessageReceived ticket :" + message.getData().get("ticket"));
 
             Handler mHandler = new Handler(Looper.getMainLooper());
             mHandler.postDelayed(new Runnable() {
                 @RequiresApi(api = Build.VERSION_CODES.Q)
                 @Override
                 public void run() {
-                    showData(message.getData().get("title"), message.getData().get("body"), message.getData().get("clickTable"));
+                    showData(message.getData().get("title"),
+                            message.getData().get("body"),
+                            message.getData().get("clickTable"),
+                            message.getData().get("ticket"));
                 }
             },0);
 
@@ -117,12 +120,16 @@ public class FCM extends FirebaseMessagingService {
 
 
     @RequiresApi(api = Build.VERSION_CODES.Q)
-    public void showData(String title, String body, String clickTable){
+    public void showData(String title, String body, String clickTable, String ticket){
         //popupActivity를 만들어서 띄우자
         Intent intent = new Intent(this, PopUp.class);
         intent.putExtra("notificationTitle", title);
         intent.putExtra("notificationBody", body);
         intent.putExtra("notificationClickTable", clickTable);
+        if(ticket == "yesTicket"){
+            intent.putExtra("profileTicket", ticket);
+        }
+
 
 
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);

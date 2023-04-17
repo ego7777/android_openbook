@@ -52,7 +52,7 @@ public class Client extends AppCompatActivity {
     final int port = 7777;
     final String host = "3.36.255.141";
 
-    static SocketClient client;
+    SocketClient client;
 
     Handler mMainHandler;
 
@@ -61,7 +61,8 @@ public class Client extends AppCompatActivity {
     HandlerThread thread;
 
 
-    Socket socket;
+    static Socket socket;
+
     BufferedReader networkReader = null;
     BufferedWriter networkWrite = null;
 
@@ -70,7 +71,7 @@ public class Client extends AppCompatActivity {
 
 
     public static final int MSG_CONNECT = 1;
-    public static final int MSG_RECEIVE = 2;
+    public static final int MSG_RECONNECT = 2;
     public static final int MSG_SEND = 3;
     public static final int MSG_CLIENT_STOP = 4;
     public static final int MSG_SERVER_STOP = 5;
@@ -78,8 +79,10 @@ public class Client extends AppCompatActivity {
 
     String get_id;
     int table_num;
+    String ticket;
     String time;
     boolean chattingAgree = false;
+
 
     ChattingAdapter chattingAdapter;
     RecyclerView chatting_view;
@@ -103,7 +106,8 @@ public class Client extends AppCompatActivity {
         table_num = getIntent().getIntExtra("tableNumber",0);
         get_id = getIntent().getStringExtra("id");
         chattingAgree = getIntent().getBooleanExtra("chattingAgree", false);
-        Log.d(TAG, "chattingAgree :" + chattingAgree);
+        ticket = getIntent().getStringExtra("profileTicket");
+        Log.d(TAG, "profileTicket :" + ticket);
 
         version ++;
 
@@ -154,6 +158,7 @@ public class Client extends AppCompatActivity {
          */
         chatting_view = findViewById(R.id.chatting_recyclerview);
         chattingAdapter = new ChattingAdapter();
+
         chatting_view.setLayoutManager(new LinearLayoutManager(Client.this, RecyclerView.VERTICAL, false));
         chatting_view.setAdapter(chattingAdapter);
 
@@ -180,10 +185,12 @@ public class Client extends AppCompatActivity {
             }
         }
 
-        Log.d(TAG, "getSenderData : " + res.toString());
+        Log.d(TAG, "list 사이즈 : " + chatLists.size());
 
         chattingAdapter.setAdapterItem(chatLists);
+
         chatting_view.scrollToPosition(chatLists.size());
+
 
 
 
@@ -213,6 +220,10 @@ public class Client extends AppCompatActivity {
                 switch (msg.what){
                     case MSG_CONNECT:
                         m = "정상적으로 서버에 접속하였습니다.";
+                        break;
+
+                    case MSG_RECONNECT:
+                        m = "새로운 소켓을 생성하였습니다";
                         break;
 
                     case MSG_CLIENT_STOP:
@@ -274,7 +285,8 @@ public class Client extends AppCompatActivity {
          * client.class에 들어오면 바로 소켓 연결
          */
 
-            if(client == null) {
+            if(socket == null) {
+                Log.d(TAG, "null이란다");
                 try {
                     client = new SocketClient(host, port);
                     client.start();
@@ -283,9 +295,10 @@ public class Client extends AppCompatActivity {
                     Log.d(TAG, "IP주소나 포트 번호가 잘못되었습니다.");
                     Log.d(TAG, "RuntimeException : " + e);
                 }
+            }else{
+                Log.d(TAG, "소켓은 그대로 있단다 아이야");
             }
-
-
+            
 
         /**
          * 보내기 버튼 누르면 상대방 채팅방에도 보내는 것으로...!!!
@@ -294,7 +307,7 @@ public class Client extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                if(chat_edit.getText().toString() != null){
+                if(!chat_edit.getText().toString().trim().isEmpty()){
                     //핸들러로부터 메세지를 하나 반환받는다
                     Message msg = mServiceHandler.obtainMessage();
                     msg.what = MSG_SEND;
@@ -318,14 +331,47 @@ public class Client extends AppCompatActivity {
                 intent.putExtra("id", get_id);
                 intent.putExtra("orderCk", true);
                 intent.putExtra("chattingAgree", chattingAgree);
-                Log.d(TAG, "intent chattingAgree :" + chattingAgree);
-//                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                intent.putExtra("profileTicket", ticket);
+                Log.d(TAG, "profileTicket :" + ticket);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 startActivity(intent);
             }
         });
 
 
     }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        boolean tlqkf;
+        if(client == null){
+            tlqkf = true;
+        }else{
+            tlqkf = false;
+        }
+        Log.d(TAG, "onStart_client null or not :" + tlqkf);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d(TAG, "onResume: ");
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        Log.d(TAG, "onStop: ");
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d(TAG, "onPause: ");
+    }
+
 
 
     class ServiceHandler extends Handler{
@@ -388,9 +434,11 @@ public class Client extends AppCompatActivity {
             //
             try {
                 //1. 클라이언트 소켓생성
-                Socket socket = new Socket();
+                socket = new Socket();
+                Log.d(TAG, "socket");
                 socket.setSoTimeout(connection_timeout);
                 socket.setSoLinger(true, connection_timeout);
+
 
 
                 /* 2. 소켓 커넥트
@@ -560,20 +608,20 @@ public class Client extends AppCompatActivity {
 
     } //SocketClient class
 
-    public void quit(){
-        loop =false;
-        try{
-            if(socket != null){
+    public void quit() {
+        loop = false;
+        try {
+            if (socket != null) {
                 socket.close();
                 socket = null;
             }
 
-//            Message toMain = mMainHandler.obtainMessage();
-//            toMain.what = MSG_CLIENT_STOP;
-//            toMain.obj = "접속을 중단합니다.";
-//            mMainHandler.sendMessage(toMain);
+            Message toMain = mMainHandler.obtainMessage();
+            toMain.what = MSG_CLIENT_STOP;
+            toMain.obj = "접속을 중단합니다.";
+            mMainHandler.sendMessage(toMain);
 
-        }catch (IOException e){
+        } catch (IOException e) {
             Log.d(TAG, "quit: e" + e);
         }
     }
