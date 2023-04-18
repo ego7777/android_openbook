@@ -264,7 +264,7 @@ public class Menu extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(getApplicationContext(), Table.class);
-                intent.putExtra("id", get_id);
+                intent.putExtra("get_id", get_id);
                 intent.putExtra("orderCk", orderCk);
                 intent.putExtra("chattingAgree", chattingAgree);
 //                intent.putExtra("clientSocket", clientSocket);

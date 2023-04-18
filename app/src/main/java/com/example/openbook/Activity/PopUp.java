@@ -15,7 +15,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
-import com.example.openbook.Chatting.ChattingUI;
 import com.example.openbook.Chatting.Client;
 import com.example.openbook.FCMclass.SendNotification;
 import com.example.openbook.R;
@@ -42,6 +41,7 @@ public class PopUp extends Activity {
     String get_id;
     int tableNumber;
     boolean agree = false;
+
     String title;
     String body;
     String ticket;
@@ -57,14 +57,33 @@ public class PopUp extends Activity {
         TextView popup_body = findViewById(R.id.popup_body);
 
         title = getIntent().getStringExtra("notificationTitle");
+
+
+        if(title == null){
+            title = getIntent().getStringExtra("title");
+            Log.d(TAG, "title :" + title);
+        }else{
+            tableNumber = Integer.parseInt(title.replace("table", ""));
+        }
+
         body = getIntent().getStringExtra("notificationBody");
+
+        if(body == null){
+            body = getIntent().getStringExtra("body");
+            Log.d(TAG, "body :" + body);
+        }
+
         get_id = getIntent().getStringExtra("notificationClickTable");
+
+        if(get_id == null){
+            get_id = getIntent().getStringExtra("get_id");
+            Log.d(TAG, "get_id :" + get_id);
+        }
         ticket = getIntent().getStringExtra("profileTicket");
 
         popup_title.setText(title);
         popup_body.setText(body);
 
-        tableNumber = Integer.parseInt(title.replace("table", ""));
 
     }
 
@@ -86,7 +105,7 @@ public class PopUp extends Activity {
 
                     //json으로 만들어서 db에 넣자
                     RequestBody formBody = new FormBody.Builder()
-                            .add("json", json(get_id, json(title, get_id)))
+                            .add("json", json(get_id, "ticket"))
                             .build();
 
                     Request request = new Request.Builder()
@@ -147,6 +166,47 @@ public class PopUp extends Activity {
                 }
             });
 
+        }else if(body.contains("프로필")){
+            popup_yes.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    RequestBody formBody = new FormBody.Builder()
+                            .add("json", json(get_id, "anything"))
+                            .build();
+
+                    Request request = new Request.Builder()
+                            .url("http://3.36.255.141/saveOrder.php")
+                            .post(formBody)
+                            .build();
+
+                    final OkHttpClient client = new OkHttpClient();
+
+                    client.newCall(request).enqueue(new Callback() {
+                        @Override
+                        public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                            Log.d(TAG, "onFailure: " + e);
+                        }
+
+                        @Override
+                        public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                            String body = response.body().string();
+
+                            Log.d(TAG, "onResponse: " + body);
+                            if(body.equals("주문완료")){
+                                ticket = "yesTicket";
+                                Intent intent = new Intent(PopUp.this, Table.class);
+                                intent.putExtra("profileTicket", ticket);
+                                intent.putExtra("get_id", get_id);
+
+//                                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                startActivity(intent);
+                                finish();
+                            }
+                        }
+                    });
+
+                }
+            });
         }
 
 
@@ -179,27 +239,30 @@ public class PopUp extends Activity {
         return;
     }
 
-    public String json(String tableName,  String ticket){
+    public String json(String tableName, String ticket){
+
         JSONObject obj = new JSONObject();
         try {
+            JSONArray jArray = new JSONArray();//배열이 필요할때
 
             JSONObject sObject = new JSONObject();//배열 내에 들어갈 json
+
             sObject.put("menu", "ticket");
             sObject.put("price", 2000);
             sObject.put("number", 1);
             sObject.put("ticket", ticket);
-
+            jArray.put(sObject);
 
             obj.put("table", tableName);
             obj.put("orderTime", getTime());
-            obj.put("item", sObject);//배열을 넣음
+            obj.put("item", jArray);//배열을 넣음
 
             Log.d(TAG, "getJson: " + obj.toString());
+
         } catch (JSONException e) {
             e.printStackTrace();
         }
-
-        return  obj.toString();
+        return obj.toString();
     }
 
     public String getTime() {

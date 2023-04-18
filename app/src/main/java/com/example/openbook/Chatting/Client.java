@@ -278,9 +278,6 @@ public class Client extends AppCompatActivity {
 
 
 
-
-
-
         /**
          * client.class에 들어오면 바로 소켓 연결
          */

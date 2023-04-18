@@ -6,12 +6,14 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Handler;
 import android.util.Log;
+import android.view.MotionEvent;
 
 import androidx.annotation.NonNull;
 
 import com.example.openbook.Activity.Table;
 import com.example.openbook.FCMclass.SendNotification;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -30,6 +32,12 @@ import okhttp3.Response;
 public class DialogCustom {
 
     String TAG = "DialogCustom";
+    String ticket;
+
+    public String getTicket() {
+        return ticket;
+    }
+
 
 
     public void showAlertDialog(Context context, String message){
@@ -80,7 +88,7 @@ public class DialogCustom {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         Intent intent = new Intent(context, Table.class);
-                        intent.putExtra("id", id);
+                        intent.putExtra("get_id", id);
                         intent.putExtra("orderCk", orderCk);
                         context.startActivity(intent);
                     }
@@ -187,7 +195,13 @@ public class DialogCustom {
                             @Override
                             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                                 String body = response.body().string();
+
                                 Log.d(TAG, "onResponse: " + body);
+                                if(body.equals("주문완료")){
+                                    ticket = "yesTicket";
+
+                                    Log.d(TAG, "Dialog ticket :"+ticket);
+                                }
                             }
                         });
                         dialog.dismiss();
@@ -195,29 +209,35 @@ public class DialogCustom {
                 });
         AlertDialog alertDialog = builder.create();
         alertDialog.show();
+
     }
 
+
+
     public String json(String tableName){
+
         JSONObject obj = new JSONObject();
         try {
+            JSONArray jArray = new JSONArray();//배열이 필요할때
 
             JSONObject sObject = new JSONObject();//배열 내에 들어갈 json
+
             sObject.put("menu", "ticket");
             sObject.put("price", 2000);
             sObject.put("number", 1);
             sObject.put("ticket", "anything");
-
+            jArray.put(sObject);
 
             obj.put("table", tableName);
             obj.put("orderTime", getTime());
-            obj.put("item", sObject);//배열을 넣음
+            obj.put("item", jArray);//배열을 넣음
 
             Log.d(TAG, "getJson: " + obj.toString());
+
         } catch (JSONException e) {
             e.printStackTrace();
         }
-
-        return  obj.toString();
+        return obj.toString();
     }
 
     public String getTime() {
@@ -228,6 +248,7 @@ public class DialogCustom {
 
         return getTime;
     }
+
 
 
 }

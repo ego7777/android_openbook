@@ -50,8 +50,11 @@
             android:name=".Chatting.Client"
             android:windowSoftInputMode="adjustResize" />
         <activity android:name=".Chatting.ChattingUI" />
+
         <activity android:name=".Activity.PopUp"
             android:theme="@android:style/Theme.Dialog"/>
+
+
         <activity android:name=".Activity.ManagerChannel"/>
 
     </application>

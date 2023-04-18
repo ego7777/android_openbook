@@ -2,7 +2,6 @@ package com.example.openbook.Activity;
 
 import android.app.Dialog;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -19,7 +18,6 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.openbook.Adapter.TableAdapter;
-import com.example.openbook.BlurImage;
 import com.example.openbook.Chatting.ChattingUI;
 import com.example.openbook.DialogCustom;
 import com.example.openbook.ImageLoadTask;
@@ -69,14 +67,16 @@ public class Table extends AppCompatActivity {
     String get_id;
     boolean chattingAgree = false;
     boolean orderCk = false;
-    String ticket = "noTicket";
+    String ticket;
+    ImageLoadTask task ;
+    String url;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.table);
 
-        get_id = getIntent().getStringExtra("id");
+        get_id = getIntent().getStringExtra("get_id");
         orderCk = getIntent().getBooleanExtra("orderCk", false);
         Log.d(TAG, "orderCk :" + orderCk);
 
@@ -130,6 +130,7 @@ public class Table extends AppCompatActivity {
 
         chatting = findViewById(R.id.chatting);
         info = findViewById(R.id.take_info);
+
     } //onCreate
 
     @Override
@@ -138,6 +139,7 @@ public class Table extends AppCompatActivity {
         Log.d(TAG, "onStart: ");
 
         chattingAgree = getIntent().getBooleanExtra("chattingAgree", false);
+
 
 //        myTable = Integer.parseInt(get_id.replace("table", ""));
 
@@ -281,19 +283,30 @@ public class Table extends AppCompatActivity {
         info.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
+
+//                Intent intent = new Intent(Table.this, TableInformationPopUp.class);
+//                intent.putExtra("myTable", myTable);
+//                intent.putExtra("clickTable", clickTable);
+//                startActivity(intent);
+
+
+
+
                 Dialog dlg = new Dialog(Table.this);
                 dlg.setContentView(R.layout.table_infomation);
                 dlg.show();
 
 
                 ImageView table_info_img = dlg.findViewById(R.id.table_info_img);
+                TextView table_info_text = dlg.findViewById(R.id.table_info_text);
                 TextView statement = dlg.findViewById(R.id.statement);
                 TextView table_info_gender = dlg.findViewById(R.id.table_info_gender);
                 TextView table_info_member = dlg.findViewById(R.id.table_info_member);
                 TextView table_info_close = dlg.findViewById(R.id.table_info_close);
 
 
-                // GET 요청 객체 생성
+//                 GET 요청 객체 생성
                 Request.Builder builder = new Request.Builder()
                         .url("http://3.36.255.141/tableInfoCk.php")
                         .get();
@@ -301,6 +314,8 @@ public class Table extends AppCompatActivity {
                 builder.addHeader("table", "table"+clickTable);
                 Request request = builder.build();
                 Log.d(TAG, "request :" + request);
+
+
 
                 if(clickTable == myTable){
                     /**
@@ -314,6 +329,7 @@ public class Table extends AppCompatActivity {
 
                         @Override
                         public void onResponse(@NonNull Call call, @NonNull Response response) {
+
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
@@ -334,20 +350,12 @@ public class Table extends AppCompatActivity {
                                                     + jsonObject.getString("img");
                                             Log.d(TAG, "url :" + url);
 
-                                            /**
-                                             * 사진을 누르면 돈내고 사진 깔거냐고 물어보기
-                                             */
 
-
-                                            ImageLoadTask task = new ImageLoadTask(Table.this, true, url,table_info_img);
-
-
-
-                                            task.execute();
 
                                             statement.setText(jsonObject.getString("statement"));
                                             table_info_gender.setText(jsonObject.getString("gender"));
                                             table_info_member.setText(jsonObject.getString("guestNum"));
+
 
                                         }//if-else문
 
@@ -384,20 +392,22 @@ public class Table extends AppCompatActivity {
                                         }else if(body.startsWith("{")){
                                             JSONObject jsonObject = new JSONObject(body);
 
-                                            String url = "http://3.36.255.141/image/"+ jsonObject.getString("img");
+                                            url = "http://3.36.255.141/image/"+ jsonObject.getString("img");
 
+                                            Log.d(TAG, "url :" + url);
+                                            Log.d(TAG, "first ticket :" + ticket);
 
-                                            ImageLoadTask task;
+                                            if(ticket == null){
+                                                task = new ImageLoadTask(Table.this, false, url,table_info_img);
+                                                task.execute();
 
-                                            Log.d(TAG, "ticket :" + ticket);
+                                            }else if(ticket.equals("yesTicket")){
+                                                task = new ImageLoadTask(Table.this, true, url,table_info_img);
+                                                task.execute();
+                                                table_info_text.setVisibility(View.INVISIBLE);
+                                                table_info_img.setClickable(false);
+                                            }
 
-
-                                            task = new ImageLoadTask(Table.this, false, url,table_info_img);
-                                            Log.d(TAG, "아 제발 진짜 왜그래 :" + ticket);
-
-
-//                                            ImageLoadTask task = new ImageLoadTask(Table.this, true,url,table_info_img);
-                                            task.execute();
 
 
                                             statement.setText(jsonObject.getString("statement"));
@@ -415,21 +425,44 @@ public class Table extends AppCompatActivity {
                         }
                     });
 
-                }
-
+                } // else문 끝
 
                 /**
-                 * 이미지 클릭시 조회권 구매하기
+                 * 사진을 누르면 돈내고 사진 깔거냐고 물어보기
                  */
+
                 table_info_img.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                       //팝업이 나오고
-                        alertDialog.buyProfileTicket(Table.this,
-                               "프로필 조회권을 구매하시겠습니까?\n** 프로필 조회권 2000원",
-                               get_id);
+
+                        Log.d(TAG, "ticket :" + ticket);
+
+
+
+                        if(ticket == null){
+                            task = new ImageLoadTask(Table.this, false, url,table_info_img);
+                            task.execute();
+                            Log.d(TAG, "블러 처리 되었슴다");
+
+                            Intent intent = new Intent(Table.this, PopUp.class);
+                            intent.putExtra("title", "프로필 조회권 구매");
+                            intent.putExtra("body", "프로필 조회권을 구매하시겠습니까?\n** 프로필 조회권 2000원");
+                            intent.putExtra("get_id", get_id);
+                            startActivity(intent);
+                            dlg.dismiss();
+
+                        }else if(ticket.equals("yesTicket")){
+                            task = new ImageLoadTask(Table.this, true, url, table_info_img);
+                            task.execute();
+                            Log.d(TAG, "로드 되었슴다");
+
+                            table_info_text.setVisibility(View.INVISIBLE);
+
+                        }
                     }
                 });
+
+
 
                 table_info_close.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -440,7 +473,7 @@ public class Table extends AppCompatActivity {
 
 
             }
-        });
+        }); //info-click
 
     } //onResume
 
