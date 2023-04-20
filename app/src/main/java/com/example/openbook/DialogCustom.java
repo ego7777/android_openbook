@@ -131,6 +131,8 @@ public class DialogCustom {
                                         SendNotification sendNotification = new SendNotification();
                                         sendNotification.requestChatting(clickTable, get_id,"yesTicket",
                                                 "에서 채팅을 요청하였습니다. 수락하시겠습니까?\n** 프로필 오픈 티켓 동봉 **");
+                                        // 여기서 realtimeBase로 바로 넣어서 조회하기...!?!??
+                                        //sendNotification class에서 저장하고, table.class에서 조회해서 까보기..!!!!!
                                         dialog.dismiss();
                                     }
                                 })

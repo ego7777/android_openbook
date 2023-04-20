@@ -36,9 +36,6 @@ import com.example.openbook.R;
 import com.example.openbook.View.CartList;
 import com.example.openbook.View.MenuList;
 import com.example.openbook.View.SideList;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.messaging.FirebaseMessaging;
 
 
 import org.json.JSONArray;
@@ -71,6 +68,7 @@ public class Menu extends AppCompatActivity {
 
     ArrayList<MenuList> menuLists;
     ArrayList<CartList> cartLists;
+    ArrayList<Integer> ticketList;
 
     SharedPreferences pref;
     SharedPreferences.Editor editor;
@@ -94,7 +92,12 @@ public class Menu extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.menu2);
 
-        get_id = getIntent().getStringExtra("id");
+        get_id = getIntent().getStringExtra("get_id");
+        orderCk = getIntent().getBooleanExtra("orderCk", false);
+        ticketList = getIntent().getIntegerArrayListExtra("ticketList");
+        Log.d(TAG, "onCreate_ticketList :" + ticketList);
+
+
 
 
         /**
@@ -113,7 +116,7 @@ public class Menu extends AppCompatActivity {
 
         chattingAgree = getIntent().getBooleanExtra("chattingAgree", false);
 
-        if (get_id.length() > 0) {
+        if(get_id.length() > 0) {
             table_number.setText(get_id);
         } else {
             table_number.setText(get_id);
@@ -267,6 +270,7 @@ public class Menu extends AppCompatActivity {
                 intent.putExtra("get_id", get_id);
                 intent.putExtra("orderCk", orderCk);
                 intent.putExtra("chattingAgree", chattingAgree);
+                intent.putIntegerArrayListExtra("ticketList", ticketList);
 //                intent.putExtra("clientSocket", clientSocket);
                 startActivity(intent);
             }

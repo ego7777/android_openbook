@@ -207,7 +207,7 @@ public class Login extends AppCompatActivity {
 //                                                editor.putString("cookie", cookie);
 //                                                editor.commit();
 
-                                                startActivityString(Menu.class, "id", local_id);
+                                                startActivityString(Menu.class, "get_id", local_id);
                                             }
                                         }
                                     } catch (Exception e) {
@@ -357,7 +357,7 @@ public class Login extends AppCompatActivity {
                                         if (responseData.equals("성공")) {
                                             Toast.makeText(getApplicationContext(), "로그인에 성공했습니다.", Toast.LENGTH_LONG).show();
                                             Intent intent = new Intent(Login.this, Main.class);
-                                            intent.putExtra("id", local_id);
+                                            intent.putExtra("get_id", local_id);
                                             startActivity(intent);
                                             Log.d(TAG, "run: 4");
                                         } else {
@@ -417,7 +417,7 @@ public class Login extends AppCompatActivity {
         }else{
             Log.d(TAG, "이미 로그인 중입니다.");
             Intent intent = new Intent(Login.this, Main.class);
-            intent.putExtra("id", local_id);
+            intent.putExtra("get_id", local_id);
             Log.d(TAG, "onStart: local_id " + local_id);
             startActivity(intent);
         }

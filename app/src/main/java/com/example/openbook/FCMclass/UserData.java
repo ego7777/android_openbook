@@ -6,7 +6,7 @@ public class UserData {
 
     public String userID;
     public String fcmToken;
-//    public int chattingRequest;
+    public int ticket;
 
 
     public String getUserID() {

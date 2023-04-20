@@ -44,6 +44,7 @@ import okhttp3.Response;
 public class Table extends AppCompatActivity {
 
     ArrayList<TableList> tableList;
+    ArrayList<Integer> ticketList;
 
     String TAG = "TableTAG";
 
@@ -67,7 +68,7 @@ public class Table extends AppCompatActivity {
     String get_id;
     boolean chattingAgree = false;
     boolean orderCk = false;
-    String ticket;
+
     ImageLoadTask task ;
     String url;
 
@@ -80,8 +81,13 @@ public class Table extends AppCompatActivity {
         orderCk = getIntent().getBooleanExtra("orderCk", false);
         Log.d(TAG, "orderCk :" + orderCk);
 
-        ticket = getIntent().getStringExtra("profileTicket");
-        Log.d(TAG, "profileTicket" + ticket);
+        ticketList = getIntent().getIntegerArrayListExtra("ticketList");
+        Log.d(TAG, "ticketList :" + ticketList);
+
+        if(ticketList == null){
+            ticketList = new ArrayList();
+            Log.d(TAG, "onCreate ticketList");
+        }
 
         TextView table_num = findViewById(R.id.table_number);
         table_num.setText(get_id);
@@ -136,7 +142,7 @@ public class Table extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        Log.d(TAG, "onStart: ");
+//        Log.d(TAG, "onStart: ");
 
         chattingAgree = getIntent().getBooleanExtra("chattingAgree", false);
 
@@ -174,7 +180,12 @@ public class Table extends AppCompatActivity {
         menu.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                finish();
+                Intent intent = new Intent(Table.this, Menu.class);
+                intent.putExtra("get_id", get_id);
+                intent.putExtra("orderCk", orderCk);
+                intent.putExtra("ticketList", ticketList);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
 
             }
         });
@@ -257,6 +268,7 @@ public class Table extends AppCompatActivity {
                                 intent.putExtra("tableNumber", clickTable);
                                 intent.putExtra("id", get_id);
                                 intent.putExtra("chattingAgree", chattingAgree);
+                                intent.putExtra("ticketList", ticketList);
                                 startActivity(intent);
                             }
 
@@ -283,15 +295,6 @@ public class Table extends AppCompatActivity {
         info.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
-
-//                Intent intent = new Intent(Table.this, TableInformationPopUp.class);
-//                intent.putExtra("myTable", myTable);
-//                intent.putExtra("clickTable", clickTable);
-//                startActivity(intent);
-
-
-
 
                 Dialog dlg = new Dialog(Table.this);
                 dlg.setContentView(R.layout.table_infomation);
@@ -395,17 +398,33 @@ public class Table extends AppCompatActivity {
                                             url = "http://3.36.255.141/image/"+ jsonObject.getString("img");
 
                                             Log.d(TAG, "url :" + url);
-                                            Log.d(TAG, "first ticket :" + ticket);
 
-                                            if(ticket == null){
-                                                task = new ImageLoadTask(Table.this, false, url,table_info_img);
+
+
+                                            if(ticketList == null || ticketList.isEmpty()){
+
+                                                Log.d(TAG, "팝업 안에서 발생 null");
+                                                task = new ImageLoadTask(Table.this, false, url, table_info_img);
                                                 task.execute();
 
-                                            }else if(ticket.equals("yesTicket")){
-                                                task = new ImageLoadTask(Table.this, true, url,table_info_img);
-                                                task.execute();
-                                                table_info_text.setVisibility(View.INVISIBLE);
-                                                table_info_img.setClickable(false);
+//
+                                            }else{
+
+                                                for(int i=0; i<ticketList.size(); i++){
+                                                    if(ticketList.get(i) == clickTable){
+                                                        Log.d(TAG, "팝업 안에서 발생 arrayList");
+                                                        task = new ImageLoadTask(Table.this, true, url,table_info_img);
+                                                        task.execute();
+                                                        table_info_text.setVisibility(View.INVISIBLE);
+                                                        table_info_img.setClickable(false);
+                                                    }else{
+                                                        task = new ImageLoadTask(Table.this, false, url,table_info_img);
+                                                        task.execute();
+                                                    }
+
+                                                }
+
+
                                             }
 
 
@@ -435,30 +454,17 @@ public class Table extends AppCompatActivity {
                     @Override
                     public void onClick(View v) {
 
-                        Log.d(TAG, "ticket :" + ticket);
+                        task = new ImageLoadTask(Table.this, false, url,table_info_img);
+                        task.execute();
+                        Log.d(TAG, "블러 처리 되었슴다");
 
-
-
-                        if(ticket == null){
-                            task = new ImageLoadTask(Table.this, false, url,table_info_img);
-                            task.execute();
-                            Log.d(TAG, "블러 처리 되었슴다");
-
-                            Intent intent = new Intent(Table.this, PopUp.class);
-                            intent.putExtra("title", "프로필 조회권 구매");
-                            intent.putExtra("body", "프로필 조회권을 구매하시겠습니까?\n** 프로필 조회권 2000원");
-                            intent.putExtra("get_id", get_id);
-                            startActivity(intent);
-                            dlg.dismiss();
-
-                        }else if(ticket.equals("yesTicket")){
-                            task = new ImageLoadTask(Table.this, true, url, table_info_img);
-                            task.execute();
-                            Log.d(TAG, "로드 되었슴다");
-
-                            table_info_text.setVisibility(View.INVISIBLE);
-
-                        }
+                        Intent intent = new Intent(Table.this, PopUp.class);
+                        intent.putExtra("title", "프로필 조회권 구매");
+                        intent.putExtra("body", "프로필 조회권을 구매하시겠습니까?\n** 프로필 조회권 2000원");
+                        intent.putExtra("get_id", get_id);
+                        intent.putExtra("clickTable", clickTable);
+                        startActivity(intent);
+                        dlg.dismiss();
                     }
                 });
 
@@ -530,7 +536,7 @@ public class Table extends AppCompatActivity {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                Log.d(TAG, "list :" + Arrays.toString(list));
+//                Log.d(TAG, "list :" + Arrays.toString(list));
 
 
                 runOnUiThread(new Runnable() {

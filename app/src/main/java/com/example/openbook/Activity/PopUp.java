@@ -25,7 +25,11 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -44,7 +48,9 @@ public class PopUp extends Activity {
 
     String title;
     String body;
-    String ticket;
+    int clickTable;
+
+    ArrayList<Integer> ticketList;
 
 
     @Override
@@ -79,7 +85,10 @@ public class PopUp extends Activity {
             get_id = getIntent().getStringExtra("get_id");
             Log.d(TAG, "get_id :" + get_id);
         }
-        ticket = getIntent().getStringExtra("profileTicket");
+
+        ticketList = new ArrayList<>();
+        clickTable = getIntent().getIntExtra("clickTable", 0);
+        Log.d(TAG, "clickTable :" + "table"+clickTable);
 
         popup_title.setText(title);
         popup_body.setText(body);
@@ -93,6 +102,7 @@ public class PopUp extends Activity {
         super.onResume();
 
         Button popup_yes = findViewById(R.id.popup_button_yes);
+        Button popup_no = findViewById(R.id.popup_button_no);
 
 
         if(body.contains("요청")){
@@ -136,18 +146,30 @@ public class PopUp extends Activity {
                     agree = true;
 //                    Intent intent = new Intent(PopUp.this, ChattingUI.class);
                     Intent intent = new Intent(PopUp.this, Client.class);
-
-
                     intent.putExtra("id", get_id);
                     intent.putExtra("tableNumber", tableNumber);
                     intent.putExtra("chattingAgree", agree);
-                    intent.putExtra("profileTicket", ticket);
+//                    intent.putExtra("profileTicket", ticket);
                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                     startActivity(intent);
                     finish();
 
                 }
             });
+
+
+            popup_no.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    /**
+                     * 해당 테이블에 요청 못하게 막기
+                     */
+                }
+            });
+
+
+
+
         }else if(body.contains("수락")){
             popup_yes.setOnClickListener(new View.OnClickListener() {
                 @RequiresApi(api = Build.VERSION_CODES.O)
@@ -170,6 +192,7 @@ public class PopUp extends Activity {
             popup_yes.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    Log.d(TAG, "yes click");
                     RequestBody formBody = new FormBody.Builder()
                             .add("json", json(get_id, "anything"))
                             .build();
@@ -193,9 +216,11 @@ public class PopUp extends Activity {
 
                             Log.d(TAG, "onResponse: " + body);
                             if(body.equals("주문완료")){
-                                ticket = "yesTicket";
+                                ticketList.add(clickTable);
+                                Log.d(TAG, "onResponse ticket add :" + Arrays.asList(ticketList).toString());
+
                                 Intent intent = new Intent(PopUp.this, Table.class);
-                                intent.putExtra("profileTicket", ticket);
+                                intent.putIntegerArrayListExtra("ticketList", ticketList);
                                 intent.putExtra("get_id", get_id);
 
 //                                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -211,10 +236,13 @@ public class PopUp extends Activity {
 
 
 
-        Button popup_no = findViewById(R.id.popup_button_no);
+
         popup_no.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                /**
+                 * 해당 테이블에 요청 못하게 막기
+                 */
                 agree = false;
                 finish();
             }
