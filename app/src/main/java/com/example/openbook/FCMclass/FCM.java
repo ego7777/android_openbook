@@ -125,6 +125,7 @@ public class FCM extends FirebaseMessagingService {
         intent.putExtra("notificationTitle", title);
         intent.putExtra("notificationBody", body);
         intent.putExtra("notificationClickTable", clickTable);
+
         if(ticket == "yesTicket"){
             intent.putExtra("profileTicket", ticket);
         }

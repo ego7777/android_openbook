@@ -25,6 +25,7 @@ import com.example.openbook.Activity.Table;
 import com.example.openbook.Adapter.ChattingAdapter;
 import com.example.openbook.Activity.Menu;
 import com.example.openbook.R;
+import com.example.openbook.TableInformation;
 import com.example.openbook.View.ChattingList;
 
 
@@ -33,7 +34,6 @@ import java.io.BufferedWriter;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.InterruptedIOException;
 import java.io.OutputStreamWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -41,18 +41,20 @@ import java.net.SocketAddress;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 @RequiresApi(api = Build.VERSION_CODES.O)
 public class Client extends AppCompatActivity {
 
     ArrayList<ChattingList> chatLists;
-    String TAG = "Chatting";
+    HashMap<Integer, TableInformation> tableInformationHashMap;
+    String TAG = "ChattingTAG";
 
 
     final int port = 7777;
     final String host = "3.36.255.141";
 
-    SocketClient client;
+    static SocketClient client;
 
     Handler mMainHandler;
 
@@ -61,7 +63,7 @@ public class Client extends AppCompatActivity {
     HandlerThread thread;
 
 
-    static Socket socket;
+    Socket socket;
 
     BufferedReader networkReader = null;
     BufferedWriter networkWrite = null;
@@ -79,9 +81,7 @@ public class Client extends AppCompatActivity {
 
     String get_id;
     int table_num;
-    String ticket;
     String time;
-    boolean chattingAgree = false;
 
 
     ChattingAdapter chattingAdapter;
@@ -104,11 +104,15 @@ public class Client extends AppCompatActivity {
 
         //table_num : 내가 대화하려고 하는 채팅방 번호
         table_num = getIntent().getIntExtra("tableNumber",0);
-        get_id = getIntent().getStringExtra("id");
-        chattingAgree = getIntent().getBooleanExtra("chattingAgree", false);
-        ticket = getIntent().getStringExtra("profileTicket");
-        Log.d(TAG, "profileTicket :" + ticket);
+        Log.d(TAG, "table_num :" + table_num);
+        get_id = getIntent().getStringExtra("get_id");
+        Log.d(TAG, "get_id :" + get_id);
 
+
+        tableInformationHashMap = (HashMap<Integer, TableInformation>) getIntent().getSerializableExtra("tableInformation");
+        Log.d(TAG, "tableInformation :" + tableInformationHashMap);
+
+        tableInformationHashMap.get(table_num).setChattingAgree(true);
         version ++;
 
         dbHelper = new DBHelper(Client.this,  version);
@@ -125,7 +129,9 @@ public class Client extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(getApplicationContext(), Menu.class);
-                intent.putExtra("id", get_id);
+                intent.putExtra("get_id", get_id);
+                intent.putExtra("orderCk",true);
+                intent.putExtra("TableInformation", tableInformationHashMap);
                 startActivity(intent);
             }
         });
@@ -134,8 +140,11 @@ public class Client extends AppCompatActivity {
         table.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d(TAG, "onClick: table");
-                finish();
+                Intent intent = new Intent(getApplicationContext(), Menu.class);
+                intent.putExtra("get_id", get_id);
+                intent.putExtra("orderCk",true);
+                intent.putExtra("TableInformation", tableInformationHashMap);
+                startActivity(intent);
             }
         });
 
@@ -184,15 +193,9 @@ public class Client extends AppCompatActivity {
                 chatLists.add(new ChattingList(res.getString(1), 0, res.getString(2),""));
             }
         }
-
-        Log.d(TAG, "list 사이즈 : " + chatLists.size());
-
         chattingAdapter.setAdapterItem(chatLists);
 
-        chatting_view.scrollToPosition(chatLists.size());
-
-
-
+        chatting_view.scrollToPosition(chattingAdapter.getItemCount()-1);
 
 
 
@@ -325,12 +328,10 @@ public class Client extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(Client.this, Table.class);
-                intent.putExtra("id", get_id);
+                intent.putExtra("get_id", get_id);
                 intent.putExtra("orderCk", true);
-                intent.putExtra("chattingAgree", chattingAgree);
-                intent.putExtra("profileTicket", ticket);
-                Log.d(TAG, "profileTicket :" + ticket);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                intent.putExtra("tableInformation", tableInformationHashMap);
+//                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 startActivity(intent);
             }
         });

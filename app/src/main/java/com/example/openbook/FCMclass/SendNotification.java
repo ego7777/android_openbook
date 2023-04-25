@@ -36,11 +36,6 @@ public class SendNotification {
     public void requestChatting(String clickTable, String get_id, String ticket, String message) {
         DatabaseReference mRootRef = FirebaseDatabase.getInstance().getReference();
 
-        //여기서..? 아니면 수락하면?
-        DatabaseReference conditionRef = mRootRef.child(get_id).child("ticket");
-
-
-
         mRootRef.child(clickTable).child("fcmToken").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {

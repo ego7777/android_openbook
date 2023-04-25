@@ -25,12 +25,12 @@ public class ClientSocket extends Thread implements Serializable {
     private final String TAG = "ClientSocket";
     SocketAddress socketAddress;
 
-    final int connection_timeout = 6000;
+    final int connection_timeout = 9999;
     public BufferedReader networkReader = null;
     public BufferedWriter networkWrite = null;
-//    Boolean loop;
+
     String get_id;
-    Socket socket;
+    static Socket socket;
 
 
 

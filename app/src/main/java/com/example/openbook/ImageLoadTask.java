@@ -40,14 +40,15 @@ public class ImageLoadTask extends AsyncTask<Void,Void, Bitmap> {
     protected Bitmap doInBackground(Void... voids) {
         Bitmap bitmap = null;
         try {
-        if (bitmapHash.containsKey(urlStr)) {
-        Bitmap oldbitmap = bitmapHash.remove(urlStr);
+            if (bitmapHash.containsKey(urlStr)) {
 
-            if(oldbitmap != null) {
-                oldbitmap.recycle();
-                oldbitmap = null;
+                Bitmap oldbitmap = bitmapHash.remove(urlStr);
+
+                if(oldbitmap != null) {
+//                   oldbitmap.recycle();
+//                   oldbitmap = null;
+                }
             }
-        }
 
         URL url = new URL(urlStr);
         bitmap = BitmapFactory.decodeStream(url.openConnection().getInputStream());

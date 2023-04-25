@@ -25,6 +25,7 @@ import com.example.openbook.Adapter.ChattingAdapter;
 import com.example.openbook.Activity.Menu;
 import com.example.openbook.FCMclass.SendNotification;
 import com.example.openbook.R;
+import com.example.openbook.TableInformation;
 import com.example.openbook.View.ChattingList;
 
 import java.io.BufferedReader;
@@ -37,6 +38,7 @@ import java.net.Socket;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 @RequiresApi(api = Build.VERSION_CODES.O)
 public class ChattingUI extends AppCompatActivity {
@@ -77,7 +79,8 @@ public class ChattingUI extends AppCompatActivity {
 
     BufferedWriter networkWrite = null;
     updateUI updateUI;
-    boolean chattingAgree = false;
+
+    HashMap<Integer, TableInformation> tableInformationHashMap;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -85,11 +88,12 @@ public class ChattingUI extends AppCompatActivity {
         setContentView(R.layout.chatting);
 
         table_num = getIntent().getIntExtra("tableNumber",0);
-        get_id = getIntent().getStringExtra("id");
-//        clientSocket = (ClientSocket) getIntent().getSerializableExtra("clientSocket");
-        chattingAgree = getIntent().getBooleanExtra("chattingAgree", false);
-        Log.d(TAG, "chattingAgree :" + chattingAgree);
+        get_id = getIntent().getStringExtra("get_id");
+        tableInformationHashMap = (HashMap<Integer, TableInformation>) getIntent().getSerializableExtra("tableInformation");
+        Log.d(TAG, "tableInformation :" + tableInformationHashMap);
 
+
+        tableInformationHashMap.get(table_num).setChattingAgree(true);
         version ++;
 
         dbHelper = new DBHelper(ChattingUI.this,  version);
@@ -106,7 +110,8 @@ public class ChattingUI extends AppCompatActivity {
             public void onClick(View v) {
                 Intent intent = new Intent(getApplicationContext(), Menu.class);
                 intent.putExtra("id", get_id);
-                intent.putExtra("chattingAgree", chattingAgree);
+                intent.putExtra("orderCk",true);
+                intent.putExtra("TableInformation", tableInformationHashMap);
                 startActivity(intent);
             }
         });
@@ -115,7 +120,11 @@ public class ChattingUI extends AppCompatActivity {
         table.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                finish();
+                Intent intent = new Intent(getApplicationContext(), Menu.class);
+                intent.putExtra("get_id", get_id);
+                intent.putExtra("orderCk",true);
+                intent.putExtra("TableInformation", tableInformationHashMap);
+                startActivity(intent);
             }
         });
 
@@ -163,10 +172,10 @@ public class ChattingUI extends AppCompatActivity {
             }
         }
 
-//        Log.d(TAG, "getSenderData : " + res.toString());
 
         chattingAdapter.setAdapterItem(chatLists);
-        chatting_view.requestFocus(chatLists.size());
+
+        chatting_view.scrollToPosition(chattingAdapter.getItemCount()-1);
 
 
 
@@ -200,7 +209,7 @@ public class ChattingUI extends AppCompatActivity {
                             Log.d(TAG, "UI update Thread 시작");
 
                         }else{
-                            Log.d(TAG, "시발 소켓 나가리:" + clientSocket.socket.isConnected());
+                            Log.d(TAG, "소켓 없어서 새로 생성:" + clientSocket.socket.isConnected());
 
                         }
 
@@ -265,10 +274,9 @@ public class ChattingUI extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(ChattingUI.this, Table.class);
-                intent.putExtra("id", get_id);
+                intent.putExtra("get_id", get_id);
                 intent.putExtra("orderCk", true);
-                intent.putExtra("chattingAgree", chattingAgree);
-                Log.d(TAG, "intent chattingAgree :" + chattingAgree);
+                intent.putExtra("tableInformation", tableInformationHashMap);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 startActivity(intent);
 

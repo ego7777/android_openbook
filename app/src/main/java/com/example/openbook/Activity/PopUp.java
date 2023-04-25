@@ -15,9 +15,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
+import com.example.openbook.Chatting.ChattingUI;
 import com.example.openbook.Chatting.Client;
 import com.example.openbook.FCMclass.SendNotification;
 import com.example.openbook.R;
+import com.example.openbook.TableInformation;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -28,8 +30,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -44,13 +45,12 @@ public class PopUp extends Activity {
     String TAG = "POPUP_Activity";
     String get_id;
     int tableNumber;
-    boolean agree = false;
 
     String title;
     String body;
     int clickTable;
 
-    ArrayList<Integer> ticketList;
+    HashMap<Integer, TableInformation> tableInformationHashMap;
 
 
     @Override
@@ -86,9 +86,15 @@ public class PopUp extends Activity {
             Log.d(TAG, "get_id :" + get_id);
         }
 
-        ticketList = new ArrayList<>();
         clickTable = getIntent().getIntExtra("clickTable", 0);
         Log.d(TAG, "clickTable :" + "table"+clickTable);
+
+        tableInformationHashMap = (HashMap<Integer, TableInformation>) getIntent().getSerializableExtra("tableInformation");
+        Log.d(TAG, "intent tableInformation :" + tableInformationHashMap);
+        if(tableInformationHashMap == null){
+            tableInformationHashMap = new HashMap<>();
+            Log.d(TAG, "initial tableInformation");
+        }
 
         popup_title.setText(title);
         popup_body.setText(body);
@@ -104,6 +110,9 @@ public class PopUp extends Activity {
         Button popup_yes = findViewById(R.id.popup_button_yes);
         Button popup_no = findViewById(R.id.popup_button_no);
 
+        /**
+         * 받는 쪽 event
+         */
 
         if(body.contains("요청")){
             popup_yes.setOnClickListener(new View.OnClickListener() {
@@ -113,43 +122,19 @@ public class PopUp extends Activity {
                     Log.d(TAG, "요청포함");
                     // 여기서 yes를 누르면 그 후로는 바로 chatUI로 넘어가게 해야함
 
-                    //json으로 만들어서 db에 넣자
-                    RequestBody formBody = new FormBody.Builder()
-                            .add("json", json(get_id, "ticket"))
-                            .build();
-
-                    Request request = new Request.Builder()
-                            .url("http://3.36.255.141/saveOrder.php")
-                            .post(formBody)
-                            .build();
-
-                    final OkHttpClient client = new OkHttpClient();
-
-                    client.newCall(request).enqueue(new Callback() {
-                        @Override
-                        public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                            Log.d(TAG, "onFailure: " + e);
-                        }
-
-                        @Override
-                        public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                            String body = response.body().string();
-                            Log.d(TAG, "onResponse: " + body);
-                        }
-                    });
-
-
                     //수락을 누르면 상대방 테이블에 요청을 수락했다고 보내주기
                     SendNotification sendNotification = new SendNotification();
                     sendNotification.requestChatting(title,get_id, "","에서 채팅을 수락하였습니다.");
 
-                    agree = true;
-//                    Intent intent = new Intent(PopUp.this, ChattingUI.class);
-                    Intent intent = new Intent(PopUp.this, Client.class);
-                    intent.putExtra("id", get_id);
+
+                    Intent intent = new Intent(PopUp.this, ChattingUI.class);
+                    intent.putExtra("get_id", get_id);
                     intent.putExtra("tableNumber", tableNumber);
-                    intent.putExtra("chattingAgree", agree);
-//                    intent.putExtra("profileTicket", ticket);
+
+                    tableInformationHashMap.put(tableNumber,
+                            new TableInformation("table"+tableNumber, false, tableNumber, true));
+                    intent.putExtra("tableInformation", tableInformationHashMap);
+
                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                     startActivity(intent);
                     finish();
@@ -168,7 +153,9 @@ public class PopUp extends Activity {
             });
 
 
-
+            /**
+             * 보낸 쪽 event
+             */
 
         }else if(body.contains("수락")){
             popup_yes.setOnClickListener(new View.OnClickListener() {
@@ -176,59 +163,49 @@ public class PopUp extends Activity {
                 @Override
                 public void onClick(View v) {
                     Log.d(TAG, "수락포함");
-                    agree = true;
-//                    Intent intent = new Intent(PopUp.this, ChattingUI.class);
-                    Intent intent = new Intent(PopUp.this, Client.class);
-                    intent.putExtra("id", get_id);
+
+                    Intent intent = new Intent(PopUp.this, ChattingUI.class);
+                    intent.putExtra("get_id", get_id);
                     intent.putExtra("tableNumber", tableNumber);
-                    intent.putExtra("chattingAgree", agree);
+
+                    tableInformationHashMap.put(tableNumber, new TableInformation(null, false, 0, true));
+                    intent.putExtra("tableInformation", tableInformationHashMap);
                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                     startActivity(intent);
                     finish();
                 }
             });
 
+            /**
+             * 프로필 포함
+             */
         }else if(body.contains("프로필")){
             popup_yes.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     Log.d(TAG, "yes click");
-                    RequestBody formBody = new FormBody.Builder()
-                            .add("json", json(get_id, "anything"))
-                            .build();
 
-                    Request request = new Request.Builder()
-                            .url("http://3.36.255.141/saveOrder.php")
-                            .post(formBody)
-                            .build();
+                    if(tableInformationHashMap == null){
+                        tableInformationHashMap = new HashMap<>();
+                        Log.d(TAG, "new tableInformation");
+                    }
 
-                    final OkHttpClient client = new OkHttpClient();
+                    if(tableInformationHashMap.get(clickTable) != null){
+                        tableInformationHashMap.get(clickTable).setWhoBuy(get_id);
+                        tableInformationHashMap.get(clickTable).setUseTable(clickTable);
+                    }else{
+                        tableInformationHashMap.put(clickTable, new TableInformation(get_id, false, clickTable, false));
+                    }
 
-                    client.newCall(request).enqueue(new Callback() {
-                        @Override
-                        public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                            Log.d(TAG, "onFailure: " + e);
-                        }
 
-                        @Override
-                        public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                            String body = response.body().string();
+                    Log.d(TAG, "tableInformation add :" + tableInformationHashMap.get(clickTable));
 
-                            Log.d(TAG, "onResponse: " + body);
-                            if(body.equals("주문완료")){
-                                ticketList.add(clickTable);
-                                Log.d(TAG, "onResponse ticket add :" + Arrays.asList(ticketList).toString());
-
-                                Intent intent = new Intent(PopUp.this, Table.class);
-                                intent.putIntegerArrayListExtra("ticketList", ticketList);
-                                intent.putExtra("get_id", get_id);
-
-//                                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                                startActivity(intent);
-                                finish();
-                            }
-                        }
-                    });
+                    Intent intent = new Intent(PopUp.this, Table.class);
+                    intent.putExtra("tableInformation", tableInformationHashMap);
+                    intent.putExtra("get_id", get_id);
+//                  intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    startActivity(intent);
+                    finish();
 
                 }
             });
@@ -243,7 +220,7 @@ public class PopUp extends Activity {
                 /**
                  * 해당 테이블에 요청 못하게 막기
                  */
-                agree = false;
+
                 finish();
             }
         });
@@ -267,38 +244,5 @@ public class PopUp extends Activity {
         return;
     }
 
-    public String json(String tableName, String ticket){
 
-        JSONObject obj = new JSONObject();
-        try {
-            JSONArray jArray = new JSONArray();//배열이 필요할때
-
-            JSONObject sObject = new JSONObject();//배열 내에 들어갈 json
-
-            sObject.put("menu", "ticket");
-            sObject.put("price", 2000);
-            sObject.put("number", 1);
-            sObject.put("ticket", ticket);
-            jArray.put(sObject);
-
-            obj.put("table", tableName);
-            obj.put("orderTime", getTime());
-            obj.put("item", jArray);//배열을 넣음
-
-            Log.d(TAG, "getJson: " + obj.toString());
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        return obj.toString();
-    }
-
-    public String getTime() {
-        long now = System.currentTimeMillis();
-        Date date = new Date(now);
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-        String getTime = dateFormat.format(date);
-
-        return getTime;
-    }
 }

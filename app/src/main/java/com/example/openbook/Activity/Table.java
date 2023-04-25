@@ -19,10 +19,13 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.openbook.Adapter.TableAdapter;
 import com.example.openbook.Chatting.ChattingUI;
+import com.example.openbook.Chatting.Client;
+import com.example.openbook.Chatting.ClientSocket;
 import com.example.openbook.DialogCustom;
 import com.example.openbook.ImageLoadTask;
 import com.example.openbook.QRcode.MakeQR;
 import com.example.openbook.R;
+import com.example.openbook.TableInformation;
 import com.example.openbook.View.TableList;
 
 import org.json.JSONArray;
@@ -33,6 +36,7 @@ import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 
 
 import okhttp3.Call;
@@ -44,7 +48,7 @@ import okhttp3.Response;
 public class Table extends AppCompatActivity {
 
     ArrayList<TableList> tableList;
-    ArrayList<Integer> ticketList;
+    HashMap<Integer, TableInformation> tableInformationHashMap;
 
     String TAG = "TableTAG";
 
@@ -66,10 +70,10 @@ public class Table extends AppCompatActivity {
 
     int myTable;
     String get_id;
-    boolean chattingAgree = false;
+
     boolean orderCk = false;
 
-    ImageLoadTask task ;
+    ImageLoadTask task;
     String url;
 
     @Override
@@ -81,12 +85,16 @@ public class Table extends AppCompatActivity {
         orderCk = getIntent().getBooleanExtra("orderCk", false);
         Log.d(TAG, "orderCk :" + orderCk);
 
-        ticketList = getIntent().getIntegerArrayListExtra("ticketList");
-        Log.d(TAG, "ticketList :" + ticketList);
 
-        if(ticketList == null){
-            ticketList = new ArrayList();
-            Log.d(TAG, "onCreate ticketList");
+        tableInformationHashMap = (HashMap<Integer, TableInformation>) getIntent().getSerializableExtra("tableInformation");
+        Log.d(TAG, "tableInformation :" + tableInformationHashMap);
+
+        if (tableInformationHashMap == null) {
+            tableInformationHashMap = new HashMap<>();
+            Log.d(TAG, "onCreate tableInformation initial one");
+        } else {
+            Log.d(TAG, "intent tableInformation size :" + tableInformationHashMap.size());
+
         }
 
         TextView table_num = findViewById(R.id.table_number);
@@ -116,13 +124,15 @@ public class Table extends AppCompatActivity {
         /**
          * 테이블 그리드 만들기 1
          */
-        for(int i=1; i<21; i++){
-            if(i == myTable){
-                tableList.add(new TableList("my table", getDrawable(R.drawable.my_table_border),0));
-            }else{
-                tableList.add(new TableList(i, getDrawable(R.drawable.table_border),1));
+        for (int i = 1; i < 21; i++) {
+            if (i == myTable) {
+                tableList.add(new TableList("my table", getDrawable(R.drawable.my_table_border), 0));
+            } else {
+                tableList.add(new TableList(i, getDrawable(R.drawable.table_border), 1));
             }
         }
+
+
 
         adapter.setAdapterItem(tableList);
 
@@ -144,7 +154,6 @@ public class Table extends AppCompatActivity {
         super.onStart();
 //        Log.d(TAG, "onStart: ");
 
-        chattingAgree = getIntent().getBooleanExtra("chattingAgree", false);
 
 
 //        myTable = Integer.parseInt(get_id.replace("table", ""));
@@ -183,7 +192,7 @@ public class Table extends AppCompatActivity {
                 Intent intent = new Intent(Table.this, Menu.class);
                 intent.putExtra("get_id", get_id);
                 intent.putExtra("orderCk", orderCk);
-                intent.putExtra("ticketList", ticketList);
+                intent.putExtra("tableInformation", tableInformationHashMap);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 startActivity(intent);
 
@@ -195,7 +204,7 @@ public class Table extends AppCompatActivity {
             @Override
             public void onItemClick(View view, int position) {
                 table_sidebar.setVisibility(View.VISIBLE);
-                clickTable = position+1;
+                clickTable = position + 1;
                 Log.d(TAG, "onItemClick: clickTable " + clickTable);
                 Log.d(TAG, "onItemClick: position " + position);
 
@@ -203,25 +212,25 @@ public class Table extends AppCompatActivity {
                  * 테이블 그리드 만들기 2
                  */
 
-                for(int i=0; i<20; i++){
-                    if(i == myTable-1){
+                for (int i = 0; i < 20; i++) {
+                    if (i == myTable - 1) {
                         tableList.get(i).setTableColor(getDrawable(R.drawable.my_table_border));
-                    }else if(i != position){
+                    } else if (i != position) {
                         tableList.get(i).setTableColor(getDrawable(R.drawable.table_border));
                     }
                 }
 
 //                checkOrderTable(get_id, myTable);
 
-                if(yes_arr.length() != 0){
-                    for(int i = 0; i<list.length; i++){
-                        tableList.get(list[i]-1).setTableColor(getDrawable(R.drawable.table_boder_order));
-                        tableList.get(list[i]-1).setTableGender(gender[i]);
-                        tableList.get(list[i]-1).setTableGuestNum(guestNum[i]);
+                if (yes_arr.length() != 0) {
+                    for (int i = 0; i < list.length; i++) {
+                        tableList.get(list[i] - 1).setTableColor(getDrawable(R.drawable.table_boder_order));
+                        tableList.get(list[i] - 1).setTableGender(gender[i]);
+                        tableList.get(list[i] - 1).setTableGuestNum(guestNum[i]);
                     }
-                }else{
-                    for(int i =0; i<list.length; i++){
-                        tableList.get(list[i]-1).setTableColor(getDrawable(R.drawable.table_boder_order));
+                } else {
+                    for (int i = 0; i < list.length; i++) {
+                        tableList.get(list[i] - 1).setTableColor(getDrawable(R.drawable.table_boder_order));
                     }
                 }
 
@@ -247,35 +256,36 @@ public class Table extends AppCompatActivity {
                     alertDialog.showAlertDialog(Table.this,
                             "주문 후 채팅이 가능합니다.");
 
-                }else if(clickTable == myTable){
+                } else if (clickTable == myTable) {
                     alertDialog.showAlertDialog(Table.this,
                             "나의 채팅방 입니다. 다른 테이블과 채팅해보세요!");
-                }else if(list.length>0) {
+                } else if (list.length > 0) {
 
                     //list(들어와 있는 애들이면 그냥 채팅이 가능하게 해주는 것인데 여기서 fcm을 보내는
                     for (int i = 0; i < list.length; i++) {
                         if (list[i] == clickTable) {
 
-                            if(chattingAgree == false){
+                            if (tableInformationHashMap.get(clickTable) == null ||
+                                    tableInformationHashMap.get(clickTable).isChattingAgree() == false)
+                             {
                                 alertDialog.chattingRequest(Table.this,
                                         clickTable + "번 테이블과 채팅을 하시겠습니까?" +
                                                 "\n<추신> 채팅 전 테이블 정보를 입력하는 것을 추천드립니다!",
                                         "table" + clickTable, get_id);
                                 Log.d(TAG, "채팅 신청");
 
-                            }else if(chattingAgree == true){
+                            } else if (tableInformationHashMap.get(clickTable).isChattingAgree() == true) {
                                 Intent intent = new Intent(Table.this, ChattingUI.class);
                                 intent.putExtra("tableNumber", clickTable);
-                                intent.putExtra("id", get_id);
-                                intent.putExtra("chattingAgree", chattingAgree);
-                                intent.putExtra("ticketList", ticketList);
+                                intent.putExtra("get_id", get_id);
+                                intent.putExtra("tableInformation", tableInformationHashMap);
                                 startActivity(intent);
                             }
 
                             break; // 얘가 안된다 망할..^^
 
 //
-                        }else{
+                        } else {
 
                             alertDialog.showAlertDialog(Table.this,
                                     "비어있는 테이블이거나 아직 주문하지 않은 테이블 입니다.");
@@ -286,7 +296,6 @@ public class Table extends AppCompatActivity {
 
             } // onClick
         }); //setOnClickListener
-
 
 
         /**
@@ -314,13 +323,12 @@ public class Table extends AppCompatActivity {
                         .url("http://3.36.255.141/tableInfoCk.php")
                         .get();
 
-                builder.addHeader("table", "table"+clickTable);
+                builder.addHeader("table", "table" + clickTable);
                 Request request = builder.build();
                 Log.d(TAG, "request :" + request);
 
 
-
-                if(clickTable == myTable){
+                if (clickTable == myTable) {
                     /**
                      *  등록을 했으면 등록된 정보를 보여주고 등록 안했으면 하단 set
                      */
@@ -339,20 +347,19 @@ public class Table extends AppCompatActivity {
                                     try {
                                         String body = response.body().string();
 
-                                        if(body.equals("없음")){
+                                        if (body.equals("없음")) {
                                             MakeQR makeQR = new MakeQR();
                                             table_info_img.setImageBitmap(makeQR.myQR(get_id));
                                             statement.setText("사진과 정보를 입력하시려면 다음 큐알로 입장해주세요 :)");
                                             table_info_gender.setVisibility(View.INVISIBLE);
                                             table_info_member.setVisibility(View.INVISIBLE);
 
-                                        }else if(body.startsWith("{")){
+                                        } else if (body.startsWith("{")) {
                                             JSONObject jsonObject = new JSONObject(body);
 
                                             String url = "http://3.36.255.141/image/"
                                                     + jsonObject.getString("img");
                                             Log.d(TAG, "url :" + url);
-
 
 
                                             statement.setText(jsonObject.getString("statement"));
@@ -370,7 +377,7 @@ public class Table extends AppCompatActivity {
                         } //onResponse
                     });
 
-                }else{
+                } else {
                     okHttpClient.newCall(request).enqueue(new Callback() {
                         @Override
                         public void onFailure(@NonNull Call call, @NonNull IOException e) {
@@ -385,49 +392,51 @@ public class Table extends AppCompatActivity {
                                     try {
                                         String body = response.body().string();
 
-                                        if(body.equals("없음")){
+                                        if (body.equals("없음")) {
 
                                             statement.setText("정보를 입력하지 않은 테이블입니다.");
                                             table_info_gender.setVisibility(View.INVISIBLE);
                                             table_info_member.setVisibility(View.INVISIBLE);
 
-
-                                        }else if(body.startsWith("{")){
+                                            /**
+                                             * table 정보 있을 때
+                                             */
+                                        } else if (body.startsWith("{")) {
                                             JSONObject jsonObject = new JSONObject(body);
 
-                                            url = "http://3.36.255.141/image/"+ jsonObject.getString("img");
+                                            url = "http://3.36.255.141/image/" + jsonObject.getString("img");
 
                                             Log.d(TAG, "url :" + url);
 
 
-
-                                            if(ticketList == null || ticketList.isEmpty()){
+                                            if (tableInformationHashMap == null ||
+                                                    tableInformationHashMap.get(clickTable) == null ||
+                                            tableInformationHashMap.get(clickTable).getUseTable() == 0) {
 
                                                 Log.d(TAG, "팝업 안에서 발생 null");
                                                 task = new ImageLoadTask(Table.this, false, url, table_info_img);
                                                 task.execute();
 
 //
-                                            }else{
+                                            } else {
 
-                                                for(int i=0; i<ticketList.size(); i++){
-                                                    if(ticketList.get(i) == clickTable){
-                                                        Log.d(TAG, "팝업 안에서 발생 arrayList");
-                                                        task = new ImageLoadTask(Table.this, true, url,table_info_img);
-                                                        task.execute();
-                                                        table_info_text.setVisibility(View.INVISIBLE);
-                                                        table_info_img.setClickable(false);
-                                                    }else{
-                                                        task = new ImageLoadTask(Table.this, false, url,table_info_img);
-                                                        task.execute();
-                                                    }
+                                                if (tableInformationHashMap.get(clickTable) == null) {
+                                                    Log.d(TAG, "팝업 안에서 발생 getUseTable null");
+                                                    task = new ImageLoadTask(Table.this, false, url, table_info_img);
+                                                    task.execute();
 
+                                                } else if (tableInformationHashMap.get(clickTable).getUseTable() == clickTable) {
+                                                    Log.d(TAG, "팝업 안에서 발생 getUseTable :" + tableInformationHashMap.get(clickTable).getUseTable());
+                                                    tableInformationHashMap.get(clickTable).setUsage(true);
+                                                    Log.d(TAG, "table 조회 :" + tableInformationHashMap.get(clickTable).isChattingAgree());
+                                                    task = new ImageLoadTask(Table.this, true, url, table_info_img);
+                                                    task.execute();
+                                                    table_info_text.setVisibility(View.INVISIBLE);
+                                                    table_info_img.setClickable(false);
                                                 }
 
 
                                             }
-
-
 
                                             statement.setText(jsonObject.getString("statement"));
                                             table_info_gender.setText(jsonObject.getString("gender"));
@@ -454,7 +463,7 @@ public class Table extends AppCompatActivity {
                     @Override
                     public void onClick(View v) {
 
-                        task = new ImageLoadTask(Table.this, false, url,table_info_img);
+                        task = new ImageLoadTask(Table.this, false, url, table_info_img);
                         task.execute();
                         Log.d(TAG, "블러 처리 되었슴다");
 
@@ -463,11 +472,11 @@ public class Table extends AppCompatActivity {
                         intent.putExtra("body", "프로필 조회권을 구매하시겠습니까?\n** 프로필 조회권 2000원");
                         intent.putExtra("get_id", get_id);
                         intent.putExtra("clickTable", clickTable);
+                        intent.putExtra("tableInformation", tableInformationHashMap);
                         startActivity(intent);
                         dlg.dismiss();
                     }
                 });
-
 
 
                 table_info_close.setOnClickListener(new View.OnClickListener() {
@@ -484,8 +493,7 @@ public class Table extends AppCompatActivity {
     } //onResume
 
 
-
-    public void checkOrderTable(String get_id, int myTable){
+    public void checkOrderTable(String get_id, int myTable) {
 
         // GET 요청 객체 생성
         Request.Builder builder = new Request.Builder()
@@ -514,7 +522,7 @@ public class Table extends AppCompatActivity {
                     yes_arr = jArray.getJSONArray(0);
                     no_arr = jArray.getJSONArray(1);
 
-                    list = new int[yes_arr.length()+no_arr.length()];
+                    list = new int[yes_arr.length() + no_arr.length()];
                     gender = new String[yes_arr.length()];
                     guestNum = new String[yes_arr.length()];
 
@@ -528,8 +536,8 @@ public class Table extends AppCompatActivity {
                     }
 
                     //정보 입력 안한애들
-                    for(int i=0; i< no_arr.length(); i++){
-                        list[yes_arr.length()+i] = Integer.parseInt(no_arr.getString(i).replace("table", ""));
+                    for (int i = 0; i < no_arr.length(); i++) {
+                        list[yes_arr.length() + i] = Integer.parseInt(no_arr.getString(i).replace("table", ""));
                     }
 
 
@@ -542,17 +550,17 @@ public class Table extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        for(int i = 0; i<yes_arr.length(); i++){
-                            tableList.get(list[i]-1).setTableColor(getDrawable(R.drawable.table_boder_order));
-                            tableList.get(list[i]-1).setTableGender(gender[i]);
-                            tableList.get(list[i]-1).setTableGuestNum(guestNum[i]);
+                        for (int i = 0; i < yes_arr.length(); i++) {
+                            tableList.get(list[i] - 1).setTableColor(getDrawable(R.drawable.table_boder_order));
+                            tableList.get(list[i] - 1).setTableGender(gender[i]);
+                            tableList.get(list[i] - 1).setTableGuestNum(guestNum[i]);
                         }
 
-                        for(int i=0; i<no_arr.length(); i++){
-                            tableList.get(list[yes_arr.length()+i]-1).setTableColor(getDrawable(R.drawable.table_boder_order));
+                        for (int i = 0; i < no_arr.length(); i++) {
+                            tableList.get(list[yes_arr.length() + i] - 1).setTableColor(getDrawable(R.drawable.table_boder_order));
                         }
 
-                        tableList.get(myTable-1).setTableColor(getDrawable(R.drawable.my_table_border));
+                        tableList.get(myTable - 1).setTableColor(getDrawable(R.drawable.my_table_border));
                         adapter.notifyDataSetChanged();
                     }
                 });
@@ -563,14 +571,11 @@ public class Table extends AppCompatActivity {
     }
 
 
-
-
     @Override
     protected void onStop() {
         super.onStop();
         Log.d(TAG, "onStop: ");
     }
-
 
 
 }

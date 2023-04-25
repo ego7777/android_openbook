@@ -29,10 +29,12 @@ import com.example.openbook.Adapter.CartAdapter;
 import com.example.openbook.Adapter.MenuAdapter;
 import com.example.openbook.Adapter.SideListViewAdapter;
 import com.example.openbook.Chatting.Client;
+import com.example.openbook.Chatting.ClientSocket;
 import com.example.openbook.Deco.menu_recyclerview_deco;
 import com.example.openbook.DialogCustom;
 import com.example.openbook.FCMclass.FCM;
 import com.example.openbook.R;
+import com.example.openbook.TableInformation;
 import com.example.openbook.View.CartList;
 import com.example.openbook.View.MenuList;
 import com.example.openbook.View.SideList;
@@ -46,6 +48,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -58,17 +61,17 @@ import okhttp3.Response;
 
 public class Menu extends AppCompatActivity {
 
-    String TAG = "menu";
+    String TAG = "menuTAG";
 
     int totalPrice;
 
     boolean orderCk = false;
     boolean infoCk = false;
-    boolean chattingAgree = false;
+    ClientSocket clientSocket;
 
     ArrayList<MenuList> menuLists;
     ArrayList<CartList> cartLists;
-    ArrayList<Integer> ticketList;
+    HashMap<Integer, TableInformation> tableInformationHashMap;
 
     SharedPreferences pref;
     SharedPreferences.Editor editor;
@@ -94,8 +97,16 @@ public class Menu extends AppCompatActivity {
 
         get_id = getIntent().getStringExtra("get_id");
         orderCk = getIntent().getBooleanExtra("orderCk", false);
-        ticketList = getIntent().getIntegerArrayListExtra("ticketList");
-        Log.d(TAG, "onCreate_ticketList :" + ticketList);
+
+        tableInformationHashMap = (HashMap<Integer, TableInformation>) getIntent().getSerializableExtra("tableInformation");
+//        Log.d(TAG, "intent_ticketList :" + ticketList.isEmpty());
+
+        if(tableInformationHashMap == null){
+            Log.d(TAG, "onCreate tableInformation null");
+        }else{
+            Log.d(TAG, "intent tableInformation size:" + tableInformationHashMap.size());
+        }
+
 
 
 
@@ -113,8 +124,6 @@ public class Menu extends AppCompatActivity {
          */
         TextView table_number = findViewById(R.id.table_number);
 
-
-        chattingAgree = getIntent().getBooleanExtra("chattingAgree", false);
 
         if(get_id.length() > 0) {
             table_number.setText(get_id);
@@ -269,8 +278,7 @@ public class Menu extends AppCompatActivity {
                 Intent intent = new Intent(getApplicationContext(), Table.class);
                 intent.putExtra("get_id", get_id);
                 intent.putExtra("orderCk", orderCk);
-                intent.putExtra("chattingAgree", chattingAgree);
-                intent.putIntegerArrayListExtra("ticketList", ticketList);
+                intent.putExtra("tableInformation", tableInformationHashMap);
 //                intent.putExtra("clientSocket", clientSocket);
                 startActivity(intent);
             }
@@ -459,6 +467,8 @@ public class Menu extends AppCompatActivity {
                                             totalPrice = 0;
                                             orderPrice.setText("");
 
+                                            clientSocket = new ClientSocket("3.36.255.141", 7777, get_id);
+                                            clientSocket.start();
 
                                         } else {
                                             orderCk = false;
@@ -602,9 +612,18 @@ public class Menu extends AppCompatActivity {
         Log.d(TAG, "onStop: ");
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onPause() {
         super.onPause();
         Log.d(TAG, "onPause: ");
+
+        try {
+            String line = clientSocket.networkReader.readLine();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 }

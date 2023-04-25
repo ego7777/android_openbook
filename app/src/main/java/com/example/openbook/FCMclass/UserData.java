@@ -6,7 +6,6 @@ public class UserData {
 
     public String userID;
     public String fcmToken;
-    public int ticket;
 
 
     public String getUserID() {
@@ -25,11 +24,4 @@ public class UserData {
         this.fcmToken = fcmToken;
     }
 
-//    public int getChattingRequest() {
-//        return chattingRequest;
-//    }
-//
-//    public void setChattingRequest(int chattingRequest) {
-//        this.chattingRequest = chattingRequest;
-//    }
 }
