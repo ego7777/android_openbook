@@ -8,18 +8,15 @@ import android.os.Handler;
 
 
 import com.example.openbook.Activity.Table;
+import com.example.openbook.Chatting.ClientSocket;
 import com.example.openbook.FCMclass.SendNotification;
+
+import java.io.Serializable;
 
 
 public class DialogCustom {
 
     String TAG = "DialogCustom";
-    String ticket;
-
-    public String getTicket() {
-        return ticket;
-    }
-
 
 
     public void showAlertDialog(Context context, String message){

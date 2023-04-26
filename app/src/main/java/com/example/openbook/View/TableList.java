@@ -3,7 +3,9 @@ package com.example.openbook.View;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 
-public class TableList {
+import java.io.Serializable;
+
+public class TableList implements Serializable {
 
     int tableNum;
     Drawable tableColor;

@@ -34,6 +34,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -85,6 +86,15 @@ public class Table extends AppCompatActivity {
         orderCk = getIntent().getBooleanExtra("orderCk", false);
         Log.d(TAG, "orderCk :" + orderCk);
 
+        tableList = (ArrayList<TableList>) getIntent().getSerializableExtra("tableList");
+
+        if(tableList == null){
+            tableList = new ArrayList<>();
+            Log.d(TAG, "onCreate tableList initial one");
+        }else{
+            Log.d(TAG, "intent tableList size :" + tableList.size());
+        }
+
 
         tableInformationHashMap = (HashMap<Integer, TableInformation>) getIntent().getSerializableExtra("tableInformation");
         Log.d(TAG, "tableInformation :" + tableInformationHashMap);
@@ -117,26 +127,24 @@ public class Table extends AppCompatActivity {
 
 
         //리스트 추가 후 어댑터 연결
-        tableList = new ArrayList<>();
+
 
         myTable = Integer.parseInt(get_id.replace("table", ""));
 
         /**
          * 테이블 그리드 만들기 1
          */
-        for (int i = 1; i < 21; i++) {
-            if (i == myTable) {
-                tableList.add(new TableList("my table", getDrawable(R.drawable.my_table_border), 0));
-            } else {
-                tableList.add(new TableList(i, getDrawable(R.drawable.table_border), 1));
-            }
-        }
-
+//        for (int i = 1; i < 21; i++) {
+//            if (i == myTable) {
+//                tableList.add(new TableList("my table", getDrawable(R.drawable.my_table_border), 0));
+//            } else {
+//                tableList.add(new TableList(i, getDrawable(R.drawable.table_border), 1));
+//            }
+//        }
 
 
         adapter.setAdapterItem(tableList);
 
-        checkOrderTable(get_id, myTable);
 
 
         //오른쪽 사이드 메뉴
@@ -222,17 +230,17 @@ public class Table extends AppCompatActivity {
 
 //                checkOrderTable(get_id, myTable);
 
-                if (yes_arr.length() != 0) {
-                    for (int i = 0; i < list.length; i++) {
-                        tableList.get(list[i] - 1).setTableColor(getDrawable(R.drawable.table_boder_order));
-                        tableList.get(list[i] - 1).setTableGender(gender[i]);
-                        tableList.get(list[i] - 1).setTableGuestNum(guestNum[i]);
-                    }
-                } else {
-                    for (int i = 0; i < list.length; i++) {
-                        tableList.get(list[i] - 1).setTableColor(getDrawable(R.drawable.table_boder_order));
-                    }
-                }
+//                if (yes_arr.length() != 0) {
+//                    for (int i = 0; i < list.length; i++) {
+//                        tableList.get(list[i] - 1).setTableColor(getDrawable(R.drawable.table_boder_order));
+//                        tableList.get(list[i] - 1).setTableGender(gender[i]);
+//                        tableList.get(list[i] - 1).setTableGuestNum(guestNum[i]);
+//                    }
+//                } else {
+//                    for (int i = 0; i < list.length; i++) {
+//                        tableList.get(list[i] - 1).setTableColor(getDrawable(R.drawable.table_boder_order));
+//                    }
+//                }
 
 //
                 tableList.get(position).setTableColor(getDrawable(R.drawable.table_border_click));

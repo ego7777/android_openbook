@@ -17,6 +17,7 @@ import androidx.annotation.RequiresApi;
 
 import com.example.openbook.Chatting.ChattingUI;
 import com.example.openbook.Chatting.Client;
+import com.example.openbook.Chatting.ClientSocket;
 import com.example.openbook.FCMclass.SendNotification;
 import com.example.openbook.R;
 import com.example.openbook.TableInformation;
@@ -26,6 +27,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,6 +51,7 @@ public class PopUp extends Activity {
     String title;
     String body;
     int clickTable;
+    boolean orderCk;
 
     HashMap<Integer, TableInformation> tableInformationHashMap;
 
@@ -95,6 +98,7 @@ public class PopUp extends Activity {
             tableInformationHashMap = new HashMap<>();
             Log.d(TAG, "initial tableInformation");
         }
+        orderCk = getIntent().getBooleanExtra("orderCk", false);
 
         popup_title.setText(title);
         popup_body.setText(body);
@@ -130,9 +134,12 @@ public class PopUp extends Activity {
                     Intent intent = new Intent(PopUp.this, ChattingUI.class);
                     intent.putExtra("get_id", get_id);
                     intent.putExtra("tableNumber", tableNumber);
+                    intent.putExtra("orderCk", orderCk);
+
 
                     tableInformationHashMap.put(tableNumber,
-                            new TableInformation("table"+tableNumber, false, tableNumber, true));
+                            new TableInformation("table"+tableNumber,
+                                    false, tableNumber, true, false));
                     intent.putExtra("tableInformation", tableInformationHashMap);
 
                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -167,8 +174,11 @@ public class PopUp extends Activity {
                     Intent intent = new Intent(PopUp.this, ChattingUI.class);
                     intent.putExtra("get_id", get_id);
                     intent.putExtra("tableNumber", tableNumber);
+                    intent.putExtra("orderCk", orderCk);
 
-                    tableInformationHashMap.put(tableNumber, new TableInformation(null, false, 0, true));
+
+                    tableInformationHashMap.put(tableNumber,
+                            new TableInformation(null, false, 0, true, false));
                     intent.putExtra("tableInformation", tableInformationHashMap);
                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                     startActivity(intent);
@@ -177,7 +187,7 @@ public class PopUp extends Activity {
             });
 
             /**
-             * 프로필 포함
+             * 프로필 포함 요청
              */
         }else if(body.contains("프로필")){
             popup_yes.setOnClickListener(new View.OnClickListener() {
@@ -194,7 +204,8 @@ public class PopUp extends Activity {
                         tableInformationHashMap.get(clickTable).setWhoBuy(get_id);
                         tableInformationHashMap.get(clickTable).setUseTable(clickTable);
                     }else{
-                        tableInformationHashMap.put(clickTable, new TableInformation(get_id, false, clickTable, false));
+                        tableInformationHashMap.put(clickTable,
+                                new TableInformation(get_id, false, clickTable, false, false));
                     }
 
 
@@ -203,6 +214,7 @@ public class PopUp extends Activity {
                     Intent intent = new Intent(PopUp.this, Table.class);
                     intent.putExtra("tableInformation", tableInformationHashMap);
                     intent.putExtra("get_id", get_id);
+                    intent.putExtra("orderCk", orderCk);
 //                  intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                     startActivity(intent);
                     finish();
@@ -221,6 +233,29 @@ public class PopUp extends Activity {
                  * 해당 테이블에 요청 못하게 막기
                  */
 
+                if(tableInformationHashMap == null){
+                    tableInformationHashMap = new HashMap<>();
+                    Log.d(TAG, "new tableInformation");
+                }
+
+                if(tableInformationHashMap.get(clickTable) != null){
+                    tableInformationHashMap.get(clickTable).setWhoBuy(get_id);
+                    tableInformationHashMap.get(clickTable).setUseTable(clickTable);
+                    tableInformationHashMap.get(clickTable).setBlock(true);
+                }else{
+                    tableInformationHashMap.put(clickTable,
+                            new TableInformation(get_id, false, clickTable, false, true));
+                }
+
+
+                Log.d(TAG, "tableInformation add :" + tableInformationHashMap.get(clickTable));
+
+                Intent intent = new Intent(PopUp.this, Table.class);
+                intent.putExtra("tableInformation", tableInformationHashMap);
+                intent.putExtra("get_id", get_id);
+                intent.putExtra("orderCk", orderCk);
+//                  intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
                 finish();
             }
         });

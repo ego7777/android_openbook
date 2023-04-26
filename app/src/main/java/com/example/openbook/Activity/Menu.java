@@ -1,5 +1,6 @@
 package com.example.openbook.Activity;
 
+
 import android.app.Dialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -38,13 +39,18 @@ import com.example.openbook.TableInformation;
 import com.example.openbook.View.CartList;
 import com.example.openbook.View.MenuList;
 import com.example.openbook.View.SideList;
+import com.example.openbook.View.TableList;
 
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+
+
+import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -64,13 +70,18 @@ public class Menu extends AppCompatActivity {
     String TAG = "menuTAG";
 
     int totalPrice;
-
+    int myTable;
     boolean orderCk = false;
     boolean infoCk = false;
-    ClientSocket clientSocket;
+
+    public static ClientSocket clientSocket;
+    boolean loop = false;
 
     ArrayList<MenuList> menuLists;
     ArrayList<CartList> cartLists;
+
+    ArrayList<TableList> tableList;
+
     HashMap<Integer, TableInformation> tableInformationHashMap;
 
     SharedPreferences pref;
@@ -90,6 +101,7 @@ public class Menu extends AppCompatActivity {
     ListView navigation;
     SideListViewAdapter sideAdapter;
 
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -98,17 +110,15 @@ public class Menu extends AppCompatActivity {
         get_id = getIntent().getStringExtra("get_id");
         orderCk = getIntent().getBooleanExtra("orderCk", false);
 
+
         tableInformationHashMap = (HashMap<Integer, TableInformation>) getIntent().getSerializableExtra("tableInformation");
-//        Log.d(TAG, "intent_ticketList :" + ticketList.isEmpty());
+
 
         if(tableInformationHashMap == null){
             Log.d(TAG, "onCreate tableInformation null");
         }else{
             Log.d(TAG, "intent tableInformation size:" + tableInformationHashMap.size());
         }
-
-
-
 
 
         /**
@@ -263,6 +273,7 @@ public class Menu extends AppCompatActivity {
     } //onStart()
 
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onResume() {
         super.onResume();
@@ -278,8 +289,9 @@ public class Menu extends AppCompatActivity {
                 Intent intent = new Intent(getApplicationContext(), Table.class);
                 intent.putExtra("get_id", get_id);
                 intent.putExtra("orderCk", orderCk);
+                intent.putExtra("tableList", tableList);
+                //이미지 직렬화 안햐서 빠꾸먹음
                 intent.putExtra("tableInformation", tableInformationHashMap);
-//                intent.putExtra("clientSocket", clientSocket);
                 startActivity(intent);
             }
         });
@@ -467,8 +479,26 @@ public class Menu extends AppCompatActivity {
                                             totalPrice = 0;
                                             orderPrice.setText("");
 
-                                            clientSocket = new ClientSocket("3.36.255.141", 7777, get_id);
-                                            clientSocket.start();
+                                            if(clientSocket == null){
+                                                clientSocket = new ClientSocket("3.36.255.141", 7777, get_id);
+                                                clientSocket.start();
+                                                Log.d(TAG, "소켓 시작");
+                                                loop = true;
+
+                                                handler.postDelayed(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        if(clientSocket.socket.isConnected()){
+                                                            updateTable updateTable = new updateTable();
+                                                            updateTable.start();
+                                                            Log.d(TAG, "updateTable start");
+                                                        }
+                                                    }
+                                                }, 1000);
+
+
+                                            }
+
 
                                         } else {
                                             orderCk = false;
@@ -526,6 +556,28 @@ public class Menu extends AppCompatActivity {
                 }
             }
         });
+
+        myTable = Integer.parseInt(get_id.replace("table", ""));
+
+
+        if(tableList == null){
+            tableList = new ArrayList();
+            Log.d(TAG, "onResume tableList initial one");
+        }else{
+            Log.d(TAG, "intent tableList size :" + tableList.size());
+        }
+
+
+        for(int i=1; i<21; i++){
+            if(i == myTable){
+                tableList.add(new TableList("my Table",getDrawable(R.drawable.my_table_border), 0));
+            }else{
+                tableList.add(new TableList(i, getDrawable(R.drawable.table_border), 1));
+            }
+        }
+
+        Log.d(TAG, "tableList :" + tableList.size());
+
 
     }
 
@@ -612,18 +664,53 @@ public class Menu extends AppCompatActivity {
         Log.d(TAG, "onStop: ");
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    @Override
-    protected void onPause() {
-        super.onPause();
-        Log.d(TAG, "onPause: ");
+    public class updateTable extends Thread {
 
-        try {
-            String line = clientSocket.networkReader.readLine();
+        BufferedReader networkReader;
 
-        } catch (IOException e) {
-            e.printStackTrace();
+
+        @RequiresApi(api = Build.VERSION_CODES.O)
+        @Override
+        public void run() {
+            super.run();
+
+            try {
+                networkReader = new BufferedReader(
+                        new InputStreamReader(clientSocket.socket.getInputStream()));
+                Log.d(TAG, "networkReader :" + networkReader.ready());
+                Log.d(TAG, "UI socket 연결 :" + clientSocket.socket.isConnected());
+
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+
+            while (loop) {
+                Log.d(TAG, "while loop start");
+                try {
+                    String line = networkReader.readLine();
+                    Log.d(TAG, "run: " + line);
+
+
+                    if(line.equals(Integer.toString(myTable))){
+                        //넘기고
+                    }else{
+                        tableList.get(Integer.parseInt(line)-1).setTableColor(getDrawable(R.drawable.table_boder_order));
+                    }
+
+
+                    //서버로부터 FIN 패킷(서버로 연결된 세션의 종료를 알리는 패킷)을 수신하면 read() 메소드는 null을 반환
+                    if (line == null) {
+                        Log.d(TAG, "break");
+                        break;
+                    }
+
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
-
     }
 }

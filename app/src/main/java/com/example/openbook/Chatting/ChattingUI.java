@@ -1,5 +1,7 @@
 package com.example.openbook.Chatting;
 
+import static com.example.openbook.Chatting.ClientSocket.socket;
+
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -23,7 +25,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.openbook.Activity.Table;
 import com.example.openbook.Adapter.ChattingAdapter;
 import com.example.openbook.Activity.Menu;
-import com.example.openbook.FCMclass.SendNotification;
 import com.example.openbook.R;
 import com.example.openbook.TableInformation;
 import com.example.openbook.View.ChattingList;
@@ -34,7 +35,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.InterruptedIOException;
 import java.io.OutputStreamWriter;
-import java.net.Socket;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -75,9 +75,9 @@ public class ChattingUI extends AppCompatActivity {
 
 
     LocalDateTime localTime = LocalDateTime.now();
-    ClientSocket clientSocket;
 
     BufferedWriter networkWrite = null;
+    ClientSocket clientSocket;
     updateUI updateUI;
 
     HashMap<Integer, TableInformation> tableInformationHashMap;
@@ -89,6 +89,8 @@ public class ChattingUI extends AppCompatActivity {
 
         table_num = getIntent().getIntExtra("tableNumber",0);
         get_id = getIntent().getStringExtra("get_id");
+
+
         tableInformationHashMap = (HashMap<Integer, TableInformation>) getIntent().getSerializableExtra("tableInformation");
         Log.d(TAG, "tableInformation :" + tableInformationHashMap);
 
@@ -202,14 +204,13 @@ public class ChattingUI extends AppCompatActivity {
                     case MSG_CONNECT:
                         m = "정상적으로 서버에 접속하였습니다.";
 
-
-                        if(clientSocket.socket.isConnected()){
+                        if(socket.isConnected()){
                             updateUI = new updateUI();
                             updateUI.start();
                             Log.d(TAG, "UI update Thread 시작");
 
                         }else{
-                            Log.d(TAG, "소켓 없어서 새로 생성:" + clientSocket.socket.isConnected());
+                            Log.d(TAG, "소켓 없어서 새로 생성:" + socket.isConnected());
 
                         }
 
@@ -324,6 +325,11 @@ public class ChattingUI extends AppCompatActivity {
                 Log.d(TAG, "clientSocket 연결 오류 :" + e);
             }
 
+        }else{
+            Message toMain = mMainHandler.obtainMessage();
+            toMain.what =MSG_CONNECT;
+            mMainHandler.sendMessage(toMain);
+
         }
 
 
@@ -344,7 +350,7 @@ public class ChattingUI extends AppCompatActivity {
                 case MSG_SEND:
                     try{
                         networkWrite = new BufferedWriter
-                                (new OutputStreamWriter(clientSocket.socket.getOutputStream()));
+                                (new OutputStreamWriter(socket.getOutputStream()));
 
                         networkWrite.write((String) msg.obj);
                         networkWrite.newLine();
@@ -376,17 +382,6 @@ public class ChattingUI extends AppCompatActivity {
     public class updateUI extends Thread{
 
         BufferedReader networkReader;
-
-//        {
-//            try {
-//                Log.d(TAG, "UI socket 연결 :" + clientSocket.socket.isConnected());
-//                networkReader = new BufferedReader(
-//                        new InputStreamReader(clientSocket.socket.getInputStream()));
-//
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
 
 
         @Override

@@ -1,6 +1,5 @@
 package com.example.openbook.View;
 
-import com.example.openbook.Adapter.CartAdapter;
 
 public class CartList {
 

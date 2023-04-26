@@ -1,6 +1,5 @@
 package com.example.openbook;
 
-import android.os.Parcelable;
 
 import java.io.Serializable;
 
@@ -10,12 +9,15 @@ public class TableInformation implements Serializable {
     boolean usage;
     int useTable;
     boolean chattingAgree;
+    boolean block;
 
-    public TableInformation(String whoBuy, boolean usage, int useTable, boolean chattingAgree){
+    public TableInformation(String whoBuy, boolean usage,
+                            int useTable, boolean chattingAgree, boolean block){
         this.whoBuy =whoBuy;
         this.usage = usage;
         this.useTable = useTable;
         this.chattingAgree = chattingAgree;
+        this.block = block;
     }
 
     public String getWhoBuy() {
@@ -49,5 +51,9 @@ public class TableInformation implements Serializable {
 
     public void setChattingAgree(boolean chattingAgree) {
         this.chattingAgree = chattingAgree;
+    }
+
+    public void setBlock(boolean block) {
+        this.block = block;
     }
 }

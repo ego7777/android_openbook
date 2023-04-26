@@ -1,7 +1,10 @@
 package com.example.openbook.Chatting;
 
+import android.annotation.SuppressLint;
 import android.os.Build;
 
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.util.Log;
 
 import androidx.annotation.RequiresApi;
@@ -17,20 +20,24 @@ import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
+import java.util.ArrayList;
+
 
 
 @RequiresApi(api = Build.VERSION_CODES.O)
-public class ClientSocket extends Thread implements Serializable {
+public class ClientSocket extends Thread implements Serializable{
 
     private final String TAG = "ClientSocket";
     SocketAddress socketAddress;
 
-    final int connection_timeout = 9999;
+    final int connection_timeout = 99999;
     public BufferedReader networkReader = null;
     public BufferedWriter networkWrite = null;
 
     String get_id;
-    static Socket socket;
+    public static Socket socket;
+    boolean loop;
+    String line;
 
 
 
@@ -40,6 +47,7 @@ public class ClientSocket extends Thread implements Serializable {
         this.get_id = get_id;
         socketAddress = new InetSocketAddress(ip, port);
     }
+
 
 
 
@@ -87,10 +95,23 @@ public class ClientSocket extends Thread implements Serializable {
             Log.d(TAG, "id flush");
 
 //            loop = true;
-//            Message toMain = chattingUI.mMainHandler.obtainMessage();
-//            toMain.what = MSG_CONNECT;
-//            chattingUI.mMainHandler.sendMessage(toMain);
-//            Log.d(TAG, "접속 보내는거? ");
+//            Log.d(TAG, "loop : " + loop);
+//
+//            while(loop){
+//                Log.d(TAG, "while loop start");
+//                try{
+//                    line = networkReader.readLine();
+//                    Log.d(TAG, "line :" + line);
+//
+//                    if(line == null){
+//                        Log.d(TAG, "break");
+//                        break;
+//                    }
+//
+//                }catch (Exception e){
+//                    Log.d(TAG, "while Exception: " + e);
+//                }
+//            }
 
 
 
@@ -117,6 +138,7 @@ public class ClientSocket extends Thread implements Serializable {
             Log.d(TAG, "quit: e" + e);
         }
     }
+
 
 
 }
