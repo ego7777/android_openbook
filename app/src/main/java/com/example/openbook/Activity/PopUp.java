@@ -21,6 +21,7 @@ import com.example.openbook.Chatting.ClientSocket;
 import com.example.openbook.FCMclass.SendNotification;
 import com.example.openbook.R;
 import com.example.openbook.TableInformation;
+import com.example.openbook.View.TableList;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -52,6 +53,7 @@ public class PopUp extends Activity {
     String body;
     int clickTable;
     boolean orderCk;
+    ArrayList<TableList> tableList;
 
     HashMap<Integer, TableInformation> tableInformationHashMap;
 
@@ -66,6 +68,8 @@ public class PopUp extends Activity {
         TextView popup_body = findViewById(R.id.popup_body);
 
         title = getIntent().getStringExtra("notificationTitle");
+
+        tableList = (ArrayList<TableList>) getIntent().getSerializableExtra("tableList");
 
 
         if(title == null){
@@ -135,6 +139,7 @@ public class PopUp extends Activity {
                     intent.putExtra("get_id", get_id);
                     intent.putExtra("tableNumber", tableNumber);
                     intent.putExtra("orderCk", orderCk);
+                    intent.putExtra("tableList", tableList);
 
 
                     tableInformationHashMap.put(tableNumber,
@@ -175,7 +180,7 @@ public class PopUp extends Activity {
                     intent.putExtra("get_id", get_id);
                     intent.putExtra("tableNumber", tableNumber);
                     intent.putExtra("orderCk", orderCk);
-
+                    intent.putExtra("tableList", tableList);
 
                     tableInformationHashMap.put(tableNumber,
                             new TableInformation(null, false, 0, true, false));
@@ -215,6 +220,7 @@ public class PopUp extends Activity {
                     intent.putExtra("tableInformation", tableInformationHashMap);
                     intent.putExtra("get_id", get_id);
                     intent.putExtra("orderCk", orderCk);
+                    intent.putExtra("tableList", tableList);
 //                  intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                     startActivity(intent);
                     finish();
@@ -254,6 +260,7 @@ public class PopUp extends Activity {
                 intent.putExtra("tableInformation", tableInformationHashMap);
                 intent.putExtra("get_id", get_id);
                 intent.putExtra("orderCk", orderCk);
+                intent.putExtra("tableList", tableList);
 //                  intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 startActivity(intent);
                 finish();

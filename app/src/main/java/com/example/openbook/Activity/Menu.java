@@ -33,6 +33,7 @@ import com.example.openbook.Chatting.Client;
 import com.example.openbook.Chatting.ClientSocket;
 import com.example.openbook.Deco.menu_recyclerview_deco;
 import com.example.openbook.DialogCustom;
+import com.example.openbook.DrawableMethod;
 import com.example.openbook.FCMclass.FCM;
 import com.example.openbook.R;
 import com.example.openbook.TableInformation;
@@ -247,6 +248,7 @@ public class Menu extends AppCompatActivity {
 
 
         if (!getName.isEmpty()) {
+
             String splitName[] = getName.split("###");
             String splitCount[] = getCount.split("###");
             String splitPrice[] = getPrice.split("###");
@@ -269,7 +271,6 @@ public class Menu extends AppCompatActivity {
             orderPrice.setText(String.valueOf("합계: " + totalPrice + " 원"));
         }
 
-
     } //onStart()
 
 
@@ -286,11 +287,15 @@ public class Menu extends AppCompatActivity {
         table.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
+                if(clientSocket != null && clientSocket.getTableList()!= null){
+                    tableList = clientSocket.getTableList();
+                }
+
                 Intent intent = new Intent(getApplicationContext(), Table.class);
                 intent.putExtra("get_id", get_id);
                 intent.putExtra("orderCk", orderCk);
                 intent.putExtra("tableList", tableList);
-                //이미지 직렬화 안햐서 빠꾸먹음
                 intent.putExtra("tableInformation", tableInformationHashMap);
                 startActivity(intent);
             }
@@ -480,21 +485,21 @@ public class Menu extends AppCompatActivity {
                                             orderPrice.setText("");
 
                                             if(clientSocket == null){
-                                                clientSocket = new ClientSocket("3.36.255.141", 7777, get_id);
+                                                clientSocket = new ClientSocket("3.36.255.141", 7777, get_id, getApplicationContext(), tableList);
                                                 clientSocket.start();
                                                 Log.d(TAG, "소켓 시작");
-                                                loop = true;
+//                                                loop = true;
 
-                                                handler.postDelayed(new Runnable() {
-                                                    @Override
-                                                    public void run() {
-                                                        if(clientSocket.socket.isConnected()){
-                                                            updateTable updateTable = new updateTable();
-                                                            updateTable.start();
-                                                            Log.d(TAG, "updateTable start");
-                                                        }
-                                                    }
-                                                }, 1000);
+//                                                handler.postDelayed(new Runnable() {
+//                                                    @Override
+//                                                    public void run() {
+//                                                        if(clientSocket.socket.isConnected()){
+//                                                            updateTable updateTable = new updateTable();
+//                                                            updateTable.start();
+//                                                            Log.d(TAG, "updateTable start");
+//                                                        }
+//                                                    }
+//                                                }, 1000);
 
 
                                             }
@@ -549,7 +554,7 @@ public class Menu extends AppCompatActivity {
                         orderCk = true;
                         dialogCustom.moveActivity(Menu.this,
                                 "테이블 정보를 입력하기 위한 페이지로 이동하겠습니까?",
-                                get_id, orderCk);
+                                get_id, orderCk, tableList);
 
                     }
 
@@ -567,12 +572,20 @@ public class Menu extends AppCompatActivity {
             Log.d(TAG, "intent tableList size :" + tableList.size());
         }
 
+        DrawableMethod drawableToBitmap = new DrawableMethod();
+
+        byte[] myTableImage = drawableToBitmap.makeBitmap(getDrawable(R.drawable.my_table_border));
+        Log.d(TAG, "myTableImage :" + myTableImage);
+        byte[] otherTableImage = drawableToBitmap.makeBitmap(getDrawable(R.drawable.table_border));
+        Log.d(TAG, "otherTableImage : " + otherTableImage);
+
+
 
         for(int i=1; i<21; i++){
             if(i == myTable){
-                tableList.add(new TableList("my Table",getDrawable(R.drawable.my_table_border), 0));
+                tableList.add(new TableList("my Table",myTableImage, 0));
             }else{
-                tableList.add(new TableList(i, getDrawable(R.drawable.table_border), 1));
+                tableList.add(new TableList(i, otherTableImage, 1));
             }
         }
 
@@ -650,10 +663,10 @@ public class Menu extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
 
-        editor.remove("name");
-        editor.remove("count");
-        editor.remove("price");
-        editor.commit();
+//        editor.remove("name");
+//        editor.remove("count");
+//        editor.remove("price");
+//        editor.commit();
 
         Log.d(TAG, "onDestroy: ");
     }
@@ -667,6 +680,9 @@ public class Menu extends AppCompatActivity {
     public class updateTable extends Thread {
 
         BufferedReader networkReader;
+        DrawableMethod drawableToBitmap = new DrawableMethod();
+
+        byte[] orderTableImage = drawableToBitmap.makeBitmap(getDrawable(R.drawable.table_boder_order));
 
 
         @RequiresApi(api = Build.VERSION_CODES.O)
@@ -696,7 +712,8 @@ public class Menu extends AppCompatActivity {
                     if(line.equals(Integer.toString(myTable))){
                         //넘기고
                     }else{
-                        tableList.get(Integer.parseInt(line)-1).setTableColor(getDrawable(R.drawable.table_boder_order));
+                        tableList.get(Integer.parseInt(line)-1).setBytes(orderTableImage);
+                        tableList.get(Integer.parseInt(line)-1).setViewType(2);
                     }
 
 

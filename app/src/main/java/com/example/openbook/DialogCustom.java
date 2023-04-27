@@ -10,8 +10,10 @@ import android.os.Handler;
 import com.example.openbook.Activity.Table;
 import com.example.openbook.Chatting.ClientSocket;
 import com.example.openbook.FCMclass.SendNotification;
+import com.example.openbook.View.TableList;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 
 public class DialogCustom {
@@ -59,7 +61,7 @@ public class DialogCustom {
     }
 
     //Menu Activity 에서 Table Activity 로 넘어가는 dialog
-    public void moveActivity(Context context, String message, String id, Boolean orderCk){
+    public void moveActivity(Context context, String message, String id, Boolean orderCk, ArrayList<TableList> tableList){
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setMessage(message)
                 .setTitle("알람")
@@ -69,6 +71,7 @@ public class DialogCustom {
                         Intent intent = new Intent(context, Table.class);
                         intent.putExtra("get_id", id);
                         intent.putExtra("orderCk", orderCk);
+                        intent.putExtra("tableList", tableList);
                         context.startActivity(intent);
                     }
                 })

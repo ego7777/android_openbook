@@ -2,8 +2,12 @@ package com.example.openbook.Activity;
 
 import android.app.Dialog;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
@@ -22,6 +26,7 @@ import com.example.openbook.Chatting.ChattingUI;
 import com.example.openbook.Chatting.Client;
 import com.example.openbook.Chatting.ClientSocket;
 import com.example.openbook.DialogCustom;
+import com.example.openbook.DrawableMethod;
 import com.example.openbook.ImageLoadTask;
 import com.example.openbook.QRcode.MakeQR;
 import com.example.openbook.R;
@@ -56,7 +61,7 @@ public class Table extends AppCompatActivity {
     int clickTable;
     TableAdapter adapter;
 
-    int list[];
+//    int list[];
     String gender[];
     String guestNum[];
     JSONArray yes_arr;
@@ -77,6 +82,9 @@ public class Table extends AppCompatActivity {
     ImageLoadTask task;
     String url;
 
+
+    DrawableMethod drawableMethod;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -88,10 +96,10 @@ public class Table extends AppCompatActivity {
 
         tableList = (ArrayList<TableList>) getIntent().getSerializableExtra("tableList");
 
-        if(tableList == null){
+        if (tableList == null) {
             tableList = new ArrayList<>();
             Log.d(TAG, "onCreate tableList initial one");
-        }else{
+        } else {
             Log.d(TAG, "intent tableList size :" + tableList.size());
         }
 
@@ -126,25 +134,31 @@ public class Table extends AppCompatActivity {
         table_grid.setAdapter(adapter);
 
 
-        //리스트 추가 후 어댑터 연결
-
-
         myTable = Integer.parseInt(get_id.replace("table", ""));
 
         /**
-         * 테이블 그리드 만들기 1
+         * tableColor 바꾸기
          */
-//        for (int i = 1; i < 21; i++) {
-//            if (i == myTable) {
-//                tableList.add(new TableList("my table", getDrawable(R.drawable.my_table_border), 0));
-//            } else {
-//                tableList.add(new TableList(i, getDrawable(R.drawable.table_border), 1));
-//            }
-//        }
+
+        drawableMethod = new DrawableMethod();
+        BitmapDrawable drawable;
+        Bitmap bitmap;
+
+        for (int i = 0; i < 20; i++) {
+            if (i == myTable) {
+                bitmap = drawableMethod.byteArrayToBitmap(tableList.get(i).getBytes());
+                drawable = new BitmapDrawable(this.getResources(), bitmap);
+                tableList.get(i).setTableColor(drawable);
+
+            } else {
+                bitmap = drawableMethod.byteArrayToBitmap(tableList.get(i).getBytes());
+                drawable = new BitmapDrawable(this.getResources(), bitmap);
+                tableList.get(i).setTableColor(drawable);
+            }
+        }
 
 
         adapter.setAdapterItem(tableList);
-
 
 
         //오른쪽 사이드 메뉴
@@ -161,7 +175,6 @@ public class Table extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
 //        Log.d(TAG, "onStart: ");
-
 
 
 //        myTable = Integer.parseInt(get_id.replace("table", ""));
@@ -194,9 +207,23 @@ public class Table extends AppCompatActivity {
 
         boolean orderCk = getIntent().getBooleanExtra("orderCk", false);
 
+        drawableMethod = new DrawableMethod();
+
+        byte[] myTableImage = drawableMethod.makeBitmap(getDrawable(R.drawable.my_table_border));
+        Log.d(TAG, "myTableImage :" + myTableImage);
+
+        byte[] notOrderTableImage = drawableMethod.makeBitmap(getDrawable(R.drawable.table_border));
+        Log.d(TAG, "notOrderTableImage : " + notOrderTableImage);
+
+        byte[] orderTableImage = drawableMethod.makeBitmap(getDrawable(R.drawable.table_boder_order));
+        Log.d(TAG, "orderTableImage :" + orderTableImage);
+
+
+
         menu.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
                 Intent intent = new Intent(Table.this, Menu.class);
                 intent.putExtra("get_id", get_id);
                 intent.putExtra("orderCk", orderCk);
@@ -204,8 +231,10 @@ public class Table extends AppCompatActivity {
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 startActivity(intent);
 
+
             }
         });
+
 
         //table 누르면 옆에 사이드 메뉴 뜨게
         adapter.setOnItemClickListener(new TableAdapter.OnItemClickListener() {
@@ -220,32 +249,29 @@ public class Table extends AppCompatActivity {
                  * 테이블 그리드 만들기 2
                  */
 
+                int temp = 1000;
+
                 for (int i = 0; i < 20; i++) {
                     if (i == myTable - 1) {
                         tableList.get(i).setTableColor(getDrawable(R.drawable.my_table_border));
                     } else if (i != position) {
+
+                        if (tableList.get(i).getViewType() == 2) {
+                           temp = i;
+                        }
                         tableList.get(i).setTableColor(getDrawable(R.drawable.table_border));
                     }
                 }
-
-//                checkOrderTable(get_id, myTable);
-
-//                if (yes_arr.length() != 0) {
-//                    for (int i = 0; i < list.length; i++) {
-//                        tableList.get(list[i] - 1).setTableColor(getDrawable(R.drawable.table_boder_order));
-//                        tableList.get(list[i] - 1).setTableGender(gender[i]);
-//                        tableList.get(list[i] - 1).setTableGuestNum(guestNum[i]);
-//                    }
-//                } else {
-//                    for (int i = 0; i < list.length; i++) {
-//                        tableList.get(list[i] - 1).setTableColor(getDrawable(R.drawable.table_boder_order));
-//                    }
-//                }
-
-//
                 tableList.get(position).setTableColor(getDrawable(R.drawable.table_border_click));
+
+                if(temp != 1000){
+                    tableList.get(temp).setTableColor(getDrawable(R.drawable.table_boder_order));
+                    Log.d(TAG, "active table :" + temp);
+                }
+
             }
         });
+
 
         DialogCustom alertDialog = new DialogCustom();
 
@@ -267,20 +293,21 @@ public class Table extends AppCompatActivity {
                 } else if (clickTable == myTable) {
                     alertDialog.showAlertDialog(Table.this,
                             "나의 채팅방 입니다. 다른 테이블과 채팅해보세요!");
-                } else if (list.length > 0) {
+                } else if (tableList.size() > 0) {
 
                     //list(들어와 있는 애들이면 그냥 채팅이 가능하게 해주는 것인데 여기서 fcm을 보내는
-                    for (int i = 0; i < list.length; i++) {
-                        if (list[i] == clickTable) {
+                    for (int i = 0; i < tableList.size(); i++) {
+                        if (tableList.get(i).getTableNum() == clickTable) {
 
                             if (tableInformationHashMap.get(clickTable) == null ||
-                                    tableInformationHashMap.get(clickTable).isChattingAgree() == false)
-                             {
+                                    tableInformationHashMap.get(clickTable).isChattingAgree() == false) {
                                 alertDialog.chattingRequest(Table.this,
                                         clickTable + "번 테이블과 채팅을 하시겠습니까?" +
                                                 "\n<추신> 채팅 전 테이블 정보를 입력하는 것을 추천드립니다!",
                                         "table" + clickTable, get_id);
                                 Log.d(TAG, "채팅 신청");
+
+                                break;
 
                             } else if (tableInformationHashMap.get(clickTable).isChattingAgree() == true) {
                                 Intent intent = new Intent(Table.this, ChattingUI.class);
@@ -290,7 +317,6 @@ public class Table extends AppCompatActivity {
                                 startActivity(intent);
                             }
 
-                            break; // 얘가 안된다 망할..^^
 
 //
                         } else {
@@ -419,7 +445,7 @@ public class Table extends AppCompatActivity {
 
                                             if (tableInformationHashMap == null ||
                                                     tableInformationHashMap.get(clickTable) == null ||
-                                            tableInformationHashMap.get(clickTable).getUseTable() == 0) {
+                                                    tableInformationHashMap.get(clickTable).getUseTable() == 0) {
 
                                                 Log.d(TAG, "팝업 안에서 발생 null");
                                                 task = new ImageLoadTask(Table.this, false, url, table_info_img);
@@ -480,6 +506,7 @@ public class Table extends AppCompatActivity {
                         intent.putExtra("body", "프로필 조회권을 구매하시겠습니까?\n** 프로필 조회권 2000원");
                         intent.putExtra("get_id", get_id);
                         intent.putExtra("clickTable", clickTable);
+                        intent.putExtra("tableList", tableList);
                         intent.putExtra("tableInformation", tableInformationHashMap);
                         startActivity(intent);
                         dlg.dismiss();
@@ -530,7 +557,7 @@ public class Table extends AppCompatActivity {
                     yes_arr = jArray.getJSONArray(0);
                     no_arr = jArray.getJSONArray(1);
 
-                    list = new int[yes_arr.length() + no_arr.length()];
+//                    list = new int[yes_arr.length() + no_arr.length()];
                     gender = new String[yes_arr.length()];
                     guestNum = new String[yes_arr.length()];
 
@@ -538,14 +565,14 @@ public class Table extends AppCompatActivity {
                     for (int i = 0; i < yes_arr.length(); i++) {
                         JSONObject jsonObject = yes_arr.getJSONObject(i);
 
-                        list[i] = Integer.parseInt(jsonObject.getString("tableName").replace("table", ""));
+//                        list[i] = Integer.parseInt(jsonObject.getString("tableName").replace("table", ""));
                         gender[i] = jsonObject.getString("gender");
                         guestNum[i] = jsonObject.getString("guestNum");
                     }
 
                     //정보 입력 안한애들
                     for (int i = 0; i < no_arr.length(); i++) {
-                        list[yes_arr.length() + i] = Integer.parseInt(no_arr.getString(i).replace("table", ""));
+//                        list[yes_arr.length() + i] = Integer.parseInt(no_arr.getString(i).replace("table", ""));
                     }
 
 
@@ -559,13 +586,13 @@ public class Table extends AppCompatActivity {
                     @Override
                     public void run() {
                         for (int i = 0; i < yes_arr.length(); i++) {
-                            tableList.get(list[i] - 1).setTableColor(getDrawable(R.drawable.table_boder_order));
-                            tableList.get(list[i] - 1).setTableGender(gender[i]);
-                            tableList.get(list[i] - 1).setTableGuestNum(guestNum[i]);
+//                            tableList.get(list[i] - 1).setTableColor(getDrawable(R.drawable.table_boder_order));
+//                            tableList.get(list[i] - 1).setTableGender(gender[i]);
+//                            tableList.get(list[i] - 1).setTableGuestNum(guestNum[i]);
                         }
 
                         for (int i = 0; i < no_arr.length(); i++) {
-                            tableList.get(list[yes_arr.length() + i] - 1).setTableColor(getDrawable(R.drawable.table_boder_order));
+//                            tableList.get(list[yes_arr.length() + i] - 1).setTableColor(getDrawable(R.drawable.table_boder_order));
                         }
 
                         tableList.get(myTable - 1).setTableColor(getDrawable(R.drawable.my_table_border));
@@ -584,6 +611,8 @@ public class Table extends AppCompatActivity {
         super.onStop();
         Log.d(TAG, "onStop: ");
     }
+
+
 
 
 }

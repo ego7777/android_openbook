@@ -28,6 +28,7 @@ import com.example.openbook.Activity.Menu;
 import com.example.openbook.R;
 import com.example.openbook.TableInformation;
 import com.example.openbook.View.ChattingList;
+import com.example.openbook.View.TableList;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -49,7 +50,7 @@ public class ChattingUI extends AppCompatActivity {
     int table_num;
     String time;
 
-
+    ArrayList<TableList> tableList;
     ArrayList<ChattingList> chatLists;
     ChattingAdapter chattingAdapter;
     RecyclerView chatting_view;
@@ -89,6 +90,7 @@ public class ChattingUI extends AppCompatActivity {
 
         table_num = getIntent().getIntExtra("tableNumber",0);
         get_id = getIntent().getStringExtra("get_id");
+        tableList = (ArrayList<TableList>) getIntent().getSerializableExtra("tableList");
 
 
         tableInformationHashMap = (HashMap<Integer, TableInformation>) getIntent().getSerializableExtra("tableInformation");
@@ -113,6 +115,7 @@ public class ChattingUI extends AppCompatActivity {
                 Intent intent = new Intent(getApplicationContext(), Menu.class);
                 intent.putExtra("id", get_id);
                 intent.putExtra("orderCk",true);
+                intent.putExtra("tableList", tableList);
                 intent.putExtra("TableInformation", tableInformationHashMap);
                 startActivity(intent);
             }
@@ -125,6 +128,7 @@ public class ChattingUI extends AppCompatActivity {
                 Intent intent = new Intent(getApplicationContext(), Menu.class);
                 intent.putExtra("get_id", get_id);
                 intent.putExtra("orderCk",true);
+                intent.putExtra("tableList", tableList);
                 intent.putExtra("TableInformation", tableInformationHashMap);
                 startActivity(intent);
             }
@@ -312,7 +316,7 @@ public class ChattingUI extends AppCompatActivity {
 
         if(clientSocket == null){
             try{
-                clientSocket = new ClientSocket("3.36.255.141", 7777, get_id);
+                clientSocket = new ClientSocket("3.36.255.141", 7777, get_id, getApplicationContext(), clientSocket.tableList);
                 clientSocket.start();
                 loop = true;
 
