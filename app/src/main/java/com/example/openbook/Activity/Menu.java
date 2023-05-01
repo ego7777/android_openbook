@@ -118,7 +118,7 @@ public class Menu extends AppCompatActivity {
         if(tableInformationHashMap == null){
             Log.d(TAG, "onCreate tableInformation null");
         }else{
-            Log.d(TAG, "intent tableInformation size:" + tableInformationHashMap.size());
+            Log.d(TAG, "menu.class intent tableInformation size:" + tableInformationHashMap.size());
         }
 
 
@@ -295,7 +295,7 @@ public class Menu extends AppCompatActivity {
                 Intent intent = new Intent(getApplicationContext(), Table.class);
                 intent.putExtra("get_id", get_id);
                 intent.putExtra("orderCk", orderCk);
-                intent.putExtra("tableList", tableList);
+//                intent.putExtra("tableList", tableList);
                 intent.putExtra("tableInformation", tableInformationHashMap);
                 startActivity(intent);
             }
@@ -314,6 +314,7 @@ public class Menu extends AppCompatActivity {
                 orderPrice.setText("합계: " + String.valueOf(totalPrice) + "원");
                 cartAdapter.setAdapterItem(cartLists);
                 sharedPreference();
+
 
             }
 
@@ -488,20 +489,6 @@ public class Menu extends AppCompatActivity {
                                                 clientSocket = new ClientSocket("3.36.255.141", 7777, get_id, getApplicationContext(), tableList);
                                                 clientSocket.start();
                                                 Log.d(TAG, "소켓 시작");
-//                                                loop = true;
-
-//                                                handler.postDelayed(new Runnable() {
-//                                                    @Override
-//                                                    public void run() {
-//                                                        if(clientSocket.socket.isConnected()){
-//                                                            updateTable updateTable = new updateTable();
-//                                                            updateTable.start();
-//                                                            Log.d(TAG, "updateTable start");
-//                                                        }
-//                                                    }
-//                                                }, 1000);
-
-
                                             }
 
 
@@ -569,23 +556,23 @@ public class Menu extends AppCompatActivity {
             tableList = new ArrayList();
             Log.d(TAG, "onResume tableList initial one");
         }else{
-            Log.d(TAG, "intent tableList size :" + tableList.size());
+            Log.d(TAG, "menu.class intent tableList size :" + tableList.size());
         }
 
-        DrawableMethod drawableToBitmap = new DrawableMethod();
-
-        byte[] myTableImage = drawableToBitmap.makeBitmap(getDrawable(R.drawable.my_table_border));
-        Log.d(TAG, "myTableImage :" + myTableImage);
-        byte[] otherTableImage = drawableToBitmap.makeBitmap(getDrawable(R.drawable.table_border));
-        Log.d(TAG, "otherTableImage : " + otherTableImage);
+//        DrawableMethod drawableToBitmap = new DrawableMethod();
+//
+//        byte[] myTableImage = drawableToBitmap.makeBitmap(getDrawable(R.drawable.my_table_border));
+//        Log.d(TAG, "myTableImage :" + myTableImage);
+//        byte[] otherTableImage = drawableToBitmap.makeBitmap(getDrawable(R.drawable.table_border));
+//        Log.d(TAG, "otherTableImage : " + otherTableImage);
 
 
 
         for(int i=1; i<21; i++){
             if(i == myTable){
-                tableList.add(new TableList("my Table",myTableImage, 0));
+                tableList.add(new TableList("my Table",getDrawable(R.drawable.my_table_border), 0));
             }else{
-                tableList.add(new TableList(i, otherTableImage, 1));
+                tableList.add(new TableList(i,getDrawable(R.drawable.table_border), 1));
             }
         }
 
@@ -677,57 +664,8 @@ public class Menu extends AppCompatActivity {
         Log.d(TAG, "onStop: ");
     }
 
-    public class updateTable extends Thread {
-
-        BufferedReader networkReader;
-        DrawableMethod drawableToBitmap = new DrawableMethod();
-
-        byte[] orderTableImage = drawableToBitmap.makeBitmap(getDrawable(R.drawable.table_boder_order));
 
 
-        @RequiresApi(api = Build.VERSION_CODES.O)
-        @Override
-        public void run() {
-            super.run();
-
-            try {
-                networkReader = new BufferedReader(
-                        new InputStreamReader(clientSocket.socket.getInputStream()));
-                Log.d(TAG, "networkReader :" + networkReader.ready());
-                Log.d(TAG, "UI socket 연결 :" + clientSocket.socket.isConnected());
 
 
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-
-            while (loop) {
-                Log.d(TAG, "while loop start");
-                try {
-                    String line = networkReader.readLine();
-                    Log.d(TAG, "run: " + line);
-
-
-                    if(line.equals(Integer.toString(myTable))){
-                        //넘기고
-                    }else{
-                        tableList.get(Integer.parseInt(line)-1).setBytes(orderTableImage);
-                        tableList.get(Integer.parseInt(line)-1).setViewType(2);
-                    }
-
-
-                    //서버로부터 FIN 패킷(서버로 연결된 세션의 종료를 알리는 패킷)을 수신하면 read() 메소드는 null을 반환
-                    if (line == null) {
-                        Log.d(TAG, "break");
-                        break;
-                    }
-
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
 }

@@ -71,7 +71,7 @@ public class DialogCustom {
                         Intent intent = new Intent(context, Table.class);
                         intent.putExtra("get_id", id);
                         intent.putExtra("orderCk", orderCk);
-                        intent.putExtra("tableList", tableList);
+//                        intent.putExtra("tableList", tableList);
                         context.startActivity(intent);
                     }
                 })

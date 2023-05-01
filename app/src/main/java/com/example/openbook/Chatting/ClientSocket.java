@@ -15,6 +15,8 @@ import com.example.openbook.DrawableMethod;
 import com.example.openbook.R;
 import com.example.openbook.View.TableList;
 
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -26,11 +28,11 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.util.ArrayList;
-
+import java.util.Arrays;
 
 
 @RequiresApi(api = Build.VERSION_CODES.O)
-public class ClientSocket extends Thread implements Serializable{
+public class ClientSocket extends Thread implements Serializable {
 
     private final String TAG = "ClientSocket";
     SocketAddress socketAddress;
@@ -43,6 +45,7 @@ public class ClientSocket extends Thread implements Serializable{
     public static Socket socket;
     boolean loop;
     String line;
+    int table[];
 
     Context context;
 
@@ -53,11 +56,6 @@ public class ClientSocket extends Thread implements Serializable{
     ArrayList<TableList> tableList;
 
 
-
-
-
-
-
     public ClientSocket(String ip, int port, String get_id, Context context, ArrayList<TableList> tableList) {
         //서버 ip 주소와 사용할 포트번호로 소켓 어드레스 객체 생성
         this.get_id = get_id;
@@ -65,8 +63,6 @@ public class ClientSocket extends Thread implements Serializable{
         this.tableList = tableList;
         socketAddress = new InetSocketAddress(ip, port);
     }
-
-
 
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -84,8 +80,8 @@ public class ClientSocket extends Thread implements Serializable{
 
 
             /** 2. 소켓 연결
-            /블록모드로 작동하는 connect() 메소드에서 반환되면 서버와 정상적으로 연결된 것
-            */
+             /블록모드로 작동하는 connect() 메소드에서 반환되면 서버와 정상적으로 연결된 것
+             */
             socket.connect(socketAddress, connection_timeout);
             Log.d(TAG, "소켓 연결 : " + socket.isConnected());
 
@@ -107,42 +103,54 @@ public class ClientSocket extends Thread implements Serializable{
             /**
              * 소켓이 생성이 되면 테이블 Id 값을 넘겨준다.
              */
-            networkWrite.write(get_id+"_table");
+            networkWrite.write(get_id + "_table");
             networkWrite.newLine();
             networkWrite.flush();
             Log.d(TAG, "id flush");
 
             loop = true;
 
-            String myTable = get_id.replace("table", "");
+            int myTable = Integer.parseInt(get_id.replace("table", ""));
             Log.d(TAG, "myTable :" + myTable);
-            
-            while(loop) {
+
+            while (loop) {
                 try {
-//                    Log.d(TAG, "while start");
+//
                     String line = networkReader.readLine();
+                    Log.d(TAG, "line : " + line);
 
-                    Log.d(TAG, "new table :"  + line);
+                    JSONObject jsonObject = new JSONObject(line);
 
-                    if (!line.equals(myTable)) {
-                        updateTable(line);
-                        Log.d(TAG, "update Table");
+                    table = new int[jsonObject.length()];
 
-                    }else{
-                        Log.d(TAG, "같음");
-
+                    for (int j = 1; j < table.length+1; j++) {
+                        Log.d(TAG, "json :" + jsonObject.getString("table"));
+                        table[j-1] = Integer.parseInt(jsonObject.getString("table"));
                     }
 
-                    if(line == null){
+                    Arrays.sort(table);
+
+
+                    Log.d(TAG, "new table :" + Arrays.toString(table));
+
+                    for (int k = 0; k < table.length; k++) {
+                        if (table[k] != myTable) {
+                            updateTable(table[k]);
+                            Log.d(TAG, "update Table");
+                        } else {
+                            Log.d(TAG, "같음");
+                        }
+                    }
+
+                    if (line == null) {
                         break;
                     }
 
-                }catch (Exception e){
+                } catch (Exception e) {
                     e.printStackTrace();
                     Log.d(TAG, "e :" + e);
                 }
             }
-
 
 
         } catch (Exception e) {
@@ -154,38 +162,39 @@ public class ClientSocket extends Thread implements Serializable{
 
     }
 
-    public void updateTable(String line){
+    public void updateTable(int tableNum) {
 
         DrawableMethod drawableToBitmap = new DrawableMethod();
 
         Log.d(TAG, "tableList size :" + tableList.size());
 
-        byte[] orderTableImage = drawableToBitmap.makeBitmap(context.getDrawable(R.drawable.table_boder_order));
-        Log.d(TAG, "updateTable image :" + orderTableImage);
+//        byte[] orderTableImage = drawableToBitmap.makeBitmap(context.getDrawable(R.drawable.table_boder_order));
+//        Log.d(TAG, "updateTable image :" + orderTableImage);
 
-        tableList.get(Integer.parseInt(line)-1).setBytes(orderTableImage);
+
+//        tableList.get(tableNum - 1).setBytes(orderTableImage);
+        tableList.get(tableNum-1).setTableColor(context.getDrawable(R.drawable.table_boder_order));
         Log.d(TAG, "updateTable: 이미지 byte로 넣기");
-        tableList.get(Integer.parseInt(line)-1).setViewType(2);
+        tableList.get(tableNum - 1).setViewType(2);
         Log.d(TAG, "updateTable: viewType 2로 바꾸기");
 
 
     }
 
-    public void quit(){
-        loop =false;
-        try{
-            if(socket != null){
+    public void quit() {
+        loop = false;
+        try {
+            if (socket != null) {
                 socket.close();
                 socket = null;
                 Log.d(TAG, "quit: ");
             }
 
 
-        }catch (IOException e){
+        } catch (IOException e) {
             Log.d(TAG, "quit: e" + e);
         }
     }
-
 
 
 }
