@@ -29,6 +29,7 @@
             android:padding="10dp"
             android:hint="아이디를 입력하세요"
             android:textSize="20sp"
+            android:textColor="@color/black"
             android:background="@drawable/border_gray"/>
 
     </LinearLayout>
@@ -56,6 +57,7 @@
             android:padding="10dp"
             android:hint="비밀번호를 입력하세요"
             android:textSize="20sp"
+            android:textColor="@color/black"
             android:ems="10"
             android:inputType="textPassword"
             android:background="@drawable/border_gray"/>
@@ -74,6 +76,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="login"
+            android:textColor="@color/black"
             android:background="@drawable/radius_10dp_lime"/>
 
         <androidx.appcompat.widget.AppCompatButton
@@ -81,6 +84,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="sign up"
+            android:textColor="@color/black"
             android:layout_marginStart="30dp"
             android:background="@drawable/radius_10dp_lime"/>
 

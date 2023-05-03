@@ -1,8 +1,8 @@
 package com.example.openbook.View;
 
-import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+
+
 
 import java.io.Serializable;
 
@@ -16,6 +16,7 @@ public class TableList implements Serializable {
     String tableGuestNum;
 
     byte[] bytes;
+
 
     public TableList(String myTable, byte[] bytes, int viewType) {
         this.myTable = myTable;

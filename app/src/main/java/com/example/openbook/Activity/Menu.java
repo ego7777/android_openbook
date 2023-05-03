@@ -47,11 +47,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
+
 import java.io.IOException;
 
 
-import java.io.InputStreamReader;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -76,7 +76,6 @@ public class Menu extends AppCompatActivity {
     boolean infoCk = false;
 
     public static ClientSocket clientSocket;
-    boolean loop = false;
 
     ArrayList<MenuList> menuLists;
     ArrayList<CartList> cartLists;
@@ -419,9 +418,8 @@ public class Menu extends AppCompatActivity {
                      2. 저장 완료하면 로컬db 날리기
                      */
 
-                    Client client = new Client();
-                    client.quit();
-                    Log.d(TAG, "소켓 완전히 종료");
+                    clientSocket.quit();
+                    Log.d(TAG, "결제해서 소켓 종료");
 
                 }
             }
@@ -558,9 +556,9 @@ public class Menu extends AppCompatActivity {
         }else{
             Log.d(TAG, "menu.class intent tableList size :" + tableList.size());
         }
-
-//        DrawableMethod drawableToBitmap = new DrawableMethod();
 //
+//        DrawableMethod drawableToBitmap = new DrawableMethod();
+
 //        byte[] myTableImage = drawableToBitmap.makeBitmap(getDrawable(R.drawable.my_table_border));
 //        Log.d(TAG, "myTableImage :" + myTableImage);
 //        byte[] otherTableImage = drawableToBitmap.makeBitmap(getDrawable(R.drawable.table_border));

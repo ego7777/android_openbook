@@ -1,6 +1,6 @@
 package com.example.openbook.Chatting;
 
-import static com.example.openbook.Chatting.ClientSocket.socket;
+import static com.example.openbook.Activity.Menu.clientSocket;
 
 import android.content.Intent;
 import android.database.Cursor;
@@ -78,7 +78,7 @@ public class ChattingUI extends AppCompatActivity {
     LocalDateTime localTime = LocalDateTime.now();
 
     BufferedWriter networkWrite = null;
-    ClientSocket clientSocket;
+//    ClientSocket clientSocket;
     updateUI updateUI;
 
     HashMap<Integer, TableInformation> tableInformationHashMap;
@@ -102,6 +102,7 @@ public class ChattingUI extends AppCompatActivity {
 
         dbHelper = new DBHelper(ChattingUI.this,  version);
         sqLiteDatabase = dbHelper.getWritableDatabase();
+
 
 
 
@@ -136,6 +137,7 @@ public class ChattingUI extends AppCompatActivity {
 
         TextView table_number = findViewById(R.id.table_number);
         table_number.setText(get_id);
+        Log.d(TAG, "get_id: " + get_id);
 
         /**
          * 채팅방 메뉴 설정
@@ -208,13 +210,13 @@ public class ChattingUI extends AppCompatActivity {
                     case MSG_CONNECT:
                         m = "정상적으로 서버에 접속하였습니다.";
 
-                        if(socket.isConnected()){
+                        if(clientSocket.socket.isConnected()){
                             updateUI = new updateUI();
                             updateUI.start();
                             Log.d(TAG, "UI update Thread 시작");
 
                         }else{
-                            Log.d(TAG, "소켓 없어서 새로 생성:" + socket.isConnected());
+                            Log.d(TAG, "소켓 없어서 새로 생성:" + clientSocket.socket.isConnected());
 
                         }
 
@@ -315,6 +317,8 @@ public class ChattingUI extends AppCompatActivity {
 
 
         if(clientSocket == null){
+            Log.d(TAG, "clientSocket null");
+
             try{
                 clientSocket = new ClientSocket("3.36.255.141", 7777, get_id, getApplicationContext(), clientSocket.tableList);
                 clientSocket.start();
@@ -354,7 +358,7 @@ public class ChattingUI extends AppCompatActivity {
                 case MSG_SEND:
                     try{
                         networkWrite = new BufferedWriter
-                                (new OutputStreamWriter(socket.getOutputStream()));
+                                (new OutputStreamWriter(clientSocket.socket.getOutputStream()));
 
                         networkWrite.write((String) msg.obj);
                         networkWrite.newLine();
@@ -396,7 +400,9 @@ public class ChattingUI extends AppCompatActivity {
             try {
                 networkReader = new BufferedReader(
                         new InputStreamReader(clientSocket.socket.getInputStream()));
+
                 Log.d(TAG, "networkReader :" + networkReader.ready());
+
                 Log.d(TAG, "UI socket 연결 :" + clientSocket.socket.isConnected());
             } catch (IOException e) {
                 e.printStackTrace();
@@ -463,6 +469,39 @@ public class ChattingUI extends AppCompatActivity {
                     Log.d(TAG, "run: e " + e);
                     break;
                 }
+            }
+
+            try{
+                if(networkWrite != null){
+                    networkWrite.close();
+                    networkWrite = null;
+                }
+
+                if(networkReader != null){
+                    networkReader.close();
+                    networkReader = null;
+                }
+
+                if(clientSocket.socket != null){
+                    clientSocket.socket.close();
+                    clientSocket.socket = null;
+                }
+
+                clientSocket = null;
+
+                if(loop){
+                    loop = false;
+                    Message toMain = mMainHandler.obtainMessage();
+                    toMain.what = MSG_SERVER_STOP;
+                    toMain.obj = "네트워크가 끊어졌습니다.";
+                    mMainHandler.sendMessage(toMain);
+                }
+            }catch (IOException e){
+                Log.d(TAG, "run: e " + e);
+                Message toMain = mMainHandler.obtainMessage();
+                toMain.what = MSG_ERROR;
+                toMain.obj = "소켓을 닫지 못했습니다.";
+                mMainHandler.sendMessage(toMain);
             }
 
         }

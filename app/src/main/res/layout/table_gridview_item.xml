@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:layout_margin="20dp"
@@ -13,13 +14,13 @@
         android:id="@+id/tableNum"
         android:layout_width="150dp"
         android:layout_height="100dp"
+        android:autoSizeMaxTextSize="20sp"
+        android:autoSizeTextType="uniform"
+        android:gravity="center"
         android:paddingTop="30dp"
         android:text="TableNum"
-        android:gravity="center"
-        android:textStyle="bold"
-        android:autoSizeTextType="uniform"
-        android:autoSizeMaxTextSize="20sp"
-        android:textColor="@color/black"/>
+        android:textColor="@color/black"
+        android:textStyle="bold" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -30,26 +31,24 @@
             android:id="@+id/table_item_gender"
             android:layout_width="75dp"
             android:layout_height="wrap_content"
+            android:gravity="center"
+            android:paddingBottom="10dp"
             android:text="성별"
             android:textSize="18sp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:paddingBottom="10dp"/>
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/table_item_guestNum"
             android:layout_width="75dp"
             android:layout_height="wrap_content"
+            android:gravity="center"
+            android:paddingBottom="10dp"
             android:text="인원"
             android:textSize="18sp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:paddingBottom="10dp"/>
-
+            android:textStyle="bold" />
 
 
     </LinearLayout>
-
 
 
 </LinearLayout>

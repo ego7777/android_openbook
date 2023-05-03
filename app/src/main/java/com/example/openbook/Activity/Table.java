@@ -4,12 +4,9 @@ import static com.example.openbook.Activity.Menu.clientSocket;
 
 import android.app.Dialog;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
@@ -25,8 +22,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.openbook.Adapter.TableAdapter;
 import com.example.openbook.Chatting.ChattingUI;
-import com.example.openbook.Chatting.Client;
-import com.example.openbook.Chatting.ClientSocket;
 import com.example.openbook.DialogCustom;
 import com.example.openbook.DrawableMethod;
 import com.example.openbook.ImageLoadTask;
@@ -39,9 +34,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 
-import java.io.Serializable;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -57,6 +53,7 @@ public class Table extends AppCompatActivity {
 
     ArrayList<TableList> tableList;
     HashMap<Integer, TableInformation> tableInformationHashMap;
+
 
     String TAG = "TableTAG";
 
@@ -74,12 +71,14 @@ public class Table extends AppCompatActivity {
     String get_id;
 
     boolean orderCk = false;
+    boolean loop = true;
 
     ImageLoadTask task;
     String url;
 
 
     DrawableMethod drawableMethod;
+    int temp;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -91,16 +90,39 @@ public class Table extends AppCompatActivity {
         orderCk = getIntent().getBooleanExtra("orderCk", false);
         Log.d(TAG, "orderCk :" + orderCk);
 
+        myTable = Integer.parseInt(get_id.replace("table", ""));
+
 //        tableList = (ArrayList<TableList>) getIntent().getSerializableExtra("tableList");
 
-        tableList = clientSocket.getTableList();
 
-        if (tableList == null) {
-            tableList = new ArrayList<>();
-            Log.d(TAG, "onCreate tableList initial one");
-        } else {
-            Log.d(TAG, "table.class intent tableList size :" + tableList.size());
+        if(clientSocket != null){
+            tableList = clientSocket.getTableList();
+            Log.d(TAG, "onCreate clientSocket exist :" + tableList.size());
+            Log.d(TAG, "TableList index 0 :" + tableList.get(0).getTableNum());
+        }else{
+            if (tableList == null) {
+                tableList = new ArrayList<>();
+
+                for(int i=1; i<21; i++){
+
+                    if(i == myTable){
+                        tableList.add(new TableList("my Table", getDrawable(R.drawable.my_table_border), 0));
+                    }else{
+                        tableList.add(new TableList(i, getDrawable(R.drawable.table_border), 1));
+                    }
+
+                }
+
+                Log.d(TAG, "onCreate tableList initial one");
+            } else {
+                Log.d(TAG, "table.class intent tableList size :" + tableList.size());
+            }
         }
+
+
+
+
+
 
 
         tableInformationHashMap = (HashMap<Integer, TableInformation>) getIntent().getSerializableExtra("tableInformation");
@@ -132,31 +154,6 @@ public class Table extends AppCompatActivity {
         //어댑터 연결
         table_grid.setAdapter(adapter);
 
-
-        myTable = Integer.parseInt(get_id.replace("table", ""));
-
-        /**
-         * tableColor 바꾸기
-         */
-
-//        drawableMethod = new DrawableMethod();
-//        BitmapDrawable drawable;
-//        Bitmap bitmap;
-
-//        for (int i = 0; i < 20; i++) {
-//            if (i == myTable) {
-//                bitmap = drawableMethod.byteArrayToBitmap(tableList.get(i).getBytes());
-//                drawable = new BitmapDrawable(this.getResources(), bitmap);
-//                tableList.get(i).setTableColor(drawable);
-//
-//            } else {
-//                bitmap = drawableMethod.byteArrayToBitmap(tableList.get(i).getBytes());
-//                drawable = new BitmapDrawable(this.getResources(), bitmap);
-//                tableList.get(i).setTableColor(drawable);
-//            }
-//        }
-
-
         adapter.setAdapterItem(tableList);
 
 
@@ -170,41 +167,18 @@ public class Table extends AppCompatActivity {
 
     } //onCreate
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-//        Log.d(TAG, "onStart: ");
 
 
-//        myTable = Integer.parseInt(get_id.replace("table", ""));
 
-//        /**
-//         * 테이블 그리드 만들기 1
-//         */
-//        for(int i=1; i<21; i++){
-//            if(i == myTable){
-//                tableList.add(new TableList("my table", getDrawable(R.drawable.my_table_border),0));
-//            }else{
-//                tableList.add(new TableList(i, getDrawable(R.drawable.table_border),1));
-//            }
-//        }
-//
-//        adapter.setAdapterItem(tableList);
-//
-//        checkOrderTable(get_id, myTable);
-
-//        orderTableUpdate();
-//        => http로 데이터 받아오기 전에 코드를 실행해서 NullPointerException이 나와버림,,,,,,
-//        그렇다고 runOnUiThread를 쓰면 밑에 클릭 이벤트 누르면 **반짝**거림 click한 테이블 색깔 적용도 안되고
-
-    } //onStart
-
-
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onResume() {
         super.onResume();
 
-        boolean orderCk = getIntent().getBooleanExtra("orderCk", false);
+        if(clientSocket != null){
+            updateTable updateTable = new updateTable();
+            updateTable.start();
+        }
 
 
         /**
@@ -221,24 +195,12 @@ public class Table extends AppCompatActivity {
         byte[] orderTableImage = drawableMethod.makeBitmap(getDrawable(R.drawable.table_boder_order));
         Log.d(TAG, "orderTableImage :" + orderTableImage);
 
-
-        menu.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                Intent intent = new Intent(Table.this, Menu.class);
-                intent.putExtra("get_id", get_id);
-                intent.putExtra("orderCk", orderCk);
-                intent.putExtra("tableInformation", tableInformationHashMap);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                startActivity(intent);
+        menu.setOnClickListener(this :: moveToMenu);
 
 
-            }
-        });
-
-
-        //table 누르면 옆에 사이드 메뉴 뜨게
+        /**
+         * table 누르면 옆에 사이드 메뉴 popup
+         */
         adapter.setOnItemClickListener(new TableAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(View view, int position) {
@@ -252,6 +214,7 @@ public class Table extends AppCompatActivity {
                  */
 
                 int temp = 1000;
+                Log.d(TAG, "onItemClick initial temp :" + temp);
 
                 for (int i = 0; i < 20; i++) {
                     if (i == myTable - 1) {
@@ -260,17 +223,17 @@ public class Table extends AppCompatActivity {
 
                         if (tableList.get(i).getViewType() == 2) {
                             temp = i;
+                            Log.d(TAG, "for문 temp : " + temp);
                         }
                         tableList.get(i).setTableColor(getDrawable(R.drawable.table_border));
                     }
+                    if (temp != 1000) {
+                        tableList.get(temp).setTableColor(getDrawable(R.drawable.table_boder_order));
+                        Log.d(TAG, "active table :" + temp);
+                    }
+
                 }
                 tableList.get(position).setTableColor(getDrawable(R.drawable.table_border_click));
-
-                if (temp != 1000) {
-                    tableList.get(temp).setTableColor(getDrawable(R.drawable.table_boder_order));
-                    Log.d(TAG, "active table :" + temp);
-                }
-
             }
         });
 
@@ -299,6 +262,7 @@ public class Table extends AppCompatActivity {
 
                     //list(들어와 있는 애들이면 그냥 채팅이 가능하게 해주는 것인데 여기서 fcm을 보내는
                     for (int i = 0; i < tableList.size(); i++) {
+
                         if (tableList.get(i).getTableNum() == clickTable) {
 
                             if (tableInformationHashMap.get(clickTable) == null ||
@@ -313,27 +277,16 @@ public class Table extends AppCompatActivity {
 
                             } else if (tableInformationHashMap.get(clickTable).isChattingAgree() == true) {
 
-                                for (int j = 0; j < 20; j++) {
-                                    if (j == myTable - 1) {
-                                        tableList.get(j).setBytes(myTableImage);
-                                    } else {
-                                        if (tableList.get(j).getViewType() == 2) {
-                                            tableList.get(j).setBytes(orderTableImage);
-                                        }
-                                        tableList.get(j).setBytes(notOrderTableImage);
-                                    }
-                                }
-
-
                                 Intent intent = new Intent(Table.this, ChattingUI.class);
                                 intent.putExtra("tableNumber", clickTable);
                                 intent.putExtra("get_id", get_id);
-                                intent.putExtra("tableList", tableList);
+                                intent.putExtra("orderCk", orderCk);
+//                                intent.putExtra("tableList", tableList);
                                 intent.putExtra("tableInformation", tableInformationHashMap);
                                 startActivity(intent);
                             }
 
-
+                            break;
 //
                         } else {
 
@@ -400,6 +353,7 @@ public class Table extends AppCompatActivity {
                                         if (body.equals("없음")) {
                                             MakeQR makeQR = new MakeQR();
                                             table_info_img.setImageBitmap(makeQR.myQR(get_id));
+                                            table_info_text.setVisibility(View.INVISIBLE);
                                             statement.setText("사진과 정보를 입력하시려면 다음 큐알로 입장해주세요 :)");
                                             table_info_gender.setVisibility(View.INVISIBLE);
                                             table_info_member.setVisibility(View.INVISIBLE);
@@ -411,7 +365,8 @@ public class Table extends AppCompatActivity {
                                                     + jsonObject.getString("img");
                                             Log.d(TAG, "url :" + url);
 
-
+                                            table_info_img.setImageURI(Uri.parse(url));
+                                            table_info_text.setText("다시 등록하시려면 \n프로필 사진을 터치해주세요!");
                                             statement.setText(jsonObject.getString("statement"));
                                             table_info_gender.setText(jsonObject.getString("gender"));
                                             table_info_member.setText(jsonObject.getString("guestNum"));
@@ -467,7 +422,7 @@ public class Table extends AppCompatActivity {
                                                 task = new ImageLoadTask(Table.this, false, url, table_info_img);
                                                 task.execute();
 
-//
+
                                             } else {
 
                                                 if (tableInformationHashMap.get(clickTable) == null) {
@@ -491,7 +446,7 @@ public class Table extends AppCompatActivity {
                                             statement.setText(jsonObject.getString("statement"));
                                             table_info_gender.setText(jsonObject.getString("gender"));
                                             table_info_member.setText(jsonObject.getString("guestNum"));
-//
+
                                         }
 
                                     } catch (IOException | JSONException e) {
@@ -513,25 +468,17 @@ public class Table extends AppCompatActivity {
                     @Override
                     public void onClick(View v) {
 
+                        if(clickTable == myTable){
+                            MakeQR makeQR = new MakeQR();
+                            table_info_img.setImageBitmap(makeQR.myQR(get_id));
+                        }
+
+
                         task = new ImageLoadTask(Table.this, false, url, table_info_img);
                         task.execute();
                         Log.d(TAG, "블러 처리 되었슴다");
 
-
-                        /**
-                         * 테이블 이미지 직렬화
-                         */
-
-                        for (int i = 0; i < 20; i++) {
-                            if (i == myTable - 1) {
-                                tableList.get(i).setBytes(myTableImage);
-                            } else {
-                                if (tableList.get(i).getViewType() == 2) {
-                                    tableList.get(i).setBytes(orderTableImage);
-                                }
-                                tableList.get(i).setBytes(notOrderTableImage);
-                            }
-                        }
+//
 
 
                         Intent intent = new Intent(Table.this, PopUp.class);
@@ -539,7 +486,7 @@ public class Table extends AppCompatActivity {
                         intent.putExtra("body", "프로필 조회권을 구매하시겠습니까?\n** 프로필 조회권 2000원");
                         intent.putExtra("get_id", get_id);
                         intent.putExtra("clickTable", clickTable);
-                        intent.putExtra("tableList", tableList);
+                        intent.putExtra("orderCk", orderCk);
                         intent.putExtra("tableInformation", tableInformationHashMap);
                         startActivity(intent);
                         dlg.dismiss();
@@ -571,7 +518,92 @@ public class Table extends AppCompatActivity {
         Log.d(TAG, "onStop: ");
     }
 
+    public void moveToMenu(View view){
+        Intent intent = new Intent(Table.this, Menu.class);
+        intent.putExtra("get_id", get_id);
+        intent.putExtra("orderCk", orderCk);
+        intent.putExtra("tableInformation", tableInformationHashMap);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(intent);
+    }
 
+    public class updateTable extends Thread{
+        int table[];
+        BufferedReader networkReader;
+
+        @RequiresApi(api = Build.VERSION_CODES.O)
+        @Override
+        public void run() {
+            super.run();
+
+            try{
+                networkReader = new BufferedReader(
+                        new InputStreamReader(clientSocket.socket.getInputStream()));
+                Log.d(TAG, "networkReader :" + networkReader.ready());
+                Log.d(TAG, "UI socket 연결 :" + clientSocket.socket.isConnected());
+
+            }catch (IOException e){
+                e.printStackTrace();
+            }
+
+            while (loop) {
+                try {
+//
+                    String line = networkReader.readLine();
+                    Log.d(TAG, "line : " + line);
+
+                    JSONArray jsonArray = new JSONArray(line);
+
+                    table = new int[jsonArray.length()];
+
+
+                    for(int j = 0; j<jsonArray.length(); j++){
+                        JSONObject jsonObject = jsonArray.getJSONObject(j);
+                        table[j] = jsonObject.getInt("table");
+                    }
+
+                    Arrays.sort(table);
+
+
+                    Log.d(TAG, "new table :" + Arrays.toString(table));
+                    temp = 1000;
+
+                    for (int i = 0; i < table.length; i++) {
+                        if (table[i] != myTable) {
+                            tableList.get(table[i]-1).setTableColor(getDrawable(R.drawable.table_boder_order));
+                            tableList.get(table[i] - 1).setViewType(2);
+                            Log.d(TAG, "update Table");
+                            temp = table[i]-1;
+
+                            if(temp != 1000){
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        adapter.notifyItemChanged(temp);
+                                    }
+                                });
+                            }
+
+
+                        } else {
+                            Log.d(TAG, "같음");
+                        }
+                    }
+
+
+
+
+                    if (line == null) {
+                        break;
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Log.d(TAG, "e :" + e);
+                }
+            }
+        }
+    }
 }
 
 

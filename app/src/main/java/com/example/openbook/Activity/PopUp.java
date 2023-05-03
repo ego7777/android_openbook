@@ -103,6 +103,7 @@ public class PopUp extends Activity {
             Log.d(TAG, "initial tableInformation");
         }
         orderCk = getIntent().getBooleanExtra("orderCk", false);
+        Log.d(TAG, "PopUp orderCk :" + orderCk);
 
         popup_title.setText(title);
         popup_body.setText(body);
@@ -260,7 +261,7 @@ public class PopUp extends Activity {
                 intent.putExtra("tableInformation", tableInformationHashMap);
                 intent.putExtra("get_id", get_id);
                 intent.putExtra("orderCk", orderCk);
-                intent.putExtra("tableList", tableList);
+//                intent.putExtra("tableList", tableList);
 //                  intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 startActivity(intent);
                 finish();

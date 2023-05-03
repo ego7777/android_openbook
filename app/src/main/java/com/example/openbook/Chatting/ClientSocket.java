@@ -15,6 +15,7 @@ import com.example.openbook.DrawableMethod;
 import com.example.openbook.R;
 import com.example.openbook.View.TableList;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -37,15 +38,15 @@ public class ClientSocket extends Thread implements Serializable {
     private final String TAG = "ClientSocket";
     SocketAddress socketAddress;
 
-    final int connection_timeout = 99999;
+    final int connection_timeout = 999999;
     public BufferedReader networkReader = null;
     public BufferedWriter networkWrite = null;
 
     String get_id;
-    public static Socket socket;
+    public Socket socket;
     boolean loop;
-    String line;
-    int table[];
+
+
 
     Context context;
 
@@ -108,49 +109,8 @@ public class ClientSocket extends Thread implements Serializable {
             networkWrite.flush();
             Log.d(TAG, "id flush");
 
-            loop = true;
-
-            int myTable = Integer.parseInt(get_id.replace("table", ""));
-            Log.d(TAG, "myTable :" + myTable);
-
-            while (loop) {
-                try {
-//
-                    String line = networkReader.readLine();
-                    Log.d(TAG, "line : " + line);
-
-                    JSONObject jsonObject = new JSONObject(line);
-
-                    table = new int[jsonObject.length()];
-
-                    for (int j = 1; j < table.length+1; j++) {
-                        Log.d(TAG, "json :" + jsonObject.getString("table"));
-                        table[j-1] = Integer.parseInt(jsonObject.getString("table"));
-                    }
-
-                    Arrays.sort(table);
 
 
-                    Log.d(TAG, "new table :" + Arrays.toString(table));
-
-                    for (int k = 0; k < table.length; k++) {
-                        if (table[k] != myTable) {
-                            updateTable(table[k]);
-                            Log.d(TAG, "update Table");
-                        } else {
-                            Log.d(TAG, "같음");
-                        }
-                    }
-
-                    if (line == null) {
-                        break;
-                    }
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    Log.d(TAG, "e :" + e);
-                }
-            }
 
 
         } catch (Exception e) {
@@ -162,24 +122,7 @@ public class ClientSocket extends Thread implements Serializable {
 
     }
 
-    public void updateTable(int tableNum) {
 
-        DrawableMethod drawableToBitmap = new DrawableMethod();
-
-        Log.d(TAG, "tableList size :" + tableList.size());
-
-//        byte[] orderTableImage = drawableToBitmap.makeBitmap(context.getDrawable(R.drawable.table_boder_order));
-//        Log.d(TAG, "updateTable image :" + orderTableImage);
-
-
-//        tableList.get(tableNum - 1).setBytes(orderTableImage);
-        tableList.get(tableNum-1).setTableColor(context.getDrawable(R.drawable.table_boder_order));
-        Log.d(TAG, "updateTable: 이미지 byte로 넣기");
-        tableList.get(tableNum - 1).setViewType(2);
-        Log.d(TAG, "updateTable: viewType 2로 바꾸기");
-
-
-    }
 
     public void quit() {
         loop = false;
