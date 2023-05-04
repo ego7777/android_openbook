@@ -12,7 +12,7 @@ import com.example.openbook.Activity.Table;
 import java.net.URL;
 import java.util.HashMap;
 
-public class ImageLoadTask extends AsyncTask<Void,Void, Bitmap> {
+public class ImageLoadTask extends AsyncTask<Void, Void, Bitmap> {
 
     private String urlStr;
     private ImageView imageView;
@@ -28,13 +28,14 @@ public class ImageLoadTask extends AsyncTask<Void,Void, Bitmap> {
         this.imageView = imageView;
         this.context = context;
         this.ticket = ticket;
-        Log.d(TAG, "ImageLoadTask ticket :" +ticket);
-        }
+        Log.d(TAG, "ImageLoadTask ticket :" + ticket);
+    }
+
 
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
-        }
+    }
 
     @Override
     protected Bitmap doInBackground(Void... voids) {
@@ -44,21 +45,21 @@ public class ImageLoadTask extends AsyncTask<Void,Void, Bitmap> {
 
                 Bitmap oldbitmap = bitmapHash.remove(urlStr);
 
-                if(oldbitmap != null) {
+                if (oldbitmap != null) {
 //                   oldbitmap.recycle();
 //                   oldbitmap = null;
                 }
             }
 
-        URL url = new URL(urlStr);
-        bitmap = BitmapFactory.decodeStream(url.openConnection().getInputStream());
+            URL url = new URL(urlStr);
+            bitmap = BitmapFactory.decodeStream(url.openConnection().getInputStream());
 
-        bitmapHash.put(urlStr,bitmap);
+            bitmapHash.put(urlStr, bitmap);
 
         } catch (Exception e) {
             e.printStackTrace();
         }
-            return bitmap;
+        return bitmap;
     }
 
 
@@ -74,9 +75,10 @@ public class ImageLoadTask extends AsyncTask<Void,Void, Bitmap> {
         BlurImage blurImage = new BlurImage();
 
         Log.d(TAG, "onPostExecute: " + ticket);
-        if(ticket == false){
+
+        if (ticket == false) {
             imageView.setImageBitmap(blurImage.blur(context, bitmap));
-        }else{
+        } else {
             imageView.setImageBitmap(bitmap);
         }
 

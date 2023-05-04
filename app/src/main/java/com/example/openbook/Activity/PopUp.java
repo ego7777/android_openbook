@@ -192,6 +192,22 @@ public class PopUp extends Activity {
                 }
             });
 
+            popup_no.setOnClickListener(new View.OnClickListener() {
+                @RequiresApi(api = Build.VERSION_CODES.O)
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent();
+                    intent.putExtra("get_id", get_id);
+//                    intent.putExtra("tableNumber", tableNumber);
+                    intent.putExtra("orderCk", orderCk);
+                    intent.putExtra("tableInformation", tableInformationHashMap);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    setResult(Activity.RESULT_OK, intent);
+
+                    finish();
+                }
+            });
+
             /**
              * 프로필 포함 요청
              */

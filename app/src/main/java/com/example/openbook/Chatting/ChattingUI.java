@@ -228,13 +228,22 @@ public class ChattingUI extends AppCompatActivity {
 
                     case MSG_SERVER_STOP:
                         //서버에 의해 연결이 종료될 때 호출
-//                        text.setText((String)msg.obj);
                         m ="서버가 접속을 종료하였습니다.";
+
+                        clientSocket = new ClientSocket("3.36.255.141", 7777, get_id, getApplicationContext(), clientSocket.tableList);
+                        clientSocket.start();
+                        loop = true;
+
+                        Message toMain = mMainHandler.obtainMessage();
+                        toMain.what = MSG_CONNECT;
+                        mMainHandler.sendMessage(toMain);
+
                         break;
 
                     case MSG_SEND:
                         //메세지 전송 시 호출
-                        m="메세지 전송 완료!";
+
+
 
                         /**
                          * sendMsg[0] : 내 테이블 번호 (get_id)
@@ -258,6 +267,8 @@ public class ChattingUI extends AppCompatActivity {
 
                         msg.obj=null;
                         chat_edit.setText((String)msg.obj);
+
+                        m="메세지 전송 완료!";
 
                         break;
 
@@ -316,7 +327,7 @@ public class ChattingUI extends AppCompatActivity {
         });
 
 
-        if(clientSocket == null){
+        if(clientSocket == null || clientSocket.socket == null){
             Log.d(TAG, "clientSocket null");
 
             try{
@@ -448,7 +459,9 @@ public class ChattingUI extends AppCompatActivity {
                                     //처음엔 읽었는지 안읽었는지 모르니까 공란으로 넘겨버림
                                     chatLists.add(new ChattingList(temp[0], 0, localTime.format(DateTimeFormatter.ofPattern("HH:mm")), ""));
                                     Log.d(TAG, "showUpdate : " +line);
-                                    chattingAdapter.setAdapterItem(chatLists);
+
+//                                    chattingAdapter.setAdapterItem(chatLists);
+                                    chattingAdapter.notifyDataSetChanged();
                                     chatting_view.smoothScrollToPosition(chatLists.size());
 
                                     time =  localTime.format(DateTimeFormatter.ofPattern("HH:mm"));
@@ -466,7 +479,7 @@ public class ChattingUI extends AppCompatActivity {
                 } catch (InterruptedIOException e) {
 
                 } catch (IOException e) {
-                    Log.d(TAG, "run: e " + e);
+                    Log.d(TAG, "run whie(loop)문 e " + e);
                     break;
                 }
             }

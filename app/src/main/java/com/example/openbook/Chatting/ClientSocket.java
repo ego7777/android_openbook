@@ -11,6 +11,8 @@ import android.util.Log;
 import androidx.annotation.RequiresApi;
 
 
+import com.example.openbook.Activity.Table;
+import com.example.openbook.Adapter.TableAdapter;
 import com.example.openbook.DrawableMethod;
 import com.example.openbook.R;
 import com.example.openbook.View.TableList;
@@ -108,7 +110,6 @@ public class ClientSocket extends Thread implements Serializable {
             networkWrite.newLine();
             networkWrite.flush();
             Log.d(TAG, "id flush");
-
 
 
 
