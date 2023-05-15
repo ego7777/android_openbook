@@ -9,6 +9,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Parcelable;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
@@ -29,11 +30,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.openbook.Adapter.CartAdapter;
 import com.example.openbook.Adapter.MenuAdapter;
 import com.example.openbook.Adapter.SideListViewAdapter;
-import com.example.openbook.Chatting.Client;
 import com.example.openbook.Chatting.ClientSocket;
 import com.example.openbook.Deco.menu_recyclerview_deco;
 import com.example.openbook.DialogCustom;
-import com.example.openbook.DrawableMethod;
 import com.example.openbook.FCMclass.FCM;
 import com.example.openbook.R;
 import com.example.openbook.TableInformation;
@@ -51,7 +50,8 @@ import org.json.JSONObject;
 import java.io.IOException;
 
 
-
+import java.io.Serializable;
+import java.net.Socket;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -79,7 +79,6 @@ public class Menu extends AppCompatActivity {
 
     ArrayList<MenuList> menuLists;
     ArrayList<CartList> cartLists;
-
     ArrayList<TableList> tableList;
 
     HashMap<Integer, TableInformation> tableInformationHashMap;
@@ -102,6 +101,7 @@ public class Menu extends AppCompatActivity {
     SideListViewAdapter sideAdapter;
 
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -110,15 +110,17 @@ public class Menu extends AppCompatActivity {
         get_id = getIntent().getStringExtra("get_id");
         orderCk = getIntent().getBooleanExtra("orderCk", false);
 
+//        clientSocket = (ClientSocket) getIntent().getSerializableExtra("clientSocket");
 
         tableInformationHashMap = (HashMap<Integer, TableInformation>) getIntent().getSerializableExtra("tableInformation");
 
 
-        if(tableInformationHashMap == null){
+        if (tableInformationHashMap == null) {
             Log.d(TAG, "onCreate tableInformation null");
-        }else{
+        } else {
             Log.d(TAG, "menu.class intent tableInformation size:" + tableInformationHashMap.size());
         }
+
 
 
         /**
@@ -133,14 +135,7 @@ public class Menu extends AppCompatActivity {
          * AppBar: 로그인하면 table number 바로 나오는거
          */
         TextView table_number = findViewById(R.id.table_number);
-
-
-        if(get_id.length() > 0) {
-            table_number.setText(get_id);
-        } else {
-            table_number.setText(get_id);
-        }
-        Log.d(TAG, "onCreate: ");
+        table_number.setText(get_id);
 
 
         TextView cart_header = findViewById(R.id.cart_header);
@@ -287,14 +282,16 @@ public class Menu extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                if(clientSocket != null && clientSocket.getTableList()!= null){
+                if (clientSocket != null && clientSocket.getTableList() != null) {
                     tableList = clientSocket.getTableList();
                 }
 
                 Intent intent = new Intent(getApplicationContext(), Table.class);
                 intent.putExtra("get_id", get_id);
                 intent.putExtra("orderCk", orderCk);
-//                intent.putExtra("tableList", tableList);
+
+//                intent.putExtra("clientSocket", clientSocket);
+
                 intent.putExtra("tableInformation", tableInformationHashMap);
                 startActivity(intent);
             }
@@ -483,7 +480,7 @@ public class Menu extends AppCompatActivity {
                                             totalPrice = 0;
                                             orderPrice.setText("");
 
-                                            if(clientSocket == null){
+                                            if (clientSocket == null) {
                                                 clientSocket = new ClientSocket("3.36.255.141", 7777, get_id, getApplicationContext(), tableList);
                                                 clientSocket.start();
                                                 Log.d(TAG, "소켓 시작");
@@ -537,10 +534,16 @@ public class Menu extends AppCompatActivity {
                     if (infoCk == false) {
                         infoCk = true;
                         orderCk = true;
-                        dialogCustom.moveActivity(Menu.this,
-                                "테이블 정보를 입력하기 위한 페이지로 이동하겠습니까?",
-                                get_id, orderCk, tableList);
 
+//                        handler.postDelayed(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                dialogCustom.moveActivity(Menu.this,
+//                                        "테이블 정보를 입력하기 위한 페이지로 이동하겠습니까?",
+//                                        get_id, orderCk, clientSocket);
+//                                Log.d(TAG, "clientSocket :" + clientSocket.isAlive());
+//                            }
+//                        }, 1000);
                     }
 
                 }
@@ -550,10 +553,10 @@ public class Menu extends AppCompatActivity {
         myTable = Integer.parseInt(get_id.replace("table", ""));
 
 
-        if(tableList == null){
+        if (tableList == null) {
             tableList = new ArrayList();
             Log.d(TAG, "onResume tableList initial one");
-        }else{
+        } else {
             Log.d(TAG, "menu.class intent tableList size :" + tableList.size());
         }
 //
@@ -565,12 +568,11 @@ public class Menu extends AppCompatActivity {
 //        Log.d(TAG, "otherTableImage : " + otherTableImage);
 
 
-
-        for(int i=1; i<21; i++){
-            if(i == myTable){
-                tableList.add(new TableList("my Table",getDrawable(R.drawable.my_table_border), 0));
-            }else{
-                tableList.add(new TableList(i,getDrawable(R.drawable.table_border), 1));
+        for (int i = 1; i < 21; i++) {
+            if (i == myTable) {
+                tableList.add(new TableList("my Table", getDrawable(R.drawable.my_table_border), 0));
+            } else {
+                tableList.add(new TableList(i, getDrawable(R.drawable.table_border), 1));
             }
         }
 
@@ -647,12 +649,6 @@ public class Menu extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
-//        editor.remove("name");
-//        editor.remove("count");
-//        editor.remove("price");
-//        editor.commit();
-
         Log.d(TAG, "onDestroy: ");
     }
 
@@ -661,9 +657,6 @@ public class Menu extends AppCompatActivity {
         super.onStop();
         Log.d(TAG, "onStop: ");
     }
-
-
-
 
 
 }

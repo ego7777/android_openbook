@@ -11,19 +11,11 @@ import android.util.Log;
 import androidx.annotation.RequiresApi;
 
 
-import com.example.openbook.Activity.Table;
-import com.example.openbook.Adapter.TableAdapter;
-import com.example.openbook.DrawableMethod;
-import com.example.openbook.R;
 import com.example.openbook.View.TableList;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
 
 import java.io.OutputStreamWriter;
 import java.io.Serializable;
@@ -31,17 +23,17 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.util.ArrayList;
-import java.util.Arrays;
+
 
 
 @RequiresApi(api = Build.VERSION_CODES.O)
-public class ClientSocket extends Thread implements Serializable {
+public class ClientSocket extends Thread implements Serializable{
 
     private final String TAG = "ClientSocket";
     SocketAddress socketAddress;
 
     final int connection_timeout = 999999;
-    public BufferedReader networkReader = null;
+//    public BufferedReader networkReader = null;
     public BufferedWriter networkWrite = null;
 
     String get_id;
@@ -59,12 +51,14 @@ public class ClientSocket extends Thread implements Serializable {
     ArrayList<TableList> tableList;
 
 
+
     public ClientSocket(String ip, int port, String get_id, Context context, ArrayList<TableList> tableList) {
         //서버 ip 주소와 사용할 포트번호로 소켓 어드레스 객체 생성
         this.get_id = get_id;
         this.context = context;
         this.tableList = tableList;
         socketAddress = new InetSocketAddress(ip, port);
+
     }
 
 
@@ -92,15 +86,12 @@ public class ClientSocket extends Thread implements Serializable {
             //3. 데이터 입출력 메소드 설정
             OutputStreamWriter o = new OutputStreamWriter(socket.getOutputStream());
             //outputStream: 출력 스트림
-
-
             networkWrite = new BufferedWriter(o);
             Log.d(TAG, "run: " + networkWrite);
-            //bufferedReader : 버퍼를 사용한 출력
 
-            InputStreamReader i = new InputStreamReader(socket.getInputStream());
+//            InputStreamReader i = new InputStreamReader(socket.getInputStream());
             //inputStream : 입력 스트림
-            networkReader = new BufferedReader(i);
+//            networkReader = new BufferedReader(i);
             //bufferedReader : 버퍼를 사용한 입력
 
             /**
@@ -110,6 +101,9 @@ public class ClientSocket extends Thread implements Serializable {
             networkWrite.newLine();
             networkWrite.flush();
             Log.d(TAG, "id flush");
+
+            networkWrite = null;
+
 
 
 

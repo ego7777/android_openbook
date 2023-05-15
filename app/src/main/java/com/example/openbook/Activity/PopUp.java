@@ -56,6 +56,7 @@ public class PopUp extends Activity {
     ArrayList<TableList> tableList;
 
     HashMap<Integer, TableInformation> tableInformationHashMap;
+    ClientSocket clientSocket;
 
 
     @Override
@@ -108,6 +109,8 @@ public class PopUp extends Activity {
         popup_title.setText(title);
         popup_body.setText(body);
 
+        clientSocket = (ClientSocket) getIntent().getSerializableExtra("clientSocket");
+
 
     }
 
@@ -140,7 +143,7 @@ public class PopUp extends Activity {
                     intent.putExtra("get_id", get_id);
                     intent.putExtra("tableNumber", tableNumber);
                     intent.putExtra("orderCk", orderCk);
-                    intent.putExtra("tableList", tableList);
+                    intent.putExtra("clientSocket", clientSocket);
 
 
                     tableInformationHashMap.put(tableNumber,
@@ -181,7 +184,7 @@ public class PopUp extends Activity {
                     intent.putExtra("get_id", get_id);
                     intent.putExtra("tableNumber", tableNumber);
                     intent.putExtra("orderCk", orderCk);
-                    intent.putExtra("tableList", tableList);
+                    intent.putExtra("clientSocket", clientSocket);
 
                     tableInformationHashMap.put(tableNumber,
                             new TableInformation(null, false, 0, true, false));
@@ -237,7 +240,7 @@ public class PopUp extends Activity {
                     intent.putExtra("tableInformation", tableInformationHashMap);
                     intent.putExtra("get_id", get_id);
                     intent.putExtra("orderCk", orderCk);
-                    intent.putExtra("tableList", tableList);
+                    intent.putExtra("clientSocket", clientSocket);
 //                  intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                     startActivity(intent);
                     finish();

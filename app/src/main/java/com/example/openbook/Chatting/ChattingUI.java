@@ -1,5 +1,6 @@
 package com.example.openbook.Chatting;
 
+
 import static com.example.openbook.Activity.Menu.clientSocket;
 
 import android.content.Intent;
@@ -50,7 +51,6 @@ public class ChattingUI extends AppCompatActivity {
     int table_num;
     String time;
 
-    ArrayList<TableList> tableList;
     ArrayList<ChattingList> chatLists;
     ChattingAdapter chattingAdapter;
     RecyclerView chatting_view;
@@ -78,7 +78,6 @@ public class ChattingUI extends AppCompatActivity {
     LocalDateTime localTime = LocalDateTime.now();
 
     BufferedWriter networkWrite = null;
-//    ClientSocket clientSocket;
     updateUI updateUI;
 
     HashMap<Integer, TableInformation> tableInformationHashMap;
@@ -90,7 +89,8 @@ public class ChattingUI extends AppCompatActivity {
 
         table_num = getIntent().getIntExtra("tableNumber",0);
         get_id = getIntent().getStringExtra("get_id");
-        tableList = (ArrayList<TableList>) getIntent().getSerializableExtra("tableList");
+
+//        clientSocket = (ClientSocket) getIntent().getSerializableExtra("clientSocket");
 
 
         tableInformationHashMap = (HashMap<Integer, TableInformation>) getIntent().getSerializableExtra("tableInformation");
@@ -116,7 +116,7 @@ public class ChattingUI extends AppCompatActivity {
                 Intent intent = new Intent(getApplicationContext(), Menu.class);
                 intent.putExtra("id", get_id);
                 intent.putExtra("orderCk",true);
-                intent.putExtra("tableList", tableList);
+//                intent.putExtra("clientSocket", clientSocket);
                 intent.putExtra("TableInformation", tableInformationHashMap);
                 startActivity(intent);
             }
@@ -126,10 +126,10 @@ public class ChattingUI extends AppCompatActivity {
         table.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(), Menu.class);
+                Intent intent = new Intent(getApplicationContext(), Table.class);
                 intent.putExtra("get_id", get_id);
                 intent.putExtra("orderCk",true);
-                intent.putExtra("tableList", tableList);
+//                intent.putExtra("clientSocket", clientSocket);
                 intent.putExtra("TableInformation", tableInformationHashMap);
                 startActivity(intent);
             }
@@ -170,11 +170,11 @@ public class ChattingUI extends AppCompatActivity {
 
 
         while(res.moveToNext()){
-            //sender가 get_id인 것은 viewType 1로
+            //sender 가 get_id인 것은 viewType 1로
             if(res.getString(3).equals(get_id) && res.getString(4).equals("table" + table_num)){
                 chatLists.add(new ChattingList(res.getString(1), 1, res.getString(2),""));
 
-                //receiver가 table_num인 것은 viewType 0으로
+                //receiver 가 table_num 인 것은 viewType 0으로
             }else if(res.getString(3).equals("table" + table_num) && res.getString(4).equals(get_id)){
                 chatLists.add(new ChattingList(res.getString(1), 0, res.getString(2),""));
             }
@@ -217,7 +217,6 @@ public class ChattingUI extends AppCompatActivity {
 
                         }else{
                             Log.d(TAG, "소켓 없어서 새로 생성:" + clientSocket.socket.isConnected());
-
                         }
 
                         break;
@@ -295,6 +294,7 @@ public class ChattingUI extends AppCompatActivity {
                 intent.putExtra("get_id", get_id);
                 intent.putExtra("orderCk", true);
                 intent.putExtra("tableInformation", tableInformationHashMap);
+                intent.putExtra("clientSocket", clientSocket);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 startActivity(intent);
 
@@ -345,6 +345,7 @@ public class ChattingUI extends AppCompatActivity {
             }
 
         }else{
+            Log.d(TAG, "onCreate: clientSocket is not null");
             Message toMain = mMainHandler.obtainMessage();
             toMain.what =MSG_CONNECT;
             mMainHandler.sendMessage(toMain);

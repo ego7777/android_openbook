@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Handler;
+import android.util.Log;
 
 
 import com.example.openbook.Activity.Table;
@@ -61,7 +62,7 @@ public class DialogCustom {
     }
 
     //Menu Activity 에서 Table Activity 로 넘어가는 dialog
-    public void moveActivity(Context context, String message, String id, Boolean orderCk, ArrayList<TableList> tableList){
+    public void moveActivity(Context context, String message, String id, Boolean orderCk, ClientSocket clientSocket){
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setMessage(message)
                 .setTitle("알람")
@@ -71,7 +72,8 @@ public class DialogCustom {
                         Intent intent = new Intent(context, Table.class);
                         intent.putExtra("get_id", id);
                         intent.putExtra("orderCk", orderCk);
-//                        intent.putExtra("tableList", tableList);
+                        intent.putExtra("clientSocket", clientSocket);
+                        Log.d(TAG, "clientSocket : " + clientSocket.isAlive());
                         context.startActivity(intent);
                     }
                 })

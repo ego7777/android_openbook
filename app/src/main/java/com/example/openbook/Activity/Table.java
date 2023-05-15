@@ -1,10 +1,10 @@
 package com.example.openbook.Activity;
 
+
 import static com.example.openbook.Activity.Menu.clientSocket;
 
 import android.app.Dialog;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -22,6 +22,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.openbook.Adapter.TableAdapter;
 import com.example.openbook.Chatting.ChattingUI;
+import com.example.openbook.Chatting.ClientSocket;
 import com.example.openbook.DialogCustom;
 import com.example.openbook.DrawableMethod;
 import com.example.openbook.ImageLoadTask;
@@ -38,6 +39,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 
 import java.io.InputStreamReader;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -94,7 +96,7 @@ public class Table extends AppCompatActivity {
 
         myTable = Integer.parseInt(get_id.replace("table", ""));
 
-//        tableList = (ArrayList<TableList>) getIntent().getSerializableExtra("tableList");
+//        clientSocket.socket = (Socket) getIntent().getSerializableExtra("clientSocket");
 
 
         if (clientSocket != null) {
@@ -103,6 +105,12 @@ public class Table extends AppCompatActivity {
             Log.d(TAG, "TableList index 0 :" + tableList.get(0).getTableNum());
 
         } else {
+
+            if(clientSocket == null){
+                Log.d(TAG, "onCreate: clientSocket is null");
+            }
+
+
             if (tableList == null) {
                 tableList = new ArrayList<>();
 
@@ -175,12 +183,12 @@ public class Table extends AppCompatActivity {
             loop = true;
             updateTable = new updateTable();
             updateTable.start();
-            Log.d(TAG, "onResume table update를 다시 시작한다~!");
+            Log.d(TAG, "onResume table update 를 다시 시작한다~!");
         }
 
 
         /**
-         * 여기는 bitmapArray로 바꿔주는 로직이여
+         * 여기는 bitmapArray 로 바꿔주는 로직이여
          */
         drawableMethod = new DrawableMethod();
 
@@ -222,7 +230,7 @@ public class Table extends AppCompatActivity {
 
                         if (tableList.get(i).getViewType() == 2) {
                             temp = i;
-                            Log.d(TAG, "for문 temp : " + temp);
+                            Log.d(TAG, "for 문 temp : " + temp);
                         }
                         tableList.get(i).setTableColor(getDrawable(R.drawable.table_border));
                     }
@@ -250,7 +258,7 @@ public class Table extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                if (orderCk == false) {
+                if (!orderCk) {
                     alertDialog.showAlertDialog(Table.this,
                             "주문 후 채팅이 가능합니다.");
 
@@ -260,20 +268,21 @@ public class Table extends AppCompatActivity {
                 } else if (tableList.get(clickTable - 1).getViewType() == 2) {
 
                     if (tableInformationHashMap.get(clickTable) == null ||
-                            tableInformationHashMap.get(clickTable).isChattingAgree() == false) {
+                            !tableInformationHashMap.get(clickTable).isChattingAgree()) {
                         alertDialog.chattingRequest(Table.this,
                                 clickTable + "번 테이블과 채팅을 하시겠습니까?" +
                                         "\n<추신> 채팅 전 테이블 정보를 입력하는 것을 추천드립니다!",
                                 "table" + clickTable, get_id);
                         Log.d(TAG, "채팅 신청");
 
-                    } else if (tableInformationHashMap.get(clickTable).isChattingAgree() == true) {
+                    } else if (tableInformationHashMap.get(clickTable).isChattingAgree()) {
                         Log.d(TAG, "Chatting Agree");
                         Intent intent = new Intent(Table.this, ChattingUI.class);
                         intent.putExtra("tableNumber", clickTable);
                         intent.putExtra("get_id", get_id);
                         intent.putExtra("orderCk", orderCk);
                         intent.putExtra("tableInformation", tableInformationHashMap);
+                        intent.putExtra("clientSocket", clientSocket);
                         startActivity(intent);
 
                     }
@@ -285,6 +294,7 @@ public class Table extends AppCompatActivity {
                 } // if-else  list.length>0 끝
             } // onClick
         }); //setOnClickListener
+
 
 
         /**
@@ -355,7 +365,6 @@ public class Table extends AppCompatActivity {
                                                     + jsonObject.getString("img");
                                             Log.d(TAG, "url :" + url);
 
-
                                             task = new ImageLoadTask(Table.this, true, url, table_info_img);
                                             task.execute();
 
@@ -366,7 +375,7 @@ public class Table extends AppCompatActivity {
                                             table_info_member.setText(jsonObject.getString("guestNum"));
 
 
-                                        }//if-else문
+                                        }//if-else 문
 
                                     } catch (IOException | JSONException e) {
                                         e.printStackTrace();
@@ -452,7 +461,7 @@ public class Table extends AppCompatActivity {
                         }
                     });
 
-                } // else문 끝
+                } // else 문 끝
 
                 /**
                  * 사진을 누르면 돈내고 사진 깔거냐고 물어보기
@@ -477,6 +486,7 @@ public class Table extends AppCompatActivity {
                             intent.putExtra("clickTable", clickTable);
                             intent.putExtra("orderCk", orderCk);
                             intent.putExtra("tableInformation", tableInformationHashMap);
+                            intent.putExtra("clientSocket", clientSocket);
 
                             startActivity(intent);
                             dlg.dismiss();
@@ -508,8 +518,12 @@ public class Table extends AppCompatActivity {
         loop = false;
         Log.d(TAG, "onStop loop false 맞아? "+ loop);
 
-        updateTable.interrupt();
-        Log.d(TAG, "onStop tableUpdate Thread 멈춤? " + updateTable.isInterrupted());
+        if(updateTable.isAlive()){
+            updateTable.interrupt();
+            Log.d(TAG, "onStop tableUpdate Thread 멈춤? " + updateTable.isInterrupted());
+
+        }
+
 
     }
 
@@ -518,11 +532,13 @@ public class Table extends AppCompatActivity {
         intent.putExtra("get_id", get_id);
         intent.putExtra("orderCk", orderCk);
         intent.putExtra("tableInformation", tableInformationHashMap);
+        intent.putExtra("clientSocket", clientSocket);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(intent);
     }
 
     public class updateTable extends Thread {
+
         int table[];
         BufferedReader networkReader;
 
@@ -592,7 +608,7 @@ public class Table extends AppCompatActivity {
 
                 } catch (IOException | JSONException e) {
                     e.printStackTrace();
-                    Log.d(TAG, "while문 e :" + e);
+                    Log.d(TAG, "while 문 e :" + e);
                 }
             }
             Log.d(TAG, "run: out?");
