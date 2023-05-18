@@ -1,8 +1,5 @@
 package com.example.openbook.Activity;
 
-
-import static com.example.openbook.Activity.Menu.clientSocket;
-
 import android.app.Dialog;
 import android.content.Intent;
 import android.os.Build;
@@ -53,11 +50,12 @@ import okhttp3.Response;
 
 public class Table extends AppCompatActivity {
 
+    String TAG = "TableTAG";
+
     ArrayList<TableList> tableList;
     HashMap<Integer, TableInformation> tableInformationHashMap;
+    ClientSocket clientSocket;
 
-
-    String TAG = "TableTAG";
 
     int clickTable;
     TableAdapter adapter;
@@ -96,8 +94,11 @@ public class Table extends AppCompatActivity {
 
         myTable = Integer.parseInt(get_id.replace("table", ""));
 
-//        clientSocket.socket = (Socket) getIntent().getSerializableExtra("clientSocket");
+//        clientSocket = (ClientSocket) getIntent().getSerializableExtra("clientSocket");
 
+
+        Socket socket = (Socket) getIntent().getParcelableExtra("clientSocket");
+        Log.d(TAG, "onCreate Socket 받음?!?!?!?! " + socket.isConnected());
 
         if (clientSocket != null) {
             tableList = clientSocket.getTableList();
@@ -511,12 +512,14 @@ public class Table extends AppCompatActivity {
     } //onResume
 
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onStop() {
         super.onStop();
 
         loop = false;
         Log.d(TAG, "onStop loop false 맞아? "+ loop);
+
 
         if(updateTable.isAlive()){
             updateTable.interrupt();
@@ -611,6 +614,7 @@ public class Table extends AppCompatActivity {
                     Log.d(TAG, "while 문 e :" + e);
                 }
             }
+            networkReader = null;
             Log.d(TAG, "run: out?");
 
 

@@ -47,11 +47,15 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 
+import java.io.BufferedWriter;
 import java.io.IOException;
 
 
+import java.io.OutputStreamWriter;
 import java.io.Serializable;
+import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -75,7 +79,6 @@ public class Menu extends AppCompatActivity {
     boolean orderCk = false;
     boolean infoCk = false;
 
-    public static ClientSocket clientSocket;
 
     ArrayList<MenuList> menuLists;
     ArrayList<CartList> cartLists;
@@ -100,6 +103,8 @@ public class Menu extends AppCompatActivity {
     ListView navigation;
     SideListViewAdapter sideAdapter;
 
+    ClientSocket clientSocket;
+
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -110,7 +115,7 @@ public class Menu extends AppCompatActivity {
         get_id = getIntent().getStringExtra("get_id");
         orderCk = getIntent().getBooleanExtra("orderCk", false);
 
-//        clientSocket = (ClientSocket) getIntent().getSerializableExtra("clientSocket");
+        clientSocket = (ClientSocket) getIntent().getSerializableExtra("clientSocket");
 
         tableInformationHashMap = (HashMap<Integer, TableInformation>) getIntent().getSerializableExtra("tableInformation");
 
@@ -284,13 +289,14 @@ public class Menu extends AppCompatActivity {
 
                 if (clientSocket != null && clientSocket.getTableList() != null) {
                     tableList = clientSocket.getTableList();
+
                 }
 
                 Intent intent = new Intent(getApplicationContext(), Table.class);
                 intent.putExtra("get_id", get_id);
                 intent.putExtra("orderCk", orderCk);
 
-//                intent.putExtra("clientSocket", clientSocket);
+                intent.putExtra("clientSocket", (Parcelable) clientSocket.socket);
 
                 intent.putExtra("tableInformation", tableInformationHashMap);
                 startActivity(intent);
@@ -326,8 +332,6 @@ public class Menu extends AppCompatActivity {
                 }
 
                 orderPrice.setText("합계: " + String.valueOf(totalPrice) + "원");
-
-
                 cartAdapter.setAdapterItem(cartLists);
                 sharedPreference();
             }
@@ -414,7 +418,6 @@ public class Menu extends AppCompatActivity {
                      /1. 로컬db 내용을 서버에 전달해서 저장
                      2. 저장 완료하면 로컬db 날리기
                      */
-
                     clientSocket.quit();
                     Log.d(TAG, "결제해서 소켓 종료");
 
@@ -481,7 +484,7 @@ public class Menu extends AppCompatActivity {
                                             orderPrice.setText("");
 
                                             if (clientSocket == null) {
-                                                clientSocket = new ClientSocket("3.36.255.141", 7777, get_id, getApplicationContext(), tableList);
+                                                clientSocket = new ClientSocket("3.36.255.141", 7777, get_id, tableList);
                                                 clientSocket.start();
                                                 Log.d(TAG, "소켓 시작");
                                             }

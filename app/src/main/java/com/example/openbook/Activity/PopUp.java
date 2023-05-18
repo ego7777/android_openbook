@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -29,6 +30,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.net.Socket;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -109,7 +111,7 @@ public class PopUp extends Activity {
         popup_title.setText(title);
         popup_body.setText(body);
 
-        clientSocket = (ClientSocket) getIntent().getSerializableExtra("clientSocket");
+        clientSocket = (ClientSocket)  getIntent().getSerializableExtra("clientSocket");
 
 
     }
@@ -280,7 +282,7 @@ public class PopUp extends Activity {
                 intent.putExtra("tableInformation", tableInformationHashMap);
                 intent.putExtra("get_id", get_id);
                 intent.putExtra("orderCk", orderCk);
-//                intent.putExtra("tableList", tableList);
+                intent.putExtra("clientSocket", clientSocket);
 //                  intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 startActivity(intent);
                 finish();

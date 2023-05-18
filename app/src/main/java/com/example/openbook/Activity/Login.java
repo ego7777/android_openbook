@@ -48,8 +48,7 @@ public class Login extends AppCompatActivity {
     String local_id;
     String TAG = "login_log";
 
-    String responseData ="";
-    String cookie;
+    String responseData = "";
 
 
     @Override
@@ -57,75 +56,7 @@ public class Login extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.login);
 
-
-        SharedPreferences pref;
-        SharedPreferences.Editor editor;
-
-        pref = getSharedPreferences("Cookie", MODE_PRIVATE);
-
-        editor = pref.edit();
-
-        cookie = pref.getString("cookie", "");
-        local_id = pref.getString("id", "");
-
-        Log.d(TAG, "시작할 때 sp에 저장된 cookie :" + cookie);
-        Log.d(TAG, "시작할 때 sp에 저장된 id : " + local_id);
-
-//        CookieJar cookieJar = new PersistentCookieJar(new SetCookieCache(),
-//                new SharedPrefsCookiePersistor(this));
-
-//        OkHttpClient.Builder builder = new OkHttpClient.Builder();
-//        builder.cookieJar(new MyCookieJar());
-//        OkHttpClient client = builder.build();
-
-
         final OkHttpClient client = new OkHttpClient();
-
-
-
-        RequestBody requestBody = new FormBody.Builder()
-                .add("id", local_id)
-                .build();
-
-        Request request_login = new Request.Builder()
-                .url("http://3.36.255.141/test.php")
-                .post(requestBody)
-                .build();
-
-
-//
-//
-        client.newCall(request_login).enqueue(new Callback() {
-            @Override
-            public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                e.printStackTrace();
-                Log.d(TAG, "login maintenance failure: " + e);
-            }
-
-            @Override
-            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-
-                responseData = response.header("Set-Cookie");
-                String body = response.body().string();
-
-                Log.d(TAG, "responseData : " + responseData);
-                Log.d(TAG, "body :" + body);
-
-                if(body.equals("세션 존재")){
-//                    startActivityString(Menu.class, "id", local_id);
-                }else{
-//                    Log.d(TAG, "세션 존재 안함");
-                }
-
-
-//                if (responseData.equals(cookie)) {
-//                    Log.d(TAG, "cookie 일치");
-//                }else {
-//                    Log.d(TAG, "cookie 불일치");
-//                }
-
-            }
-        });
 
 
         /**
@@ -156,7 +87,6 @@ public class Login extends AppCompatActivity {
                             .add("id", local_id)
                             .add("pw", pw.getText().toString().trim())
                             .build();
-
 
 
                     //요청 만들기
@@ -192,14 +122,14 @@ public class Login extends AppCompatActivity {
 
                                                 dialogCustom.showAlertDialog(Login.this, "아이디가 존재하지 않습니다");
 
-                                            }else if(responseData.equals("2")){
+                                            } else if (responseData.equals("2")) {
 
                                                 dialogCustom.showAlertDialog(Login.this, "비밀번호가 일치하지 않습니다.");
 
-                                            }else if(responseData.equals("쿠키 실패")){
+                                            } else if (responseData.equals("쿠키 실패")) {
                                                 Log.d(TAG, "쿠키 실패");
 
-                                            }else if(responseData.equals("성공")){
+                                            } else if (responseData.equals("성공")) {
                                                 //성공하면 쿠키를 쉐어드에 저장한다
 //                                                cookie = response.header("Set-Cookie");
 //
@@ -227,7 +157,7 @@ public class Login extends AppCompatActivity {
         /**
          * 회원가입
          */
-        Button signup =  findViewById(R.id.signup);
+        Button signup = findViewById(R.id.signup);
         signup.setOnClickListener(new View.OnClickListener() {
 
             @Override
@@ -236,9 +166,6 @@ public class Login extends AppCompatActivity {
                 startActivity(intent);
             }
         });
-
-
-
 
 
         /**
@@ -257,15 +184,15 @@ public class Login extends AppCompatActivity {
         Log.d(TAG, "gsc: " + gsc);
 
         SignInButton google_login = findViewById(R.id.google_login);
-            google_login.setOnClickListener(new View.OnClickListener() {
+        google_login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent signInIntent = gsc.getSignInIntent();
                 Log.d(TAG, "signInIntent: ");
                 startActivityForResult(signInIntent, 1000);
                 Log.d(TAG, "signIn: ");
-             }
-            });
+            }
+        });
 
 
     }
@@ -307,10 +234,9 @@ public class Login extends AppCompatActivity {
                 personId = acct.getId();
 
 
-
-                Log.d(TAG, "handleSignInResult:personName "+personName);
-                Log.d(TAG, "handleSignInResult:personEmail "+personEmail);
-                Log.d(TAG, "handleSignInResult:personId "+personId);
+                Log.d(TAG, "handleSignInResult:personName " + personName);
+                Log.d(TAG, "handleSignInResult:personEmail " + personEmail);
+                Log.d(TAG, "handleSignInResult:personId " + personId);
 
 
                 RequestBody formBody = new FormBody.Builder()
@@ -326,7 +252,6 @@ public class Login extends AppCompatActivity {
                         .post(formBody)
                         .build();
                 Log.d(TAG, "request :" + request);
-
 
 
                 google_client.newCall(request).enqueue(new Callback() {
@@ -347,7 +272,7 @@ public class Login extends AppCompatActivity {
                             public void run() {
                                 try {
                                     if (!response.isSuccessful()) {
-                                        Log.d(TAG, "응답실패"+response);
+                                        Log.d(TAG, "응답실패" + response);
                                         Toast.makeText(getApplicationContext(), "네트워크 문제 발생", Toast.LENGTH_SHORT).show();
 
                                     } else {
@@ -375,7 +300,7 @@ public class Login extends AppCompatActivity {
                     }
                 });
 
-            }else{
+            } else {
                 Log.d(TAG, "아ㅏ 실패야 임마!!");
             }
         } catch (ApiException e) {
@@ -384,10 +309,8 @@ public class Login extends AppCompatActivity {
     }
 
 
-
-
     // 문자열 인텐트 전달 함수
-    public void startActivityString(Class c, String name , String sendString) {
+    public void startActivityString(Class c, String name, String sendString) {
         Intent intent = new Intent(getApplicationContext(), c);
         intent.putExtra(name, sendString);
         startActivity(intent);
@@ -406,15 +329,14 @@ public class Login extends AppCompatActivity {
     }
 
 
-
     @Override
     protected void onStart() {
         super.onStart();
         GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
 
-        if(account==null){
+        if (account == null) {
             Log.d(TAG, "로그인이 필요합니다.");
-        }else{
+        } else {
             Log.d(TAG, "이미 로그인 중입니다.");
             Intent intent = new Intent(Login.this, Main.class);
             intent.putExtra("get_id", local_id);
@@ -468,8 +390,6 @@ public class Login extends AppCompatActivity {
 //                });
 //            }
 //        });
-
-
 
 
     }

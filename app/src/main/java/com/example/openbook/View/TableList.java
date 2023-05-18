@@ -5,6 +5,7 @@ import android.graphics.drawable.Drawable;
 
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 public class TableList implements Serializable {
 
@@ -62,6 +63,8 @@ public class TableList implements Serializable {
         this.tableColor = tableColor;
         this.viewType = viewType;
     }
+
+
 
 
     public int getTableNum() {
