@@ -36,7 +36,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 
 import java.io.InputStreamReader;
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -94,11 +93,8 @@ public class Table extends AppCompatActivity {
 
         myTable = Integer.parseInt(get_id.replace("table", ""));
 
-//        clientSocket = (ClientSocket) getIntent().getSerializableExtra("clientSocket");
+        clientSocket = (ClientSocket) getIntent().getSerializableExtra("clientSocket");
 
-
-        Socket socket = (Socket) getIntent().getParcelableExtra("clientSocket");
-        Log.d(TAG, "onCreate Socket 받음?!?!?!?! " + socket.isConnected());
 
         if (clientSocket != null) {
             tableList = clientSocket.getTableList();
@@ -143,14 +139,14 @@ public class Table extends AppCompatActivity {
 
         }
 
-        TextView table_num = findViewById(R.id.table_number);
+        TextView table_num = findViewById(R.id.appbar_menu_table_number);
         table_num.setText(get_id);
 
 
         /**
          * Appbar: Menu 누르면 이동
          */
-        menu = findViewById(R.id.menu);
+        menu = findViewById(R.id.appbar_menu_menu);
 
         RecyclerView table_grid = findViewById(R.id.tableGrid);
         adapter = new TableAdapter();
@@ -199,7 +195,7 @@ public class Table extends AppCompatActivity {
         byte[] notOrderTableImage = drawableMethod.makeBitmap(getDrawable(R.drawable.table_border));
         Log.d(TAG, "notOrderTableImage : " + notOrderTableImage);
 
-        byte[] orderTableImage = drawableMethod.makeBitmap(getDrawable(R.drawable.table_boder_order));
+        byte[] orderTableImage = drawableMethod.makeBitmap(getDrawable(R.drawable.table_border_order));
         Log.d(TAG, "orderTableImage :" + orderTableImage);
 
         menu.setOnClickListener(this::moveToMenu);
@@ -236,7 +232,7 @@ public class Table extends AppCompatActivity {
                         tableList.get(i).setTableColor(getDrawable(R.drawable.table_border));
                     }
                     if (temp != 1000) {
-                        tableList.get(temp).setTableColor(getDrawable(R.drawable.table_boder_order));
+                        tableList.get(temp).setTableColor(getDrawable(R.drawable.table_border_order));
 //                        Log.d(TAG, "active table :" + temp);
                     }
 
@@ -552,9 +548,11 @@ public class Table extends AppCompatActivity {
 
             try {
                 networkReader = new BufferedReader(
-                        new InputStreamReader(clientSocket.socket.getInputStream()));
+                        new InputStreamReader(clientSocket.getSocket().getInputStream()));
+
+
                 Log.d(TAG, "networkReader :" + networkReader.ready());
-                Log.d(TAG, "UI socket 연결 :" + clientSocket.socket.isConnected());
+                Log.d(TAG, "UI socket 연결 :" + clientSocket.getSocket().isConnected());
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -584,7 +582,7 @@ public class Table extends AppCompatActivity {
 
                     for (int i = 0; i < table.length; i++) {
                         if (table[i] != myTable) {
-                            tableList.get(table[i] - 1).setTableColor(getDrawable(R.drawable.table_boder_order));
+                            tableList.get(table[i] - 1).setTableColor(getDrawable(R.drawable.table_border_order));
                             tableList.get(table[i] - 1).setViewType(2);
                             Log.d(TAG, "update Table");
                             temp = table[i] - 1;

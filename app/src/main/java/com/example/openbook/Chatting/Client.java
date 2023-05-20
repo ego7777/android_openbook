@@ -124,7 +124,7 @@ public class Client extends AppCompatActivity {
         /**
          * AppBar 설정
          */
-        TextView menu = findViewById(R.id.menu);
+        TextView menu = findViewById(R.id.appbar_menu_menu);
         menu.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -136,7 +136,7 @@ public class Client extends AppCompatActivity {
             }
         });
 
-        TextView table = findViewById(R.id.table);
+        TextView table = findViewById(R.id.appbar_menu_table);
         table.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -148,7 +148,7 @@ public class Client extends AppCompatActivity {
             }
         });
 
-        TextView table_number = findViewById(R.id.table_number);
+        TextView table_number = findViewById(R.id.appbar_menu_table_number);
         table_number.setText(get_id);
 
 

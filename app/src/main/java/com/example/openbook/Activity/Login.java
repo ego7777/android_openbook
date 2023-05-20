@@ -3,20 +3,18 @@ package com.example.openbook.Activity;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.app.Dialog;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.openbook.DialogCustom;
 import com.example.openbook.Main;
 import com.example.openbook.R;
+import com.example.openbook.View.TableList;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -26,6 +24,7 @@ import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.Task;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -48,7 +47,7 @@ public class Login extends AppCompatActivity {
     String local_id;
     String TAG = "login_log";
 
-    String responseData = "";
+    ArrayList<TableList> tableList;
 
 
     @Override
@@ -75,6 +74,7 @@ public class Login extends AppCompatActivity {
         login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
                 if (id.getText().toString().length() > 0 ||
                         pw.getText().toString().trim().length() > 0) {
                     local_id = id.getText().toString().trim();
@@ -91,16 +91,15 @@ public class Login extends AppCompatActivity {
 
                     //요청 만들기
 
-                    Request request_new = new Request.Builder()
+                    Request request = new Request.Builder()
                             .url("http://3.36.255.141/login.php")
                             .post(formBody)
                             .build();
 
                     //응답 콜백
-                    client.newCall(request_new).enqueue(new Callback() {
+                    client.newCall(request).enqueue(new Callback() {
                         @Override
                         public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                            e.printStackTrace();
                             Log.d(TAG, "onFailure: " + e);
                         }
 
@@ -114,9 +113,8 @@ public class Login extends AppCompatActivity {
                                             Log.d(TAG, "응답 실패" + response);
                                         } else {
                                             Log.d(TAG, "응답 성공");
-                                            responseData = response.body().string();
+                                            String responseData = response.body().string();
                                             Log.d(TAG, "responseData : " + responseData);
-                                            Log.d(TAG, "cookie : " + response.headers().get("Set-Cookie"));
 
                                             if (responseData.equals("1")) {
 
@@ -126,18 +124,13 @@ public class Login extends AppCompatActivity {
 
                                                 dialogCustom.showAlertDialog(Login.this, "비밀번호가 일치하지 않습니다.");
 
-                                            } else if (responseData.equals("쿠키 실패")) {
-                                                Log.d(TAG, "쿠키 실패");
-
                                             } else if (responseData.equals("성공")) {
-                                                //성공하면 쿠키를 쉐어드에 저장한다
-//                                                cookie = response.header("Set-Cookie");
-//
-//                                                editor.putString("id", local_id);
-//                                                editor.putString("cookie", cookie);
-//                                                editor.commit();
 
                                                 startActivityString(Menu.class, "get_id", local_id);
+
+                                            } else if (responseData.equals("admin")){
+
+                                                startActivityAdmin(Admin.class,tableList, local_id);
                                             }
                                         }
                                     } catch (Exception e) {
@@ -320,9 +313,12 @@ public class Login extends AppCompatActivity {
 
     // 인텐트 화면전환 하는 함수
     // FLAG_ACTIVITY_CLEAR_TOP = 불러올 액티비티 위에 쌓인 액티비티 지운다.
-    public void startActivityflag(Class c) {
+    public void startActivityAdmin(Class c,ArrayList<TableList> tableList, String id) {
         Intent intent = new Intent(getApplicationContext(), c);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        intent.putExtra("tableList", tableList);
+        intent.putExtra("get_id", id);
+
         startActivity(intent);
         // 화면전환 애니메이션 없애기
         overridePendingTransition(0, 0);
@@ -344,52 +340,13 @@ public class Login extends AppCompatActivity {
             startActivity(intent);
         }
 
-//        OkHttpClient client = new OkHttpClient();
-//        Request request = new Request.Builder()
-//                .url("http://3.36.255.141/loginCk.php")
-//                .get()
-//                .build();
-//
-//        client.newCall(request).enqueue(new Callback() {
-//            @Override
-//            public void onFailure(@NonNull Call call, @NonNull IOException e) {
-//                Log.d(TAG, "onFailure: " + e);
-//            }
-//
-//            @Override
-//            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-//
-//                runOnUiThread(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        try {
-//                            if (!response.isSuccessful()) {
-//                                Log.d(TAG, "응답실패"+response);
-//                                Toast.makeText(getApplicationContext(), "네트워크 문제 발생", Toast.LENGTH_SHORT).show();
-//
-//                            } else {
-//                                // 응답 성공
-//                                Log.d(TAG, "응답 성공");
-//                                final String responseData = response.body().string();
-//                                if(responseData.equals(local_id)){
-//                                    Log.d(TAG, "responseData : " + responseData);
-//                                    Log.d(TAG, "local 로그인 중");
-//                                    Intent intent = new Intent(Login.this, Main.class);
-////                                    intent.putExtra("get_id", )
-//                                    startActivity(intent);
-//                                }else{
-//                                    Log.d(TAG, "local 로그아웃");
-//                                    Log.d(TAG, "responseData : " + responseData);
-//                                }
-//                            }
-//
-//                        } catch (Exception e) {
-//                            e.printStackTrace();
-//                        }
-//                    }
-//                });
-//            }
-//        });
+        if(tableList == null){
+            tableList = new ArrayList<>();
+
+            for(int i=1; i<21; i++){
+                tableList.add(new TableList(i, getDrawable(R.drawable.table_border_order), 1));
+            }
+        }
 
 
     }

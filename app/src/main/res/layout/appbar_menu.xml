@@ -10,44 +10,41 @@
         android:background="@color/lime">
 
         <androidx.appcompat.widget.Toolbar
-            android:id="@+id/toolbar"
+            android:id="@+id/appbar_menu_toolbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
             <TextView
-                android:id="@+id/menu"
+                android:id="@+id/appbar_menu_menu"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:text="Menu"
-
                 android:textSize="25sp"
                 android:textStyle="bold"
                 android:textColor="@color/black" />
 
             <TextView
-                android:id="@+id/table"
+                android:id="@+id/appbar_menu_table"
                 android:layout_marginStart="40dp"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:text="Table"
-
                 android:textSize="25sp"
                 android:textStyle="bold"
                 android:textColor="@color/black"/>
 
             <TextView
-                android:id="@+id/game"
+                android:id="@+id/appbar_menu_game"
                 android:layout_marginStart="40dp"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:text="Game"
-
                 android:textSize="25sp"
                 android:textStyle="bold"
                 android:textColor="@color/black" />
 
             <TextView
-                android:id="@+id/table_number"
+                android:id="@+id/appbar_menu_table_number"
                 android:layout_gravity="end"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

@@ -55,7 +55,7 @@
             android:theme="@android:style/Theme.Dialog"/>
 
 
-        <activity android:name=".Activity.ManagerChannel"/>
+        <activity android:name=".Activity.Admin"/>
 
     </application>
 

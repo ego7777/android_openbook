@@ -109,7 +109,7 @@ public class ChattingUI extends AppCompatActivity {
         /**
          * AppBar 설정
          */
-        TextView menu = findViewById(R.id.menu);
+        TextView menu = findViewById(R.id.appbar_menu_menu);
         menu.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -122,7 +122,7 @@ public class ChattingUI extends AppCompatActivity {
             }
         });
 
-        TextView table = findViewById(R.id.table);
+        TextView table = findViewById(R.id.appbar_menu_table);
         table.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -135,7 +135,7 @@ public class ChattingUI extends AppCompatActivity {
             }
         });
 
-        TextView table_number = findViewById(R.id.table_number);
+        TextView table_number = findViewById(R.id.appbar_menu_table_number);
         table_number.setText(get_id);
         Log.d(TAG, "get_id: " + get_id);
 
@@ -207,13 +207,13 @@ public class ChattingUI extends AppCompatActivity {
                     case MSG_CONNECT:
                         m = "정상적으로 서버에 접속하였습니다.";
 
-                        if (clientSocket.socket.isConnected()) {
+                        if (clientSocket.getSocket().isConnected()) {
                             updateUI = new updateUI();
                             updateUI.start();
                             Log.d(TAG, "UI update Thread 시작");
 
                         } else {
-                            Log.d(TAG, "소켓 없어서 새로 생성:" + clientSocket.socket.isConnected());
+                            Log.d(TAG, "소켓 없어서 새로 생성:" + clientSocket.getSocket().isConnected());
                         }
 
                         break;
@@ -319,7 +319,7 @@ public class ChattingUI extends AppCompatActivity {
         });
 
 
-        if (clientSocket.socket == null) {
+        if (clientSocket.getSocket() == null) {
             Log.d(TAG, "clientSocket null");
 
             try {
@@ -362,7 +362,7 @@ public class ChattingUI extends AppCompatActivity {
                 case MSG_SEND:
                     try {
                         networkWrite = new BufferedWriter
-                                (new OutputStreamWriter(clientSocket.socket.getOutputStream()));
+                                (new OutputStreamWriter(clientSocket.getSocket().getOutputStream()));
 
                         networkWrite.write((String) msg.obj);
                         networkWrite.newLine();
@@ -384,12 +384,12 @@ public class ChattingUI extends AppCompatActivity {
                 case MSG_SERVER_STOP:
                     //quit 메소드 호출
                     try {
-                        clientSocket.socket.close();
+                        clientSocket.getSocket().close();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                     Log.d(TAG, "handleMessage: quit");
-                    clientSocket.socket = null;
+//                    clientSocket.getSocket() = null;
                     break;
             }
         }
@@ -408,11 +408,11 @@ public class ChattingUI extends AppCompatActivity {
 
             try {
                 networkReader = new BufferedReader(
-                        new InputStreamReader(clientSocket.socket.getInputStream()));
+                        new InputStreamReader(clientSocket.getSocket().getInputStream()));
 
                 Log.d(TAG, "networkReader :" + networkReader.ready());
 
-                Log.d(TAG, "UI socket 연결 :" + clientSocket.socket.isConnected());
+                Log.d(TAG, "UI socket 연결 :" + clientSocket.getSocket().isConnected());
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -492,9 +492,9 @@ public class ChattingUI extends AppCompatActivity {
                     networkReader = null;
                 }
 
-                if (clientSocket.socket != null) {
-                    clientSocket.socket.close();
-                    clientSocket.socket = null;
+                if (clientSocket.getSocket() != null) {
+                    clientSocket.getSocket().close();
+//                    clientSocket.socket = null;
                 }
 
 

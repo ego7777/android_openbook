@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:layout_margin="20dp"
@@ -28,7 +29,7 @@
         android:orientation="horizontal">
 
         <TextView
-            android:id="@+id/table_item_gender"
+            android:id="@+id/table_grid_gender"
             android:layout_width="75dp"
             android:layout_height="wrap_content"
             android:gravity="center"
@@ -38,7 +39,7 @@
             android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/table_item_guestNum"
+            android:id="@+id/table_grid_guestNum"
             android:layout_width="75dp"
             android:layout_height="wrap_content"
             android:gravity="center"

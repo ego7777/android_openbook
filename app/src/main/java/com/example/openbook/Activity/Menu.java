@@ -9,7 +9,6 @@ import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Parcelable;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
@@ -47,15 +46,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 
-import java.io.BufferedWriter;
 import java.io.IOException;
 
 
-import java.io.OutputStreamWriter;
-import java.io.Serializable;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.net.SocketAddress;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -110,7 +103,7 @@ public class Menu extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.menu2);
+        setContentView(R.layout.menu_main);
 
         get_id = getIntent().getStringExtra("get_id");
         orderCk = getIntent().getBooleanExtra("orderCk", false);
@@ -139,7 +132,7 @@ public class Menu extends AppCompatActivity {
         /**
          * AppBar: 로그인하면 table number 바로 나오는거
          */
-        TextView table_number = findViewById(R.id.table_number);
+        TextView table_number = findViewById(R.id.appbar_menu_table_number);
         table_number.setText(get_id);
 
 
@@ -154,7 +147,7 @@ public class Menu extends AppCompatActivity {
         super.onStart();
         //액티비티가 사용자에게 보여질 때, 사용자와 상호작용 X
 
-        table = findViewById(R.id.table);
+        table = findViewById(R.id.appbar_menu_table);
 
         /**
          * 장바구니
@@ -296,7 +289,7 @@ public class Menu extends AppCompatActivity {
                 intent.putExtra("get_id", get_id);
                 intent.putExtra("orderCk", orderCk);
 
-                intent.putExtra("clientSocket", (Parcelable) clientSocket.socket);
+                intent.putExtra("clientSocket", clientSocket);
 
                 intent.putExtra("tableInformation", tableInformationHashMap);
                 startActivity(intent);

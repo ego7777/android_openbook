@@ -89,8 +89,8 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> 
     class ViewHolder extends RecyclerView.ViewHolder {
 
         TextView tableNum;
-        TextView table_item_gender;
-        TextView table_item_guestNum;
+        TextView table_grid_gender;
+        TextView table_grid_guestNum;
 
         int position;
         private int viewType;
@@ -101,8 +101,8 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> 
             this.viewType =viewType;
 
             tableNum = itemView.findViewById(R.id.tableNum);
-            table_item_gender = itemView.findViewById(R.id.table_item_gender);
-            table_item_guestNum = itemView.findViewById(R.id.table_item_guestNum);
+            table_grid_gender = itemView.findViewById(R.id.table_grid_gender);
+            table_grid_guestNum = itemView.findViewById(R.id.table_grid_guestNum);
 
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -134,22 +134,22 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> 
             tableNum.setText(String.valueOf(items.getTableNum()));
             tableNum.setBackground(items.getTableColor());
 
-            table_item_gender.setText(items.getTableGender());
-            table_item_gender.setBackground(items.getTableColor());
+            table_grid_gender.setText(items.getTableGender());
+            table_grid_gender.setBackground(items.getTableColor());
 
-            table_item_guestNum.setText(items.getTableGuestNum());
-            table_item_guestNum.setBackground(items.getTableColor());
+            table_grid_guestNum.setText(items.getTableGuestNum());
+            table_grid_guestNum.setBackground(items.getTableColor());
         }
 
         void onBindMine(TableList items){
             tableNum.setText(items.getMyTable());
             tableNum.setBackground(items.getTableColor());
 
-            table_item_gender.setText(items.getTableGender());
-            table_item_gender.setBackground(items.getTableColor());
+            table_grid_gender.setText(items.getTableGender());
+            table_grid_gender.setBackground(items.getTableColor());
 
-            table_item_guestNum.setText(items.getTableGuestNum());
-            table_item_guestNum.setBackground(items.getTableColor());
+            table_grid_guestNum.setText(items.getTableGuestNum());
+            table_grid_guestNum.setBackground(items.getTableColor());
 
         }
 
