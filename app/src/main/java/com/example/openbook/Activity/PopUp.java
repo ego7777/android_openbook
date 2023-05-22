@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -12,38 +11,18 @@ import android.view.Window;
 import android.widget.Button;
 import android.widget.TextView;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.example.openbook.Chatting.ChattingUI;
-import com.example.openbook.Chatting.Client;
 import com.example.openbook.Chatting.ClientSocket;
 import com.example.openbook.FCMclass.SendNotification;
 import com.example.openbook.R;
-import com.example.openbook.TableInformation;
-import com.example.openbook.View.TableList;
+import com.example.openbook.Data.TableInformation;
+import com.example.openbook.Data.TableList;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.IOException;
-import java.io.Serializable;
-import java.net.Socket;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
-
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.FormBody;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 
 public class PopUp extends Activity {
 

@@ -1,4 +1,4 @@
-package com.example.openbook;
+package com.example.openbook.Data;
 
 
 import java.io.Serializable;

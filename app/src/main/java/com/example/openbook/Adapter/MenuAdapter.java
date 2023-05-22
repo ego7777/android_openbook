@@ -12,8 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.openbook.R;
-import com.example.openbook.View.MenuList;
-import com.example.openbook.View.TableList;
+import com.example.openbook.Data.MenuList;
 
 import java.util.ArrayList;
 

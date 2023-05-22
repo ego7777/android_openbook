@@ -10,7 +10,7 @@ import androidx.annotation.Nullable;
 
 public class DBHelper extends SQLiteOpenHelper {
 
-    static String DBName = "chattingMessages.db";
+    static String DBName = "OpenbookLocal.db";
     String content = "content";
     String time = "time";
     String sender = "sender";
@@ -25,7 +25,7 @@ public class DBHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
 
-        String query="CREATE TABLE chattingTable" +
+        String queryChatting="CREATE TABLE chattingTable" +
                 "(id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "content VARCHAR(2000) not null," +
                 "time VARCHAR(8) not null," +
@@ -33,18 +33,30 @@ public class DBHelper extends SQLiteOpenHelper {
                 "receiver VARCAHR(10) not null," +
                 "read VARCHAR(4))";
 
-        db.execSQL(query);
+        db.execSQL(queryChatting);
+
+        String queryMenu = "CREATE TABLE menuListTable"+
+                "(id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "menuName VARCHAR(20) not null," +
+                "menuPrice INT not null," +
+                "menuImage VARCHAR(255) not null)";
+
+        db.execSQL(queryMenu);
 
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        String query = "DROP TABLE chattingTable";
-        db.execSQL(query);
+        String queryChatting = "DROP TABLE chattingTable";
+        db.execSQL(queryChatting);
+
+        String queryMenu = "DROP TABLE menuListTable";
+        db.execSQL(queryMenu);
+
         onCreate(db);
     }
 
-    public boolean insertData(String content, String time, String sender, String receiver, String read){
+    public boolean insertChattingData(String content, String time, String sender, String receiver, String read){
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put("content", content);
@@ -59,10 +71,24 @@ public class DBHelper extends SQLiteOpenHelper {
         return true;
     }
 
-
-    public Cursor getChattingData(){
+    public boolean insertMenuData(String menuName, int menuPrice, String menuImage){
         SQLiteDatabase db = this.getWritableDatabase();
-        Cursor res = db.rawQuery("SELECT * FROM chattingTable", null);
+        ContentValues contentValues = new ContentValues();
+        contentValues.put("menuName", menuName);
+        contentValues.put("menuPrice", menuPrice);
+        contentValues.put("menuImage", menuImage);
+
+        long result = db.insert("menuListTable", null, contentValues);
+        if(result == -1){
+            return false;
+        }
+        return true;
+    }
+
+
+    public Cursor getTableData(String tableName){
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor res = db.rawQuery("SELECT * FROM "+tableName, null);
         return res;
     }
 

@@ -1,7 +1,6 @@
 package com.example.openbook.Chatting;
 
 
-import android.content.Context;
 import android.os.Build;
 
 import android.util.Log;
@@ -9,7 +8,7 @@ import android.util.Log;
 import androidx.annotation.RequiresApi;
 
 
-import com.example.openbook.View.TableList;
+import com.example.openbook.Data.TableList;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

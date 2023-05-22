@@ -1,11 +1,9 @@
 package com.example.openbook.Adapter;
 
 import android.annotation.SuppressLint;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -13,8 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.openbook.R;
-import com.example.openbook.View.CartList;
-import com.example.openbook.View.ChattingList;
+import com.example.openbook.Data.ChattingList;
 
 import java.util.ArrayList;
 

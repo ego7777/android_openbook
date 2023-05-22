@@ -1,4 +1,4 @@
-package com.example.openbook.View;
+package com.example.openbook.Data;
 
 public class ChattingList {
     String text;

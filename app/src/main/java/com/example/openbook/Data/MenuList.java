@@ -1,7 +1,7 @@
-package com.example.openbook.View;
+package com.example.openbook.Data;
 
 public class MenuList {
-    int redId;
+    int drawableId;
     String menu_name;
     int menu_price;
 
@@ -15,8 +15,8 @@ public class MenuList {
 
     int viewType;
 
-    public MenuList (int redId, String name, int price, int viewType){
-        this.redId = redId;
+    public MenuList (int drawableId, String name, int price, int viewType){
+        this.drawableId = drawableId;
         this.menu_name = name;
         this.menu_price = price;
         this.viewType = viewType;
@@ -31,11 +31,11 @@ public class MenuList {
     }
 
     public int getRedId() {
-        return redId;
+        return drawableId;
     }
 
-    public void setRedId(int redId) {
-        this.redId = redId;
+    public void setRedId(int drawableId) {
+        this.drawableId = drawableId;
     }
 
 

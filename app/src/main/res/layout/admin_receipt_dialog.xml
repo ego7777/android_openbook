@@ -4,66 +4,77 @@
     android:layout_height="700dp"
     android:layout_gravity="center"
     android:gravity="center"
+    android:background="@drawable/receipt"
     android:orientation="vertical">
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Menu"
-        android:textColor="@color/black"
-        android:textSize="30dp"
-        android:textStyle="bold" />
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="5dp"
-        android:layout_gravity="center"
-        android:layout_marginTop="20dp"
-        android:background="@drawable/dash_line" />
-
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:layout_width="match_parent"
-        android:layout_height="400dp"
-        android:layout_marginTop="20dp" />
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="5dp"
-        android:layout_gravity="center"
-        android:layout_marginTop="20dp"
-        android:background="@drawable/dash_line" />
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:layout_height="650dp"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="@color/receipt_gray">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:gravity="right"
-            android:paddingStart="25dp"
-            android:text="Total."
-            android:textStyle="bold"
+            android:text="Menu"
             android:textColor="@color/black"
-            android:textSize="20dp" />
+            android:textSize="30dp"
+            android:textStyle="bold" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="5dp"
+            android:layout_gravity="center"
+            android:layout_marginTop="20dp"
+            android:background="@drawable/dash_line" />
 
 
-        <TextView
-            android:id="@+id/admin_receipt_totalPrice"
+        <androidx.recyclerview.widget.RecyclerView
+            android:layout_width="match_parent"
+            android:layout_height="400dp"
+            android:layout_marginTop="20dp" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="5dp"
+            android:layout_gravity="center"
+            android:layout_marginTop="20dp"
+            android:background="@drawable/dash_line" />
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:gravity="right"
-            android:paddingEnd="20dp"
-            android:text="얼마 뚱땅뚱땅"
-            android:textColor="@color/black"
-            android:textSize="20dp" />
+            android:orientation="horizontal"
+            android:layout_marginTop="30dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="right"
+                android:paddingStart="25dp"
+                android:text="Total."
+                android:textColor="@color/black"
+                android:textSize="20dp"
+                android:textStyle="bold" />
+
+
+            <TextView
+                android:id="@+id/admin_receipt_totalPrice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="right"
+                android:paddingEnd="20dp"
+                android:text="얼마 뚱땅뚱땅"
+                android:textColor="@color/black"
+                android:textSize="20dp" />
+
+
+        </LinearLayout>
 
 
     </LinearLayout>
+
 
 
 

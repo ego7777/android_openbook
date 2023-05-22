@@ -1,23 +1,18 @@
 package com.example.openbook.Adapter;
 
 import android.annotation.SuppressLint;
-import android.content.res.Resources;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.openbook.R;
-import com.example.openbook.View.CartList;
-import com.example.openbook.View.MenuList;
-import com.example.openbook.View.RequestList;
+import com.example.openbook.Data.CartList;
 
 import java.util.ArrayList;
 

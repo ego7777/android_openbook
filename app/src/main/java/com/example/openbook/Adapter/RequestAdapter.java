@@ -10,7 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.openbook.R;
-import com.example.openbook.View.RequestList;
+import com.example.openbook.Data.RequestList;
 
 
 import java.util.ArrayList;

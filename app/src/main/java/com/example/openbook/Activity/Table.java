@@ -25,8 +25,8 @@ import com.example.openbook.DrawableMethod;
 import com.example.openbook.ImageLoadTask;
 import com.example.openbook.QRcode.MakeQR;
 import com.example.openbook.R;
-import com.example.openbook.TableInformation;
-import com.example.openbook.View.TableList;
+import com.example.openbook.Data.TableInformation;
+import com.example.openbook.Data.TableList;
 
 import org.json.JSONArray;
 import org.json.JSONException;

@@ -4,6 +4,8 @@ package com.example.openbook.Activity;
 import android.app.Dialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
@@ -30,15 +32,16 @@ import com.example.openbook.Adapter.CartAdapter;
 import com.example.openbook.Adapter.MenuAdapter;
 import com.example.openbook.Adapter.SideListViewAdapter;
 import com.example.openbook.Chatting.ClientSocket;
+import com.example.openbook.Chatting.DBHelper;
 import com.example.openbook.Deco.menu_recyclerview_deco;
 import com.example.openbook.DialogCustom;
 import com.example.openbook.FCMclass.FCM;
 import com.example.openbook.R;
-import com.example.openbook.TableInformation;
-import com.example.openbook.View.CartList;
-import com.example.openbook.View.MenuList;
-import com.example.openbook.View.SideList;
-import com.example.openbook.View.TableList;
+import com.example.openbook.Data.TableInformation;
+import com.example.openbook.Data.CartList;
+import com.example.openbook.Data.MenuList;
+import com.example.openbook.Data.SideList;
+import com.example.openbook.Data.TableList;
 
 
 import org.json.JSONArray;
@@ -85,7 +88,7 @@ public class Menu extends AppCompatActivity {
     String get_id;
 
     TextView table;
-    RecyclerView cartView;
+
     CartAdapter cartAdapter;
     TextView orderPrice;
     TextView order;
@@ -97,6 +100,8 @@ public class Menu extends AppCompatActivity {
     SideListViewAdapter sideAdapter;
 
     ClientSocket clientSocket;
+
+    OkHttpClient okHttpClient;
 
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -137,22 +142,12 @@ public class Menu extends AppCompatActivity {
 
 
         TextView cart_header = findViewById(R.id.cart_header);
-
-
-    } // onCreate()
-
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        //액티비티가 사용자에게 보여질 때, 사용자와 상호작용 X
-
         table = findViewById(R.id.appbar_menu_table);
 
         /**
          * 장바구니
          */
-        cartView = findViewById(R.id.cart);
+        RecyclerView cartView = findViewById(R.id.cart);
         cartView.setLayoutManager(new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
 
         cartAdapter = new CartAdapter();
@@ -163,7 +158,6 @@ public class Menu extends AppCompatActivity {
 
         orderPrice = findViewById(R.id.order_price);
         order = findViewById(R.id.order);
-
 
         /**
          * 안주
@@ -177,37 +171,48 @@ public class Menu extends AppCompatActivity {
         menuLists = new ArrayList<>();
         menuGrid.setAdapter(menuAdapter);
 
-        int img[] = {R.drawable.salad, R.drawable.soup, R.drawable.dish, R.drawable.burger, R.drawable.ramen, R.drawable.pasta,
-                R.drawable.beer_mug, R.drawable.beer, R.drawable.soju, R.drawable.cocktail, 0, 0,
-                R.drawable.nachos, R.drawable.tteokbokki, R.drawable.fries};
 
-        String menu_name[] = {
-                "샐러드",
-                "전골",
-                "목살스테이크",
-                "수제버거",
-                "해물라면",
-                "파스타",
-                "생맥주",
-                "병맥주",
-                "소주",
-                "칵테일",
-                null,
-                null,
-                "나초",
-                "국물떡볶이",
-                "감자튀김",
-        };
+        DBHelper dbHelper;
+        SQLiteDatabase sqLiteDatabase;
+        int version = 1;
 
-        int menu_price[] = {9000, 15000, 18000, 9000, 8000, 15000, 4500, 5000, 5000, 6000, 0, 0, 5000, 6000, 5000};
+        dbHelper = new DBHelper(Menu.this, version);
+        sqLiteDatabase = dbHelper.getWritableDatabase();
+
+        Cursor res = dbHelper.getTableData("menuListTable");
+
+        okHttpClient = new OkHttpClient();
+
+        if(res.getCount() == 0){
+            Log.d(TAG, "새로 받아오기");
+
+            Request request = new Request.Builder()
+                    .url("http://3.36.255.141/saveOrder.php")
+                    .build();
+
+            okHttpClient.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                    Log.d(TAG, "onFailure: " + e);
+                }
+
+                @Override
+                public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                    String responseData = response.body().string();
+
+                    if(responseData.contains("{")){
+                        //json 변환 하는 놈으로 만들어
+                    }else{
+                        Log.d(TAG, "onResponse : " + responseData);
+                    }
+                }
+            });
 
 
-        for (int i = 0; i < img.length; i++) {
-            if (i == 10 || i == 11) {
-                menuLists.add(new MenuList(0, null, 0, 0));
-            } else {
-                menuLists.add(new MenuList(img[i], menu_name[i], menu_price[i], 1));
-            }
+        }
+
+        while(res.moveToNext()){
+            menuLists.add(new MenuList(res.getInt(3), res.getString(1), res.getInt(2), 1));
         }
 
         menuAdapter.setAdapterItem(menuLists);
@@ -225,6 +230,15 @@ public class Menu extends AppCompatActivity {
             sideAdapter.addItem(new SideList(side[i]));
         }
         navigation.setAdapter(sideAdapter);
+
+
+    } // onCreate()
+
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        //액티비티가 사용자에게 보여질 때, 사용자와 상호작용 X
 
 
         /**
@@ -449,10 +463,10 @@ public class Menu extends AppCompatActivity {
                             .post(formBody)
                             .build();
 
-                    final OkHttpClient client = new OkHttpClient();
 
 
-                    client.newCall(request).enqueue(new Callback() {
+
+                    okHttpClient.newCall(request).enqueue(new Callback() {
                         @Override
                         public void onFailure(@NonNull Call call, @NonNull IOException e) {
                             orderCk = false;
@@ -652,6 +666,10 @@ public class Menu extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         Log.d(TAG, "onStop: ");
+    }
+
+    public void setMenuList(String jsonData){
+
     }
 
 

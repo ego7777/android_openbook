@@ -31,8 +31,9 @@
         <entry key="app/src/main/res/drawable/table_select.xml" value="0.1085" />
         <entry key="app/src/main/res/drawable/table_unpress.xml" value="0.1085" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.20742753623188406" />
-        <entry key="app/src/main/res/layout/admin_main.xml" value="0.16681776971894832" />
-        <entry key="app/src/main/res/layout/admin_receipt_dialog.xml" value="0.17216949462890627" />
+        <entry key="app/src/main/res/layout/admin_main.xml" value="0.16159250585480095" />
+        <entry key="app/src/main/res/layout/admin_receipt_dialog.xml" value="0.3236343383789063" />
+        <entry key="app/src/main/res/layout/admin_table_gridview_item.xml" value="0.1559383499546691" />
         <entry key="app/src/main/res/layout/appbar.xml" value="0.289044289044289" />
         <entry key="app/src/main/res/layout/appbar_admin.xml" value="0.16681776971894832" />
         <entry key="app/src/main/res/layout/call_gridview_item.xml" value="0.1" />
@@ -54,6 +55,7 @@
         <entry key="app/src/main/res/layout/menu_item_temp.xml" value="0.1" />
         <entry key="app/src/main/res/layout/menu_list.xml" value="0.1" />
         <entry key="app/src/main/res/layout/menu_lust.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/menu_main.xml" value="0.1559383499546691" />
         <entry key="app/src/main/res/layout/notification.xml" value="0.1" />
         <entry key="app/src/main/res/layout/order_complete.xml" value="0.1" />
         <entry key="app/src/main/res/layout/popup.xml" value="0.1" />

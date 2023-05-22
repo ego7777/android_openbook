@@ -1,8 +1,6 @@
 package com.example.openbook.Adapter;
 
 import android.annotation.SuppressLint;
-import android.graphics.Color;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,9 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.openbook.R;
-import com.example.openbook.View.TableList;
-
-import org.w3c.dom.Text;
+import com.example.openbook.Data.TableList;
 
 import java.util.ArrayList;
 
@@ -47,7 +43,10 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> 
      * 실체화를 해주는 아이가 Inflater
      * **/
     public TableAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.table_gridview_item, parent, false);
+
+        View view = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.table_gridview_item, parent, false);
+
         return new TableAdapter.ViewHolder(view, viewType);
     }
 

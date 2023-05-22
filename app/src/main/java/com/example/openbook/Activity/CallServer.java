@@ -16,8 +16,8 @@ import com.example.openbook.Adapter.CartAdapter;
 import com.example.openbook.Adapter.RequestAdapter;
 
 import com.example.openbook.R;
-import com.example.openbook.View.CartList;
-import com.example.openbook.View.RequestList;
+import com.example.openbook.Data.CartList;
+import com.example.openbook.Data.RequestList;
 
 import java.util.ArrayList;
 

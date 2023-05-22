@@ -11,10 +11,10 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.example.openbook.Data.AdminTableList;
 import com.example.openbook.DialogCustom;
 import com.example.openbook.Main;
 import com.example.openbook.R;
-import com.example.openbook.View.TableList;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -47,7 +47,7 @@ public class Login extends AppCompatActivity {
     String local_id;
     String TAG = "login_log";
 
-    ArrayList<TableList> tableList;
+    ArrayList<AdminTableList> adminTableList;
 
 
     @Override
@@ -130,7 +130,7 @@ public class Login extends AppCompatActivity {
 
                                             } else if (responseData.equals("admin")){
 
-                                                startActivityAdmin(Admin.class,tableList, local_id);
+                                                startActivityAdmin(Admin.class, adminTableList, local_id);
                                             }
                                         }
                                     } catch (Exception e) {
@@ -313,12 +313,12 @@ public class Login extends AppCompatActivity {
 
     // 인텐트 화면전환 하는 함수
     // FLAG_ACTIVITY_CLEAR_TOP = 불러올 액티비티 위에 쌓인 액티비티 지운다.
-    public void startActivityAdmin(Class c,ArrayList<TableList> tableList, String id) {
+    public void startActivityAdmin(Class c, ArrayList<AdminTableList> tableList, String id) {
         Intent intent = new Intent(getApplicationContext(), c);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+//        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         intent.putExtra("tableList", tableList);
         intent.putExtra("get_id", id);
-
+        Log.d(TAG, "startActivityAdmin:  여기 까지 옴?");
         startActivity(intent);
         // 화면전환 애니메이션 없애기
         overridePendingTransition(0, 0);
@@ -340,11 +340,12 @@ public class Login extends AppCompatActivity {
             startActivity(intent);
         }
 
-        if(tableList == null){
-            tableList = new ArrayList<>();
+        if(adminTableList == null){
+            adminTableList = new ArrayList<>();
 
             for(int i=1; i<21; i++){
-                tableList.add(new TableList(i, getDrawable(R.drawable.table_border_order), 1));
+                adminTableList.add(new AdminTableList("table"+i,
+                        null, null, null, null));
             }
         }
 

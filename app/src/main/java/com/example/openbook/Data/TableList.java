@@ -1,11 +1,10 @@
-package com.example.openbook.View;
+package com.example.openbook.Data;
 
 import android.graphics.drawable.Drawable;
 
 
 
 import java.io.Serializable;
-import java.util.ArrayList;
 
 public class TableList implements Serializable {
 

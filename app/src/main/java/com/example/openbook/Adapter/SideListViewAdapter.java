@@ -5,12 +5,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.openbook.R;
-import com.example.openbook.View.CartList;
-import com.example.openbook.View.SideList;
+import com.example.openbook.Data.SideList;
 
 import java.util.ArrayList;
 

@@ -9,7 +9,6 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
-import android.os.Parcelable;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -25,8 +24,8 @@ import com.example.openbook.Activity.Table;
 import com.example.openbook.Adapter.ChattingAdapter;
 import com.example.openbook.Activity.Menu;
 import com.example.openbook.R;
-import com.example.openbook.TableInformation;
-import com.example.openbook.View.ChattingList;
+import com.example.openbook.Data.TableInformation;
+import com.example.openbook.Data.ChattingList;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -34,9 +33,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.InterruptedIOException;
 import java.io.OutputStreamWriter;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.net.SocketAddress;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -162,7 +158,7 @@ public class ChattingUI extends AppCompatActivity {
         /**
          * 기존에 채팅한 내역이 있으면 채팅 내역을 가져온다.
          */
-        Cursor res = dbHelper.getChattingData();
+        Cursor res = dbHelper.getTableData("chattingTable");
 
         if (res.getCount() == 0) {
             Log.d(TAG, "SQlite에서 데이터를 찾을 수 없습니다.");
@@ -256,7 +252,7 @@ public class ChattingUI extends AppCompatActivity {
                         chatting_view.smoothScrollToPosition(chatLists.size());
 
                         //정상적으로 리사이클러뷰에 올라가면 db에 저장
-                        dbHelper.insertData(sendMsg[1], time, get_id, sendMsg[2], "");
+                        dbHelper.insertChattingData(sendMsg[1], time, get_id, sendMsg[2], "");
 
 //                        imm.hideSoftInputFromWindow(chat_edit.getWindowToken(), 0);
 
@@ -463,7 +459,7 @@ public class ChattingUI extends AppCompatActivity {
 
                                     time = localTime.format(DateTimeFormatter.ofPattern("HH:mm"));
 
-                                    dbHelper.insertData(temp[0], time, receiver, get_id, "");
+                                    dbHelper.insertChattingData(temp[0], time, receiver, get_id, "");
                                     Log.d(TAG, "전송 받은거 저장");
                                 } // 해당 테이블에 데이터 넣어주기
                             } // 읽음 처리 if문

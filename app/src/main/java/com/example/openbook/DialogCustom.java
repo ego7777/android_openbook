@@ -11,10 +11,6 @@ import android.util.Log;
 import com.example.openbook.Activity.Table;
 import com.example.openbook.Chatting.ClientSocket;
 import com.example.openbook.FCMclass.SendNotification;
-import com.example.openbook.View.TableList;
-
-import java.io.Serializable;
-import java.util.ArrayList;
 
 
 public class DialogCustom {
