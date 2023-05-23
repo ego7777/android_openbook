@@ -11,10 +11,6 @@ import androidx.annotation.Nullable;
 public class DBHelper extends SQLiteOpenHelper {
 
     static String DBName = "OpenbookLocal.db";
-    String content = "content";
-    String time = "time";
-    String sender = "sender";
-    String receiver = "receiver";
 
 
     public DBHelper(@Nullable Context context, int version) {
@@ -39,7 +35,7 @@ public class DBHelper extends SQLiteOpenHelper {
                 "(id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "menuName VARCHAR(20) not null," +
                 "menuPrice INT not null," +
-                "menuImage VARCHAR(255) not null)";
+                "menuImage INT not null)";
 
         db.execSQL(queryMenu);
 
@@ -71,7 +67,7 @@ public class DBHelper extends SQLiteOpenHelper {
         return true;
     }
 
-    public boolean insertMenuData(String menuName, int menuPrice, String menuImage){
+    public boolean insertMenuData(String menuName, int menuPrice, int menuImage){
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put("menuName", menuName);

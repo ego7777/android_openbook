@@ -152,7 +152,7 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
 
         private int getViewSrc(int viewType) {
             if (viewType == TYPE_NO) {
-                return R.layout.menu_item_temp;
+                return R.layout.menu_gridview_item_empty;
             } else {
                 return R.layout.menu_gridview_item;
             }

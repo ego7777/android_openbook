@@ -21,23 +21,23 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder> {
     String TAG = "CartAdapter";
 
 
-
     /**
      * 커스텀 리스너 인터페이스 정의
      */
-    public interface OnItemClickListener{
+    public interface OnItemClickListener {
         void onPlusClick(View view, int position);
+
         void onMinusClick(View view, int position);
+
         void onDeleteClick(View view, int position);
 
     }
 
     private CartAdapter.OnItemClickListener myListener = null;
 
-    public void setOnItemClickListener(CartAdapter.OnItemClickListener listener){
+    public void setOnItemClickListener(CartAdapter.OnItemClickListener listener) {
         this.myListener = listener;
     }
-
 
 
     @NonNull
@@ -54,7 +54,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder> {
 
     /**
      * 액티비티에서 받아온 데이터를 바인딩해줌.
-     * **/
+     **/
     @Override
     public void onBindViewHolder(@NonNull CartAdapter.ViewHolder holder, @SuppressLint("RecyclerView") int position) {
         holder.onBind(items.get(position));
@@ -62,20 +62,19 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder> {
     }
 
 
-
     /**
      * 리사이클러뷰 리스트 사이즈를 불러옴
-     * **/
+     **/
     @Override
     public int getItemCount() {
-        if(items == null){
-            return  0;
+        if (items == null) {
+            return 0;
         }
 
         return items.size();
     }
 
-    public  void setAdapterItem(ArrayList<CartList> items){
+    public void setAdapterItem(ArrayList<CartList> items) {
         this.items = items;
         notifyDataSetChanged();
     }
@@ -83,7 +82,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder> {
 
     /**
      * 뷰홀더 생성
-     * **/
+     **/
     class ViewHolder extends RecyclerView.ViewHolder {
 
         TextView menu_name;
@@ -95,16 +94,14 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder> {
         private int viewType;
 
 
-
-
-
         public ViewHolder(@NonNull View itemView, int viewType) {
             super(itemView);
-            this.viewType =viewType;
+            this.viewType = viewType;
 
-            menu_name = itemView.findViewById(R.id.cart_menu_name);
-            menu_price = itemView.findViewById(R.id.cart_menu_price);
-            menu_count = itemView.findViewById(R.id.menu_count);
+            menu_name = itemView.findViewById(R.id.cart_item_menuName);
+            menu_count = itemView.findViewById(R.id.cart_item_count);
+            menu_price = itemView.findViewById(R.id.cart_item_price);
+
             plus = itemView.findViewById(R.id.plus);
             minus = itemView.findViewById(R.id.minus);
             delete = itemView.findViewById(R.id.delete);
@@ -159,43 +156,60 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder> {
 
 
         void onBind(CartList items) {
-            if (viewType == TYPE_NO) {
-                onBindNo(items);
-            } else if (viewType == TYPE_YES) {
-                onBindYes(items);
+            if (viewType == TYPE_Menu) {
+                onBindMenu(items);
+            } else if (viewType == TYPE_Call) {
+                onBindCall(items);
+            } else if(viewType == TYPE_Admin){
+                onBindAdmin(items);
             }
         }
 
 
-        void onBindYes(CartList items) {
+        void onBindMenu(CartList items) {
             menu_name.setText(items.getMenu_name());
             menu_price.setText(String.valueOf(items.getMenu_price()));
             menu_count.setText(String.valueOf(items.getMenu_count()));
         }
 
-        void onBindNo(CartList items) {
+
+        //callServer에서 사용하는 bind
+        void onBindCall(CartList items) {
             menu_name.setText(items.getMenu_name());
             menu_count.setText(String.valueOf(items.getMenu_count()));
             menu_price.setVisibility(itemView.INVISIBLE);
 
+        }
 
+        void onBindAdmin(CartList items){
+            menu_name.setText(items.getMenu_name());
+            menu_count.setText(String.valueOf(items.getMenu_count()));
+            menu_count.setText(String.valueOf(items.getMenu_count()));
+            plus.setVisibility(itemView.INVISIBLE);
+            minus.setVisibility(itemView.INVISIBLE);
+            delete.setVisibility(itemView.INVISIBLE);
         }
     }
 
 
     // view type
-    private int TYPE_NO = 101;
-    private int TYPE_YES = 102;
-
-
+    // 1 -> CallServer.class,
+    // 2 -> Menu.class,
+    // 3 -> Admin.class
+    private int TYPE_Call = 101;
+    private int TYPE_Menu = 102;
+    private int TYPE_Admin = 103;
 
 
     @Override
     public int getItemViewType(int position) {
         if (items.get(position).getViewType() == 0) {
-            return TYPE_NO;
+            return TYPE_Call;
+        } else if (items.get(position).getViewType() == 1) {
+            return TYPE_Menu;
         } else {
-            return TYPE_YES;
+            return TYPE_Admin;
         }
+
     }
 }

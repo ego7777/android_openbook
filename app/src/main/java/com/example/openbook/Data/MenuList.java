@@ -2,6 +2,7 @@ package com.example.openbook.Data;
 
 public class MenuList {
     int drawableId;
+    String drawable;
     String menu_name;
     int menu_price;
 
@@ -21,6 +22,12 @@ public class MenuList {
         this.menu_price = price;
         this.viewType = viewType;
     }
+
+//    public MenuList(String drawable, String name, int price){
+//        this.drawable = d
+//        this.menu_name = name;
+//        this.menu_price = price;
+//    }
 
     public int getMenu_price() {
         return menu_price;

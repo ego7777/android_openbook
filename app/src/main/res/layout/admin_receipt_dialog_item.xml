@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="600dp"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="20dp"
+    android:gravity="center">
+
+    <TextView
+        android:id="@+id/admin_receipt_dialog_item_menuName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="메뉴 이름"
+        android:textSize="25dp"
+        android:textColor="@color/black"
+        android:layout_marginEnd="100dp"/>
+
+    <TextView
+        android:id="@+id/admin_receipt_dialog_item_menuCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="개수"
+        android:textSize="25dp"
+        android:textColor="@color/black"
+        android:layout_gravity="center"/>
+
+    <TextView
+        android:id="@+id/admin_receipt_dialog_item_menuPrice"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="가격"
+        android:textSize="25dp"
+        android:textColor="@color/black"
+        android:layout_marginStart="100dp"/>
+
+
+
+</LinearLayout>

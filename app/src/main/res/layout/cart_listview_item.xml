@@ -7,7 +7,7 @@
 
     <TextView
         android:layout_marginStart="20dp"
-        android:id="@+id/cart_menu_name"
+        android:id="@+id/cart_item_menuName"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="메뉴 이름"
@@ -31,7 +31,7 @@
         android:layout_weight="1"/>
 
     <TextView
-        android:id="@+id/menu_count"
+        android:id="@+id/cart_item_count"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="개수"
@@ -57,7 +57,7 @@
 
 
     <TextView
-        android:id="@+id/cart_menu_price"
+        android:id="@+id/cart_item_price"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:textColor="@color/black"

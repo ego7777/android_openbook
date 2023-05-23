@@ -36,6 +36,7 @@ import com.example.openbook.Chatting.DBHelper;
 import com.example.openbook.Deco.menu_recyclerview_deco;
 import com.example.openbook.DialogCustom;
 import com.example.openbook.FCMclass.FCM;
+import com.example.openbook.FCMclass.SendNotification;
 import com.example.openbook.R;
 import com.example.openbook.Data.TableInformation;
 import com.example.openbook.Data.CartList;
@@ -103,6 +104,9 @@ public class Menu extends AppCompatActivity {
 
     OkHttpClient okHttpClient;
 
+    DBHelper dbHelper;
+
+    JSONArray menujArray;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -123,7 +127,6 @@ public class Menu extends AppCompatActivity {
         } else {
             Log.d(TAG, "menu.class intent tableInformation size:" + tableInformationHashMap.size());
         }
-
 
 
         /**
@@ -172,8 +175,8 @@ public class Menu extends AppCompatActivity {
         menuGrid.setAdapter(menuAdapter);
 
 
-        DBHelper dbHelper;
         SQLiteDatabase sqLiteDatabase;
+
         int version = 1;
 
         dbHelper = new DBHelper(Menu.this, version);
@@ -183,11 +186,11 @@ public class Menu extends AppCompatActivity {
 
         okHttpClient = new OkHttpClient();
 
-        if(res.getCount() == 0){
-            Log.d(TAG, "새로 받아오기");
+        if (res.getCount() == 0) {
+            Log.d(TAG, "메뉴 db 새로 받아오기");
 
             Request request = new Request.Builder()
-                    .url("http://3.36.255.141/saveOrder.php")
+                    .url("http://3.36.255.141/MenuDbLookUp.php")
                     .build();
 
             okHttpClient.newCall(request).enqueue(new Callback() {
@@ -200,19 +203,20 @@ public class Menu extends AppCompatActivity {
                 public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                     String responseData = response.body().string();
 
-                    if(responseData.contains("{")){
-                        //json 변환 하는 놈으로 만들어
-                    }else{
+                    if (responseData.contains("[")) {
+                        setMenuList(responseData);
+                    } else {
                         Log.d(TAG, "onResponse : " + responseData);
                     }
                 }
             });
 
 
-        }
-
-        while(res.moveToNext()){
-            menuLists.add(new MenuList(res.getInt(3), res.getString(1), res.getInt(2), 1));
+        } else {
+            Log.d(TAG, "메뉴db 있는거 사용");
+            while (res.moveToNext()) {
+                menuLists.add(new MenuList(res.getInt(3), res.getString(1), res.getInt(2), 1));
+            }
         }
 
         menuAdapter.setAdapterItem(menuLists);
@@ -464,8 +468,6 @@ public class Menu extends AppCompatActivity {
                             .build();
 
 
-
-
                     okHttpClient.newCall(request).enqueue(new Callback() {
                         @Override
                         public void onFailure(@NonNull Call call, @NonNull IOException e) {
@@ -489,6 +491,10 @@ public class Menu extends AppCompatActivity {
                                             cartAdapter.setAdapterItem(cartLists);
                                             totalPrice = 0;
                                             orderPrice.setText("");
+
+                                            SendNotification sendNotification = new SendNotification();
+
+                                            sendNotification.sendMenu(get_id, menujArray.toString());
 
                                             if (clientSocket == null) {
                                                 clientSocket = new ClientSocket("3.36.255.141", 7777, get_id, tableList);
@@ -518,6 +524,7 @@ public class Menu extends AppCompatActivity {
                     editor.remove("count");
                     editor.remove("price");
                     editor.commit();
+
 
 
                     Dialog dlg = new Dialog(Menu.this);
@@ -625,18 +632,18 @@ public class Menu extends AppCompatActivity {
     public String getJson(String get_id, ArrayList<CartList> list) {
         JSONObject obj = new JSONObject();
         try {
-            JSONArray jArray = new JSONArray();//배열이 필요할때
+            menujArray = new JSONArray();//배열이 필요할때
             for (int i = 0; i < list.size(); i++)//배열
             {
                 JSONObject sObject = new JSONObject();//배열 내에 들어갈 json
                 sObject.put("menu", list.get(i).getMenu_name());
                 sObject.put("price", list.get(i).getMenu_price());
-                sObject.put("number", list.get(i).getMenu_count());
-                jArray.put(sObject);
+                sObject.put("count", list.get(i).getMenu_count());
+                menujArray.put(sObject);
             }
             obj.put("table", get_id);
             obj.put("orderTime", getTime());
-            obj.put("item", jArray);//배열을 넣음
+            obj.put("item", menujArray);//배열을 넣음
 
             Log.d(TAG, "getJson: " + obj.toString());
 
@@ -668,7 +675,38 @@ public class Menu extends AppCompatActivity {
         Log.d(TAG, "onStop: ");
     }
 
-    public void setMenuList(String jsonData){
+    public void setMenuList(String jsonData) {
+
+        try {
+            JSONArray jsonArray = new JSONArray(jsonData);
+
+            for (int i = 0; i < jsonArray.length(); i++) {
+                JSONObject jsonObject = jsonArray.getJSONObject(i);
+
+                menuLists.add(new MenuList
+                        (getResources().getIdentifier
+                                (jsonObject.getString("img"),
+                                        "drawable", getPackageName()),
+                                jsonObject.getString("menu"),
+                                jsonObject.getInt("price"), 1));
+
+                dbHelper.insertMenuData(jsonObject.getString("menu"),
+                        jsonObject.getInt("price"),
+                        getResources().getIdentifier
+                                (jsonObject.getString("img"),
+                                        "drawable", getPackageName()));
+            }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                menuAdapter.notifyDataSetChanged();
+            }
+        });
 
     }
 
