@@ -42,7 +42,7 @@
         </activity>
         <activity android:name=".Activity.Login" />
         <activity android:name=".Activity.SignUp" />
-        <activity android:name=".Main" />
+        <activity android:name=".Activity.PaymentSelect"/>
         <activity android:name=".Activity.Menu" />
         <activity android:name=".Activity.Table" />
         <activity android:name=".Activity.CallServer" />

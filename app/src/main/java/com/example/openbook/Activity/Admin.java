@@ -27,6 +27,7 @@ public class Admin extends AppCompatActivity {
 
     TextView appbar_admin_sales;
     TextView appbar_admin_addMenu;
+    TextView appbar_admin_addTable;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -41,7 +42,7 @@ public class Admin extends AppCompatActivity {
         /**
          * 로그인을 성공하면 id, token을 firebase realtime db에 저장
          */
-        Intent fcm = new Intent(getApplicationContext(), FCM.class);
+        Intent fcm = new Intent(Admin.this, FCM.class);
         fcm.putExtra("get_id", get_id);
         startService(fcm);
 
@@ -51,6 +52,8 @@ public class Admin extends AppCompatActivity {
         appbar_admin_sales = findViewById(R.id.appbar_admin_sales);
 
         appbar_admin_addMenu = findViewById(R.id.appbar_admin_addMenu);
+
+        appbar_admin_addTable = findViewById(R.id.appbar_admin_addTable);
 
         RecyclerView tableGrid = findViewById(R.id.admin_grid);
         adapter = new AdminTableAdapter();
@@ -85,6 +88,10 @@ public class Admin extends AppCompatActivity {
             public void onClick(View v) {
                 // 메뉴 이름, 가격, 이미지를 등록하면 서버로 들어가서 menuList Db에 등록된다
             }
+        });
+
+        appbar_admin_addTable.setOnClickListener(view ->{
+            // 다이얼로그로 띄우자...!!!
         });
 
         Dialog dialog = new Dialog(Admin.this);

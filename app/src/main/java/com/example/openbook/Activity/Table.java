@@ -517,11 +517,11 @@ public class Table extends AppCompatActivity {
         Log.d(TAG, "onStop loop false 맞아? "+ loop);
 
 
-        if(updateTable.isAlive()){
-            updateTable.interrupt();
-            Log.d(TAG, "onStop tableUpdate Thread 멈춤? " + updateTable.isInterrupted());
+//        if(updateTable.isAlive()){
+//            updateTable.interrupt();
+//            Log.d(TAG, "onStop tableUpdate Thread 멈춤? " + updateTable.isInterrupted());
 
-        }
+//        }
 
 
     }

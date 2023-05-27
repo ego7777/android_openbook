@@ -13,7 +13,6 @@ import android.widget.Toast;
 
 import com.example.openbook.Data.AdminTableList;
 import com.example.openbook.DialogCustom;
-import com.example.openbook.Main;
 import com.example.openbook.R;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -126,7 +125,7 @@ public class Login extends AppCompatActivity {
 
                                             } else if (responseData.equals("성공")) {
 
-                                                startActivityString(Menu.class, "get_id", local_id);
+                                                startActivityString(PaymentSelect.class, "get_id", local_id);
 
                                             } else if (responseData.equals("admin")){
 
@@ -274,7 +273,7 @@ public class Login extends AppCompatActivity {
                                         final String responseData = response.body().string();
                                         if (responseData.equals("성공")) {
                                             Toast.makeText(getApplicationContext(), "로그인에 성공했습니다.", Toast.LENGTH_LONG).show();
-                                            Intent intent = new Intent(Login.this, Main.class);
+                                            Intent intent = new Intent(Login.this, PaymentSelect.class);
                                             intent.putExtra("get_id", local_id);
                                             startActivity(intent);
                                             Log.d(TAG, "run: 4");
@@ -334,7 +333,7 @@ public class Login extends AppCompatActivity {
             Log.d(TAG, "로그인이 필요합니다.");
         } else {
             Log.d(TAG, "이미 로그인 중입니다.");
-            Intent intent = new Intent(Login.this, Main.class);
+            Intent intent = new Intent(Login.this, PaymentSelect.class);
             intent.putExtra("get_id", local_id);
             Log.d(TAG, "onStart: local_id " + local_id);
             startActivity(intent);

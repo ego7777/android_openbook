@@ -87,6 +87,7 @@ public class Menu extends AppCompatActivity {
     SharedPreferences.Editor editor;
 
     String get_id;
+    String paymentStyle;
 
     TextView table;
 
@@ -115,6 +116,7 @@ public class Menu extends AppCompatActivity {
         setContentView(R.layout.menu_main);
 
         get_id = getIntent().getStringExtra("get_id");
+        paymentStyle = getIntent().getStringExtra("paymentStyle");
         orderCk = getIntent().getBooleanExtra("orderCk", false);
 
         clientSocket = (ClientSocket) getIntent().getSerializableExtra("clientSocket");
@@ -448,10 +450,35 @@ public class Menu extends AppCompatActivity {
 
         DialogCustom dialogCustom = new DialogCustom();
 
+
+        /**
+         * paymentStyle = "before" -> 바로 결제 붙여서 서버로 넘아가고 db에 저장
+         * paymentStyle = "after" -> 이면 그냥 주문 fcm으로 날리고
+         * -> admin에서 팝업 확인 누르면 -> admin s.p(or any db)에 메뉴 정보 담아서
+         * -> admin에서 결제하면 -> db로 넘어가도록...!!!!
+         */
+
         order.setOnClickListener(new View.OnClickListener() {
             @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void onClick(View view) {
+
+                if(paymentStyle.equals("after")){
+                    // fcm으로 날리고
+
+                }else if(paymentStyle.equals("before")){
+
+                    // 여기에 카카오 페이를 붙이겠읍니다.....
+
+
+                }else{
+                    Log.d(TAG, "order click : paymentStyle이 없어..");
+                }
+
+
+
+
+
 
                 if (cartLists.size() == 0) {
                     dialogCustom.HandlerAlertDialog(Menu.this, "메뉴가 존재하지 않습니다.");
