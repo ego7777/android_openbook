@@ -26,13 +26,13 @@ public class CallServer extends AppCompatActivity {
     String TAG = "CallTAG";
     ArrayList<RequestList> request_item;
     ArrayList<CartList> cartLists;
-    int count;
+
     int pos = 1000;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.call_server);
+        setContentView(R.layout.call_server_activity);
 
 
         TextView close = findViewById(R.id.call_server_close);
@@ -133,8 +133,8 @@ public class CallServer extends AppCompatActivity {
                 if (pos == 1000) {
                     cartLists.add(new CartList(name, 1, 0));
                 }else {
-                    count = cartLists.get(position).getMenu_count() + 1;
-                    cartLists.get(position).setMenu_count(count);
+                    int quantity = cartLists.get(position).getMenu_quantity() + 1;
+                    cartLists.get(position).setMenu_quantity(quantity);
                 }
 
                 cartAdapter.setAdapterItem(cartLists);
@@ -152,21 +152,21 @@ public class CallServer extends AppCompatActivity {
         cartAdapter.setOnItemClickListener(new CartAdapter.OnItemClickListener() {
             @Override
             public void onPlusClick(View view, int position) {
-                int add = cartLists.get(position).getMenu_count() + 1;
-                cartLists.get(position).setMenu_count(add);
+                int add = cartLists.get(position).getMenu_quantity() + 1;
+                cartLists.get(position).setMenu_quantity(add);
                 cartAdapter.setAdapterItem(cartLists);
 
             }
 
             @Override
             public void onMinusClick(View view, int position) {
-                int minus = cartLists.get(position).getMenu_count()-1;
+                int minus = cartLists.get(position).getMenu_quantity()-1;
 
 
                 if(minus==0){
                     cartLists.remove(position);
                 }else{
-                    cartLists.get(position).setMenu_count(minus);
+                    cartLists.get(position).setMenu_quantity(minus);
                 }
 
 

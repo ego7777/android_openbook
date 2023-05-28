@@ -36,7 +36,7 @@
         <entry key="app/src/main/res/layout/admin_receipt_dialog_item.xml" value="0.1" />
         <entry key="app/src/main/res/layout/admin_table_gridview_item.xml" value="0.1559383499546691" />
         <entry key="app/src/main/res/layout/appbar.xml" value="0.289044289044289" />
-        <entry key="app/src/main/res/layout/appbar_admin.xml" value="0.16681776971894832" />
+        <entry key="app/src/main/res/layout/appbar_admin.xml" value="0.1" />
         <entry key="app/src/main/res/layout/call_gridview_item.xml" value="0.1" />
         <entry key="app/src/main/res/layout/call_listview_item.xml" value="0.1243209360635186" />
         <entry key="app/src/main/res/layout/call_server.xml" value="0.1" />
@@ -48,8 +48,11 @@
         <entry key="app/src/main/res/layout/header.xml" value="0.12376237623762376" />
         <entry key="app/src/main/res/layout/intro.xml" value="0.1318359375" />
         <entry key="app/src/main/res/layout/intro2.xml" value="0.12479095458984375" />
+        <entry key="app/src/main/res/layout/kakaopay_activity.xml" value="0.15820489573889393" />
+        <entry key="app/src/main/res/layout/kakaopay_webview.xml" value="0.1" />
         <entry key="app/src/main/res/layout/line_layout.xml" value="0.1" />
         <entry key="app/src/main/res/layout/login.xml" value="0.25" />
+        <entry key="app/src/main/res/layout/login_activity.xml" value="0.15820489573889393" />
         <entry key="app/src/main/res/layout/menu.xml" value="0.165" />
         <entry key="app/src/main/res/layout/menu2.xml" value="0.1" />
         <entry key="app/src/main/res/layout/menu_gridview_item.xml" value="0.10416666666666667" />
@@ -60,6 +63,7 @@
         <entry key="app/src/main/res/layout/notification.xml" value="0.1" />
         <entry key="app/src/main/res/layout/order_complete.xml" value="0.1" />
         <entry key="app/src/main/res/layout/payment_select.xml" value="0.14621633176571183" />
+        <entry key="app/src/main/res/layout/payment_select_activity.xml" value="0.13349514563106796" />
         <entry key="app/src/main/res/layout/popup.xml" value="0.1" />
         <entry key="app/src/main/res/layout/send_heart.xml" value="0.2302810516772439" />
         <entry key="app/src/main/res/layout/send_heart_dlg.xml" value="0.1" />

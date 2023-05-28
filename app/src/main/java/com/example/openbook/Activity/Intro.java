@@ -20,7 +20,7 @@ public class Intro extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.intro);
+        setContentView(R.layout.intro_acitivity);
 
         ImageView rate1 = findViewById(R.id.rate1);
         ImageView rate2 = findViewById(R.id.rate2);

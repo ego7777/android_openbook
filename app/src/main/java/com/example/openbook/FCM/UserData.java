@@ -1,6 +1,4 @@
-package com.example.openbook.FCMclass;
-
-import com.google.android.gms.tasks.Task;
+package com.example.openbook.FCM;
 
 public class UserData {
 

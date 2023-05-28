@@ -35,8 +35,9 @@ import com.example.openbook.Chatting.ClientSocket;
 import com.example.openbook.Chatting.DBHelper;
 import com.example.openbook.Deco.menu_recyclerview_deco;
 import com.example.openbook.DialogCustom;
-import com.example.openbook.FCMclass.FCM;
-import com.example.openbook.FCMclass.SendNotification;
+import com.example.openbook.FCM.FCM;
+import com.example.openbook.FCM.SendNotification;
+import com.example.openbook.KakaoPay;
 import com.example.openbook.R;
 import com.example.openbook.Data.TableInformation;
 import com.example.openbook.Data.CartList;
@@ -113,7 +114,7 @@ public class Menu extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.menu_main);
+        setContentView(R.layout.menu_activity);
 
         get_id = getIntent().getStringExtra("get_id");
         paymentStyle = getIntent().getStringExtra("paymentStyle");
@@ -255,28 +256,28 @@ public class Menu extends AppCompatActivity {
         editor = pref.edit();
 
         String getName = pref.getString("name", "");
-        String getCount = pref.getString("count", "");
+        String getQuantity = pref.getString("quantity", "");
         String getPrice = pref.getString("price", "");
 
 
         if (!getName.isEmpty()) {
 
             String splitName[] = getName.split("###");
-            String splitCount[] = getCount.split("###");
+            String splitQuantity[] = getQuantity.split("###");
             String splitPrice[] = getPrice.split("###");
 
 
-            int changeCount[] = new int[splitCount.length];
+            int changeQuantity[] = new int[splitQuantity.length];
             int changePrice[] = new int[splitPrice.length];
 
 
             for (int i = 0; i < splitName.length; i++) {
 
-                changeCount[i] = Integer.parseInt(splitCount[i]);
+                changeQuantity[i] = Integer.parseInt(splitQuantity[i]);
                 changePrice[i] = Integer.parseInt(splitPrice[i]);
 
-                cartLists.add(new CartList(splitName[i], changePrice[i], changeCount[i], 1));
-                totalPrice = totalPrice + changePrice[i] * changeCount[i];
+                cartLists.add(new CartList(splitName[i], changePrice[i], changeQuantity[i], 1));
+                totalPrice = totalPrice + changePrice[i] * changeQuantity[i];
             }
 
             cartAdapter.setAdapterItem(cartLists);
@@ -323,8 +324,8 @@ public class Menu extends AppCompatActivity {
         cartAdapter.setOnItemClickListener(new CartAdapter.OnItemClickListener() {
             @Override
             public void onPlusClick(View view, int position) {
-                int add = cartLists.get(position).getMenu_count() + 1;
-                cartLists.get(position).setMenu_count(add);
+                int add = cartLists.get(position).getMenu_quantity() + 1;
+                cartLists.get(position).setMenu_quantity(add);
                 totalPrice = totalPrice + cartLists.get(position).getMenu_price();
                 orderPrice.setText("합계: " + String.valueOf(totalPrice) + "원");
                 cartAdapter.setAdapterItem(cartLists);
@@ -335,13 +336,13 @@ public class Menu extends AppCompatActivity {
 
             @Override
             public void onMinusClick(View view, int position) {
-                int minus = cartLists.get(position).getMenu_count() - 1;
+                int minus = cartLists.get(position).getMenu_quantity() - 1;
                 totalPrice = totalPrice - cartLists.get(position).getMenu_price();
 
                 if (minus == 0) {
                     cartLists.remove(position);
                 } else {
-                    cartLists.get(position).setMenu_count(minus);
+                    cartLists.get(position).setMenu_quantity(minus);
                 }
 
                 orderPrice.setText("합계: " + String.valueOf(totalPrice) + "원");
@@ -352,10 +353,10 @@ public class Menu extends AppCompatActivity {
 
             @Override
             public void onDeleteClick(View view, int position) {
-                int delete_count = cartLists.get(position).getMenu_count();
+                int delete_quantity = cartLists.get(position).getMenu_quantity();
                 int delete_price = cartLists.get(position).getMenu_price();
 
-                totalPrice = totalPrice - (delete_price * delete_count);
+                totalPrice = totalPrice - (delete_price * delete_quantity);
                 orderPrice.setText("합계: " + String.valueOf(totalPrice) + "원");
 
                 cartLists.remove(position);
@@ -373,7 +374,7 @@ public class Menu extends AppCompatActivity {
         menuAdapter.setOnItemClickListener(new MenuAdapter.OnItemClickListener() {
 
             int pos = 1000;
-            int menuCount;
+            int menuQuantity;
 
             @Override
             public void onItemClick(View view, int id, String name, int price, int position) {
@@ -390,8 +391,8 @@ public class Menu extends AppCompatActivity {
                 if (pos == 1000) {
                     cartLists.add(new CartList(name, price, 1, 1));
                 } else {
-                    menuCount = cartLists.get(pos).getMenu_count() + 1;
-                    cartLists.get(pos).setMenu_count(menuCount);
+                    menuQuantity = cartLists.get(pos).getMenu_quantity() + 1;
+                    cartLists.get(pos).setMenu_quantity(menuQuantity);
                 }
 
                 cartAdapter.setAdapterItem(cartLists);
@@ -485,66 +486,70 @@ public class Menu extends AppCompatActivity {
 
                 } else {
 
-                    RequestBody formBody = new FormBody.Builder()
-                            .add("json", getJson(get_id, cartLists))
-                            .build();
+                    Intent intent = new Intent(Menu.this, KakaoPay.class);
+                    intent.putExtra("orderList", getJson(get_id, cartLists));
+                    startActivity(intent);
 
-                    Request request = new Request.Builder()
-                            .url("http://3.36.255.141/saveOrder.php")
-                            .post(formBody)
-                            .build();
-
-
-                    okHttpClient.newCall(request).enqueue(new Callback() {
-                        @Override
-                        public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                            orderCk = false;
-                            e.printStackTrace();
-                            Toast.makeText(getApplicationContext(), "네트워크에 문제가 발생하였습니다.\n잠시 후 다시 주문해주세요.", Toast.LENGTH_LONG).show();
-                            Log.d(TAG, "order failure: " + e);
-                        }
-
-                        @Override
-                        public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    try {
-                                        String body = response.body().string();
-
-                                        if (body.equals("주문완료")) {
-                                            orderCk = true;
-                                            cartLists = new ArrayList<>();
-                                            cartAdapter.setAdapterItem(cartLists);
-                                            totalPrice = 0;
-                                            orderPrice.setText("");
-
-                                            SendNotification sendNotification = new SendNotification();
-
-                                            sendNotification.sendMenu(get_id, menujArray.toString());
-
-                                            if (clientSocket == null) {
-                                                clientSocket = new ClientSocket("3.36.255.141", 7777, get_id, tableList);
-                                                clientSocket.start();
-                                                Log.d(TAG, "소켓 시작");
-                                            }
-
-
-                                        } else {
-                                            orderCk = false;
-                                            Toast.makeText(getApplicationContext(), "서버에 문제가 발생하였습니다." +
-                                                    "\n잠시 후 다시 주문해주세요.", Toast.LENGTH_LONG).show();
-                                            Log.d(TAG, "response : " + body);
-                                        }
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
-                                    }
-                                }
-                            });
-
-
-                        }
-                    }); //response
+//                    RequestBody formBody = new FormBody.Builder()
+//                            .add("json", getJson(get_id, cartLists))
+//                            .build();
+//
+//                    Request request = new Request.Builder()
+//                            .url("http://3.36.255.141/saveOrder.php")
+//                            .post(formBody)
+//                            .build();
+//
+//
+//                    okHttpClient.newCall(request).enqueue(new Callback() {
+//                        @Override
+//                        public void onFailure(@NonNull Call call, @NonNull IOException e) {
+//                            orderCk = false;
+//                            e.printStackTrace();
+//                            Toast.makeText(getApplicationContext(), "네트워크에 문제가 발생하였습니다.\n잠시 후 다시 주문해주세요.", Toast.LENGTH_LONG).show();
+//                            Log.d(TAG, "order failure: " + e);
+//                        }
+//
+//                        @Override
+//                        public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+//                            runOnUiThread(new Runnable() {
+//                                @Override
+//                                public void run() {
+//                                    try {
+//                                        String body = response.body().string();
+//
+//                                        if (body.equals("주문완료")) {
+//                                            orderCk = true;
+//                                            cartLists = new ArrayList<>();
+//                                            cartAdapter.setAdapterItem(cartLists);
+//                                            totalPrice = 0;
+//                                            orderPrice.setText("");
+//
+//                                            SendNotification sendNotification = new SendNotification();
+//
+//                                            sendNotification.sendMenu(get_id, menujArray.toString());
+//
+//                                            if (clientSocket == null) {
+//                                                clientSocket = new ClientSocket("3.36.255.141", 7777, get_id, tableList);
+//                                                clientSocket.start();
+//                                                Log.d(TAG, "소켓 시작");
+//                                            }
+//
+//
+//                                        } else {
+//                                            orderCk = false;
+//                                            Toast.makeText(getApplicationContext(), "서버에 문제가 발생하였습니다." +
+//                                                    "\n잠시 후 다시 주문해주세요.", Toast.LENGTH_LONG).show();
+//                                            Log.d(TAG, "response : " + body);
+//                                        }
+//                                    } catch (IOException e) {
+//                                        e.printStackTrace();
+//                                    }
+//                                }
+//                            });
+//
+//
+//                        }
+//                    }); //response
 
 
                     editor.remove("name");
@@ -629,7 +634,7 @@ public class Menu extends AppCompatActivity {
     public void sharedPreference() {
 
         String name_temp = null;
-        String count_temp = null;
+        String quantity_temp = null;
         String price_temp = null;
 
 
@@ -637,18 +642,18 @@ public class Menu extends AppCompatActivity {
 
             if (name_temp == null) {
                 name_temp = cartLists.get(i).getMenu_name() + "###";
-                count_temp = cartLists.get(i).getMenu_count() + "###";
+                quantity_temp = cartLists.get(i).getMenu_quantity() + "###";
                 price_temp = cartLists.get(i).getMenu_price() + "###";
             } else {
                 name_temp = name_temp + cartLists.get(i).getMenu_name() + "###";
-                count_temp = count_temp + cartLists.get(i).getMenu_count() + "###";
+                quantity_temp = quantity_temp + cartLists.get(i).getMenu_quantity() + "###";
                 price_temp = price_temp + cartLists.get(i).getMenu_price() + "###";
             }
 
         }
 
         editor.putString("name", name_temp);
-        editor.putString("count", count_temp);
+        editor.putString("quantity", quantity_temp);
         editor.putString("price", price_temp);
         editor.commit();
 
@@ -665,7 +670,7 @@ public class Menu extends AppCompatActivity {
                 JSONObject sObject = new JSONObject();//배열 내에 들어갈 json
                 sObject.put("menu", list.get(i).getMenu_name());
                 sObject.put("price", list.get(i).getMenu_price());
-                sObject.put("count", list.get(i).getMenu_count());
+                sObject.put("quantity", list.get(i).getMenu_quantity());
                 menujArray.put(sObject);
             }
             obj.put("table", get_id);

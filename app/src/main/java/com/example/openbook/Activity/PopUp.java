@@ -16,7 +16,7 @@ import androidx.annotation.RequiresApi;
 
 import com.example.openbook.Chatting.ChattingUI;
 import com.example.openbook.Chatting.ClientSocket;
-import com.example.openbook.FCMclass.SendNotification;
+import com.example.openbook.FCM.SendNotification;
 import com.example.openbook.R;
 import com.example.openbook.Data.TableInformation;
 import com.example.openbook.Data.TableList;

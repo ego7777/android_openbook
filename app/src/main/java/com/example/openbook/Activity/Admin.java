@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.openbook.Adapter.AdminTableAdapter;
 import com.example.openbook.Data.AdminTableList;
-import com.example.openbook.FCMclass.FCM;
+import com.example.openbook.FCM.FCM;
 import com.example.openbook.R;
 
 import java.util.ArrayList;
@@ -32,7 +32,7 @@ public class Admin extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.admin_main);
+        setContentView(R.layout.admin_activity);
 
 
 
@@ -53,7 +53,7 @@ public class Admin extends AppCompatActivity {
 
         appbar_admin_addMenu = findViewById(R.id.appbar_admin_addMenu);
 
-        appbar_admin_addTable = findViewById(R.id.appbar_admin_addTable);
+        appbar_admin_addTable = findViewById(R.id.appbar_admin_modifyTable);
 
         RecyclerView tableGrid = findViewById(R.id.admin_grid);
         adapter = new AdminTableAdapter();

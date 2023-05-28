@@ -5,19 +5,19 @@ public class CartList {
 
     String menu_name;
     int menu_price;
-    int menu_count;
+    int menu_quantity;
     int viewType;
 
-    public CartList (String name, int price, int count, int viewType){
+    public CartList (String name, int price, int quantity, int viewType){
         this.menu_name = name;
         this.menu_price = price;
-        this.menu_count = count;
+        this.menu_quantity = quantity;
         this.viewType = viewType;
     }
 
-    public CartList(String name, int count, int viewType){
+    public CartList(String name, int quantity, int viewType){
         this.menu_name = name;
-        this.menu_count =count;
+        this.menu_quantity =quantity;
         this.viewType = viewType;
     }
 
@@ -44,11 +44,11 @@ public class CartList {
         this.menu_name = menu_name;
     }
 
-    public int getMenu_count(){
-        return  menu_count;
+    public int getMenu_quantity(){
+        return  menu_quantity;
     }
-    public void setMenu_count(int menu_count) {
-        this.menu_count = menu_count;
+    public void setMenu_quantity(int menu_quantity) {
+        this.menu_quantity = menu_quantity;
     }
 
 

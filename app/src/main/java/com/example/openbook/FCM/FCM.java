@@ -1,4 +1,4 @@
-package com.example.openbook.FCMclass;
+package com.example.openbook.FCM;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;

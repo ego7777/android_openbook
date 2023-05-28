@@ -87,7 +87,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder> {
 
         TextView menu_name;
         TextView menu_price;
-        TextView menu_count;
+        TextView menu_quantity;
         Button plus;
         Button minus;
         Button delete;
@@ -99,7 +99,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder> {
             this.viewType = viewType;
 
             menu_name = itemView.findViewById(R.id.cart_item_menuName);
-            menu_count = itemView.findViewById(R.id.cart_item_count);
+            menu_quantity = itemView.findViewById(R.id.cart_item_count);
             menu_price = itemView.findViewById(R.id.cart_item_price);
 
             plus = itemView.findViewById(R.id.plus);
@@ -169,22 +169,22 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder> {
         void onBindMenu(CartList items) {
             menu_name.setText(items.getMenu_name());
             menu_price.setText(String.valueOf(items.getMenu_price()));
-            menu_count.setText(String.valueOf(items.getMenu_count()));
+            menu_quantity.setText(String.valueOf(items.getMenu_quantity()));
         }
 
 
         //callServer에서 사용하는 bind
         void onBindCall(CartList items) {
             menu_name.setText(items.getMenu_name());
-            menu_count.setText(String.valueOf(items.getMenu_count()));
+            menu_quantity.setText(String.valueOf(items.getMenu_quantity()));
             menu_price.setVisibility(itemView.INVISIBLE);
 
         }
 
         void onBindAdmin(CartList items){
             menu_name.setText(items.getMenu_name());
-            menu_count.setText(String.valueOf(items.getMenu_count()));
-            menu_count.setText(String.valueOf(items.getMenu_count()));
+            menu_quantity.setText(String.valueOf(items.getMenu_quantity()));
+            menu_quantity.setText(String.valueOf(items.getMenu_quantity()));
             plus.setVisibility(itemView.INVISIBLE);
             minus.setVisibility(itemView.INVISIBLE);
             delete.setVisibility(itemView.INVISIBLE);

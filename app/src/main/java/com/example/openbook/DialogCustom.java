@@ -10,7 +10,7 @@ import android.util.Log;
 
 import com.example.openbook.Activity.Table;
 import com.example.openbook.Chatting.ClientSocket;
-import com.example.openbook.FCMclass.SendNotification;
+import com.example.openbook.FCM.SendNotification;
 
 
 public class DialogCustom {
