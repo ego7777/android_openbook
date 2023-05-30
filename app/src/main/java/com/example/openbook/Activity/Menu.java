@@ -247,6 +247,14 @@ public class Menu extends AppCompatActivity {
         super.onStart();
         //액티비티가 사용자에게 보여질 때, 사용자와 상호작용 X
 
+        String returnOrderList = getIntent().getStringExtra("orderList");
+        Log.d(TAG, "onStart_returnOrderList : " + returnOrderList);
+        Log.d(TAG, "onStart_PaymentStyle :" + paymentStyle);
+
+        if (returnOrderList != null) {
+            saveOrder(returnOrderList);
+        }
+
 
         /**
          * 액티비티 전환 시 sp에 저장된 장바구니 데이터 가져와서 뿌려주기
@@ -447,7 +455,7 @@ public class Menu extends AppCompatActivity {
          * 4. 채팅 신청 (하트대신!!!)-> 궁금하면 사진 까봐 -> 채팅하기
          */
 
-        Handler handler = new Handler();
+
 
         DialogCustom dialogCustom = new DialogCustom();
 
@@ -464,120 +472,32 @@ public class Menu extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                if(paymentStyle.equals("after")){
-                    // fcm으로 날리고
-
-                }else if(paymentStyle.equals("before")){
-
-                    // 여기에 카카오 페이를 붙이겠읍니다.....
-
-
-                }else{
-                    Log.d(TAG, "order click : paymentStyle이 없어..");
-                }
-
-
-
-
-
-
                 if (cartLists.size() == 0) {
                     dialogCustom.HandlerAlertDialog(Menu.this, "메뉴가 존재하지 않습니다.");
 
                 } else {
 
-                    Intent intent = new Intent(Menu.this, KakaoPay.class);
-                    intent.putExtra("orderList", getJson(get_id, cartLists));
-                    startActivity(intent);
+                    if (paymentStyle.equals("after")) {
+                        // fcm으로 날리고
 
-//                    RequestBody formBody = new FormBody.Builder()
-//                            .add("json", getJson(get_id, cartLists))
-//                            .build();
-//
-//                    Request request = new Request.Builder()
-//                            .url("http://3.36.255.141/saveOrder.php")
-//                            .post(formBody)
-//                            .build();
-//
-//
-//                    okHttpClient.newCall(request).enqueue(new Callback() {
-//                        @Override
-//                        public void onFailure(@NonNull Call call, @NonNull IOException e) {
-//                            orderCk = false;
-//                            e.printStackTrace();
-//                            Toast.makeText(getApplicationContext(), "네트워크에 문제가 발생하였습니다.\n잠시 후 다시 주문해주세요.", Toast.LENGTH_LONG).show();
-//                            Log.d(TAG, "order failure: " + e);
-//                        }
-//
-//                        @Override
-//                        public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-//                            runOnUiThread(new Runnable() {
-//                                @Override
-//                                public void run() {
-//                                    try {
-//                                        String body = response.body().string();
-//
-//                                        if (body.equals("주문완료")) {
-//                                            orderCk = true;
-//                                            cartLists = new ArrayList<>();
-//                                            cartAdapter.setAdapterItem(cartLists);
-//                                            totalPrice = 0;
-//                                            orderPrice.setText("");
-//
-//                                            SendNotification sendNotification = new SendNotification();
-//
-//                                            sendNotification.sendMenu(get_id, menujArray.toString());
-//
-//                                            if (clientSocket == null) {
-//                                                clientSocket = new ClientSocket("3.36.255.141", 7777, get_id, tableList);
-//                                                clientSocket.start();
-//                                                Log.d(TAG, "소켓 시작");
-//                                            }
-//
-//
-//                                        } else {
-//                                            orderCk = false;
-//                                            Toast.makeText(getApplicationContext(), "서버에 문제가 발생하였습니다." +
-//                                                    "\n잠시 후 다시 주문해주세요.", Toast.LENGTH_LONG).show();
-//                                            Log.d(TAG, "response : " + body);
-//                                        }
-//                                    } catch (IOException e) {
-//                                        e.printStackTrace();
-//                                    }
-//                                }
-//                            });
-//
-//
-//                        }
-//                    }); //response
+                    } else if (paymentStyle.equals("before")) {
+
+                        // 여기에 카카오 페이를 붙이겠읍니다.....
+                        Intent intent = new Intent(Menu.this, KakaoPay.class);
+                        intent.putExtra("menuName", getOrderMenuName(cartLists));
+                        intent.putExtra("menuPrice", totalPrice);
+                        intent.putExtra("jsonOrderList", getJson(get_id, cartLists));
+                        intent.putExtra("paymentStyle", paymentStyle);
+                        intent.putExtra("get_id", get_id);
+                        startActivity(intent);
 
 
-                    editor.remove("name");
-                    editor.remove("count");
-                    editor.remove("price");
-                    editor.commit();
+                    } else {
+                        Log.d(TAG, "order click : paymentStyle이 없어..");
+                    }
 
 
-
-                    Dialog dlg = new Dialog(Menu.this);
-                    dlg.setContentView(R.layout.order_complete);
-                    dlg.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-                    dlg.show();
-
-                    ImageView img = dlg.findViewById(R.id.serve_img);
-                    TextView text = dlg.findViewById(R.id.serve_text);
-
-
-                    Animation animation = AnimationUtils.loadAnimation(Menu.this, R.anim.order_complete);
-                    img.startAnimation(animation);
-                    text.startAnimation(animation);
-
-                    handler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            dlg.dismiss();
-                        }
-                    }, 1000);
+//
 
 
                     if (infoCk == false) {
@@ -630,6 +550,22 @@ public class Menu extends AppCompatActivity {
 
     }
 
+    public String getOrderMenuName(ArrayList<CartList> cartLists) {
+
+        int menuQuantity = cartLists.size();
+
+        String menuName;
+
+        if (menuQuantity == 1) {
+            menuName = cartLists.get(0).getMenu_name();
+        } else {
+            menuName = cartLists.get(0).getMenu_name() + " 외" + Integer.toString(menuQuantity - 1);
+        }
+        Log.d(TAG, "menuName :" + menuName);
+
+        return menuName;
+    }
+
 
     public void sharedPreference() {
 
@@ -674,7 +610,7 @@ public class Menu extends AppCompatActivity {
                 menujArray.put(sObject);
             }
             obj.put("table", get_id);
-            obj.put("orderTime", getTime());
+            obj.put("orderTime", "시간");
             obj.put("item", menujArray);//배열을 넣음
 
             Log.d(TAG, "getJson: " + obj.toString());
@@ -685,27 +621,6 @@ public class Menu extends AppCompatActivity {
         return obj.toString();
     }
 
-    public String getTime() {
-        long now = System.currentTimeMillis();
-        Date date = new Date(now);
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-        String getTime = dateFormat.format(date);
-
-        return getTime;
-    }
-
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        Log.d(TAG, "onDestroy: ");
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        Log.d(TAG, "onStop: ");
-    }
 
     public void setMenuList(String jsonData) {
 
@@ -739,6 +654,101 @@ public class Menu extends AppCompatActivity {
                 menuAdapter.notifyDataSetChanged();
             }
         });
+
+    }
+
+    public void saveOrder(String returnOrderList) {
+
+        RequestBody formBody = new FormBody.Builder()
+                .add("json", returnOrderList)
+                .build();
+
+        Request request = new Request.Builder()
+                .url("http://3.36.255.141/saveOrder.php")
+                .post(formBody)
+                .build();
+
+
+        okHttpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                orderCk = false;
+                e.printStackTrace();
+                Toast.makeText(getApplicationContext(), "네트워크에 문제가 발생하였습니다.\n잠시 후 다시 주문해주세요.", Toast.LENGTH_LONG).show();
+                Log.d(TAG, "order failure: " + e);
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                runOnUiThread(new Runnable() {
+                    @RequiresApi(api = Build.VERSION_CODES.O)
+                    @Override
+                    public void run() {
+                        try {
+                            String body = response.body().string();
+
+                            if (body.equals("주문완료")) {
+                                orderCk = true;
+                                cartLists = new ArrayList<>();
+                                cartAdapter.setAdapterItem(cartLists);
+                                totalPrice = 0;
+                                orderPrice.setText("");
+
+//                                            SendNotification sendNotification = new SendNotification();
+//
+//                                            sendNotification.sendMenu(get_id, menujArray.toString());
+
+                                if (clientSocket == null) {
+                                    clientSocket = new ClientSocket("3.36.255.141", 7777, get_id, tableList);
+                                    clientSocket.start();
+                                    Log.d(TAG, "소켓 시작");
+                                }
+
+
+                            } else {
+                                orderCk = false;
+                                Toast.makeText(getApplicationContext(), "서버에 문제가 발생하였습니다." +
+                                        "\n잠시 후 다시 주문해주세요.", Toast.LENGTH_LONG).show();
+                                Log.d(TAG, "response : " + body);
+                            }
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+
+
+            }
+        }); //response
+
+        editor.remove("name");
+        editor.remove("count");
+        editor.remove("price");
+        editor.commit();
+
+
+
+        Dialog dlg = new Dialog(Menu.this);
+        dlg.setContentView(R.layout.order_complete);
+        dlg.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        dlg.show();
+
+        ImageView img = dlg.findViewById(R.id.serve_img);
+        TextView text = dlg.findViewById(R.id.serve_text);
+
+
+        Animation animation = AnimationUtils.loadAnimation(Menu.this, R.anim.order_complete);
+        img.startAnimation(animation);
+        text.startAnimation(animation);
+
+        Handler handler = new Handler();
+
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                dlg.dismiss();
+            }
+        }, 1000);
 
     }
 
