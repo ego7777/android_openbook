@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.openbook.Adapter.AdminTableAdapter;
 import com.example.openbook.Data.AdminTableList;
+import com.example.openbook.Data.TableList;
 import com.example.openbook.FCM.FCM;
 import com.example.openbook.R;
 
@@ -27,7 +28,9 @@ public class Admin extends AppCompatActivity {
 
     TextView appbar_admin_sales;
     TextView appbar_admin_addMenu;
-    TextView appbar_admin_addTable;
+    TextView appbar_admin_modifyTable;
+
+    String get_id;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -36,8 +39,8 @@ public class Admin extends AppCompatActivity {
 
 
 
-        adminTableList = (ArrayList<AdminTableList>) getIntent().getSerializableExtra("tableList");
-        String get_id = getIntent().getStringExtra("get_id");
+        adminTableList = (ArrayList<AdminTableList>) getIntent().getSerializableExtra("adminTableList");
+        get_id = getIntent().getStringExtra("get_id");
 
         /**
          * 로그인을 성공하면 id, token을 firebase realtime db에 저장
@@ -53,7 +56,7 @@ public class Admin extends AppCompatActivity {
 
         appbar_admin_addMenu = findViewById(R.id.appbar_admin_addMenu);
 
-        appbar_admin_addTable = findViewById(R.id.appbar_admin_modifyTable);
+        appbar_admin_modifyTable = findViewById(R.id.appbar_admin_modifyTable);
 
         RecyclerView tableGrid = findViewById(R.id.admin_grid);
         adapter = new AdminTableAdapter();
@@ -87,11 +90,15 @@ public class Admin extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // 메뉴 이름, 가격, 이미지를 등록하면 서버로 들어가서 menuList Db에 등록된다
+                startActivityClass(AdminModifyMenu.class);
+
             }
         });
 
-        appbar_admin_addTable.setOnClickListener(view ->{
-            // 다이얼로그로 띄우자...!!!
+        appbar_admin_modifyTable.setOnClickListener(view ->{
+            startActivityClass(AdminModifyTableNumber.class);
+
+
         });
 
         Dialog dialog = new Dialog(Admin.this);
@@ -105,5 +112,12 @@ public class Admin extends AppCompatActivity {
             }
         });
 
+    }
+
+    public void startActivityClass(Class activity){
+        Intent intent = new Intent(Admin.this, activity);
+        intent.putExtra("get_id", get_id);
+        intent.putExtra("adminTableList", adminTableList);
+        startActivity(intent);
     }
 }

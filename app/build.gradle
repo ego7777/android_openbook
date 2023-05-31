@@ -67,6 +67,9 @@ dependencies {
     implementation 'com.google.firebase:firebase-database:20.1.0'
     implementation 'com.google.firebase:firebase-analytics'
 
+    //graph
+    implementation 'com.github.PhilJay:MpAndroidChart:v3.0.2'
+
 
 
     testImplementation 'junit:junit:4.13.2'

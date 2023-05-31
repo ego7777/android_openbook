@@ -8,6 +8,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -36,7 +37,6 @@ import com.example.openbook.Chatting.DBHelper;
 import com.example.openbook.Deco.menu_recyclerview_deco;
 import com.example.openbook.DialogCustom;
 import com.example.openbook.FCM.FCM;
-import com.example.openbook.FCM.SendNotification;
 import com.example.openbook.KakaoPay;
 import com.example.openbook.R;
 import com.example.openbook.Data.TableInformation;
@@ -53,10 +53,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 
-
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 
 import okhttp3.Call;
@@ -76,7 +73,6 @@ public class Menu extends AppCompatActivity {
     int myTable;
     boolean orderCk = false;
     boolean infoCk = false;
-
 
     ArrayList<MenuList> menuLists;
     ArrayList<CartList> cartLists;
@@ -205,6 +201,7 @@ public class Menu extends AppCompatActivity {
                 @Override
                 public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                     String responseData = response.body().string();
+                    Log.d(TAG, "onResponse: " + responseData);
 
                     if (responseData.contains("[")) {
                         setMenuList(responseData);
@@ -218,7 +215,11 @@ public class Menu extends AppCompatActivity {
         } else {
             Log.d(TAG, "메뉴db 있는거 사용");
             while (res.moveToNext()) {
-                menuLists.add(new MenuList(res.getInt(3), res.getString(1), res.getInt(2), 1));
+                menuLists.add(new MenuList(res.getString(3),//img
+                        res.getString(1), //name
+                        res.getInt(2), //price
+                        res.getInt(4), //menuType
+                        1));
             }
         }
 
@@ -385,7 +386,7 @@ public class Menu extends AppCompatActivity {
             int menuQuantity;
 
             @Override
-            public void onItemClick(View view, int id, String name, int price, int position) {
+            public void onItemClick(View view,  String name, int price, int position) {
 
                 //중복되는 메뉴의 포지션 값 get
                 for (int i = 0; i < cartLists.size(); i++) {
@@ -497,9 +498,6 @@ public class Menu extends AppCompatActivity {
                     }
 
 
-//
-
-
                     if (infoCk == false) {
                         infoCk = true;
                         orderCk = true;
@@ -524,11 +522,18 @@ public class Menu extends AppCompatActivity {
 
         if (tableList == null) {
             tableList = new ArrayList();
+
+
             Log.d(TAG, "onResume tableList initial one");
         } else {
             Log.d(TAG, "menu.class intent tableList size :" + tableList.size());
         }
 //
+
+        SharedPreferences preference = getSharedPreferences("TableNumber", MODE_PRIVATE);
+        int table = preference.getInt("tableNumber", 20);
+        Log.d(TAG, "SharedPreference table :" + table);
+
 //        DrawableMethod drawableToBitmap = new DrawableMethod();
 
 //        byte[] myTableImage = drawableToBitmap.makeBitmap(getDrawable(R.drawable.my_table_border));
@@ -537,7 +542,7 @@ public class Menu extends AppCompatActivity {
 //        Log.d(TAG, "otherTableImage : " + otherTableImage);
 
 
-        for (int i = 1; i < 21; i++) {
+        for (int i = 1; i < table+1; i++) {
             if (i == myTable) {
                 tableList.add(new TableList("my Table", getDrawable(R.drawable.my_table_border), 0));
             } else {
@@ -630,18 +635,19 @@ public class Menu extends AppCompatActivity {
             for (int i = 0; i < jsonArray.length(); i++) {
                 JSONObject jsonObject = jsonArray.getJSONObject(i);
 
-                menuLists.add(new MenuList
-                        (getResources().getIdentifier
-                                (jsonObject.getString("img"),
-                                        "drawable", getPackageName()),
-                                jsonObject.getString("menu"),
-                                jsonObject.getInt("price"), 1));
+                String url = "http://3.36.255.141/menuImage/"+jsonObject.getString("img");
+                String menu = jsonObject.getString("menu");
+                int price = jsonObject.getInt("price");
+                int menuType = jsonObject.getInt("type");
+
+                menuLists.add(new MenuList(url,menu, price, menuType,1));
+
+
 
                 dbHelper.insertMenuData(jsonObject.getString("menu"),
                         jsonObject.getInt("price"),
-                        getResources().getIdentifier
-                                (jsonObject.getString("img"),
-                                        "drawable", getPackageName()));
+                        url,
+                        jsonObject.getInt("type"));
             }
 
         } catch (JSONException e) {
@@ -752,5 +758,43 @@ public class Menu extends AppCompatActivity {
 
     }
 
+    public void menuListSorting(){
+        int mainMenu = 0;
+        int drink =0;
+        int sideMenu = 0;
 
+
+        for(int i=0; i<menuLists.size(); i++){
+            if(menuLists.get(i).getMenuType() ==1){
+                mainMenu = mainMenu+1;
+            }else if(menuLists.get(i).getMenuType() == 2){
+                drink = drink +1;
+            }else if(menuLists.get(i).getMenu_price() ==3){
+                sideMenu = sideMenu +1;
+            }
+        }
+
+//        if(mainMenu/3 == 1){
+//            menuLists.add(mainMenu, new MenuList(null, null, 0,3, 0));
+//            menuLists.add(mainMenu+1, new MenuList(null, null, 0, 3, 0));
+//        }else if(mainMenu/3 == 2){
+//            menuLists.add(mainMenu, new MenuList(null, null, 0,0, 0));
+//        }
+//
+//
+//
+//        if(drink/3 == 1){
+//            menuLists.add(drink, new MenuList(null, null, 0,0, 0));
+//            menuLists.add(mainMenu+1, new MenuList(null, null, 0, 0, 0));
+//        }else if(mainMenu/3 == 2){
+//            menuLists.add(mainMenu, new MenuList(null, null, 0,0, 0));
+//        }
+//
+//        if(mainMenu/3 == 1){
+//            menuLists.add(mainMenu, new MenuList(null, null, 0,0, 0));
+//            menuLists.add(mainMenu+1, new MenuList(null, null, 0, 0, 0));
+//        }else if(mainMenu/3 == 2){
+//            menuLists.add(mainMenu, new MenuList(null, null, 0,0, 0));
+//        }
+    }
 }

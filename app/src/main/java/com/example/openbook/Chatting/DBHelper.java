@@ -5,8 +5,11 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.net.Uri;
 
 import androidx.annotation.Nullable;
+
+import java.net.URL;
 
 public class DBHelper extends SQLiteOpenHelper {
 
@@ -35,9 +38,11 @@ public class DBHelper extends SQLiteOpenHelper {
                 "(id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "menuName VARCHAR(20) not null," +
                 "menuPrice INT not null," +
-                "menuImage INT not null)";
+                "menuImage INT not null, " +
+                "menuType INT not null)";
 
         db.execSQL(queryMenu);
+
 
     }
 
@@ -67,12 +72,13 @@ public class DBHelper extends SQLiteOpenHelper {
         return true;
     }
 
-    public boolean insertMenuData(String menuName, int menuPrice, int menuImage){
+    public boolean insertMenuData(String menuName, int menuPrice, String menuImage, int menuType){
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put("menuName", menuName);
         contentValues.put("menuPrice", menuPrice);
         contentValues.put("menuImage", menuImage);
+        contentValues.put("menuType", menuType);
 
         long result = db.insert("menuListTable", null, contentValues);
         if(result == -1){

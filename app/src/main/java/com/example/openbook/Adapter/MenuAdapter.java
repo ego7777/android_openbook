@@ -1,6 +1,9 @@
 package com.example.openbook.Adapter;
 
 import android.annotation.SuppressLint;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,18 +17,26 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.openbook.R;
 import com.example.openbook.Data.MenuList;
 
+import java.io.IOException;
+import java.lang.reflect.Array;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 
 public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
     ArrayList<MenuList> menuItem;
+    ArrayList<MenuList> menuItem1;
+    ArrayList<MenuList> menuItem2;
+    ArrayList<MenuList> menuItem3;
 
     String TAG = "RecyclerViewAdapter";
+    Bitmap bitmap = null;
 
     /**
      * 커스텀 리스너 인터페이스 정의
      */
     public interface OnItemClickListener {
-        void onItemClick(View view, int id, String name, int price, int position);
+        void onItemClick(View view, String name, int price, int position);
 
     }
 
@@ -42,7 +53,8 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
      * 실체화를 해주는 아이가 Inflater
      * **/
     public MenuAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(getViewSrc(viewType), parent, false);
+        View view = LayoutInflater.from(parent.getContext()).
+                inflate(getViewSrc(viewType), parent, false);
 
         return new ViewHolder(view, viewType);
     }
@@ -52,7 +64,11 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
      **/
     @Override
     public void onBindViewHolder(@NonNull MenuAdapter.ViewHolder holder, @SuppressLint("RecyclerView") int position) {
-        holder.onBind(menuItem.get(position));
+        try {
+            holder.onBind(menuItem.get(position));
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
 //        Log.d(TAG, "onCreateViewHolder: onBIndViewHolder");
     }
 
@@ -90,7 +106,7 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
             super(itemView);
             this.viewType = viewType;
 
-            if(viewType == TYPE_YES){
+            if (viewType == TYPE_YES) {
 
                 menu_image = itemView.findViewById(R.id.menu_image);
                 menu_name = itemView.findViewById(R.id.menu_name);
@@ -102,7 +118,7 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
                     @Override
                     public void onClick(View view) {
                         int position = getAdapterPosition();
-                        int id = menuItem.get(position).getRedId();
+//                        Uri url = menuItem.get(position).getUrl();
                         String name = menuItem.get(position).getMenu_name();
                         int price = menuItem.get(position).getMenu_price();
                         Log.d(TAG, "onClick: 2");
@@ -110,7 +126,7 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
                         if (position != RecyclerView.NO_POSITION) {
                             Log.d(TAG, "onClick: 3");
                             if (myListener != null) {
-                                myListener.onItemClick(view, id, name, price, position);
+                                myListener.onItemClick(view, name, price, position);
                             }
                         }
                     }
@@ -120,7 +136,7 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
 
         }
 
-        void onBind(MenuList item) {
+        void onBind(MenuList item) throws MalformedURLException {
             if (viewType == TYPE_NO) {
                 onBindNo(item);
             } else if (viewType == TYPE_YES) {
@@ -128,43 +144,68 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
             }
         }
 
-        void onBindYes(MenuList items) {
-            menu_image.setImageResource(items.getRedId());
-            menu_name.setText(items.getMenu_name());
-            menu_price.setText(String.valueOf(items.getMenu_price()));
+        void onBindYes(MenuList items) throws MalformedURLException {
+            URL url = new URL(items.getUrl());
+
+            Thread bitmapThread = new Thread(){
+                @Override
+                public void run() {
+                    try {
+                        bitmap = BitmapFactory.decodeStream
+                                (url.openConnection().getInputStream());
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+            };
+            bitmapThread.start();
+
+            try{
+                bitmapThread.join();
+                menu_image.setImageBitmap(bitmap);
+                menu_name.setText(items.getMenu_name());
+                menu_price.setText(String.valueOf(items.getMenu_price()));
+
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+
+
         }
 
         void onBindNo(MenuList items) {
             ImageView temp_img = itemView.findViewById(R.id.temp_img);
             TextView temp_name = itemView.findViewById(R.id.temp_name);
-//            TextView temp_price = itemView.findViewById(R.id.temp_price);
-            temp_img.setImageResource(items.getRedId());
+
             temp_name.setText(items.getMenu_name());
 //            temp_price.setText(String.valueOf(items.getMenu_price()));
         }
 
     }
 
-        // view type
-        private int TYPE_NO = 101;
-        private int TYPE_YES = 102;
+    // view type
+    private int TYPE_NO = 101;
+    private int TYPE_YES = 102;
 
 
-        private int getViewSrc(int viewType) {
-            if (viewType == TYPE_NO) {
-                return R.layout.menu_gridview_item_empty;
-            } else {
-                return R.layout.menu_gridview_item;
-            }
-        }
-
-        @Override
-        public int getItemViewType(int position) {
-            if (menuItem.get(position).getViewType() == 0) {
-                return TYPE_NO;
-            } else {
-                return TYPE_YES;
-            }
+    private int getViewSrc(int viewType) {
+        if (viewType == TYPE_NO) {
+            return R.layout.menu_gridview_item_empty;
+        } else {
+            return R.layout.menu_gridview_item;
         }
     }
+
+    @Override
+    public int getItemViewType(int position) {
+        if (menuItem.get(position).getViewType() == 0) {
+            return TYPE_NO;
+        } else {
+            return TYPE_YES;
+        }
+    }
+
+}
 

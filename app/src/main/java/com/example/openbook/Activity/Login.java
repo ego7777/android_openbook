@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -12,6 +13,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.example.openbook.Data.AdminTableList;
+import com.example.openbook.Data.TableList;
 import com.example.openbook.DialogCustom;
 import com.example.openbook.R;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -46,7 +48,10 @@ public class Login extends AppCompatActivity {
     String local_id;
     String TAG = "login_log";
 
+    SharedPreferences pref;
+    SharedPreferences.Editor editor;
     ArrayList<AdminTableList> adminTableList;
+    ArrayList<TableList> tableList;
 
 
     @Override
@@ -55,6 +60,12 @@ public class Login extends AppCompatActivity {
         setContentView(R.layout.login_activity);
 
         final OkHttpClient client = new OkHttpClient();
+
+        pref = getSharedPreferences("TableNumber", MODE_PRIVATE);
+
+        editor = pref.edit();
+
+
 
 
         /**
@@ -129,7 +140,7 @@ public class Login extends AppCompatActivity {
 
                                             } else if (responseData.equals("admin")){
 
-                                                startActivityAdmin(Admin.class, adminTableList, local_id);
+                                                startActivityTableList(Admin.class, adminTableList, "adminTableList",local_id);
                                             }
                                         }
                                     } catch (Exception e) {
@@ -312,12 +323,11 @@ public class Login extends AppCompatActivity {
 
     // 인텐트 화면전환 하는 함수
     // FLAG_ACTIVITY_CLEAR_TOP = 불러올 액티비티 위에 쌓인 액티비티 지운다.
-    public void startActivityAdmin(Class c, ArrayList<AdminTableList> tableList, String id) {
+    public void startActivityTableList(Class c, ArrayList tableList, String tableListName,String id) {
         Intent intent = new Intent(getApplicationContext(), c);
 //        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        intent.putExtra("tableList", tableList);
+        intent.putExtra(tableListName, tableList);
         intent.putExtra("get_id", id);
-        Log.d(TAG, "startActivityAdmin:  여기 까지 옴?");
         startActivity(intent);
         // 화면전환 애니메이션 없애기
         overridePendingTransition(0, 0);
@@ -339,14 +349,19 @@ public class Login extends AppCompatActivity {
             startActivity(intent);
         }
 
+
         if(adminTableList == null){
             adminTableList = new ArrayList<>();
 
-            for(int i=1; i<21; i++){
+            int table = pref.getInt("tableNumber", 20);
+
+            for(int i=1; i<table+1; i++){
                 adminTableList.add(new AdminTableList("table"+i,
                         null, null, null, null));
             }
         }
+
+
 
 
     }

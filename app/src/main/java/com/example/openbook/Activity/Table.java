@@ -2,6 +2,7 @@ package com.example.openbook.Activity;
 
 import android.app.Dialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -111,7 +112,10 @@ public class Table extends AppCompatActivity {
             if (tableList == null) {
                 tableList = new ArrayList<>();
 
-                for (int i = 1; i < 21; i++) {
+                SharedPreferences preference = getSharedPreferences("TableNumber", MODE_PRIVATE);
+                int table = preference.getInt("tableNumber", 20);
+
+                for (int i = 1; i < table+1; i++) {
 
                     if (i == myTable) {
                         tableList.add(new TableList("my Table", getDrawable(R.drawable.my_table_border), 0));
@@ -345,7 +349,7 @@ public class Table extends AppCompatActivity {
 
                                         if (body.equals("없음")) {
                                             MakeQR makeQR = new MakeQR();
-                                            table_info_img.setImageBitmap(makeQR.myQR(get_id));
+                                            table_info_img.setImageBitmap(makeQR.clientQR(get_id));
                                             table_info_img.setClickable(false);
 
                                             table_info_text.setVisibility(View.INVISIBLE);
@@ -470,7 +474,7 @@ public class Table extends AppCompatActivity {
 
                         if (clickTable == myTable) {
                             MakeQR makeQR = new MakeQR();
-                            table_info_img.setImageBitmap(makeQR.myQR(get_id));
+                            table_info_img.setImageBitmap(makeQR.clientQR(get_id));
                             table_info_text.setVisibility(View.INVISIBLE);
 
                         } else {
