@@ -38,7 +38,6 @@ public class Admin extends AppCompatActivity {
         setContentView(R.layout.admin_activity);
 
 
-
         adminTableList = (ArrayList<AdminTableList>) getIntent().getSerializableExtra("adminTableList");
         get_id = getIntent().getStringExtra("get_id");
 
@@ -83,6 +82,7 @@ public class Admin extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 //매출 액티비티가 나온다
+                startActivityClass(AdminSales.class);
             }
         });
 

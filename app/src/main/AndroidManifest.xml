@@ -61,6 +61,8 @@
         <activity android:name=".Activity.AdminModifyMenu"
             android:theme="@android:style/Theme.Dialog"/>
 
+        <activity android:name=".Activity.AdminSales"/>
+
         <activity android:name=".Activity.Admin"/>
         <activity android:name=".KakaoPay"/>
 

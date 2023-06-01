@@ -1,23 +1,55 @@
 package com.example.openbook.Activity;
 
+import android.content.Entity;
+import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.openbook.Data.AdminTableList;
 import com.example.openbook.R;
-import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.charts.BarChart;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.FormBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class AdminSales extends AppCompatActivity {
 
-    TextView day;
-    TextView week;
-    TextView month;
-    TextView threeMonth;
-    TextView year;
+    String TAG = "AdminSales_TAG";
 
-    LineChart chart;
+    String get_id;
+    ArrayList<AdminTableList> adminTableList;
+
+    TextView home, day, week, month, year;
+    TextView appbar_admin_addMenu;
+    TextView appbar_admin_modifyTable;
+
+    BarChart chart;
+
+    OkHttpClient okHttpClient;
+    RequestBody requestBody;
+
+    Request request;
 
 
     @Override
@@ -25,15 +57,26 @@ public class AdminSales extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.admin_sales);
 
+        get_id = getIntent().getStringExtra("get_id");
+        adminTableList = (ArrayList<AdminTableList>) getIntent().getSerializableExtra("adminTableList");
+
+        home = findViewById(R.id.appbar_admin_home);
+
         day = findViewById(R.id.admin_sales_sidebar_day);
         week = findViewById(R.id.admin_sales_sidebar_week);
         month = findViewById(R.id.admin_sales_sidebar_month);
-        threeMonth = findViewById(R.id.admin_sales_sidebar_threeMonth);
         year = findViewById(R.id.admin_sales_sidebar_year);
+
+        appbar_admin_addMenu = findViewById(R.id.appbar_admin_addMenu);
+        appbar_admin_modifyTable = findViewById(R.id.appbar_admin_modifyTable);
+        appbar_admin_addMenu.setVisibility(View.INVISIBLE);
+        appbar_admin_modifyTable.setVisibility(View.INVISIBLE);
+
 
         chart = findViewById(R.id.admin_sales_chart);
 
-        //db에 접근해서 일단 오늘 매출을 보여준다
+        setOkHttpClient("day");
+
 
     }
 
@@ -41,24 +84,104 @@ public class AdminSales extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        day.setOnClickListener(view ->{
+        home.setOnClickListener(view -> {
+            Intent intent = new Intent(AdminSales.this, Admin.class);
+            intent.putExtra("get_id", get_id);
+            intent.putExtra("adminTableList", adminTableList);
+            startActivity(intent);
+        });
+
+
+        day.setOnClickListener(view -> {
+
+            setOkHttpClient("day");
+        });
+
+        week.setOnClickListener(view -> {
+
+            setOkHttpClient("week");
 
         });
 
-        week.setOnClickListener(view ->{
-
+        month.setOnClickListener(view -> {
+            setOkHttpClient("month");
         });
 
-        month.setOnClickListener(view ->{
 
+        year.setOnClickListener(view -> {
+            setOkHttpClient("year");
         });
+    }
 
-        threeMonth.setOnClickListener(view ->{
+    public void setOkHttpClient(String duration) {
+        //db에 접근해서 일단 오늘 매출을 보여준다
+        okHttpClient = new OkHttpClient();
 
+        requestBody = new FormBody.Builder()
+                .add("duration", duration)
+                .build();
+
+        request = new Request.Builder()
+                .url("http://3.36.255.141/Sales.php")
+                .post(requestBody)
+                .build();
+
+        okHttpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                Log.d(TAG, "onFailure: " + e);
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                String body = response.body().string();
+                Log.d(TAG, "onResponse: " + body);
+
+
+            }
         });
+    }
 
-        year.setOnClickListener(view ->{
+    public void setChart(String duration, String data, String dataFormat) throws JSONException, ParseException {
 
-        });
+        JSONArray jsonArray = new JSONArray(data);
+
+        ArrayList<Entity> entity_chart = new ArrayList<>();
+
+
+        if (duration.equals("day")) {
+
+            //time 00 01 02 ~ 12 까지 (24개의 그래프로 나눠서 array에 넣기)
+
+        } else if (duration.equals("week")) {
+
+            // 일 ~ 토 (7개의 그래프로 나눠서 array에 넣기)
+
+        } else if (duration.equals("month")) {
+
+            // 1월 ~ 12월 (12개의 그래프로 나눠서 넣기)
+
+        } else if (duration.equals("year")) {
+
+        }
+
+
+
+
+
+    }
+
+    public void temp(){
+
+//        for (int i = 0; i < jsonArray.length(); i++) {
+//
+//            JSONObject jsonObject = jsonArray.getJSONObject(i);
+//
+//            SimpleDateFormat dateFormat =
+//                    new SimpleDateFormat(dataFormat, java.util.Locale.getDefault());
+//
+//            Date date = dateFormat.parse(jsonObject.getString("orderTime"));
+//
+//        }
     }
 }

@@ -157,6 +157,15 @@ public class Menu extends AppCompatActivity {
         cartLists = new ArrayList<>();
         cartView.setAdapter(cartAdapter);
 
+        /**
+         * 액티비티 전환 시 sp에 저장된 장바구니 데이터 가져와서 뿌려주기
+         */
+        pref = getSharedPreferences("Order", MODE_PRIVATE);
+
+        editor = pref.edit();
+
+
+
 
         orderPrice = findViewById(R.id.order_price);
         order = findViewById(R.id.order);
@@ -256,13 +265,6 @@ public class Menu extends AppCompatActivity {
             saveOrder(returnOrderList);
         }
 
-
-        /**
-         * 액티비티 전환 시 sp에 저장된 장바구니 데이터 가져와서 뿌려주기
-         */
-        pref = getSharedPreferences("Order", MODE_PRIVATE);
-
-        editor = pref.edit();
 
         String getName = pref.getString("name", "");
         String getQuantity = pref.getString("quantity", "");
@@ -513,9 +515,9 @@ public class Menu extends AppCompatActivity {
 //                        }, 1000);
                     }
 
-                }
+                } // cartList에 데이터 if-else
             }
-        });
+        }); //주문하기 click event
 
         myTable = Integer.parseInt(get_id.replace("table", ""));
 
@@ -615,7 +617,6 @@ public class Menu extends AppCompatActivity {
                 menujArray.put(sObject);
             }
             obj.put("table", get_id);
-            obj.put("orderTime", "시간");
             obj.put("item", menujArray);//배열을 넣음
 
             Log.d(TAG, "getJson: " + obj.toString());
@@ -692,6 +693,7 @@ public class Menu extends AppCompatActivity {
                     public void run() {
                         try {
                             String body = response.body().string();
+                            Log.d(TAG, "saveOrder :" + body);
 
                             if (body.equals("주문완료")) {
                                 orderCk = true;
@@ -704,11 +706,11 @@ public class Menu extends AppCompatActivity {
 //
 //                                            sendNotification.sendMenu(get_id, menujArray.toString());
 
-                                if (clientSocket == null) {
-                                    clientSocket = new ClientSocket("3.36.255.141", 7777, get_id, tableList);
-                                    clientSocket.start();
-                                    Log.d(TAG, "소켓 시작");
-                                }
+//                                if (clientSocket == null) {
+//                                    clientSocket = new ClientSocket("3.36.255.141", 7777, get_id, tableList);
+//                                    clientSocket.start();
+//                                    Log.d(TAG, "소켓 시작");
+//                                }
 
 
                             } else {

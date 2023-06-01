@@ -15,7 +15,7 @@
         android:layout_height="match_parent"
         android:orientation="horizontal">
 
-        <com.github.mikephil.charting.charts.LineChart
+        <com.github.mikephil.charting.charts.BarChart
             android:id="@+id/admin_sales_chart"
             android:layout_width="800dp"
             android:layout_height="500dp"
@@ -71,18 +71,6 @@
                 android:textColor="@color/black"
                 android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/admin_sales_sidebar_threeMonth"
-                android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:layout_marginTop="20dp"
-                android:autoSizeMaxTextSize="30sp"
-                android:autoSizeTextType="uniform"
-                android:background="@color/red_pink"
-                android:gravity="center"
-                android:text="3 Month"
-                android:textColor="@color/black"
-                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/admin_sales_sidebar_year"

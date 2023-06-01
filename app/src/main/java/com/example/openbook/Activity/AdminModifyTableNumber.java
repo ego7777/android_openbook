@@ -106,6 +106,7 @@ public class AdminModifyTableNumber extends Activity {
             intent.putExtra("get_id", get_id);
             intent.putExtra("adminTableList", adminTableList);
             startActivity(intent);
+            overridePendingTransition(0, 0);
         });
 
         cancel.setOnClickListener(view ->{
@@ -113,6 +114,7 @@ public class AdminModifyTableNumber extends Activity {
             intent.putExtra("get_id", get_id);
             intent.putExtra("adminTableList", adminTableList);
             startActivity(intent);
+            overridePendingTransition(0, 0);
         });
     }
 

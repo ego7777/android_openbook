@@ -228,10 +228,11 @@ public class KakaoPay extends AppCompatActivity {
                 try {
                     JSONObject jsonObject = new JSONObject(responseData);
                     String time = jsonObject.getString("created_at");
+                    Log.d(TAG, "created_at :" + time);
 
 
                     JSONObject orderList = new JSONObject(jsonOrderList);
-                    orderList.getString("orderTime").replace("시간", time);
+                    orderList.put("orderTime", time);
 
                     Intent intent = new Intent(KakaoPay.this, Menu.class);
                     intent.putExtra("orderList", orderList.toString());

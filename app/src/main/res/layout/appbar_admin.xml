@@ -14,10 +14,20 @@
             android:layout_height="wrap_content">
 
             <TextView
+                android:id="@+id/appbar_admin_home"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="홈"
+                android:textSize="25sp"
+                android:textStyle="bold"
+                android:textColor="@color/black" />
+
+            <TextView
                 android:id="@+id/appbar_admin_sales"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:text="매출"
+                android:layout_marginStart="40dp"
                 android:textSize="25sp"
                 android:textStyle="bold"
                 android:textColor="@color/black" />
