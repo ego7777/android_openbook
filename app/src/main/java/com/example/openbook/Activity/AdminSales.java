@@ -2,6 +2,7 @@ package com.example.openbook.Activity;
 
 import android.content.Entity;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -9,11 +10,14 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.openbook.Data.AdminSalesList;
 import com.example.openbook.Data.AdminTableList;
 import com.example.openbook.R;
 import com.github.mikephil.charting.charts.BarChart;
+import com.github.mikephil.charting.data.BarEntry;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -22,8 +26,13 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Locale;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -132,21 +141,34 @@ public class AdminSales extends AppCompatActivity {
                 Log.d(TAG, "onFailure: " + e);
             }
 
+            @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 String body = response.body().string();
                 Log.d(TAG, "onResponse: " + body);
+
+                try {
+                    setChart(duration, body);
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
 
 
             }
         });
     }
 
-    public void setChart(String duration, String data, String dataFormat) throws JSONException, ParseException {
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public void setChart(String duration, String data) throws JSONException, ParseException {
 
         JSONArray jsonArray = new JSONArray(data);
 
         ArrayList<Entity> entity_chart = new ArrayList<>();
+
+
 
 
         if (duration.equals("day")) {
@@ -154,6 +176,10 @@ public class AdminSales extends AppCompatActivity {
             //time 00 01 02 ~ 12 까지 (24개의 그래프로 나눠서 array에 넣기)
 
         } else if (duration.equals("week")) {
+
+            temp(jsonArray, duration);
+
+            //차라리 여기서 리턴 받아서 써라
 
             // 일 ~ 토 (7개의 그래프로 나눠서 array에 넣기)
 
@@ -171,17 +197,36 @@ public class AdminSales extends AppCompatActivity {
 
     }
 
-    public void temp(){
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public void temp(JSONArray jsonArray, String duration) throws JSONException{
 
-//        for (int i = 0; i < jsonArray.length(); i++) {
-//
-//            JSONObject jsonObject = jsonArray.getJSONObject(i);
-//
-//            SimpleDateFormat dateFormat =
-//                    new SimpleDateFormat(dataFormat, java.util.Locale.getDefault());
-//
-//            Date date = dateFormat.parse(jsonObject.getString("orderTime"));
-//
-//        }
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+
+        ArrayList<AdminSalesList> salesLists = new ArrayList();
+
+        String temp = "";
+
+        for (int i = 0; i < jsonArray.length(); i++) {
+
+            JSONObject jsonObject = jsonArray.getJSONObject(i);
+            LocalDateTime date = LocalDateTime.parse(jsonObject.getString("orderTime"),
+                    dateTimeFormatter);
+
+            int totalPrice = jsonObject.getInt("totalPrice");
+
+            salesLists.add(new AdminSalesList(date, totalPrice));
+
+        }
+
+        Log.d(TAG, "salesList: " + salesLists.size());
+
+        if(duration.equals("day")){
+
+            for(int i=0; i<salesLists.size(); i++){
+//                if(salesLists.get(i).)
+            }
+        }
+
+
     }
 }
