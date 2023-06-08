@@ -37,6 +37,7 @@ import com.example.openbook.Chatting.DBHelper;
 import com.example.openbook.Deco.menu_recyclerview_deco;
 import com.example.openbook.DialogCustom;
 import com.example.openbook.FCM.FCM;
+import com.example.openbook.FCM.SendNotification;
 import com.example.openbook.KakaoPay;
 import com.example.openbook.R;
 import com.example.openbook.Data.TableInformation;
@@ -134,6 +135,8 @@ public class Menu extends AppCompatActivity {
         Intent fcm = new Intent(getApplicationContext(), FCM.class);
         fcm.putExtra("get_id", get_id);
         startService(fcm);
+
+        SendNotification sendNotification = new SendNotification();
 
 
         /**

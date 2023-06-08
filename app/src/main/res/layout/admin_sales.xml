@@ -17,22 +17,24 @@
 
         <com.github.mikephil.charting.charts.BarChart
             android:id="@+id/admin_sales_chart"
-            android:layout_width="800dp"
-            android:layout_height="500dp"
-            android:layout_margin="100dp"/>
+            android:layout_width="900dp"
+            android:layout_height="600dp"
+            android:layout_margin="90dp"/>
 
 
 
         <LinearLayout
             android:id="@+id/admin_sales_sidebar"
             android:layout_width="0dp"
-            android:layout_height="match_parent"
+            android:layout_height="600dp"
             android:layout_margin="30dp"
             android:layout_weight="2"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:gravity="center">
+
 
             <TextView
-                android:id="@+id/admin_sales_sidebar_day"
+                android:id="@+id/admin_sales_sidebar_today"
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
                 android:autoSizeMaxTextSize="30sp"
@@ -40,6 +42,19 @@
                 android:background="@color/red_pink"
                 android:gravity="center"
                 android:text="Today"
+                android:textColor="@color/black"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/admin_sales_sidebar_day"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:layout_marginTop="20dp"
+                android:autoSizeMaxTextSize="30sp"
+                android:autoSizeTextType="uniform"
+                android:background="@color/red_pink"
+                android:gravity="center"
+                android:text="Day"
                 android:textColor="@color/black"
                 android:textStyle="bold" />
 
@@ -81,7 +96,7 @@
                 android:autoSizeTextType="uniform"
                 android:background="@color/red_pink"
                 android:gravity="center"
-                android:text="year"
+                android:text="Year"
                 android:textColor="@color/black"
                 android:textStyle="bold" />
 

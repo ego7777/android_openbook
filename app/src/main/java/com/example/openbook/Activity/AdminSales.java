@@ -1,7 +1,7 @@
 package com.example.openbook.Activity;
 
-import android.content.Entity;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -17,7 +17,15 @@ import com.example.openbook.Data.AdminSalesList;
 import com.example.openbook.Data.AdminTableList;
 import com.example.openbook.R;
 import com.github.mikephil.charting.charts.BarChart;
+import com.github.mikephil.charting.components.AxisBase;
+import com.github.mikephil.charting.components.Legend;
+import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.components.YAxis;
+import com.github.mikephil.charting.data.BarData;
+import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
+import com.github.mikephil.charting.formatter.IAxisValueFormatter;
+
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -25,14 +33,14 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.DayOfWeek;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.WeekFields;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.Locale;
+import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -49,11 +57,14 @@ public class AdminSales extends AppCompatActivity {
     String get_id;
     ArrayList<AdminTableList> adminTableList;
 
-    TextView home, day, week, month, year;
+    TextView home, today, day, week, month, year;
     TextView appbar_admin_addMenu;
     TextView appbar_admin_modifyTable;
 
     BarChart chart;
+    XAxis xAxis;
+    YAxis yAxisRight;
+    YAxis yAxisLeft;
 
     OkHttpClient okHttpClient;
     RequestBody requestBody;
@@ -71,6 +82,7 @@ public class AdminSales extends AppCompatActivity {
 
         home = findViewById(R.id.appbar_admin_home);
 
+        today = findViewById(R.id.admin_sales_sidebar_today);
         day = findViewById(R.id.admin_sales_sidebar_day);
         week = findViewById(R.id.admin_sales_sidebar_week);
         month = findViewById(R.id.admin_sales_sidebar_month);
@@ -83,6 +95,33 @@ public class AdminSales extends AppCompatActivity {
 
 
         chart = findViewById(R.id.admin_sales_chart);
+        chart.getDescription().setEnabled(false);
+
+        chart.setNoDataText("데이터가 존재하지 않습니다.");
+        chart.setNoDataTextColor(Color.RED);
+
+        xAxis = chart.getXAxis();
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+
+        xAxis.setDrawAxisLine(true);
+        xAxis.setDrawGridLines(false);
+        xAxis.setTextSize(18);
+
+        xAxis.setGranularity(1f);
+        xAxis.setGranularityEnabled(true);
+
+        xAxis.setSpaceMin(1f);
+
+        yAxisRight = chart.getAxisRight();
+        yAxisRight.setTextSize(15);
+        yAxisRight.setAxisMinimum(0f);
+        yAxisRight.setGranularity(1f);
+
+        yAxisLeft = chart.getAxisLeft();
+        yAxisLeft.setTextSize(15);
+        yAxisLeft.setAxisMinimum(0f);
+        yAxisLeft.setGranularity(1f);
+
 
         setOkHttpClient("day");
 
@@ -100,10 +139,15 @@ public class AdminSales extends AppCompatActivity {
             startActivity(intent);
         });
 
+        today.setOnClickListener(view -> {
+            setOkHttpClient("today");
+        });
+
 
         day.setOnClickListener(view -> {
 
             setOkHttpClient("day");
+
         });
 
         week.setOnClickListener(view -> {
@@ -121,6 +165,7 @@ public class AdminSales extends AppCompatActivity {
             setOkHttpClient("year");
         });
     }
+
 
     public void setOkHttpClient(String duration) {
         //db에 접근해서 일단 오늘 매출을 보여준다
@@ -148,7 +193,14 @@ public class AdminSales extends AppCompatActivity {
                 Log.d(TAG, "onResponse: " + body);
 
                 try {
-                    setChart(duration, body);
+                    if (body != null) {
+                        getSalesInfo(duration, body);
+
+                    }
+//                    else if (body == null) {
+//                        setChart(null, duration);
+//                    }
+
 
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -161,72 +213,298 @@ public class AdminSales extends AppCompatActivity {
         });
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    public void setChart(String duration, String data) throws JSONException, ParseException {
-
-        JSONArray jsonArray = new JSONArray(data);
-
-        ArrayList<Entity> entity_chart = new ArrayList<>();
-
-
-
-
-        if (duration.equals("day")) {
-
-            //time 00 01 02 ~ 12 까지 (24개의 그래프로 나눠서 array에 넣기)
-
-        } else if (duration.equals("week")) {
-
-            temp(jsonArray, duration);
-
-            //차라리 여기서 리턴 받아서 써라
-
-            // 일 ~ 토 (7개의 그래프로 나눠서 array에 넣기)
-
-        } else if (duration.equals("month")) {
-
-            // 1월 ~ 12월 (12개의 그래프로 나눠서 넣기)
-
-        } else if (duration.equals("year")) {
-
-        }
-
-
-
-
-
-    }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    public void temp(JSONArray jsonArray, String duration) throws JSONException{
+    public void getSalesInfo(String duration, String data) throws JSONException, ParseException {
 
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 
         ArrayList<AdminSalesList> salesLists = new ArrayList();
 
-        String temp = "";
+        JSONArray jsonArray = new JSONArray(data);
 
         for (int i = 0; i < jsonArray.length(); i++) {
 
             JSONObject jsonObject = jsonArray.getJSONObject(i);
+
             LocalDateTime date = LocalDateTime.parse(jsonObject.getString("orderTime"),
                     dateTimeFormatter);
+
 
             int totalPrice = jsonObject.getInt("totalPrice");
 
             salesLists.add(new AdminSalesList(date, totalPrice));
+            Log.d(TAG, "getSalesInfo: " + salesLists.get(i).getLocalDateTime());
 
         }
 
-        Log.d(TAG, "salesList: " + salesLists.size());
+        sortData(salesLists, duration);
+    }
 
-        if(duration.equals("day")){
 
-            for(int i=0; i<salesLists.size(); i++){
-//                if(salesLists.get(i).)
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public void sortData(ArrayList<AdminSalesList> salesLists, String duration) {
+
+        //중복되는 날짜 금액 합산
+        HashMap<Integer, Integer> hashMap = new HashMap<>();
+
+
+        ArrayList<AdminSalesList> salesListFinal = new ArrayList<>();
+        String title;
+
+
+        if (duration.equals("today")) {
+
+            for (int i = 0; i < salesLists.size(); i++) {
+
+                int hour = salesLists.get(i).getLocalDateTime().getHour();
+
+                if (hashMap.get(hour) == null) {
+
+                    hashMap.put(hour, salesLists.get(i).getTotalPrice());
+
+                } else {
+                    int duplicatedPrice = hashMap.get(hour) + salesLists.get(i).getTotalPrice();
+                    hashMap.replace(hour, duplicatedPrice);
+                }
+            }
+
+//            title = LocalDate.parse(salesLists.get(0).getLocalDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))).toString();
+
+
+        } else if (duration.equals("day")) {
+
+            for (int i = 0; i < salesLists.size(); i++) {
+
+                int dayOfMonth = salesLists.get(i).getLocalDateTime().getDayOfMonth();
+
+                if (hashMap.get(dayOfMonth) == null) {
+
+                    hashMap.put(dayOfMonth, salesLists.get(i).getTotalPrice());
+                    Log.d(TAG, "sortData null: " + hashMap.get(dayOfMonth));
+
+                } else {
+                    int duplicatedPrice = hashMap.get(dayOfMonth) + salesLists.get(i).getTotalPrice();
+                    hashMap.replace(dayOfMonth, duplicatedPrice);
+                    Log.d(TAG, "sortData not null: " + hashMap.get(dayOfMonth));
+                }
+
+            } // for문 끝
+
+
+        } else if (duration.equals("week")) {
+
+            //중복되는 날짜 금액 합산
+            for (int i = 0; i < salesLists.size(); i++) {
+
+                int weekOfMonth = salesLists.get(i).getLocalDateTime().get(WeekFields.ISO.weekOfMonth());
+
+                if (hashMap.get(weekOfMonth) == null) {
+                    hashMap.put(weekOfMonth, salesLists.get(i).getTotalPrice());
+                } else {
+                    Integer duplicatedPrice = hashMap.get(weekOfMonth) + salesLists.get(i).getTotalPrice();
+                    hashMap.replace(weekOfMonth, duplicatedPrice);
+                }
+
+            } // for문 끝
+
+
+        } else if (duration.equals("month")) {
+
+            //중복되는 날짜 금액 합산
+            for (int i = 0; i < salesLists.size(); i++) {
+
+                int month = salesLists.get(i).getLocalDateTime().getMonthValue();
+
+                if (hashMap.get(month) == null) {
+                    hashMap.put(month, salesLists.get(i).getTotalPrice());
+                } else {
+                    int duplicatedPrice = hashMap.get(month) + salesLists.get(i).getTotalPrice();
+                    hashMap.replace(month, duplicatedPrice);
+                }
+            }
+
+
+        } else if (duration.equals("year")) {
+
+            //중복되는 날짜 금액 합산
+            for (int i = 0; i < salesLists.size(); i++) {
+
+                int year = salesLists.get(i).getLocalDateTime().getYear();
+
+                if (hashMap.get(year) == null) {
+                    hashMap.put(year, salesLists.get(i).getTotalPrice());
+                } else {
+                    int duplicatedPrice = hashMap.get(year) + salesLists.get(i).getTotalPrice();
+                    hashMap.replace(year, duplicatedPrice);
+                }
             }
         }
 
 
+        Log.d(TAG, "sortData:  Integer");
+
+        hashMap.forEach((Key, Value) -> {
+
+            salesListFinal.add(new AdminSalesList(Key, Value));
+
+        });
+
+
+        title = LocalDate.parse(salesLists.get(0).getLocalDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))) + "   ~   "
+                + LocalDate.parse(salesLists.get(salesLists.size() - 1).getLocalDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+
+
+        setChart(salesListFinal, duration, title);
+
     }
+
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public void setChart(ArrayList<AdminSalesList> salesLists, String duration, String title) {
+
+        ArrayList<BarEntry> entries = new ArrayList<>();
+        BarData barData = new BarData();
+        BarDataSet barDataSet;
+
+
+        if (duration.equals("today")) {
+            xAxis.setAxisMinimum(-1f);
+            xAxis.setAxisMaximum(23.9f);
+
+            xAxis.setValueFormatter(new IAxisValueFormatter() {
+                @Override
+                public String getFormattedValue(float value, AxisBase axis) {
+                    return (int) value + "시";
+                }
+            });
+
+            for (int i = 0; i < salesLists.size(); i++) {
+
+                int hour = salesLists.get(i).getIntDate();
+                int price = salesLists.get(i).getTotalPrice();
+
+                entries.add(new BarEntry(hour, price));
+
+
+            }
+
+
+        } else if (duration.equals("day")) {
+
+            xAxis.setAxisMinimum((float) (salesLists.get(0).getIntDate() - 0.9));
+            xAxis.setAxisMaximum((float) (salesLists.get(salesLists.size() - 1).getIntDate() + 0.9));
+            xAxis.setSpaceMin(0.1f);
+            xAxis.setSpaceMax(0.1f);
+
+
+            xAxis.setValueFormatter(new IAxisValueFormatter() {
+                @Override
+                public String getFormattedValue(float value, AxisBase axis) {
+                    return (int) value + "일";
+                }
+            });
+
+
+            for (int i = 0; i < salesLists.size(); i++) {
+
+
+                int day = salesLists.get(i).getIntDate();
+                Log.d(TAG, "day: " + day);
+
+
+                int price = salesLists.get(i).getTotalPrice();
+                Log.d(TAG, "price: " + price);
+
+                entries.add(new BarEntry(day, price));
+
+            }
+
+
+        } else if (duration.equals("week")) {
+
+            xAxis.setAxisMinimum(0.1f);
+            xAxis.setAxisMaximum(4.9f);
+//            xAxis.setAxisMaximum(0.1f);
+
+            xAxis.setValueFormatter(new IAxisValueFormatter() {
+                @Override
+                public String getFormattedValue(float value, AxisBase axis) {
+                    return (int) value + "주";
+                }
+            });
+
+
+            for (int i = 0; i < salesLists.size(); i++) {
+
+                int week = salesLists.get(i).getIntDate();
+
+                int price = salesLists.get(i).getTotalPrice();
+
+                entries.add(new BarEntry(week, price));
+
+            }
+
+
+        } else if (duration.equals("month")) {
+
+            xAxis.setAxisMinimum(0.1f);
+            xAxis.setAxisMaximum(12.9f);
+
+
+            xAxis.setValueFormatter(new IAxisValueFormatter() {
+                @Override
+                public String getFormattedValue(float value, AxisBase axis) {
+                    return (int) value + "월";
+                }
+            });
+
+
+            for (int i = 0; i < salesLists.size(); i++) {
+
+                int month = salesLists.get(i).getIntDate();
+
+                int price = salesLists.get(i).getTotalPrice();
+
+                entries.add(new BarEntry(month, price));
+
+            }
+
+        } else if (duration.equals("year")) {
+            xAxis.setAxisMinimum((float) (salesLists.get(0).getIntDate()-0.9));
+            xAxis.setAxisMaximum((float) (salesLists.get(salesLists.size()-1).getIntDate()+0.9));
+            xAxis.setValueFormatter(new IAxisValueFormatter() {
+                @Override
+                public String getFormattedValue(float value, AxisBase axis) {
+                    return (int) value + "년";
+                }
+            });
+
+            for(int i=0; i<salesLists.size(); i++){
+                int year = salesLists.get(i).getIntDate();
+                int price = salesLists.get(i).getTotalPrice();
+
+                entries.add(new BarEntry(year, price));
+
+            }
+        }
+
+        Legend legend = chart.getLegend();
+        legend.setVerticalAlignment(Legend.LegendVerticalAlignment.BOTTOM);
+        legend.setHorizontalAlignment(Legend.LegendHorizontalAlignment.CENTER);
+        legend.setTextSize(20f);
+        legend.setTextColor(Color.BLACK);
+
+
+        barDataSet = new BarDataSet(entries, title);
+        barDataSet.setColor(R.color.blue_purple);
+        barDataSet.setValueTextSize(17);
+        barData.addDataSet(barDataSet);
+
+
+        chart.setData(barData);
+        chart.invalidate(); // 차트 업데이트
+    }
+
+
 }

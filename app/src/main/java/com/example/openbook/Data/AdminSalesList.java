@@ -1,8 +1,53 @@
 package com.example.openbook.Data;
 
+import com.example.openbook.Activity.Admin;
+import com.example.openbook.Activity.AdminSales;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public class AdminSalesList {
+
+
+    String localDate;
+    LocalDateTime localDateTime;
+    int totalPrice;
+    int intDate;
+
+
+    public AdminSalesList(LocalDateTime localDateTime, int totalPrice){
+        this.localDateTime = localDateTime;
+        this.totalPrice = totalPrice;
+
+    }
+
+    public AdminSalesList(String localDate, int totalPrice){
+        this.localDate = localDate;
+        this.totalPrice = totalPrice;
+    }
+
+    public AdminSalesList(int intDate, int totalPrice){
+        this.intDate = intDate;
+        this.totalPrice = totalPrice;
+    }
+
+    public String getLocalDate() {
+        return localDate;
+    }
+
+    public void setLocalDate(String localDate) {
+        this.localDate = localDate;
+    }
+
+    public int getIntDate(){
+        return intDate;
+    }
+
+    public void setIntDate(int intDate){
+        this.intDate = intDate;
+    }
+
+
 
     public LocalDateTime getLocalDateTime() {
         return localDateTime;
@@ -17,14 +62,6 @@ public class AdminSalesList {
     }
 
     public void setTotalPrice(int totalPrice) {
-        this.totalPrice = totalPrice;
-    }
-
-    LocalDateTime localDateTime;
-    int totalPrice;
-
-    public AdminSalesList(LocalDateTime localDateTime, int totalPrice){
-        this.localDateTime = localDateTime;
         this.totalPrice = totalPrice;
     }
 

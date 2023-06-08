@@ -130,4 +130,43 @@ public class SendNotification {
         });
 
     }
+
+    public void useTheTable(String get_id){
+        mRootRef.child("admin").child("fcmToken").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                String pushToken = (String) snapshot.getValue();
+
+                RequestBody formBody = new FormBody.Builder().
+                        add("to", pushToken).
+                        add("tableNumber", get_id).
+                        build();
+
+                Request httpRequest = new Request.Builder()
+                        .url("http://3.36.255.141/fcmPush.php")
+                        .addHeader("Authorization", "key=" + SERVER_KEY)
+                        .post(formBody)
+                        .build();
+
+                okHttpClient.newCall(httpRequest).enqueue(new Callback() {
+                    @Override
+                    public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                        Log.d(TAG, "onFailure: " + e);
+                    }
+
+                    @Override
+                    public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                        Log.d(TAG, "body: " + response.body().string());
+                    }
+                });
+
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.d(TAG, "onCancelled: " + error);
+            }
+        });
+    }
 }

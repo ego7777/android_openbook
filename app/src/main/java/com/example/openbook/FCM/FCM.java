@@ -15,6 +15,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 
+import com.example.openbook.Activity.Admin;
 import com.example.openbook.Activity.PopUp;
 import com.example.openbook.Chatting.ChattingUI;
 
@@ -92,28 +93,70 @@ public class FCM extends FirebaseMessagingService {
             showNotification(message.getNotification().getTitle(),
                     message.getNotification().getBody());
         }else if(message.getData() != null){
-            Log.d(TAG, "onMessageReceived title: " + message.getData().get("title"));
-            Log.d(TAG, "onMessageReceived body: " + message.getData().get("body"));
-            Log.d(TAG, "onMessageReceived clickTable: " +message.getData().get("clickTable"));
-            Log.d(TAG, "onMessageReceived ticket :" + message.getData().get("ticket"));
 
-            Handler mHandler = new Handler(Looper.getMainLooper());
-            mHandler.postDelayed(new Runnable() {
-                @RequiresApi(api = Build.VERSION_CODES.Q)
-                @Override
-                public void run() {
-                    showData(message.getData().get("title"),
-                            message.getData().get("body"),
-                            message.getData().get("clickTable"),
-                            message.getData().get("ticket"));
-                }
-            },0);
+            Log.d(TAG, "onMessageReceived: " + message.getData());
+
+            if(message.getData().containsKey("title")){
+                Log.d(TAG, "onMessageReceived title: " + message.getData().get("title"));
+                Log.d(TAG, "onMessageReceived body: " + message.getData().get("body"));
+                Log.d(TAG, "onMessageReceived clickTable: " +message.getData().get("clickTable"));
+                Log.d(TAG, "onMessageReceived ticket :" + message.getData().get("ticket"));
+
+                Handler mHandler = new Handler(Looper.getMainLooper());
+                mHandler.postDelayed(new Runnable() {
+                    @RequiresApi(api = Build.VERSION_CODES.Q)
+                    @Override
+                    public void run() {
+                        showData(message.getData().get("title"),
+                                message.getData().get("body"),
+                                message.getData().get("clickTable"),
+                                message.getData().get("ticket"));
+                    }
+                },0);
+
+            }else if(message.getData().containsKey("gender")){
+                Log.d(TAG, "onMessageReceived title: " + message.getData().get("gender"));
+                Log.d(TAG, "onMessageReceived body: " + message.getData().get("guestNumber"));
+                Log.d(TAG, "onMessageReceived clickTable: " +message.getData().get("tableName"));
+
+
+                Handler mHandler = new Handler(Looper.getMainLooper());
+                mHandler.postDelayed(new Runnable() {
+                    @RequiresApi(api = Build.VERSION_CODES.Q)
+                    @Override
+                    public void run() {
+                        adminData(message.getData().get("gender"),
+                                message.getData().get("guestNumber"),
+                                message.getData().get("tableName"));
+                    }
+                },0);
+            }
 
 
         }
 
 
     }
+
+    public void adminData(String gender, String guestNumber, String tableName){
+        Intent intent = new Intent(this, Admin.class);
+        intent.putExtra("gender", gender);
+        intent.putExtra("guestNumber", guestNumber);
+        intent.putExtra("tableName", tableName);
+
+
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+
+        try {
+            pendingIntent.send();
+
+        } catch (PendingIntent.CanceledException e) {
+            e.printStackTrace();
+        }
+
+    }
+
 
 
 

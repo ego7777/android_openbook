@@ -3,6 +3,7 @@ package com.example.openbook.Activity;
 import android.app.Dialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
@@ -23,6 +24,8 @@ import okhttp3.OkHttpClient;
 
 public class Admin extends AppCompatActivity {
 
+    String TAG = "AdminTAG";
+
     ArrayList<AdminTableList> adminTableList;
     AdminTableAdapter adapter;
 
@@ -31,6 +34,10 @@ public class Admin extends AppCompatActivity {
     TextView appbar_admin_modifyTable;
 
     String get_id;
+
+    String gender;
+    String guestNumber;
+    String tableName;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -70,6 +77,17 @@ public class Admin extends AppCompatActivity {
 
         OkHttpClient okHttpClient = new OkHttpClient();
 
+    }
+
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        gender = getIntent().getStringExtra("gender");
+        guestNumber = getIntent().getStringExtra("guestNumber");
+        tableName = getIntent().getStringExtra("tableName");
+
 
 
     }
@@ -77,6 +95,16 @@ public class Admin extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
+
+        if(tableName != null){
+            Log.d(TAG, "tableName not null: " );
+            int tableNameInt = Integer.parseInt(tableName);
+            adminTableList.get(tableNameInt).setAdminTableGender(gender);
+            adminTableList.get(tableNameInt).setAdminTableGuestNumber(guestNumber);
+        }
+
+
 
         appbar_admin_sales.setOnClickListener(new View.OnClickListener() {
             @Override
