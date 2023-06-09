@@ -2,6 +2,7 @@ package com.example.openbook.Activity;
 
 import android.app.Dialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -14,9 +15,12 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.openbook.Adapter.AdminTableAdapter;
 import com.example.openbook.Data.AdminTableList;
-import com.example.openbook.Data.TableList;
 import com.example.openbook.FCM.FCM;
 import com.example.openbook.R;
+import com.example.openbook.TableQuantity;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 
@@ -29,24 +33,63 @@ public class Admin extends AppCompatActivity {
     ArrayList<AdminTableList> adminTableList;
     AdminTableAdapter adapter;
 
-    TextView appbar_admin_sales;
-    TextView appbar_admin_addMenu;
-    TextView appbar_admin_modifyTable;
+    TextView appbar_admin_sales, appbar_admin_addMenu, appbar_admin_modifyTable;
 
     String get_id;
 
-    String gender;
-    String guestNumber;
-    String tableName;
+    String gender, guestNumber, tableName;
+
+    SharedPreferences pref;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.admin_activity);
 
+        overridePendingTransition(0,0);
+
 
         adminTableList = (ArrayList<AdminTableList>) getIntent().getSerializableExtra("adminTableList");
+        Log.d(TAG, "onCreate adminTableList size: " + adminTableList.size());
         get_id = getIntent().getStringExtra("get_id");
+
+        if(get_id == null){
+            get_id = "admin";
+        }
+
+        if(adminTableList == null){
+            Log.d(TAG, "onCreate adminTableList null: ");
+            adminTableList = new ArrayList<>();
+
+            pref = getSharedPreferences("TableAdminInformation", MODE_PRIVATE);
+
+            TableQuantity tableQuantity = new TableQuantity();
+
+            int table = tableQuantity.getTableQuantity();
+            String tableInformation;
+
+            for(int i = 1; i<table+1; i++){
+                tableInformation = pref.getString("table"+i, null);
+
+                try {
+                    JSONObject jsonObject =new JSONObject(tableInformation);
+
+                    adminTableList.add(new AdminTableList("table"+i,
+                            jsonObject.getString("adminTableMenu"),
+                            jsonObject.getString("adminTablePrice"),
+                            jsonObject.getString("adminTableGender"),
+                            jsonObject.getString("adminTableGuestNumber")));
+
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            } // for문 끝
+
+
+        }else{
+            Log.d(TAG, "onCreate adminTableList not null: ");
+        }
 
         /**
          * 로그인을 성공하면 id, token을 firebase realtime db에 저장
@@ -74,8 +117,11 @@ public class Admin extends AppCompatActivity {
         tableGrid.setAdapter(adapter);
 
         adapter.setAdapterItem(adminTableList);
+        Log.d(TAG, "onCreate setAdapter Table: ");
 
         OkHttpClient okHttpClient = new OkHttpClient();
+
+
 
     }
 
@@ -84,12 +130,15 @@ public class Admin extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
 
+
+        gender = null;
         gender = getIntent().getStringExtra("gender");
+
+        guestNumber = null;
         guestNumber = getIntent().getStringExtra("guestNumber");
+
+        tableName = null;
         tableName = getIntent().getStringExtra("tableName");
-
-
-
     }
 
     @Override
@@ -98,8 +147,8 @@ public class Admin extends AppCompatActivity {
 
 
         if(tableName != null){
-            Log.d(TAG, "tableName not null: " );
-            int tableNameInt = Integer.parseInt(tableName);
+            Log.d(TAG, "tableName not null: "  + tableName);
+            int tableNameInt = Integer.parseInt(tableName.replace("table", ""))-1;
             adminTableList.get(tableNameInt).setAdminTableGender(gender);
             adminTableList.get(tableNameInt).setAdminTableGuestNumber(guestNumber);
         }
@@ -124,7 +173,7 @@ public class Admin extends AppCompatActivity {
         });
 
         appbar_admin_modifyTable.setOnClickListener(view ->{
-            startActivityClass(AdminModifyTableNumber.class);
+            startActivityClass(AdminModifyTableQuantity.class);
 
 
         });

@@ -2,6 +2,7 @@ package com.example.openbook.Activity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 
 import androidx.annotation.Nullable;
@@ -15,9 +16,12 @@ import java.util.ArrayList;
 public class PaymentSelect extends AppCompatActivity {
 
     String get_id;
+    int tableFromDB;
 
     Button payment_select_after;
     Button payment_select_before;
+
+    String TAG = "paymentSelect_TAG";
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -25,6 +29,8 @@ public class PaymentSelect extends AppCompatActivity {
         setContentView(R.layout.payment_select_activity);
 
         get_id = getIntent().getStringExtra("get_id");
+        tableFromDB = getIntent().getIntExtra("tableFromDB", 20);
+        Log.d(TAG, "tableFromDB: " + tableFromDB);
 
         payment_select_after = findViewById(R.id.payment_select_after);
         payment_select_before = findViewById(R.id.payment_select_before);
@@ -49,6 +55,7 @@ public class PaymentSelect extends AppCompatActivity {
         Intent intent = new Intent(PaymentSelect.this, Menu.class);
         intent.putExtra("get_id", get_id);
         intent.putExtra("paymentStyle", paymentStyle);
+        intent.putExtra("tableFromDB", tableFromDB);
         startActivity(intent);
         overridePendingTransition(0, 0);
     }

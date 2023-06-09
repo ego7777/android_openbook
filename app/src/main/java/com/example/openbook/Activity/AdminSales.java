@@ -100,6 +100,7 @@ public class AdminSales extends AppCompatActivity {
         chart.setNoDataText("데이터가 존재하지 않습니다.");
         chart.setNoDataTextColor(Color.RED);
 
+
         xAxis = chart.getXAxis();
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
 

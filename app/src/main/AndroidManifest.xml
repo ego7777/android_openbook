@@ -55,7 +55,7 @@
         <activity android:name=".Activity.PopUp"
             android:theme="@android:style/Theme.Dialog"/>
 
-        <activity android:name=".Activity.AdminModifyTableNumber"
+        <activity android:name=".Activity.AdminModifyTableQuantity"
             android:theme="@android:style/Theme.Dialog"/>
 
         <activity android:name=".Activity.AdminModifyMenu"

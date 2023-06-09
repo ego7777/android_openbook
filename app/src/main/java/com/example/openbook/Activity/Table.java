@@ -95,6 +95,19 @@ public class Table extends AppCompatActivity {
         myTable = Integer.parseInt(get_id.replace("table", ""));
 
         clientSocket = (ClientSocket) getIntent().getSerializableExtra("clientSocket");
+        tableList = (ArrayList<TableList>) getIntent().getSerializableExtra("tableList");
+
+        for (int i = 0; i < tableList.size(); i++) {
+
+            if (i == myTable-1) {
+                tableList.get(i).setTableColor(getDrawable(R.drawable.my_table_border));
+            } else {
+                tableList.get(i).setTableColor(getDrawable(R.drawable.table_border));
+
+            }
+
+        }
+
 
 
         if (clientSocket != null) {
@@ -110,20 +123,16 @@ public class Table extends AppCompatActivity {
 
 
             if (tableList == null) {
-                tableList = new ArrayList<>();
 
-                SharedPreferences preference = getSharedPreferences("TableNumber", MODE_PRIVATE);
-                int table = preference.getInt("tableNumber", 20);
-
-                for (int i = 1; i < table+1; i++) {
-
-                    if (i == myTable) {
-                        tableList.add(new TableList("my Table", getDrawable(R.drawable.my_table_border), 0));
-                    } else {
-                        tableList.add(new TableList(i, getDrawable(R.drawable.table_border), 1));
-                    }
-
-                }
+//                for (int i = 1; i < table+1; i++) {
+//
+//                    if (i == myTable) {
+//                        tableList.add(new TableList("my Table", getDrawable(R.drawable.my_table_border), 0));
+//                    } else {
+//                        tableList.add(new TableList(i, getDrawable(R.drawable.table_border), 1));
+//                    }
+//
+//                }
 
                 Log.d(TAG, "onCreate tableList initial one");
             } else {
@@ -224,7 +233,7 @@ public class Table extends AppCompatActivity {
                 Log.d(TAG, "onItemClick initial temp :" + temp);
 
 
-                for (int i = 0; i < 20; i++) {
+                for (int i = 0; i < tableList.size(); i++) {
                     if (i == myTable - 1) {
                         tableList.get(i).setTableColor(getDrawable(R.drawable.my_table_border));
                     } else if (i != position) {

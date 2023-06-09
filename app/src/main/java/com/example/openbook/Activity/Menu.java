@@ -9,6 +9,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -45,6 +46,7 @@ import com.example.openbook.Data.CartList;
 import com.example.openbook.Data.MenuList;
 import com.example.openbook.Data.SideList;
 import com.example.openbook.Data.TableList;
+import com.example.openbook.TableQuantity;
 
 
 import org.json.JSONArray;
@@ -86,6 +88,7 @@ public class Menu extends AppCompatActivity {
 
     String get_id;
     String paymentStyle;
+    int tableFromDB;
 
     TextView table;
 
@@ -115,6 +118,8 @@ public class Menu extends AppCompatActivity {
 
         get_id = getIntent().getStringExtra("get_id");
         paymentStyle = getIntent().getStringExtra("paymentStyle");
+        tableFromDB = getIntent().getIntExtra("tableFromDB", 20);
+        Log.d(TAG, "tableFromDB: " + tableFromDB);
         orderCk = getIntent().getBooleanExtra("orderCk", false);
 
         clientSocket = (ClientSocket) getIntent().getSerializableExtra("clientSocket");
@@ -323,6 +328,7 @@ public class Menu extends AppCompatActivity {
                 Intent intent = new Intent(getApplicationContext(), Table.class);
                 intent.putExtra("get_id", get_id);
                 intent.putExtra("orderCk", orderCk);
+                intent.putExtra("tableList", tableList);
 
                 intent.putExtra("clientSocket", clientSocket);
 
@@ -525,19 +531,8 @@ public class Menu extends AppCompatActivity {
         myTable = Integer.parseInt(get_id.replace("table", ""));
 
 
-        if (tableList == null) {
-            tableList = new ArrayList();
 
 
-            Log.d(TAG, "onResume tableList initial one");
-        } else {
-            Log.d(TAG, "menu.class intent tableList size :" + tableList.size());
-        }
-//
-
-        SharedPreferences preference = getSharedPreferences("TableNumber", MODE_PRIVATE);
-        int table = preference.getInt("tableNumber", 20);
-        Log.d(TAG, "SharedPreference table :" + table);
 
 //        DrawableMethod drawableToBitmap = new DrawableMethod();
 
@@ -547,15 +542,27 @@ public class Menu extends AppCompatActivity {
 //        Log.d(TAG, "otherTableImage : " + otherTableImage);
 
 
-        for (int i = 1; i < table+1; i++) {
-            if (i == myTable) {
-                tableList.add(new TableList("my Table", getDrawable(R.drawable.my_table_border), 0));
-            } else {
-                tableList.add(new TableList(i, getDrawable(R.drawable.table_border), 1));
+        if(tableList == null){
+            Log.d(TAG, "onResume tableList null: ");
+
+            tableList = new ArrayList<>();
+
+            for (int i = 1; i < tableFromDB+1; i++) {
+                if (i == myTable) {
+                    tableList.add(new TableList("my Table", (Drawable) null, 0));
+                } else {
+                    tableList.add(new TableList(i, (Drawable) null, 1));
+                }
             }
+
+
+        }else{
+            Log.d(TAG, "onResume tableList not null: ");
         }
 
         Log.d(TAG, "tableList :" + tableList.size());
+
+
 
 
     }
@@ -779,27 +786,5 @@ public class Menu extends AppCompatActivity {
             }
         }
 
-//        if(mainMenu/3 == 1){
-//            menuLists.add(mainMenu, new MenuList(null, null, 0,3, 0));
-//            menuLists.add(mainMenu+1, new MenuList(null, null, 0, 3, 0));
-//        }else if(mainMenu/3 == 2){
-//            menuLists.add(mainMenu, new MenuList(null, null, 0,0, 0));
-//        }
-//
-//
-//
-//        if(drink/3 == 1){
-//            menuLists.add(drink, new MenuList(null, null, 0,0, 0));
-//            menuLists.add(mainMenu+1, new MenuList(null, null, 0, 0, 0));
-//        }else if(mainMenu/3 == 2){
-//            menuLists.add(mainMenu, new MenuList(null, null, 0,0, 0));
-//        }
-//
-//        if(mainMenu/3 == 1){
-//            menuLists.add(mainMenu, new MenuList(null, null, 0,0, 0));
-//            menuLists.add(mainMenu+1, new MenuList(null, null, 0, 0, 0));
-//        }else if(mainMenu/3 == 2){
-//            menuLists.add(mainMenu, new MenuList(null, null, 0,0, 0));
-//        }
     }
 }

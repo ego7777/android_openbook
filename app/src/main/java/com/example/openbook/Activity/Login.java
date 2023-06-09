@@ -16,6 +16,7 @@ import com.example.openbook.Data.AdminTableList;
 import com.example.openbook.Data.TableList;
 import com.example.openbook.DialogCustom;
 import com.example.openbook.R;
+import com.example.openbook.TableQuantity;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -23,6 +24,9 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.Task;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -51,7 +55,7 @@ public class Login extends AppCompatActivity {
     SharedPreferences pref;
     SharedPreferences.Editor editor;
     ArrayList<AdminTableList> adminTableList;
-    ArrayList<TableList> tableList;
+    int tableFromDB;
 
 
     @Override
@@ -61,7 +65,7 @@ public class Login extends AppCompatActivity {
 
         final OkHttpClient client = new OkHttpClient();
 
-        pref = getSharedPreferences("TableNumber", MODE_PRIVATE);
+        pref = getSharedPreferences("AdminTableInformation", MODE_PRIVATE);
 
         editor = pref.edit();
 
@@ -122,7 +126,6 @@ public class Login extends AppCompatActivity {
                                         if (!response.isSuccessful()) {
                                             Log.d(TAG, "응답 실패" + response);
                                         } else {
-                                            Log.d(TAG, "응답 성공");
                                             String responseData = response.body().string();
                                             Log.d(TAG, "responseData : " + responseData);
 
@@ -136,7 +139,7 @@ public class Login extends AppCompatActivity {
 
                                             } else if (responseData.equals("성공")) {
 
-                                                startActivityString(PaymentSelect.class, "get_id", local_id);
+                                                startActivityString(PaymentSelect.class,"get_id", local_id);
 
                                             } else if (responseData.equals("admin")){
 
@@ -280,14 +283,13 @@ public class Login extends AppCompatActivity {
 
                                     } else {
                                         // 응답 성공
-                                        Log.d(TAG, "응답 성공");
                                         final String responseData = response.body().string();
                                         if (responseData.equals("성공")) {
                                             Toast.makeText(getApplicationContext(), "로그인에 성공했습니다.", Toast.LENGTH_LONG).show();
                                             Intent intent = new Intent(Login.this, PaymentSelect.class);
                                             intent.putExtra("get_id", local_id);
                                             startActivity(intent);
-                                            Log.d(TAG, "run: 4");
+
                                         } else {
                                             Log.d(TAG, "회원가입에 실패 했습니다." + responseData);
                                             Toast.makeText(getApplicationContext(), "회원가입에 실패했습니다.", Toast.LENGTH_LONG).show();
@@ -316,6 +318,7 @@ public class Login extends AppCompatActivity {
     public void startActivityString(Class c, String name, String sendString) {
         Intent intent = new Intent(getApplicationContext(), c);
         intent.putExtra(name, sendString);
+        intent.putExtra("tableFromDB", tableFromDB);
         startActivity(intent);
         // 화면전환 애니메이션 없애기
         overridePendingTransition(0, 0);
@@ -350,15 +353,38 @@ public class Login extends AppCompatActivity {
         }
 
 
+
+
         if(adminTableList == null){
             adminTableList = new ArrayList<>();
 
-            int table = pref.getInt("tableNumber", 20);
+            TableQuantity tableQuantity = new TableQuantity();
 
-            for(int i=1; i<table+1; i++){
+            tableFromDB = tableQuantity.getTableQuantity();
+            Log.d(TAG, "onStart table : " + tableFromDB);
+
+            for(int i=1; i<tableFromDB+1; i++){
                 adminTableList.add(new AdminTableList("table"+i,
                         null, null, null, null));
+
+                JSONObject jsonObject = new JSONObject();
+                try {
+                    jsonObject.put("adminTableMenu", null);
+                    jsonObject.put("adminTablePrice", null);
+                    jsonObject.put("adminTableGender", null);
+                    jsonObject.put("adminTableGuestNumber", null);
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+                editor.putString("table"+i, jsonObject.toString());
+                editor.commit();
             }
+
+            Log.d(TAG, "onStart Table Size: " + adminTableList.size());
+
+
         }
 
 

@@ -11,14 +11,25 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.example.openbook.Data.AdminTableList;
 import com.example.openbook.R;
+import com.example.openbook.TableQuantity;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
-public class AdminModifyTableNumber extends Activity {
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.FormBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
+public class AdminModifyTableQuantity extends Activity {
 
     String TAG = "AdminModifyTable_Activity";
     String get_id;
@@ -30,10 +41,12 @@ public class AdminModifyTableNumber extends Activity {
 
     SharedPreferences pref;
     SharedPreferences.Editor editor;
+    TableQuantity tableQuantity;
 
     ArrayList<AdminTableList> adminTableList;
 
     int table;
+
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -50,16 +63,18 @@ public class AdminModifyTableNumber extends Activity {
         tableNumber = findViewById(R.id.admin_modify_table_text);
         cancel = findViewById(R.id.admin_modify_table_cancel);
 
+        tableQuantity = new TableQuantity();
         /**
-         * adminTableList가 없으면 s.p에서 가져와서 넣어주기
+         * adminTableList가 없으면 member db에 접근해서 가져오기
          */
-        pref = getSharedPreferences("TableNumber", MODE_PRIVATE);
-
-        editor = pref.edit();
+//        pref = getSharedPreferences("TableNumber", MODE_PRIVATE);
+//
+//        editor = pref.edit();
 
         if(adminTableList == null){
-            table = pref.getInt("tableNumber", 20);
-            Log.d(TAG, "adminTableList null :" + table);
+
+            table = tableQuantity.getTableQuantity();
+
         }else{
             table = adminTableList.size();
             Log.d(TAG, "adminTableList size : " + adminTableList.get(table-1).getAdminTableNumber());
@@ -91,7 +106,7 @@ public class AdminModifyTableNumber extends Activity {
                 Log.d(TAG, "adminTableList remove :" + adminTableList.get(table-1).getAdminTableNumber());
                 tableNumber.setText(String.valueOf(table));
             } else if(table ==0){
-                Toast.makeText(AdminModifyTableNumber.this, "테이블 개수는 0개 이상이어야 합니다.", Toast.LENGTH_LONG).show();
+                Toast.makeText(AdminModifyTableQuantity.this, "테이블 개수는 0개 이상이어야 합니다.", Toast.LENGTH_LONG).show();
             }
         });
 
@@ -99,10 +114,9 @@ public class AdminModifyTableNumber extends Activity {
             // 비밀번호 한 번 더 치고, 서버에 저장해서 껐다가 켜도 자동적으로 테이블 번호 받아오도록
             // 그러면 admin 관리 db가 있어야겟구먼유
 
-            editor.putInt("tableNumber", table);
-            editor.commit();
+            tableQuantity.setTableQuantity(table);
 
-            Intent intent = new Intent(AdminModifyTableNumber.this, Admin.class);
+            Intent intent = new Intent(AdminModifyTableQuantity.this, Admin.class);
             intent.putExtra("get_id", get_id);
             intent.putExtra("adminTableList", adminTableList);
             startActivity(intent);
@@ -110,7 +124,7 @@ public class AdminModifyTableNumber extends Activity {
         });
 
         cancel.setOnClickListener(view ->{
-            Intent intent = new Intent(AdminModifyTableNumber.this, Admin.class);
+            Intent intent = new Intent(AdminModifyTableQuantity.this, Admin.class);
             intent.putExtra("get_id", get_id);
             intent.putExtra("adminTableList", adminTableList);
             startActivity(intent);
@@ -132,4 +146,8 @@ public class AdminModifyTableNumber extends Activity {
         //안드로이드 백버튼 막기
         return;
     }
+
+
+
+
 }

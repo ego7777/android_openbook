@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.CallLog;
 import android.util.Log;
 import android.widget.RemoteViews;
 
@@ -46,6 +47,7 @@ public class FCM extends FirebaseMessagingService {
             @Override
             public void onComplete(@NonNull Task<String> task) {
                 if (task.isSuccessful()) {
+                    Log.d(TAG, "onComplete: " + get_id);
                     saveToken(get_id, task.getResult());
                 }
             }
@@ -115,10 +117,9 @@ public class FCM extends FirebaseMessagingService {
                 },0);
 
             }else if(message.getData().containsKey("gender")){
-                Log.d(TAG, "onMessageReceived title: " + message.getData().get("gender"));
-                Log.d(TAG, "onMessageReceived body: " + message.getData().get("guestNumber"));
-                Log.d(TAG, "onMessageReceived clickTable: " +message.getData().get("tableName"));
-
+                Log.d(TAG, "onMessageReceived gender: " + message.getData().get("gender"));
+                Log.d(TAG, "onMessageReceived guestNumber: " + message.getData().get("guestNumber"));
+                Log.d(TAG, "onMessageReceived tableName: " +message.getData().get("tableName"));
 
                 Handler mHandler = new Handler(Looper.getMainLooper());
                 mHandler.postDelayed(new Runnable() {
@@ -144,13 +145,13 @@ public class FCM extends FirebaseMessagingService {
         intent.putExtra("guestNumber", guestNumber);
         intent.putExtra("tableName", tableName);
 
+        int requestCode = (int) System.currentTimeMillis();
 
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, requestCode, intent, PendingIntent.FLAG_IMMUTABLE);
 
         try {
             pendingIntent.send();
-
         } catch (PendingIntent.CanceledException e) {
             e.printStackTrace();
         }
@@ -172,8 +173,6 @@ public class FCM extends FirebaseMessagingService {
         if(ticket == "yesTicket"){
             intent.putExtra("profileTicket", ticket);
         }
-
-
 
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
