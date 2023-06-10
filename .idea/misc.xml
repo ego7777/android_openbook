@@ -41,6 +41,7 @@
         <entry key="app/src/main/res/layout/admina_modify_menu.xml" value="0.1" />
         <entry key="app/src/main/res/layout/appbar.xml" value="0.289044289044289" />
         <entry key="app/src/main/res/layout/appbar_admin.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/appbar_menu.xml" value="0.1" />
         <entry key="app/src/main/res/layout/call_gridview_item.xml" value="0.1" />
         <entry key="app/src/main/res/layout/call_listview_item.xml" value="0.1243209360635186" />
         <entry key="app/src/main/res/layout/call_server.xml" value="0.1" />
@@ -60,6 +61,7 @@
         <entry key="app/src/main/res/layout/login_activity.xml" value="0.15820489573889393" />
         <entry key="app/src/main/res/layout/menu.xml" value="0.165" />
         <entry key="app/src/main/res/layout/menu2.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/menu_activity.xml" value="0.2092010498046875" />
         <entry key="app/src/main/res/layout/menu_gridview_item.xml" value="0.10416666666666667" />
         <entry key="app/src/main/res/layout/menu_gridview_item_empty.xml" value="0.1" />
         <entry key="app/src/main/res/layout/menu_item_temp.xml" value="0.1" />

@@ -380,6 +380,7 @@ public class Login extends AppCompatActivity {
 
                 editor.putString("table"+i, jsonObject.toString());
                 editor.commit();
+//                Log.d(TAG, "adminTableInformation: " + pref.getString("table" + i, null));
             }
 
             Log.d(TAG, "onStart Table Size: " + adminTableList.size());

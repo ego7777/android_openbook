@@ -30,11 +30,17 @@ import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 
 public class FCM extends FirebaseMessagingService {
 
     String TAG = "FCM";
     String get_id;
+    int requestCode;
+    Handler mHandler = new Handler(Looper.getMainLooper());
 
 
     @Override
@@ -98,13 +104,14 @@ public class FCM extends FirebaseMessagingService {
 
             Log.d(TAG, "onMessageReceived: " + message.getData());
 
+
+            //client가 채팅 요청하는 것
             if(message.getData().containsKey("title")){
                 Log.d(TAG, "onMessageReceived title: " + message.getData().get("title"));
                 Log.d(TAG, "onMessageReceived body: " + message.getData().get("body"));
                 Log.d(TAG, "onMessageReceived clickTable: " +message.getData().get("clickTable"));
                 Log.d(TAG, "onMessageReceived ticket :" + message.getData().get("ticket"));
 
-                Handler mHandler = new Handler(Looper.getMainLooper());
                 mHandler.postDelayed(new Runnable() {
                     @RequiresApi(api = Build.VERSION_CODES.Q)
                     @Override
@@ -116,36 +123,74 @@ public class FCM extends FirebaseMessagingService {
                     }
                 },0);
 
+            //admin page table정보 update
             }else if(message.getData().containsKey("gender")){
                 Log.d(TAG, "onMessageReceived gender: " + message.getData().get("gender"));
                 Log.d(TAG, "onMessageReceived guestNumber: " + message.getData().get("guestNumber"));
                 Log.d(TAG, "onMessageReceived tableName: " +message.getData().get("tableName"));
 
-                Handler mHandler = new Handler(Looper.getMainLooper());
                 mHandler.postDelayed(new Runnable() {
                     @RequiresApi(api = Build.VERSION_CODES.Q)
                     @Override
                     public void run() {
-                        adminData(message.getData().get("gender"),
+                        adminTableInformation(message.getData().get("gender"),
                                 message.getData().get("guestNumber"),
                                 message.getData().get("tableName"));
                     }
                 },0);
+
+                //admin page 선불좌석 표시
+            }else if(message.getData().containsKey("tableStatement")){
+                Log.d(TAG, "onMessageReceived state: " + message.getData().get("tableStatement"));
+                Log.d(TAG, "onMessageReceived tableNumber: " + message.getData().get("tableNumber"));
+
+                mHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        adminTableData(message.getData().get("tableStatement"),
+                                message.getData().get("tableNumber"));
+                    }
+                }, 0);
+
+            }else if(message.getData().containsKey("menuName")){
+                mHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        adminTableMenu(message.getData().get("tableName"),
+                                message.getData().get("menuName"),
+                                message.getData().get("item")
+                                );
+                    }
+                },0);
             }
-
-
         }
-
 
     }
 
-    public void adminData(String gender, String guestNumber, String tableName){
+    public void adminTableMenu(String tableName, String menuName, String item){
+        int totalPrice=0;
+
+        try {
+            JSONArray jsonArray = new JSONArray(item);
+
+            for(int i=0; i<jsonArray.length(); i++){
+                JSONObject jsonObject = jsonArray.getJSONObject(i);
+                totalPrice = totalPrice + jsonObject.getInt("price");
+
+            }
+            Log.d(TAG, "adminTableMenu totalPrice: " + totalPrice);
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
         Intent intent = new Intent(this, Admin.class);
-        intent.putExtra("gender", gender);
-        intent.putExtra("guestNumber", guestNumber);
+        intent.putExtra("menuName", menuName);
+        intent.putExtra("totalPrice", String.valueOf(totalPrice));
+        intent.putExtra("totalMenuList", item);
         intent.putExtra("tableName", tableName);
 
-        int requestCode = (int) System.currentTimeMillis();
+        requestCode = (int) System.currentTimeMillis();
 
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, requestCode, intent, PendingIntent.FLAG_IMMUTABLE);
@@ -153,6 +198,44 @@ public class FCM extends FirebaseMessagingService {
         try {
             pendingIntent.send();
         } catch (PendingIntent.CanceledException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
+    public void adminTableInformation(String gender, String guestNumber, String tableName){
+        Intent intent = new Intent(this, Admin.class);
+        intent.putExtra("gender", gender);
+        intent.putExtra("guestNumber", guestNumber);
+        intent.putExtra("tableName", tableName);
+
+        requestCode  = (int) System.currentTimeMillis();
+
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, requestCode, intent, PendingIntent.FLAG_IMMUTABLE);
+
+        try {
+            pendingIntent.send();
+        } catch (PendingIntent.CanceledException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public void adminTableData(String statement, String tableName){
+        Intent intent = new Intent(this, Admin.class);
+        intent.putExtra("tableStatement", statement);
+        intent.putExtra("tableName", tableName);
+
+        requestCode  = (int) System.currentTimeMillis();
+
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, requestCode, intent, PendingIntent.FLAG_IMMUTABLE);
+
+        try{
+            pendingIntent.send();
+        }catch (PendingIntent.CanceledException e){
             e.printStackTrace();
         }
 

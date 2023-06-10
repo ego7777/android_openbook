@@ -89,7 +89,7 @@ public class SendNotification {
 
     }
 
-    public void sendMenu(String tableNumber, String menujArray) {
+    public void sendMenu(String menujArray) {
 
         mRootRef.child("admin").child("fcmToken").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -98,7 +98,6 @@ public class SendNotification {
 
                 RequestBody formBody = new FormBody.Builder().
                         add("to", pushToken).
-                        add("tableNumber", tableNumber).
                         add("notification", menujArray).
                         build();
 
@@ -131,15 +130,34 @@ public class SendNotification {
 
     }
 
-    public void useTheTable(String get_id){
+    public void useTheTable(String get_id, String statement) {
+
         mRootRef.child("admin").child("fcmToken").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 String pushToken = (String) snapshot.getValue();
 
+                JSONObject jsonObject = new JSONObject();
+
+                try {
+                    jsonObject.put("tableNumber", get_id);
+
+                    if (statement.equals("사용")) {
+                        jsonObject.put("tableStatement", "선불 이용 좌석");
+
+
+                    } else if (statement.equals("종료")) {
+                        jsonObject.put("tableStatement", "");
+                    }
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+
                 RequestBody formBody = new FormBody.Builder().
                         add("to", pushToken).
-                        add("tableNumber", get_id).
+                        add("notification", jsonObject.toString()).
                         build();
 
                 Request httpRequest = new Request.Builder()

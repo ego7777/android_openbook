@@ -37,7 +37,8 @@ public class Admin extends AppCompatActivity {
 
     String get_id;
 
-    String gender, guestNumber, tableName;
+    String gender, guestNumber, tableName, tableStatement, totalPrice, menuName, totalMenuList;
+
 
     SharedPreferences pref;
 
@@ -46,18 +47,18 @@ public class Admin extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.admin_activity);
 
-        overridePendingTransition(0,0);
+        overridePendingTransition(0, 0);
 
 
         adminTableList = (ArrayList<AdminTableList>) getIntent().getSerializableExtra("adminTableList");
-        Log.d(TAG, "onCreate adminTableList size: " + adminTableList.size());
+//        Log.d(TAG, "onCreate adminTableList size: " + adminTableList.size());
         get_id = getIntent().getStringExtra("get_id");
 
-        if(get_id == null){
+        if (get_id == null) {
             get_id = "admin";
         }
 
-        if(adminTableList == null){
+        if (adminTableList == null) {
             Log.d(TAG, "onCreate adminTableList null: ");
             adminTableList = new ArrayList<>();
 
@@ -66,28 +67,43 @@ public class Admin extends AppCompatActivity {
             TableQuantity tableQuantity = new TableQuantity();
 
             int table = tableQuantity.getTableQuantity();
+            Log.d(TAG, "tableQuantity : " + table);
+
             String tableInformation;
 
-            for(int i = 1; i<table+1; i++){
-                tableInformation = pref.getString("table"+i, null);
+            for (int i = 1; i < table + 1; i++) {
+                String num = String.valueOf(i);
+                tableInformation = pref.getString("table" + num, null);
 
-                try {
-                    JSONObject jsonObject =new JSONObject(tableInformation);
-
-                    adminTableList.add(new AdminTableList("table"+i,
-                            jsonObject.getString("adminTableMenu"),
-                            jsonObject.getString("adminTablePrice"),
-                            jsonObject.getString("adminTableGender"),
-                            jsonObject.getString("adminTableGuestNumber")));
+                if (tableInformation == null) {
+                    adminTableList.add(new AdminTableList("table" + i,
+                            null,
+                            null,
+                            null,
+                            null));
 
 
-                } catch (JSONException e) {
-                    e.printStackTrace();
+                } else {
+                    try {
+                        JSONObject jsonObject = new JSONObject(tableInformation);
+
+                        adminTableList.add(new AdminTableList("table" + i,
+                                jsonObject.getString("adminTableMenu"),
+                                jsonObject.getString("adminTablePrice"),
+                                jsonObject.getString("adminTableGender"),
+                                jsonObject.getString("adminTableGuestNumber")));
+
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
                 }
+
+
             } // for문 끝
 
 
-        }else{
+        } else {
             Log.d(TAG, "onCreate adminTableList not null: ");
         }
 
@@ -117,10 +133,9 @@ public class Admin extends AppCompatActivity {
         tableGrid.setAdapter(adapter);
 
         adapter.setAdapterItem(adminTableList);
-        Log.d(TAG, "onCreate setAdapter Table: ");
+
 
         OkHttpClient okHttpClient = new OkHttpClient();
-
 
 
     }
@@ -129,8 +144,6 @@ public class Admin extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-
-
         gender = null;
         gender = getIntent().getStringExtra("gender");
 
@@ -139,6 +152,19 @@ public class Admin extends AppCompatActivity {
 
         tableName = null;
         tableName = getIntent().getStringExtra("tableName");
+
+        tableStatement = getIntent().getStringExtra("tableStatement");
+
+
+        if(menuName != null) {
+            int pastCount = Integer.parseInt(String.valueOf(menuName.indexOf(menuName.length())));
+            Log.d(TAG, "pastCount: " + pastCount);
+
+        }
+        menuName = getIntent().getStringExtra("menuName");
+        totalPrice = getIntent().getStringExtra("totalPrice");
+        totalMenuList = getIntent().getStringExtra("totalMenuList");
+
     }
 
     @Override
@@ -146,13 +172,25 @@ public class Admin extends AppCompatActivity {
         super.onResume();
 
 
-        if(tableName != null){
-            Log.d(TAG, "tableName not null: "  + tableName);
-            int tableNameInt = Integer.parseInt(tableName.replace("table", ""))-1;
+        if (gender != null) {
+            Log.d(TAG, "gender not null: " + gender);
+            int tableNameInt = Integer.parseInt(tableName.replace("table", "")) - 1;
             adminTableList.get(tableNameInt).setAdminTableGender(gender);
             adminTableList.get(tableNameInt).setAdminTableGuestNumber(guestNumber);
-        }
 
+        } else if (tableStatement != null) {
+            Log.d(TAG, "tableStatement not null: " + tableStatement);
+
+            int tableNameInt = Integer.parseInt(tableName.replace("table", "")) - 1;
+            Log.d(TAG, "tableNameInt: " + tableNameInt);
+            adminTableList.get(tableNameInt).setAdminTableMenu(tableStatement);
+
+        }else if(menuName != null){
+            int tableNameInt = Integer.parseInt(tableName.replace("table", "")) - 1;
+            adminTableList.get(tableNameInt).setAdminTableMenu(menuName);
+            adminTableList.get(tableNameInt).setAdminTablePrice(totalPrice);
+
+        }
 
 
         appbar_admin_sales.setOnClickListener(new View.OnClickListener() {
@@ -172,7 +210,7 @@ public class Admin extends AppCompatActivity {
             }
         });
 
-        appbar_admin_modifyTable.setOnClickListener(view ->{
+        appbar_admin_modifyTable.setOnClickListener(view -> {
             startActivityClass(AdminModifyTableQuantity.class);
 
 
@@ -186,12 +224,14 @@ public class Admin extends AppCompatActivity {
             @Override
             public void onItemClick(View view, int position) {
                 dialog.show();
+
+//                totalMenuList 여기 있는 데이터를 dialog에 띄울거야 (저장도 당연히 해야겠지)
             }
         });
 
     }
 
-    public void startActivityClass(Class activity){
+    public void startActivityClass(Class activity) {
         Intent intent = new Intent(Admin.this, activity);
         intent.putExtra("get_id", get_id);
         intent.putExtra("adminTableList", adminTableList);

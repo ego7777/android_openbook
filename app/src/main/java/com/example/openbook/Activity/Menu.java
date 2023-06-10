@@ -17,6 +17,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -72,35 +73,32 @@ public class Menu extends AppCompatActivity {
 
     String TAG = "menuTAG";
 
-    int totalPrice;
-    int myTable;
+    int totalPrice, myTable;
     boolean orderCk = false;
     boolean infoCk = false;
 
     ArrayList<MenuList> menuLists;
     ArrayList<CartList> cartLists;
     ArrayList<TableList> tableList;
+    ListView menuNavigation;
 
     HashMap<Integer, TableInformation> tableInformationHashMap;
 
     SharedPreferences pref;
     SharedPreferences.Editor editor;
 
-    String get_id;
-    String paymentStyle;
+    String get_id, paymentStyle;
     int tableFromDB;
 
-    TextView table;
+    TextView appbarMenuTable, appbarOrderList, cartOrderPrice;
 
     CartAdapter cartAdapter;
-    TextView orderPrice;
-    TextView order;
-
-    RecyclerView menuGrid;
     MenuAdapter menuAdapter;
-
-    ListView navigation;
     SideListViewAdapter sideAdapter;
+
+    Button cartOrderButton, menuClose;
+
+    RecyclerView menuRecyclerview;
 
     ClientSocket clientSocket;
 
@@ -109,6 +107,9 @@ public class Menu extends AppCompatActivity {
     DBHelper dbHelper;
 
     JSONArray menujArray;
+
+    SendNotification sendNotification;
+
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -141,7 +142,12 @@ public class Menu extends AppCompatActivity {
         fcm.putExtra("get_id", get_id);
         startService(fcm);
 
-        SendNotification sendNotification = new SendNotification();
+        sendNotification = new SendNotification();
+        if(paymentStyle.equals("before")){
+            sendNotification.useTheTable(get_id, "사용");
+        }
+
+
 
 
         /**
@@ -150,20 +156,25 @@ public class Menu extends AppCompatActivity {
         TextView table_number = findViewById(R.id.appbar_menu_table_number);
         table_number.setText(get_id);
 
+        menuClose = findViewById(R.id.menu_close);
 
-        TextView cart_header = findViewById(R.id.cart_header);
-        table = findViewById(R.id.appbar_menu_table);
+        if(paymentStyle.equals("after")){
+            menuClose.setVisibility(View.GONE);
+        }
+        appbarMenuTable = findViewById(R.id.appbar_menu_table);
+        appbarOrderList = findViewById(R.id.appbar_menu_orderList);
+
 
         /**
          * 장바구니
          */
-        RecyclerView cartView = findViewById(R.id.cart);
-        cartView.setLayoutManager(new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
+        RecyclerView cartRecyclerview = findViewById(R.id.menu_cart_recyclerview);
+        cartRecyclerview.setLayoutManager(new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
 
         cartAdapter = new CartAdapter();
 
         cartLists = new ArrayList<>();
-        cartView.setAdapter(cartAdapter);
+        cartRecyclerview.setAdapter(cartAdapter);
 
         /**
          * 액티비티 전환 시 sp에 저장된 장바구니 데이터 가져와서 뿌려주기
@@ -172,23 +183,20 @@ public class Menu extends AppCompatActivity {
 
         editor = pref.edit();
 
-
-
-
-        orderPrice = findViewById(R.id.order_price);
-        order = findViewById(R.id.order);
+        cartOrderPrice = findViewById(R.id.cart_order_price);
+        cartOrderButton = findViewById(R.id.cart_order_button);
 
         /**
          * 안주
          */
-        menuGrid = findViewById(R.id.menu_grid);
-        menuGrid.setLayoutManager(new GridLayoutManager(this, 3));
-        menuGrid.addItemDecoration(new menu_recyclerview_deco(Menu.this));
+        menuRecyclerview = findViewById(R.id.menu_recyclerview);
+        menuRecyclerview.setLayoutManager(new GridLayoutManager(this, 3));
+        menuRecyclerview.addItemDecoration(new menu_recyclerview_deco(Menu.this));
 
         menuAdapter = new MenuAdapter();
 
         menuLists = new ArrayList<>();
-        menuGrid.setAdapter(menuAdapter);
+        menuRecyclerview.setAdapter(menuAdapter);
 
 
         SQLiteDatabase sqLiteDatabase;
@@ -246,7 +254,7 @@ public class Menu extends AppCompatActivity {
         /**
          * 사이드 네비게이션
          */
-        navigation = findViewById(R.id.navigation);
+        menuNavigation = findViewById(R.id.menu_navigation);
         sideAdapter = new SideListViewAdapter();
 
         String side[] = {"메인안주", "주류", "사이드", "직원호출", "결제(test)"};
@@ -254,7 +262,7 @@ public class Menu extends AppCompatActivity {
         for (int i = 0; i < side.length; i++) {
             sideAdapter.addItem(new SideList(side[i]));
         }
-        navigation.setAdapter(sideAdapter);
+        menuNavigation.setAdapter(sideAdapter);
 
 
     } // onCreate()
@@ -300,7 +308,7 @@ public class Menu extends AppCompatActivity {
             }
 
             cartAdapter.setAdapterItem(cartLists);
-            orderPrice.setText(String.valueOf("합계: " + totalPrice + " 원"));
+            cartOrderPrice.setText(String.valueOf("합계: " + totalPrice + " 원"));
         }
 
     } //onStart()
@@ -312,11 +320,17 @@ public class Menu extends AppCompatActivity {
         super.onResume();
         //사용자와 상호작용 하는 단계, 어플 기능은 여기서
 
+        menuClose.setOnClickListener(view ->{
+            //admin에게 fcm 날리기
+            sendNotification.useTheTable(get_id, "종료");
+
+        });
+
 
         /**
          * Appbar: table 클래스로 이동
          */
-        table.setOnClickListener(new View.OnClickListener() {
+        appbarMenuTable.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
@@ -329,9 +343,7 @@ public class Menu extends AppCompatActivity {
                 intent.putExtra("get_id", get_id);
                 intent.putExtra("orderCk", orderCk);
                 intent.putExtra("tableList", tableList);
-
                 intent.putExtra("clientSocket", clientSocket);
-
                 intent.putExtra("tableInformation", tableInformationHashMap);
                 startActivity(intent);
             }
@@ -347,7 +359,7 @@ public class Menu extends AppCompatActivity {
                 int add = cartLists.get(position).getMenu_quantity() + 1;
                 cartLists.get(position).setMenu_quantity(add);
                 totalPrice = totalPrice + cartLists.get(position).getMenu_price();
-                orderPrice.setText("합계: " + String.valueOf(totalPrice) + "원");
+                cartOrderPrice.setText("합계: " + String.valueOf(totalPrice) + "원");
                 cartAdapter.setAdapterItem(cartLists);
                 sharedPreference();
 
@@ -358,14 +370,13 @@ public class Menu extends AppCompatActivity {
             public void onMinusClick(View view, int position) {
                 int minus = cartLists.get(position).getMenu_quantity() - 1;
                 totalPrice = totalPrice - cartLists.get(position).getMenu_price();
-
                 if (minus == 0) {
                     cartLists.remove(position);
                 } else {
                     cartLists.get(position).setMenu_quantity(minus);
                 }
 
-                orderPrice.setText("합계: " + String.valueOf(totalPrice) + "원");
+                cartOrderPrice.setText("합계: " + String.valueOf(totalPrice) + "원");
                 cartAdapter.setAdapterItem(cartLists);
                 sharedPreference();
             }
@@ -377,7 +388,7 @@ public class Menu extends AppCompatActivity {
                 int delete_price = cartLists.get(position).getMenu_price();
 
                 totalPrice = totalPrice - (delete_price * delete_quantity);
-                orderPrice.setText("합계: " + String.valueOf(totalPrice) + "원");
+                cartOrderPrice.setText("합계: " + String.valueOf(totalPrice) + "원");
 
                 cartLists.remove(position);
 
@@ -421,7 +432,7 @@ public class Menu extends AppCompatActivity {
 
 
                 totalPrice = totalPrice + price;
-                orderPrice.setText(String.valueOf("합계: " + totalPrice + " 원"));
+                cartOrderPrice.setText(String.valueOf("합계: " + totalPrice + " 원"));
 
                 sharedPreference();
 
@@ -434,13 +445,13 @@ public class Menu extends AppCompatActivity {
             @Override
             public void onItemClick(View view, String where) {
                 if (where.equals("메인안주")) {
-                    menuGrid.smoothScrollToPosition(0);
+                    menuRecyclerview.smoothScrollToPosition(0);
 
                 } else if (where.equals("주류")) {
-                    menuGrid.smoothScrollToPosition(9);
+                    menuRecyclerview.smoothScrollToPosition(9);
 
                 } else if (where.equals("사이드")) {
-                    menuGrid.smoothScrollToPosition(12);
+                    menuRecyclerview.smoothScrollToPosition(12);
 
                 } else if (where.equals("직원호출")) {
                     Intent intent = new Intent(Menu.this, CallServer.class);
@@ -479,7 +490,7 @@ public class Menu extends AppCompatActivity {
          * -> admin에서 결제하면 -> db로 넘어가도록...!!!!
          */
 
-        order.setOnClickListener(new View.OnClickListener() {
+        cartOrderButton.setOnClickListener(new View.OnClickListener() {
             @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void onClick(View view) {
@@ -491,6 +502,13 @@ public class Menu extends AppCompatActivity {
 
                     if (paymentStyle.equals("after")) {
                         // fcm으로 날리고
+
+                        sendNotification.sendMenu(adminOrderMenuList(cartLists));
+                        Log.d(TAG, "onClick: ");
+
+                        successOrder();
+
+
 
                     } else if (paymentStyle.equals("before")) {
 
@@ -527,6 +545,8 @@ public class Menu extends AppCompatActivity {
                 } // cartList에 데이터 if-else
             }
         }); //주문하기 click event
+
+
 
         myTable = Integer.parseInt(get_id.replace("table", ""));
 
@@ -565,7 +585,7 @@ public class Menu extends AppCompatActivity {
 
 
 
-    }
+    } // onResume
 
     public String getOrderMenuName(ArrayList<CartList> cartLists) {
 
@@ -581,6 +601,32 @@ public class Menu extends AppCompatActivity {
         Log.d(TAG, "menuName :" + menuName);
 
         return menuName;
+    }
+
+    public String adminOrderMenuList(ArrayList<CartList> cartLists){
+        JSONObject jsonObject = new JSONObject();
+        try {
+//
+            menujArray = new JSONArray();//배열이 필요할때
+
+            for (int i = 0; i < cartLists.size(); i++)//배열
+            {
+                //배열 내에 들어갈 json
+                JSONObject sObject = new JSONObject();
+                sObject.put("menu", cartLists.get(i).getMenu_name());
+                sObject.put("price", cartLists.get(i).getMenu_price());
+                sObject.put("quantity", cartLists.get(i).getMenu_quantity());
+                menujArray.put(sObject);
+            }
+
+            jsonObject.put("item", menujArray);
+            jsonObject.put("menuName", getOrderMenuName(cartLists));
+            jsonObject.put("tableName", get_id);
+        }catch (JSONException e){
+            e.printStackTrace();
+        }
+
+        return jsonObject.toString();
     }
 
 
@@ -710,7 +756,7 @@ public class Menu extends AppCompatActivity {
                                 cartLists = new ArrayList<>();
                                 cartAdapter.setAdapterItem(cartLists);
                                 totalPrice = 0;
-                                orderPrice.setText("");
+                                cartOrderPrice.setText("");
 
 //                                            SendNotification sendNotification = new SendNotification();
 //
@@ -770,21 +816,41 @@ public class Menu extends AppCompatActivity {
 
     }
 
-    public void menuListSorting(){
-        int mainMenu = 0;
-        int drink =0;
-        int sideMenu = 0;
+    public void successOrder(){
+
+        cartLists = new ArrayList<>();
+        cartAdapter.setAdapterItem(cartLists);
+        totalPrice = 0;
+        cartOrderPrice.setText("");
+
+        editor.remove("name");
+        editor.remove("count");
+        editor.remove("price");
+        editor.commit();
 
 
-        for(int i=0; i<menuLists.size(); i++){
-            if(menuLists.get(i).getMenuType() ==1){
-                mainMenu = mainMenu+1;
-            }else if(menuLists.get(i).getMenuType() == 2){
-                drink = drink +1;
-            }else if(menuLists.get(i).getMenu_price() ==3){
-                sideMenu = sideMenu +1;
+
+        Dialog dlg = new Dialog(Menu.this);
+        dlg.setContentView(R.layout.order_complete);
+        dlg.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        dlg.show();
+
+        ImageView img = dlg.findViewById(R.id.serve_img);
+        TextView text = dlg.findViewById(R.id.serve_text);
+
+
+        Animation animation = AnimationUtils.loadAnimation(Menu.this, R.anim.order_complete);
+        img.startAnimation(animation);
+        text.startAnimation(animation);
+
+        Handler handler = new Handler();
+
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                dlg.dismiss();
             }
-        }
+        }, 1000);
 
     }
 }
