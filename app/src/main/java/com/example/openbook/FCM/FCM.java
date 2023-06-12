@@ -17,6 +17,7 @@ import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 
 import com.example.openbook.Activity.Admin;
+import com.example.openbook.Activity.AdminPopup;
 import com.example.openbook.Activity.PopUp;
 import com.example.openbook.Chatting.ChattingUI;
 
@@ -184,7 +185,7 @@ public class FCM extends FirebaseMessagingService {
             e.printStackTrace();
         }
 
-        Intent intent = new Intent(this, Admin.class);
+        Intent intent = new Intent(this, AdminPopup.class);
         intent.putExtra("menuName", menuName);
         intent.putExtra("totalPrice", String.valueOf(totalPrice));
         intent.putExtra("totalMenuList", item);
@@ -224,7 +225,7 @@ public class FCM extends FirebaseMessagingService {
     }
 
     public void adminTableData(String statement, String tableName){
-        Intent intent = new Intent(this, Admin.class);
+        Intent intent = new Intent(this, AdminPopup.class);
         intent.putExtra("tableStatement", statement);
         intent.putExtra("tableName", tableName);
 

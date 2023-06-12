@@ -32,8 +32,13 @@
         <entry key="app/src/main/res/drawable/table_unpress.xml" value="0.1085" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.20742753623188406" />
         <entry key="app/src/main/res/layout/admin_activity.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/admin_alarm_popup.xml" value="0.1145788798631894" />
         <entry key="app/src/main/res/layout/admin_main.xml" value="0.16159250585480095" />
         <entry key="app/src/main/res/layout/admin_modify_table_number.xml" value="0.18798522949218754" />
+        <entry key="app/src/main/res/layout/admin_popup.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/admin_popup_enter_out.xml" value="0.14065840102607952" />
+        <entry key="app/src/main/res/layout/admin_popup_menu.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/admin_popup_payment.xml" value="0.1" />
         <entry key="app/src/main/res/layout/admin_receipt_dialog.xml" value="0.3236343383789063" />
         <entry key="app/src/main/res/layout/admin_receipt_dialog_item.xml" value="0.1" />
         <entry key="app/src/main/res/layout/admin_sales.xml" value="0.1" />

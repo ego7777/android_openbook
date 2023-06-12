@@ -1,5 +1,7 @@
 package com.example.openbook.Adapter;
 
+import android.graphics.Color;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,6 +16,9 @@ import com.example.openbook.R;
 import java.util.ArrayList;
 
 public class AdminTableAdapter extends RecyclerView.Adapter<AdminTableAdapter.ViewHolder> {
+
+    String TAG = "adminTableAdapter_TAG";
+
 
     ArrayList<AdminTableList> table = new ArrayList<>();
 
@@ -89,11 +94,24 @@ public class AdminTableAdapter extends RecyclerView.Adapter<AdminTableAdapter.Vi
         }
 
         void onBind(AdminTableList items){
+
+
             admin_grid_number.setText(items.getAdminTableNumber());
             admin_grid_menu.setText(items.getAdminTableMenu());
             admin_grid_price.setText(items.getAdminTablePrice());
             admin_grid_gender.setText(items.getAdminTableGender());
             admin_grid_guestNum.setText(items.getAdminTableGuestNumber());
+
+            if(items!= null && items.getAdminTableMenu() != null){
+                if(items.getAdminTableMenu().contains("선불")){
+
+                    admin_grid_menu.setTextColor(Color.RED);
+                }
+            }
+
+
         }
+
     }
+
 }

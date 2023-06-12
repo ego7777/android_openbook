@@ -13,7 +13,6 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.example.openbook.Data.AdminTableList;
-import com.example.openbook.Data.TableList;
 import com.example.openbook.DialogCustom;
 import com.example.openbook.R;
 import com.example.openbook.TableQuantity;

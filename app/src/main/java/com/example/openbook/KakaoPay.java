@@ -143,9 +143,9 @@ public class KakaoPay extends AppCompatActivity {
                 .add("quantity", "1") //상품 수량
                 .add("total_amount", String.valueOf(menuPrice)) //총 금액
                 .add("tax_free_amount", "0") // 상품 비과세
-                .add("approval_url", "http://developers.kakao.com/success") // 성공 시 redirect url
-                .add("cancel_url", "http://developers.kakao.com/cancel") // 취소 시 redirect url
-                .add("fail_url", "http://developers.kakao.com/fail") // 실패 시 redirect url
+                .add("approval_url", "http://3.36.255.141//success") // 성공 시 redirect url
+                .add("cancel_url", "http://3.36.255.141/kakaopayCancel.html") // 취소 시 redirect url
+                .add("fail_url", "http://3.36.255.141//fail") // 실패 시 redirect url
                 .build();
 
         Request request = new Request.Builder()

@@ -41,6 +41,7 @@ public class Admin extends AppCompatActivity {
 
 
     SharedPreferences pref;
+    SharedPreferences.Editor editor;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -223,7 +224,11 @@ public class Admin extends AppCompatActivity {
         adapter.setOnItemClickListener(new AdminTableAdapter.onItemClickListener() {
             @Override
             public void onItemClick(View view, int position) {
-                dialog.show();
+
+                if(!adminTableList.get(position).getAdminTableMenu().contains("선불")){
+                    dialog.show();
+                }
+
 
 //                totalMenuList 여기 있는 데이터를 dialog에 띄울거야 (저장도 당연히 해야겠지)
             }

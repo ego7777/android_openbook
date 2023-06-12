@@ -257,7 +257,7 @@ public class Menu extends AppCompatActivity {
         menuNavigation = findViewById(R.id.menu_navigation);
         sideAdapter = new SideListViewAdapter();
 
-        String side[] = {"메인안주", "주류", "사이드", "직원호출", "결제(test)"};
+        String side[] = {"메인안주", "주류", "사이드", "직원호출"};
 
         for (int i = 0; i < side.length; i++) {
             sideAdapter.addItem(new SideList(side[i]));
@@ -322,7 +322,10 @@ public class Menu extends AppCompatActivity {
 
         menuClose.setOnClickListener(view ->{
             //admin에게 fcm 날리기
+            Log.d(TAG, "menuClose Click: ");
             sendNotification.useTheTable(get_id, "종료");
+            Log.d(TAG, "click: ");
+            finish();
 
         });
 

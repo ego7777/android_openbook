@@ -22,7 +22,7 @@
         android:layout_height="wrap_content"
         android:text="menu"
         android:textColor="@color/black"
-        android:textSize="30sp"
+        android:textSize="20sp"
         android:padding="10dp"/>
 
     <TextView
@@ -31,7 +31,7 @@
         android:layout_height="wrap_content"
         android:text="20000"
         android:textColor="@color/black"
-        android:textSize="30sp"
+        android:textSize="20sp"
         android:padding="10dp"/>
 
     <LinearLayout
@@ -47,7 +47,7 @@
             android:layout_height="wrap_content"
             android:text="여자"
             android:textColor="@color/black"
-            android:textSize="30sp"/>
+            android:textSize="20sp"/>
 
         <TextView
             android:id="@+id/admin_grid_guestNum"
@@ -55,7 +55,7 @@
             android:layout_height="wrap_content"
             android:text="3명"
             android:textColor="@color/black"
-            android:textSize="30sp"
+            android:textSize="20sp"
             android:layout_marginStart="30dp"/>
 
     </LinearLayout>

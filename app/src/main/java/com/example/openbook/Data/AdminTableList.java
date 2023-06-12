@@ -10,13 +10,18 @@ public class AdminTableList implements Serializable {
     String adminTableGender;
     String adminTableGuestNumber;
 
-    public AdminTableList(String adminTableNumber, String adminTableMenu, String adminTablePrice, String adminTableGender, String adminTableGuestNumber){
+
+
+    public AdminTableList(String adminTableNumber, String adminTableMenu, String adminTablePrice,
+                          String adminTableGender, String adminTableGuestNumber){
         this.adminTableNumber = adminTableNumber;
         this.adminTableMenu = adminTableMenu;
         this.adminTablePrice = adminTablePrice;
         this.adminTableGender = adminTableGender;
         this.adminTableGuestNumber = adminTableGuestNumber;
+
     }
+
 
 
     public String getAdminTableNumber() {
