@@ -51,8 +51,8 @@ public class Login extends AppCompatActivity {
     String local_id;
     String TAG = "login_log";
 
-    SharedPreferences pref;
-    SharedPreferences.Editor editor;
+//    SharedPreferences pref;
+//    SharedPreferences.Editor editor;
     ArrayList<AdminTableList> adminTableList;
     int tableFromDB;
 
@@ -64,9 +64,7 @@ public class Login extends AppCompatActivity {
 
         final OkHttpClient client = new OkHttpClient();
 
-        pref = getSharedPreferences("AdminTableInformation", MODE_PRIVATE);
 
-        editor = pref.edit();
 
 
 
@@ -377,9 +375,7 @@ public class Login extends AppCompatActivity {
                     e.printStackTrace();
                 }
 
-                editor.putString("table"+i, jsonObject.toString());
-                editor.commit();
-//                Log.d(TAG, "adminTableInformation: " + pref.getString("table" + i, null));
+
             }
 
             Log.d(TAG, "onStart Table Size: " + adminTableList.size());

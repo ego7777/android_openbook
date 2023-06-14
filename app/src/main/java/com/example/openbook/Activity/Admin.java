@@ -1,24 +1,31 @@
 package com.example.openbook.Activity;
 
 import android.app.Dialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.icu.text.UnicodeSetSpanner;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.openbook.Adapter.AdminPopUpAdapter;
 import com.example.openbook.Adapter.AdminTableAdapter;
 import com.example.openbook.Data.AdminTableList;
+import com.example.openbook.Data.OrderList;
 import com.example.openbook.FCM.FCM;
 import com.example.openbook.R;
 import com.example.openbook.TableQuantity;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -31,17 +38,16 @@ public class Admin extends AppCompatActivity {
     String TAG = "AdminTAG";
 
     ArrayList<AdminTableList> adminTableList;
+
     AdminTableAdapter adapter;
+
 
     TextView appbar_admin_sales, appbar_admin_addMenu, appbar_admin_modifyTable;
 
     String get_id;
 
-    String gender, guestNumber, tableName, tableStatement, totalPrice, menuName, totalMenuList;
+    String gender, guestNumber, tableName, tableStatement, totalPrice, menuName;
 
-
-    SharedPreferences pref;
-    SharedPreferences.Editor editor;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -50,21 +56,22 @@ public class Admin extends AppCompatActivity {
 
         overridePendingTransition(0, 0);
 
-
         adminTableList = (ArrayList<AdminTableList>) getIntent().getSerializableExtra("adminTableList");
-//        Log.d(TAG, "onCreate adminTableList size: " + adminTableList.size());
+
+
         get_id = getIntent().getStringExtra("get_id");
 
         if (get_id == null) {
             get_id = "admin";
         }
 
-        if (adminTableList == null) {
+        if (adminTableList != null) {
+            Log.d(TAG, "onCreate adminTableList size : " + adminTableList.size());
+
+        } else if (adminTableList == null) {
+
             Log.d(TAG, "onCreate adminTableList null: ");
             adminTableList = new ArrayList<>();
-
-            pref = getSharedPreferences("TableAdminInformation", MODE_PRIVATE);
-
             TableQuantity tableQuantity = new TableQuantity();
 
             int table = tableQuantity.getTableQuantity();
@@ -73,33 +80,11 @@ public class Admin extends AppCompatActivity {
             String tableInformation;
 
             for (int i = 1; i < table + 1; i++) {
-                String num = String.valueOf(i);
-                tableInformation = pref.getString("table" + num, null);
-
-                if (tableInformation == null) {
-                    adminTableList.add(new AdminTableList("table" + i,
-                            null,
-                            null,
-                            null,
-                            null));
-
-
-                } else {
-                    try {
-                        JSONObject jsonObject = new JSONObject(tableInformation);
-
-                        adminTableList.add(new AdminTableList("table" + i,
-                                jsonObject.getString("adminTableMenu"),
-                                jsonObject.getString("adminTablePrice"),
-                                jsonObject.getString("adminTableGender"),
-                                jsonObject.getString("adminTableGuestNumber")));
-
-
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                }
-
+                adminTableList.add(new AdminTableList("table" + i,
+                        null,
+                        null,
+                        null,
+                        null));
 
             } // for문 끝
 
@@ -157,14 +142,13 @@ public class Admin extends AppCompatActivity {
         tableStatement = getIntent().getStringExtra("tableStatement");
 
 
-        if(menuName != null) {
+        if (menuName != null) {
             int pastCount = Integer.parseInt(String.valueOf(menuName.indexOf(menuName.length())));
             Log.d(TAG, "pastCount: " + pastCount);
 
         }
         menuName = getIntent().getStringExtra("menuName");
         totalPrice = getIntent().getStringExtra("totalPrice");
-        totalMenuList = getIntent().getStringExtra("totalMenuList");
 
     }
 
@@ -186,7 +170,7 @@ public class Admin extends AppCompatActivity {
             Log.d(TAG, "tableNameInt: " + tableNameInt);
             adminTableList.get(tableNameInt).setAdminTableMenu(tableStatement);
 
-        }else if(menuName != null){
+        } else if (menuName != null) {
             int tableNameInt = Integer.parseInt(tableName.replace("table", "")) - 1;
             adminTableList.get(tableNameInt).setAdminTableMenu(menuName);
             adminTableList.get(tableNameInt).setAdminTablePrice(totalPrice);
@@ -217,16 +201,17 @@ public class Admin extends AppCompatActivity {
 
         });
 
-        Dialog dialog = new Dialog(Admin.this);
-        dialog.setContentView(R.layout.admin_receipt_dialog);
-
 
         adapter.setOnItemClickListener(new AdminTableAdapter.onItemClickListener() {
             @Override
             public void onItemClick(View view, int position) {
 
-                if(!adminTableList.get(position).getAdminTableMenu().contains("선불")){
-                    dialog.show();
+                if (!adminTableList.get(position).getAdminTableMenu().contains("선불")) {
+                    showReceiptDialog(position, Admin.this);
+
+                } else {
+                    Log.d(TAG, "onItemClick: 빈 좌석 or 선불 이용 좌석");
+
                 }
 
 
@@ -234,6 +219,36 @@ public class Admin extends AppCompatActivity {
             }
         });
 
+    }
+
+    public void showReceiptDialog(int position, Context context) {
+        Dialog dialog = new Dialog(Admin.this);
+        dialog.setContentView(R.layout.admin_receipt_dialog);
+
+        AdminPopUpAdapter adminReceiptAdapter = new AdminPopUpAdapter();
+
+        ArrayList<OrderList> adminOrderList = new ArrayList<>();
+
+        TextView adminReceiptCancel = dialog.findViewById(R.id.admin_receipt_cancel);
+        TextView adminReceiptTotalPrice = dialog.findViewById(R.id.admin_receipt_totalPrice);
+        RecyclerView adminReceiptRecyclerView = dialog.findViewById(R.id.admin_receipt_recyclerView);
+
+        adminReceiptRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        adminReceiptRecyclerView.setAdapter(adminReceiptAdapter);
+        adminReceiptAdapter.setAdapterItem(adminOrderList);
+
+
+        int key = position + 1;
+
+
+
+
+
+        dialog.show();
+
+        adminReceiptCancel.setOnClickListener(view -> {
+            dialog.dismiss();
+        });
     }
 
     public void startActivityClass(Class activity) {

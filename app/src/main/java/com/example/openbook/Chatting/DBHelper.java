@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 
@@ -34,6 +35,8 @@ public class DBHelper extends SQLiteOpenHelper {
 
         db.execSQL(queryChatting);
 
+
+        //menu.class
         String queryMenu = "CREATE TABLE menuListTable"+
                 "(id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "menuName VARCHAR(20) not null," +
@@ -42,6 +45,15 @@ public class DBHelper extends SQLiteOpenHelper {
                 "menuType INT not null)";
 
         db.execSQL(queryMenu);
+
+        String queryAdmin = "CREATE TABLE adminTableList" +
+                "(id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "tableName VARCHAR(20) not null," +
+                "menuName VARCHAR(20) not null," +
+                "menuQuantity INT not null, " +
+                "menuPRice INT not null)";
+
+        db.execSQL(queryAdmin);
 
 
     }
@@ -53,6 +65,9 @@ public class DBHelper extends SQLiteOpenHelper {
 
         String queryMenu = "DROP TABLE menuListTable";
         db.execSQL(queryMenu);
+
+        String queryAdmin = "DROP TABLE adminTableList";
+        db.execSQL(queryAdmin);
 
         onCreate(db);
     }
@@ -81,6 +96,21 @@ public class DBHelper extends SQLiteOpenHelper {
         contentValues.put("menuType", menuType);
 
         long result = db.insert("menuListTable", null, contentValues);
+        if(result == -1){
+            return false;
+        }
+        return true;
+    }
+
+    public boolean insetAdminData(String tableName, String menuName, int menuQuantity, int menuPrice){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put("tableName", tableName);
+        contentValues.put("menuName", menuName);
+        contentValues.put("menuQuantity",menuQuantity);
+        contentValues.put("menuPrice", menuPrice);
+
+        long result = db.insert("adminTableList", null, contentValues);
         if(result == -1){
             return false;
         }

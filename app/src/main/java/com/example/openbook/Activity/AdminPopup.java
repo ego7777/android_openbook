@@ -2,6 +2,7 @@ package com.example.openbook.Activity;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -15,11 +16,14 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.openbook.Adapter.AdminPopUpAdapter;
+import com.example.openbook.Data.AdminTableList;
 import com.example.openbook.Data.OrderList;
 import com.example.openbook.R;
+import com.example.openbook.TableQuantity;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 
@@ -42,6 +46,8 @@ public class AdminPopup extends Activity {
 
     Handler handler = new Handler();
 
+
+    ArrayList<AdminTableList> adminTableList;
 
 
     @Override
@@ -66,13 +72,38 @@ public class AdminPopup extends Activity {
         adminPopUpAdapter.setAdapterItem(orderLists);
 
 
+        if (adminTableList == null) {
+
+            adminTableList = new ArrayList<>();
 
 
+            TableQuantity tableQuantity = new TableQuantity();
+
+            int table = tableQuantity.getTableQuantity();
+            Log.d(TAG, "tableQuantity : " + table);
 
 
+            for (int i = 1; i < table + 1; i++) {
 
+
+                adminTableList.add(new AdminTableList("table" + i,
+                        null,
+                        null,
+                        null,
+                        null));
+
+
+                adminTableList.add(new AdminTableList("table" + i,
+                        menuName, totalPrice, null, null));
+
+            }
+
+        } // for문 끝
+
+        Log.d(TAG, "adminTableSize: " + adminTableList.size());
 
     }
+
 
     @Override
     protected void onStart() {
@@ -89,6 +120,7 @@ public class AdminPopup extends Activity {
         menuName = getIntent().getStringExtra("menuName");
         totalMenuList = getIntent().getStringExtra("totalMenuList");
         totalPrice = getIntent().getStringExtra("totalPrice");
+        Log.d(TAG, "totalMenuList: " + totalMenuList);
 
 
         popup_title.setText(tableName);
@@ -100,34 +132,53 @@ public class AdminPopup extends Activity {
 
 
 //        viewType: 0->in/out, 1->menu
-        if(tableStatement.contains("선불")){
-            orderLists.add(tableNumber-1, new OrderList(0, tableName, tableName +" 선불 좌석 이용 시작하였습니다."));
 
-        }else if(tableStatement.contains("")){
-            orderLists.get(tableNumber-1).setStatement(tableName + " 선불 좌석 이용 종료하였습니다.");
-        }
+        if (tableStatement != null) {
+            if (tableStatement.contains("선불")) {
+                orderLists.add(new OrderList(0, tableName, tableName + " 선불 좌석 이용 시작하였습니다."));
 
 
+            } else if (tableStatement.contains("")) {
+                orderLists.get(tableNumber - 1).setStatement(tableName + " 선불 좌석 이용 종료하였습니다.");
 
-        if(totalMenuList != null){
-            try {
-                JSONArray jsonArray = new JSONArray(totalMenuList);
-
-                for(int i=0; i<jsonArray.length(); i++){
-
-                }
-            } catch (JSONException e) {
-                e.printStackTrace();
             }
 
         }
 
 
-        popup_button.setOnClickListener(view ->{
+        if (totalMenuList != null) {
+            try {
+                JSONArray jsonArray = new JSONArray(totalMenuList);
+                JSONObject jsonObject;
+
+
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    jsonObject = jsonArray.getJSONObject(i);
+                    orderLists.add(new OrderList(1, tableName,
+                            jsonObject.getString("menu"), jsonObject.getInt("quantity"),
+                            jsonObject.getInt("price")));
+
+                }
+
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+
+        }
+
+
+        popup_button.setOnClickListener(view -> {
             Intent intent = new Intent(this, Admin.class);
             intent.putExtra("tableStatement", tableStatement);
             intent.putExtra("tableName", tableName);
+            intent.putExtra("totalPrice", totalPrice);
+            intent.putExtra("menuName", menuName);
+            intent.putExtra("adminTableList", adminTableList);
+
             startActivity(intent);
+            handler.removeCallbacksAndMessages(null);
         });
 
 
@@ -137,6 +188,9 @@ public class AdminPopup extends Activity {
                 Intent intent = new Intent(AdminPopup.this, Admin.class);
                 intent.putExtra("tableStatement", tableStatement);
                 intent.putExtra("tableName", tableName);
+                intent.putExtra("totalPrice", totalPrice);
+                intent.putExtra("menuName", menuName);
+                intent.putExtra("adminTableList", adminTableList);
                 startActivity(intent);
             }
         }, 5000);
@@ -146,7 +200,7 @@ public class AdminPopup extends Activity {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         //바깥 레이어 클릭해도 안닫히게 하기
-        if(event.getAction() == MotionEvent.ACTION_OUTSIDE){
+        if (event.getAction() == MotionEvent.ACTION_OUTSIDE) {
             return false;
         }
         return true;
@@ -157,4 +211,6 @@ public class AdminPopup extends Activity {
         //안드로이드 백버튼 막기
         return;
     }
+
+
 }
