@@ -115,7 +115,7 @@ public class Client extends AppCompatActivity {
         tableInformationHashMap.get(table_num).setChattingAgree(true);
         version ++;
 
-        dbHelper = new DBHelper(Client.this,  version);
+        dbHelper = new DBHelper(Client.this, version);
         sqLiteDatabase = dbHelper.getWritableDatabase();
 
 

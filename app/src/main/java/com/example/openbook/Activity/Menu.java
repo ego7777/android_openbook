@@ -105,6 +105,7 @@ public class Menu extends AppCompatActivity {
     OkHttpClient okHttpClient;
 
     DBHelper dbHelper;
+    SQLiteDatabase sqLiteDatabase;
 
     JSONArray menujArray;
 
@@ -143,6 +144,7 @@ public class Menu extends AppCompatActivity {
         startService(fcm);
 
         sendNotification = new SendNotification();
+
         if(paymentStyle.equals("before")){
             sendNotification.useTheTable(get_id, "사용");
         }
@@ -199,7 +201,7 @@ public class Menu extends AppCompatActivity {
         menuRecyclerview.setAdapter(menuAdapter);
 
 
-        SQLiteDatabase sqLiteDatabase;
+
 
         int version = 1;
 
@@ -347,6 +349,7 @@ public class Menu extends AppCompatActivity {
                 intent.putExtra("orderCk", orderCk);
                 intent.putExtra("tableList", tableList);
                 intent.putExtra("clientSocket", clientSocket);
+                intent.putExtra("paymentStyle", paymentStyle);
                 intent.putExtra("tableInformation", tableInformationHashMap);
                 startActivity(intent);
             }

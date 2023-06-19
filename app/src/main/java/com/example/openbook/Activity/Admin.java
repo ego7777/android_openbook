@@ -4,6 +4,9 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.icu.text.DecimalFormat;
 import android.icu.text.UnicodeSetSpanner;
 import android.os.Bundle;
 import android.util.Log;
@@ -19,6 +22,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.openbook.Adapter.AdminPopUpAdapter;
 import com.example.openbook.Adapter.AdminTableAdapter;
+import com.example.openbook.Chatting.DBHelper;
 import com.example.openbook.Data.AdminTableList;
 import com.example.openbook.Data.OrderList;
 import com.example.openbook.FCM.FCM;
@@ -41,12 +45,20 @@ public class Admin extends AppCompatActivity {
 
     AdminTableAdapter adapter;
 
-
     TextView appbar_admin_sales, appbar_admin_addMenu, appbar_admin_modifyTable;
 
     String get_id;
 
-    String gender, guestNumber, tableName, tableStatement, totalPrice, menuName;
+    String gender, guestNumber, tableName, tableStatement,  menuName;
+    int totalPrice;
+
+    DBHelper dbHelper;
+    Cursor res;
+    SQLiteDatabase sqLiteDatabase;
+    int version=1;
+
+    SharedPreferences sharedPreference;
+    SharedPreferences.Editor editor;
 
 
     @Override
@@ -65,6 +77,9 @@ public class Admin extends AppCompatActivity {
             get_id = "admin";
         }
 
+        sharedPreference = getSharedPreferences("oldMenuSummary", MODE_PRIVATE);
+        editor = sharedPreference.edit();
+
         if (adminTableList != null) {
             Log.d(TAG, "onCreate adminTableList size : " + adminTableList.size());
 
@@ -77,16 +92,28 @@ public class Admin extends AppCompatActivity {
             int table = tableQuantity.getTableQuantity();
             Log.d(TAG, "tableQuantity : " + table);
 
-            String tableInformation;
 
             for (int i = 1; i < table + 1; i++) {
-                adminTableList.add(new AdminTableList("table" + i,
-                        null,
-                        null,
-                        null,
-                        null));
 
-            } // for문 끝
+                String summary = sharedPreference.getString("table" +i + "menu", null);
+                Log.d(TAG, "summary: " + summary);
+
+                int price = sharedPreference.getInt("table" + i + "price", 0);
+                Log.d(TAG, "price: " + price);
+
+                if (summary != null) {
+                    adminTableList.add(new AdminTableList("table" + i,
+                            summary, String.valueOf(price), null, null));
+
+                } else {
+                    adminTableList.add(new AdminTableList("table" + i,
+                            null,
+                            null,
+                            null,
+                            null));
+                }
+
+            }// for문 끝
 
 
         } else {
@@ -123,6 +150,13 @@ public class Admin extends AppCompatActivity {
 
         OkHttpClient okHttpClient = new OkHttpClient();
 
+        dbHelper = new DBHelper(Admin.this, version);
+
+        sqLiteDatabase = dbHelper.getWritableDatabase();
+        res = dbHelper.getTableData("adminTableList");
+        version ++;
+
+
 
     }
 
@@ -148,7 +182,8 @@ public class Admin extends AppCompatActivity {
 
         }
         menuName = getIntent().getStringExtra("menuName");
-        totalPrice = getIntent().getStringExtra("totalPrice");
+//        totalPrice = getIntent().getIntExtra("totalPrice", 0);
+//        Log.d(TAG, "totalPrice: " + totalPrice);
 
     }
 
@@ -169,11 +204,12 @@ public class Admin extends AppCompatActivity {
             int tableNameInt = Integer.parseInt(tableName.replace("table", "")) - 1;
             Log.d(TAG, "tableNameInt: " + tableNameInt);
             adminTableList.get(tableNameInt).setAdminTableMenu(tableStatement);
+            adminTableList.get(tableNameInt).setAdminTablePrice("");
 
         } else if (menuName != null) {
             int tableNameInt = Integer.parseInt(tableName.replace("table", "")) - 1;
             adminTableList.get(tableNameInt).setAdminTableMenu(menuName);
-            adminTableList.get(tableNameInt).setAdminTablePrice(totalPrice);
+            adminTableList.get(tableNameInt).setAdminTablePrice(String.valueOf(totalPrice));
 
         }
 
@@ -229,6 +265,8 @@ public class Admin extends AppCompatActivity {
 
         ArrayList<OrderList> adminOrderList = new ArrayList<>();
 
+        adminOrderList = dbHelper.fetchMenuDetails(tableName, adminOrderList);
+
         TextView adminReceiptCancel = dialog.findViewById(R.id.admin_receipt_cancel);
         TextView adminReceiptTotalPrice = dialog.findViewById(R.id.admin_receipt_totalPrice);
         RecyclerView adminReceiptRecyclerView = dialog.findViewById(R.id.admin_receipt_recyclerView);
@@ -237,12 +275,11 @@ public class Admin extends AppCompatActivity {
         adminReceiptRecyclerView.setAdapter(adminReceiptAdapter);
         adminReceiptAdapter.setAdapterItem(adminOrderList);
 
+        int getPrice = Integer.parseInt(adminTableList.get(position).getAdminTablePrice());
 
-        int key = position + 1;
+        String totalPrice = addCommasToNumber(getPrice);
 
-
-
-
+        adminReceiptTotalPrice.setText(totalPrice);
 
         dialog.show();
 
@@ -256,5 +293,10 @@ public class Admin extends AppCompatActivity {
         intent.putExtra("get_id", get_id);
         intent.putExtra("adminTableList", adminTableList);
         startActivity(intent);
+    }
+
+    public String addCommasToNumber(int number){
+        DecimalFormat decimalFormat = new DecimalFormat("#,###");
+        return decimalFormat.format(number) + "원";
     }
 }

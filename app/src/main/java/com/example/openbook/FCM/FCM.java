@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
-import android.provider.CallLog;
 import android.util.Log;
 import android.widget.RemoteViews;
 
@@ -17,7 +16,8 @@ import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 
 import com.example.openbook.Activity.Admin;
-import com.example.openbook.Activity.AdminPopup;
+import com.example.openbook.Activity.AdminPaymentBeforePopup;
+import com.example.openbook.Activity.AdminPaymentAfterPopup;
 import com.example.openbook.Activity.PopUp;
 import com.example.openbook.Chatting.ChattingUI;
 
@@ -148,7 +148,7 @@ public class FCM extends FirebaseMessagingService {
                 mHandler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        adminTableData(message.getData().get("tableStatement"),
+                        adminPaymentBefore(message.getData().get("tableStatement"),
                                 message.getData().get("tableNumber"));
                     }
                 }, 0);
@@ -168,7 +168,7 @@ public class FCM extends FirebaseMessagingService {
 
     }
 
-    public void adminTableMenu(String tableName, String menuName, String item){
+    public void adminTableMenu(String tableName, String menuSummary, String item){
         int totalPrice=0;
 
         try {
@@ -185,9 +185,9 @@ public class FCM extends FirebaseMessagingService {
             e.printStackTrace();
         }
 
-        Intent intent = new Intent(this, AdminPopup.class);
-        intent.putExtra("menuName", menuName);
-        intent.putExtra("totalPrice", String.valueOf(totalPrice));
+        Intent intent = new Intent(this, AdminPaymentAfterPopup.class);
+        intent.putExtra("menuSummary", menuSummary);
+        intent.putExtra("totalPrice", totalPrice);
         intent.putExtra("totalMenuList", item);
         intent.putExtra("tableName", tableName);
 
@@ -224,10 +224,13 @@ public class FCM extends FirebaseMessagingService {
 
     }
 
-    public void adminTableData(String statement, String tableName){
-        Intent intent = new Intent(this, AdminPopup.class);
+
+
+    public void adminPaymentBefore(String statement, String tableName){
+        Intent intent = new Intent(this, AdminPaymentBeforePopup.class);
         intent.putExtra("tableStatement", statement);
         intent.putExtra("tableName", tableName);
+        Log.d(TAG, "tableStatement: " + statement);
 
         requestCode  = (int) System.currentTimeMillis();
 

@@ -61,7 +61,7 @@
         <activity android:name=".Activity.AdminModifyMenu"
             android:theme="@android:style/Theme.Dialog"/>
 
-        <activity android:name=".Activity.AdminPopup"
+        <activity android:name=".Activity.AdminPaymentAfterPopup"
             android:theme="@android:style/Theme.Dialog"/>
 
         <activity android:name=".Activity.AdminSales"/>

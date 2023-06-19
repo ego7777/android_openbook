@@ -329,6 +329,7 @@ public class Login extends AppCompatActivity {
         intent.putExtra(tableListName, tableList);
         intent.putExtra("get_id", id);
         startActivity(intent);
+        Log.d(TAG, "startActivityTableList: " + tableList.size());
         // 화면전환 애니메이션 없애기
         overridePendingTransition(0, 0);
     }
@@ -352,7 +353,7 @@ public class Login extends AppCompatActivity {
 
 
 
-        if(adminTableList == null){
+        if(adminTableList == null || adminTableList.isEmpty()){
             adminTableList = new ArrayList<>();
 
             TableQuantity tableQuantity = new TableQuantity();

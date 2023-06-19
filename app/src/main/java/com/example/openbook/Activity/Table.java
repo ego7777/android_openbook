@@ -68,7 +68,7 @@ public class Table extends AppCompatActivity {
     TextView info;
 
     int myTable;
-    String get_id;
+    String get_id, paymentStyle;
 
     boolean orderCk = false;
     boolean loop = false;
@@ -91,6 +91,8 @@ public class Table extends AppCompatActivity {
         get_id = getIntent().getStringExtra("get_id");
         orderCk = getIntent().getBooleanExtra("orderCk", false);
         Log.d(TAG, "orderCk :" + orderCk);
+
+        paymentStyle = getIntent().getStringExtra("paymentStyle");
 
         myTable = Integer.parseInt(get_id.replace("table", ""));
 
@@ -137,6 +139,7 @@ public class Table extends AppCompatActivity {
                 Log.d(TAG, "onCreate tableList initial one");
             } else {
                 Log.d(TAG, "table.class intent tableList size :" + tableList.size());
+                
             }
         }
 
@@ -545,6 +548,7 @@ public class Table extends AppCompatActivity {
         intent.putExtra("orderCk", orderCk);
         intent.putExtra("tableInformation", tableInformationHashMap);
         intent.putExtra("clientSocket", clientSocket);
+        intent.putExtra("paymentStyle", paymentStyle);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(intent);
     }
