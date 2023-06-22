@@ -1,5 +1,6 @@
 package com.example.openbook.Activity;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -18,7 +19,7 @@ import com.example.openbook.R;
 
 import java.util.ArrayList;
 
-public class AdminPaymentBeforePopup extends AppCompatActivity {
+public class AdminPaymentBeforePopup extends Activity {
 
     String tableStatement, tableName;
 

@@ -175,6 +175,17 @@ public class DBHelper extends SQLiteOpenHelper {
 
 
 
+    public void deleteTableData(String tableValue) {
+        SQLiteDatabase db = getWritableDatabase();
+        String deleteQuery = "DELETE FROM adminTableList"  + " WHERE tableName = '" + tableValue + "'";
+        db.execSQL(deleteQuery);
+        db.close();
+    }
+
+
+
+
+
     public Cursor getTableData(String tableName) {
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor res = db.rawQuery("SELECT * FROM " + tableName, null);

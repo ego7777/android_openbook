@@ -1,6 +1,7 @@
 package com.example.openbook.Adapter;
 
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,9 +19,9 @@ import java.util.ArrayList;
 public class AdminTableAdapter extends RecyclerView.Adapter<AdminTableAdapter.ViewHolder> {
 
     String TAG = "adminTableAdapter_TAG";
-
-
     ArrayList<AdminTableList> table = new ArrayList<>();
+
+    private int lastClickedPosition = -1;
 
     public interface onItemClickListener {
         void onItemClick(View view, int position);
@@ -44,6 +45,13 @@ public class AdminTableAdapter extends RecyclerView.Adapter<AdminTableAdapter.Vi
     @Override
     public void onBindViewHolder(@NonNull AdminTableAdapter.ViewHolder holder, int position) {
         holder.onBind(table.get(position));
+
+        if(position == lastClickedPosition){
+            int color = holder.itemView.getContext().getResources().getColor(R.color.salmon);
+            holder.itemView.setBackgroundColor(color);
+        }else{
+            holder.itemView.setBackgroundColor(Color.WHITE);
+        }
     }
 
     @Override
@@ -82,13 +90,18 @@ public class AdminTableAdapter extends RecyclerView.Adapter<AdminTableAdapter.Vi
                 @Override
                 public void onClick(View v) {
                     position = getAdapterPosition();
+                    Log.d(TAG, "position: " + position);
 
                     if (position != RecyclerView.NO_POSITION) {
-                        if (myListener != null) {
+                        if (myListener != null ) {
                             myListener.onItemClick(v, position);
                             notifyDataSetChanged();
+                            notifyItemChanged(lastClickedPosition);
+                            lastClickedPosition = position;
+                            notifyItemChanged(position);
                         }
                     }
+
                 }
             });
         }
@@ -108,6 +121,7 @@ public class AdminTableAdapter extends RecyclerView.Adapter<AdminTableAdapter.Vi
                     admin_grid_menu.setTextColor(Color.RED);
                 }
             }
+
 
 
         }

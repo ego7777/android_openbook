@@ -28,6 +28,7 @@
         <entry key="app/src/main/res/drawable/table_boder_order.xml" value="0.1" />
         <entry key="app/src/main/res/drawable/table_border.xml" value="0.1725" />
         <entry key="app/src/main/res/drawable/table_border_click.xml" value="0.1325" />
+        <entry key="app/src/main/res/drawable/table_border_order.xml" value="0.1" />
         <entry key="app/src/main/res/drawable/table_select.xml" value="0.1085" />
         <entry key="app/src/main/res/drawable/table_unpress.xml" value="0.1085" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.20742753623188406" />

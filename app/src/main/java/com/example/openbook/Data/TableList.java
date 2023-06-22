@@ -15,31 +15,7 @@ public class TableList implements Serializable {
     String tableGender;
     String tableGuestNum;
 
-    byte[] bytes;
-
-
-    public TableList(String myTable, byte[] bytes, int viewType) {
-        this.myTable = myTable;
-        this.bytes = bytes;
-        this.viewType = viewType;
-    }
-
-    public TableList(int tableNum,  byte[] bytes, int viewType){
-        this.tableNum = tableNum;
-        this.bytes= bytes;
-        this.viewType =viewType;
-    }
-
-
-    public byte[] getBytes() {
-        return bytes;
-    }
-
-    public void setBytes(byte[] bytes) {
-        this.bytes = bytes;
-    }
-
-
+    // 0->
     public int getViewType() {
         return viewType;
     }

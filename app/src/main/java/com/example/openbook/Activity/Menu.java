@@ -41,6 +41,7 @@ import com.example.openbook.DialogCustom;
 import com.example.openbook.FCM.FCM;
 import com.example.openbook.FCM.SendNotification;
 import com.example.openbook.KakaoPay;
+import com.example.openbook.OrderSave;
 import com.example.openbook.R;
 import com.example.openbook.Data.TableInformation;
 import com.example.openbook.Data.CartList;
@@ -62,10 +63,8 @@ import java.util.HashMap;
 
 import okhttp3.Call;
 import okhttp3.Callback;
-import okhttp3.FormBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import okhttp3.RequestBody;
 import okhttp3.Response;
 
 
@@ -126,8 +125,9 @@ public class Menu extends AppCompatActivity {
 
         clientSocket = (ClientSocket) getIntent().getSerializableExtra("clientSocket");
 
-        tableInformationHashMap = (HashMap<Integer, TableInformation>) getIntent().getSerializableExtra("tableInformation");
 
+        tableInformationHashMap = (HashMap<Integer, TableInformation>) getIntent().getSerializableExtra("tableInformation");
+        tableList = (ArrayList<TableList>) getIntent().getSerializableExtra("tableList");
 
         if (tableInformationHashMap == null) {
             Log.d(TAG, "onCreate tableInformation null");
@@ -145,11 +145,9 @@ public class Menu extends AppCompatActivity {
 
         sendNotification = new SendNotification();
 
-        if(paymentStyle.equals("before")){
+        if (paymentStyle.equals("before")) {
             sendNotification.useTheTable(get_id, "사용");
         }
-
-
 
 
         /**
@@ -160,7 +158,7 @@ public class Menu extends AppCompatActivity {
 
         menuClose = findViewById(R.id.menu_close);
 
-        if(paymentStyle.equals("after")){
+        if (paymentStyle.equals("after")) {
             menuClose.setVisibility(View.GONE);
         }
         appbarMenuTable = findViewById(R.id.appbar_menu_table);
@@ -181,8 +179,7 @@ public class Menu extends AppCompatActivity {
         /**
          * 액티비티 전환 시 sp에 저장된 장바구니 데이터 가져와서 뿌려주기
          */
-        pref = getSharedPreferences("Order", MODE_PRIVATE);
-
+        pref = getSharedPreferences("cart_list", MODE_PRIVATE);
         editor = pref.edit();
 
         cartOrderPrice = findViewById(R.id.cart_order_price);
@@ -201,9 +198,8 @@ public class Menu extends AppCompatActivity {
         menuRecyclerview.setAdapter(menuAdapter);
 
 
-
-
         int version = 1;
+        version ++;
 
         dbHelper = new DBHelper(Menu.this, version);
         sqLiteDatabase = dbHelper.getWritableDatabase();
@@ -270,6 +266,7 @@ public class Menu extends AppCompatActivity {
     } // onCreate()
 
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onStart() {
         super.onStart();
@@ -280,37 +277,34 @@ public class Menu extends AppCompatActivity {
         Log.d(TAG, "onStart_PaymentStyle :" + paymentStyle);
 
         if (returnOrderList != null) {
-            saveOrder(returnOrderList);
-        }
+            OrderSave orderSave = new OrderSave();
+            try{
+                boolean success = orderSave.orderSave(returnOrderList);
 
-
-        String getName = pref.getString("name", "");
-        String getQuantity = pref.getString("quantity", "");
-        String getPrice = pref.getString("price", "");
-
-
-        if (!getName.isEmpty()) {
-
-            String splitName[] = getName.split("###");
-            String splitQuantity[] = getQuantity.split("###");
-            String splitPrice[] = getPrice.split("###");
-
-
-            int changeQuantity[] = new int[splitQuantity.length];
-            int changePrice[] = new int[splitPrice.length];
-
-
-            for (int i = 0; i < splitName.length; i++) {
-
-                changeQuantity[i] = Integer.parseInt(splitQuantity[i]);
-                changePrice[i] = Integer.parseInt(splitPrice[i]);
-
-                cartLists.add(new CartList(splitName[i], changePrice[i], changeQuantity[i], 1));
-                totalPrice = totalPrice + changePrice[i] * changeQuantity[i];
+                if (success == true) {
+                    successOrder();
+                    Log.d(TAG, "successOrder 성공: ");
+                } else {
+                    orderCk = false;
+                }
+            }catch (InterruptedException e){
+                e.printStackTrace();
             }
 
+        }
+
+        String savedJson = pref.getString("cart_list", null);
+
+
+        if (savedJson != null) {
+            cartLists = getSharedPreference(savedJson);
             cartAdapter.setAdapterItem(cartLists);
-            cartOrderPrice.setText(String.valueOf("합계: " + totalPrice + " 원"));
+
+            for (CartList menu : cartLists) {
+                totalPrice += menu.getMenu_price() * menu.getMenu_quantity();
+            }
+
+            cartOrderPrice.setText(String.valueOf(totalPrice));
         }
 
     } //onStart()
@@ -322,11 +316,13 @@ public class Menu extends AppCompatActivity {
         super.onResume();
         //사용자와 상호작용 하는 단계, 어플 기능은 여기서
 
-        menuClose.setOnClickListener(view ->{
+        menuClose.setOnClickListener(view -> {
             //admin에게 fcm 날리기
             Log.d(TAG, "menuClose Click: ");
             sendNotification.useTheTable(get_id, "종료");
-            Log.d(TAG, "click: ");
+
+            editor.remove("cart_list");
+            editor.commit();
             finish();
 
         });
@@ -367,9 +363,8 @@ public class Menu extends AppCompatActivity {
                 totalPrice = totalPrice + cartLists.get(position).getMenu_price();
                 cartOrderPrice.setText("합계: " + String.valueOf(totalPrice) + "원");
                 cartAdapter.setAdapterItem(cartLists);
-                sharedPreference();
 
-
+                saveSharedPreference();
             }
 
             @Override
@@ -384,7 +379,7 @@ public class Menu extends AppCompatActivity {
 
                 cartOrderPrice.setText("합계: " + String.valueOf(totalPrice) + "원");
                 cartAdapter.setAdapterItem(cartLists);
-                sharedPreference();
+                saveSharedPreference();
             }
 
 
@@ -399,9 +394,8 @@ public class Menu extends AppCompatActivity {
                 cartLists.remove(position);
 
                 cartAdapter.setAdapterItem(cartLists);
-                sharedPreference();
+                saveSharedPreference();
             }
-
         });
 
 
@@ -414,7 +408,7 @@ public class Menu extends AppCompatActivity {
             int menuQuantity;
 
             @Override
-            public void onItemClick(View view,  String name, int price, int position) {
+            public void onItemClick(View view, String name, int price, int position) {
 
                 //중복되는 메뉴의 포지션 값 get
                 for (int i = 0; i < cartLists.size(); i++) {
@@ -440,7 +434,7 @@ public class Menu extends AppCompatActivity {
                 totalPrice = totalPrice + price;
                 cartOrderPrice.setText(String.valueOf("합계: " + totalPrice + " 원"));
 
-                sharedPreference();
+                saveSharedPreference();
 
             }
         });
@@ -463,15 +457,6 @@ public class Menu extends AppCompatActivity {
                     Intent intent = new Intent(Menu.this, CallServer.class);
                     startActivity(intent);
 
-                } else if (where.equals("결제(test)")) {
-
-                    /**
-                     /1. 로컬db 내용을 서버에 전달해서 저장
-                     2. 저장 완료하면 로컬db 날리기
-                     */
-                    clientSocket.quit();
-                    Log.d(TAG, "결제해서 소켓 종료");
-
                 }
             }
         });
@@ -483,7 +468,6 @@ public class Menu extends AppCompatActivity {
          * 3. 읽으면 <읽음> 표시만 하기…………
          * 4. 채팅 신청 (하트대신!!!)-> 궁금하면 사진 까봐 -> 채팅하기
          */
-
 
 
         DialogCustom dialogCustom = new DialogCustom();
@@ -508,11 +492,15 @@ public class Menu extends AppCompatActivity {
 
                     if (paymentStyle.equals("after")) {
                         // fcm으로 날리고
-
                         sendNotification.sendMenu(adminOrderMenuList(cartLists));
                         Log.d(TAG, "onClick: ");
-
                         successOrder();
+
+                        if (clientSocket == null) {
+                            clientSocket = new ClientSocket("3.36.255.141", 7777, get_id, tableList);
+                            clientSocket.start();
+                            Log.d(TAG, "연결?: ");
+                        }
 
 
 
@@ -536,16 +524,6 @@ public class Menu extends AppCompatActivity {
                     if (infoCk == false) {
                         infoCk = true;
                         orderCk = true;
-
-//                        handler.postDelayed(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                dialogCustom.moveActivity(Menu.this,
-//                                        "테이블 정보를 입력하기 위한 페이지로 이동하겠습니까?",
-//                                        get_id, orderCk, clientSocket);
-//                                Log.d(TAG, "clientSocket :" + clientSocket.isAlive());
-//                            }
-//                        }, 1000);
                     }
 
                 } // cartList에 데이터 if-else
@@ -553,42 +531,28 @@ public class Menu extends AppCompatActivity {
         }); //주문하기 click event
 
 
-
         myTable = Integer.parseInt(get_id.replace("table", ""));
 
 
-
-
-
-//        DrawableMethod drawableToBitmap = new DrawableMethod();
-
-//        byte[] myTableImage = drawableToBitmap.makeBitmap(getDrawable(R.drawable.my_table_border));
-//        Log.d(TAG, "myTableImage :" + myTableImage);
-//        byte[] otherTableImage = drawableToBitmap.makeBitmap(getDrawable(R.drawable.table_border));
-//        Log.d(TAG, "otherTableImage : " + otherTableImage);
-
-
-        if(tableList == null){
+        if (tableList == null) {
             Log.d(TAG, "onResume tableList null: ");
 
             tableList = new ArrayList<>();
 
-            for (int i = 1; i < tableFromDB+1; i++) {
+            for (int i = 1; i < tableFromDB + 1; i++) {
                 if (i == myTable) {
-                    tableList.add(new TableList("my Table", (Drawable) null, 0));
+                    tableList.add(new TableList(get_id, (Drawable) null, 0));
                 } else {
                     tableList.add(new TableList(i, (Drawable) null, 1));
                 }
             }
 
 
-        }else{
+        } else {
             Log.d(TAG, "onResume tableList not null: ");
         }
 
         Log.d(TAG, "tableList :" + tableList.size());
-
-
 
 
     } // onResume
@@ -609,7 +573,7 @@ public class Menu extends AppCompatActivity {
         return menuName;
     }
 
-    public String adminOrderMenuList(ArrayList<CartList> cartLists){
+    public String adminOrderMenuList(ArrayList<CartList> cartLists) {
         JSONObject jsonObject = new JSONObject();
         try {
 //
@@ -628,41 +592,49 @@ public class Menu extends AppCompatActivity {
             jsonObject.put("item", menujArray);
             jsonObject.put("menuName", getOrderMenuName(cartLists));
             jsonObject.put("tableName", get_id);
-        }catch (JSONException e){
+        } catch (JSONException e) {
             e.printStackTrace();
         }
 
         return jsonObject.toString();
     }
 
+    public void saveSharedPreference() {
 
-    public void sharedPreference() {
+        JSONArray jsonArray = new JSONArray();
 
-        String name_temp = null;
-        String quantity_temp = null;
-        String price_temp = null;
-
-
-        for (int i = 0; i < cartLists.size(); i++) {
-
-            if (name_temp == null) {
-                name_temp = cartLists.get(i).getMenu_name() + "###";
-                quantity_temp = cartLists.get(i).getMenu_quantity() + "###";
-                price_temp = cartLists.get(i).getMenu_price() + "###";
-            } else {
-                name_temp = name_temp + cartLists.get(i).getMenu_name() + "###";
-                quantity_temp = quantity_temp + cartLists.get(i).getMenu_quantity() + "###";
-                price_temp = price_temp + cartLists.get(i).getMenu_price() + "###";
+        for (CartList menu : cartLists) {
+            JSONObject jsonObject = new JSONObject();
+            try {
+                jsonObject.put("menu", menu.getMenu_name());
+                jsonObject.put("quantity", menu.getMenu_quantity());
+                jsonObject.put("price", menu.getMenu_price());
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
-
+            jsonArray.put(jsonObject);
         }
 
-        editor.putString("name", name_temp);
-        editor.putString("quantity", quantity_temp);
-        editor.putString("price", price_temp);
+        String json = jsonArray.toString();
+        editor.putString("cart_list", json);
         editor.commit();
 
+    }
 
+    public ArrayList getSharedPreference(String savedJson) {
+        try {
+            JSONArray jsonArray = new JSONArray(savedJson);
+            for (int i = 0; i < jsonArray.length(); i++) {
+                JSONObject jsonObject = jsonArray.getJSONObject(i);
+                String menuName = jsonObject.getString("menu");
+                int menuQuantity = jsonObject.getInt("quantity");
+                int menuPrice = jsonObject.getInt("price");
+                cartLists.add(new CartList(menuName, menuPrice, menuQuantity, 1));
+            }
+        } catch (JSONException e) {
+
+        }
+        return cartLists;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -698,13 +670,12 @@ public class Menu extends AppCompatActivity {
             for (int i = 0; i < jsonArray.length(); i++) {
                 JSONObject jsonObject = jsonArray.getJSONObject(i);
 
-                String url = "http://3.36.255.141/menuImage/"+jsonObject.getString("img");
+                String url = "http://3.36.255.141/menuImage/" + jsonObject.getString("img");
                 String menu = jsonObject.getString("menu");
                 int price = jsonObject.getInt("price");
                 int menuType = jsonObject.getInt("type");
 
-                menuLists.add(new MenuList(url,menu, price, menuType,1));
-
+                menuLists.add(new MenuList(url, menu, price, menuType, 1));
 
 
                 dbHelper.insertMenuData(jsonObject.getString("menu"),
@@ -726,114 +697,16 @@ public class Menu extends AppCompatActivity {
 
     }
 
-    public void saveOrder(String returnOrderList) {
 
-        RequestBody formBody = new FormBody.Builder()
-                .add("json", returnOrderList)
-                .build();
-
-        Request request = new Request.Builder()
-                .url("http://3.36.255.141/saveOrder.php")
-                .post(formBody)
-                .build();
-
-
-        okHttpClient.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                orderCk = false;
-                e.printStackTrace();
-                Toast.makeText(getApplicationContext(), "네트워크에 문제가 발생하였습니다.\n잠시 후 다시 주문해주세요.", Toast.LENGTH_LONG).show();
-                Log.d(TAG, "order failure: " + e);
-            }
-
-            @Override
-            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                runOnUiThread(new Runnable() {
-                    @RequiresApi(api = Build.VERSION_CODES.O)
-                    @Override
-                    public void run() {
-                        try {
-                            String body = response.body().string();
-                            Log.d(TAG, "saveOrder :" + body);
-
-                            if (body.equals("주문완료")) {
-                                orderCk = true;
-                                cartLists = new ArrayList<>();
-                                cartAdapter.setAdapterItem(cartLists);
-                                totalPrice = 0;
-                                cartOrderPrice.setText("");
-
-//                                            SendNotification sendNotification = new SendNotification();
-//
-//                                            sendNotification.sendMenu(get_id, menujArray.toString());
-
-//                                if (clientSocket == null) {
-//                                    clientSocket = new ClientSocket("3.36.255.141", 7777, get_id, tableList);
-//                                    clientSocket.start();
-//                                    Log.d(TAG, "소켓 시작");
-//                                }
-
-
-                            } else {
-                                orderCk = false;
-                                Toast.makeText(getApplicationContext(), "서버에 문제가 발생하였습니다." +
-                                        "\n잠시 후 다시 주문해주세요.", Toast.LENGTH_LONG).show();
-                                Log.d(TAG, "response : " + body);
-                            }
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
-
-
-            }
-        }); //response
-
-        editor.remove("name");
-        editor.remove("count");
-        editor.remove("price");
-        editor.commit();
-
-
-
-        Dialog dlg = new Dialog(Menu.this);
-        dlg.setContentView(R.layout.order_complete);
-        dlg.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        dlg.show();
-
-        ImageView img = dlg.findViewById(R.id.serve_img);
-        TextView text = dlg.findViewById(R.id.serve_text);
-
-
-        Animation animation = AnimationUtils.loadAnimation(Menu.this, R.anim.order_complete);
-        img.startAnimation(animation);
-        text.startAnimation(animation);
-
-        Handler handler = new Handler();
-
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                dlg.dismiss();
-            }
-        }, 1000);
-
-    }
-
-    public void successOrder(){
-
+    public void successOrder() {
+        orderCk = true;
         cartLists = new ArrayList<>();
         cartAdapter.setAdapterItem(cartLists);
         totalPrice = 0;
         cartOrderPrice.setText("");
 
-        editor.remove("name");
-        editor.remove("count");
-        editor.remove("price");
+        editor.remove("cart_list");
         editor.commit();
-
 
 
         Dialog dlg = new Dialog(Menu.this);
@@ -857,6 +730,7 @@ public class Menu extends AppCompatActivity {
                 dlg.dismiss();
             }
         }, 1000);
+
 
     }
 }

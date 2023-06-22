@@ -1,6 +1,8 @@
 package com.example.openbook.Adapter;
 
 import android.annotation.SuppressLint;
+import android.graphics.drawable.Drawable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,25 +15,42 @@ import com.example.openbook.R;
 import com.example.openbook.Data.TableList;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> {
 
-    ArrayList<TableList> table = new ArrayList<TableList>();
-    String TAG = "TableAdapter";
+    int myTable;
+    ArrayList<TableList> table;
+    String TAG = "TableAdapterTAG";
 
+    private int lastClickedPosition = -1;
+    private HashMap<Integer, Integer> positionColorMap = new HashMap<>();
+
+
+    public TableAdapter(ArrayList<TableList> table, int myTable) {
+        this.table = table;
+        this.myTable = myTable;
+        Log.d(TAG, "TableAdapter get_id: " + myTable);
+    }
+
+    public void changeItemColor(int position, int color){
+        positionColorMap.put(position, color);
+        Log.d(TAG, "changeItemColor: " + position);
+        notifyDataSetChanged();
+    }
 
 
     /**
      * 커스텀 리스너 인터페이스 정의
      */
-    public interface OnItemClickListener{
-        void onItemClick(View view , int position);
+    public interface OnItemClickListener {
+        void onItemClick(View view, int position);
 
     }
 
     private TableAdapter.OnItemClickListener myListener = null;
 
-    public void setOnItemClickListener(TableAdapter.OnItemClickListener listener){
+    public void setOnItemClickListener(TableAdapter.OnItemClickListener listener) {
         this.myListener = listener;
     }
 
@@ -51,40 +70,70 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> 
     }
 
 
-
     /**
      * 액티비티에서 받아온 데이터를 바인딩해줌.
-     * **/
+     **/
     @Override
     public void onBindViewHolder(@NonNull TableAdapter.ViewHolder holder, @SuppressLint("RecyclerView") int position) {
+
+
         holder.onBind(table.get(position));
+        int color;
+
+        if (position == lastClickedPosition) {
+            color = holder.itemView.getContext().getColor(R.color.blue_purple);
+            holder.itemView.setBackgroundColor(color);
+        } else if (position == myTable - 1) {
+            color = holder.itemView.getContext().getColor(R.color.flower_pink);
+            holder.itemView.setBackgroundColor(color);
+        } else {
+            color = holder.itemView.getContext().getColor(R.color.light_gray);
+            holder.itemView.setBackgroundColor(color);
+        }
+
+
+        Integer orderedTable = positionColorMap.get(position);
+
+        if(orderedTable != null){
+            if (orderedTable.equals(lastClickedPosition)) {
+                Log.d(TAG, "equal ");
+                color = holder.itemView.getContext().getColor(R.color.blue_purple);
+                holder.itemView.setBackgroundColor(color);
+
+            } else {
+                Log.d(TAG, "not equal: " + position);
+                holder.itemView.setBackgroundColor(orderedTable);
+            }
+
+
+        }
+
+
     }
 
 
     /**
      * 리사이클러뷰 리스트 사이즈를 불러옴
-     * **/
+     **/
     @Override
     public int getItemCount() {
-        if(table == null){
-            return  0;
+        if (table == null) {
+            return 0;
         }
 
         return table.size();
     }
 
-    public  void setAdapterItem(ArrayList<TableList> items){
+    public void setAdapterItem(ArrayList<TableList> items) {
         this.table = items;
 
         notifyDataSetChanged();
     }
 
 
-
-
     /**
      * 뷰홀더 생성
-     * **/
+     **/
     class ViewHolder extends RecyclerView.ViewHolder {
 
         TextView tableNum;
@@ -97,7 +146,7 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> 
 
         public ViewHolder(@NonNull View itemView, int viewType) {
             super(itemView);
-            this.viewType =viewType;
+            this.viewType = viewType;
 
             tableNum = itemView.findViewById(R.id.tableNum);
             table_grid_gender = itemView.findViewById(R.id.table_grid_gender);
@@ -112,6 +161,10 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> 
                         if (myListener != null) {
                             myListener.onItemClick(view, position);
                             notifyDataSetChanged();
+
+                            notifyItemChanged(lastClickedPosition);
+                            lastClickedPosition = position;
+                            notifyItemChanged(position);
                         }
                     }
                 }
@@ -121,34 +174,24 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> 
 
 
         void onBind(TableList items) {
-            if(viewType == 0){
+            if (viewType == 0) {
                 onBindMine(items);
-            }else if(viewType == 1){
+            } else if (viewType == 1) {
                 onBindOthers(items);
             }
 
         }
 
-        void onBindOthers(TableList items){
+        void onBindOthers(TableList items) {
             tableNum.setText(String.valueOf(items.getTableNum()));
-            tableNum.setBackground(items.getTableColor());
-
             table_grid_gender.setText(items.getTableGender());
-            table_grid_gender.setBackground(items.getTableColor());
-
             table_grid_guestNum.setText(items.getTableGuestNum());
-            table_grid_guestNum.setBackground(items.getTableColor());
         }
 
-        void onBindMine(TableList items){
+        void onBindMine(TableList items) {
             tableNum.setText(items.getMyTable());
-            tableNum.setBackground(items.getTableColor());
-
             table_grid_gender.setText(items.getTableGender());
-            table_grid_gender.setBackground(items.getTableColor());
-
             table_grid_guestNum.setText(items.getTableGuestNum());
-            table_grid_guestNum.setBackground(items.getTableColor());
 
         }
 

@@ -9,17 +9,24 @@ import androidx.annotation.RequiresApi;
 
 
 import com.example.openbook.Data.TableList;
+import com.example.openbook.R;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.util.ArrayList;
-
+import java.util.Arrays;
 
 
 @RequiresApi(api = Build.VERSION_CODES.O)
@@ -84,11 +91,14 @@ public class ClientSocket extends Thread implements Serializable{
 
 //            ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
 
+            BufferedReader networkReader = new BufferedReader(
+                    new InputStreamReader(socket.getInputStream()));
 
             OutputStreamWriter o = new OutputStreamWriter(socket.getOutputStream());
             //outputStream: 출력 스트림
             networkWrite = new BufferedWriter(o);
 //            Log.d(TAG, "run: " + networkWrite);
+
 
 
             /**
@@ -106,6 +116,22 @@ public class ClientSocket extends Thread implements Serializable{
 
             networkWrite = null;
 
+//            while(loop){
+//                String line = networkReader.readLine();
+//                Log.d(TAG, "line: " + line);
+//
+//                if(line.contains("[")){
+//                    tableData(line);
+//                }
+//
+//                if(line == null){
+//                    Log.d(TAG, "line null: ");
+//                    break;
+//                }
+//            }
+
+
+
 
 
 
@@ -118,7 +144,60 @@ public class ClientSocket extends Thread implements Serializable{
         }
 
     }
+//
+//    public void tableData(String line){
+//        int table[];
+//        int temp;
+//        int myTable = Integer.parseInt(get_id.replace("table", ""));
+//        try {
+//            JSONArray jsonArray = new JSONArray(line);
+//
+//            table = new int[jsonArray.length()];
+//
+//
+//            for (int j = 0; j < jsonArray.length(); j++) {
+//                JSONObject jsonObject = jsonArray.getJSONObject(j);
+//                table[j] = jsonObject.getInt("table");
+//            }
+//
+//            Arrays.sort(table);
+//
+//
+//            Log.d(TAG, "new table :" + Arrays.toString(table));
+//            temp = 1000;
 
+//            for (int i = 0; i < table.length; i++) {
+//                if (table[i] != myTable) {
+//                    tableList.get(table[i] - 1).setTableColor(getDrawable(R.drawable.table_border_order));
+//                    tableList.get(table[i] - 1).setViewType(2);
+//                    Log.d(TAG, "update Table");
+//                    temp = table[i] - 1;
+//
+//                    if (temp != 1000) {
+//                        runOnUiThread(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                adapter.notifyItemChanged(temp);
+//                            }
+//                        });
+//                    }
+//
+//
+//                } else {
+//                    Log.d(TAG, "같음");
+//                }
+//            }
+
+
+
+
+//        } catch (JSONException e) {
+//            e.printStackTrace();
+//        }
+//
+//
+//
+//    }
 
 
     public void quit() {

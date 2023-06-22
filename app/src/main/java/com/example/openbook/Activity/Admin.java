@@ -6,15 +6,24 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.icu.text.DecimalFormat;
 import android.icu.text.UnicodeSetSpanner;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -24,8 +33,12 @@ import com.example.openbook.Adapter.AdminPopUpAdapter;
 import com.example.openbook.Adapter.AdminTableAdapter;
 import com.example.openbook.Chatting.DBHelper;
 import com.example.openbook.Data.AdminTableList;
+import com.example.openbook.Data.CartList;
 import com.example.openbook.Data.OrderList;
+import com.example.openbook.DialogCustom;
 import com.example.openbook.FCM.FCM;
+import com.example.openbook.KakaoPay;
+import com.example.openbook.OrderSave;
 import com.example.openbook.R;
 import com.example.openbook.TableQuantity;
 
@@ -33,9 +46,17 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.FormBody;
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class Admin extends AppCompatActivity {
 
@@ -46,19 +67,20 @@ public class Admin extends AppCompatActivity {
     AdminTableAdapter adapter;
 
     TextView appbar_admin_sales, appbar_admin_addMenu, appbar_admin_modifyTable;
+    TextView admin_sidebar_menu, admin_sidebar_info, admin_sidebar_pay;
 
     String get_id;
 
-    String gender, guestNumber, tableName, tableStatement,  menuName;
+    String gender, guestNumber, tableName, tableStatement, menuName;
     int totalPrice;
 
     DBHelper dbHelper;
-    Cursor res;
-    SQLiteDatabase sqLiteDatabase;
-    int version=1;
+    int version = 1;
 
     SharedPreferences sharedPreference;
     SharedPreferences.Editor editor;
+
+    String afterPaymentList;
 
 
     @Override
@@ -69,13 +91,15 @@ public class Admin extends AppCompatActivity {
         overridePendingTransition(0, 0);
 
         adminTableList = (ArrayList<AdminTableList>) getIntent().getSerializableExtra("adminTableList");
-
+        afterPaymentList = getIntent().getStringExtra("orderList");
+        Log.d(TAG, "orderList: " + afterPaymentList);
 
         get_id = getIntent().getStringExtra("get_id");
 
         if (get_id == null) {
             get_id = "admin";
         }
+
 
         sharedPreference = getSharedPreferences("oldMenuSummary", MODE_PRIVATE);
         editor = sharedPreference.edit();
@@ -95,15 +119,21 @@ public class Admin extends AppCompatActivity {
 
             for (int i = 1; i < table + 1; i++) {
 
-                String summary = sharedPreference.getString("table" +i + "menu", null);
+                String summary = sharedPreference.getString("table" + i + "menu", null);
                 Log.d(TAG, "summary: " + summary);
 
                 int price = sharedPreference.getInt("table" + i + "price", 0);
                 Log.d(TAG, "price: " + price);
 
+                String gender = sharedPreference.getString("table" + i + "gender", null);
+                Log.d(TAG, "gender: " + gender);
+
+                String guestNumber = sharedPreference.getString("table" + i + "guestNumber", null);
+                Log.d(TAG, "guestNumber: " + guestNumber);
+
                 if (summary != null) {
                     adminTableList.add(new AdminTableList("table" + i,
-                            summary, String.valueOf(price), null, null));
+                            summary, String.valueOf(price), gender, guestNumber));
 
                 } else {
                     adminTableList.add(new AdminTableList("table" + i,
@@ -131,10 +161,12 @@ public class Admin extends AppCompatActivity {
         appbar_admin_id.setText(get_id);
 
         appbar_admin_sales = findViewById(R.id.appbar_admin_sales);
-
         appbar_admin_addMenu = findViewById(R.id.appbar_admin_addMenu);
-
         appbar_admin_modifyTable = findViewById(R.id.appbar_admin_modifyTable);
+
+        admin_sidebar_menu = findViewById(R.id.admin_sidebar_menu);
+        admin_sidebar_info = findViewById(R.id.admin_sidebar_info);
+        admin_sidebar_pay = findViewById(R.id.admin_sidebar_pay);
 
         RecyclerView tableGrid = findViewById(R.id.admin_grid);
         adapter = new AdminTableAdapter();
@@ -148,14 +180,8 @@ public class Admin extends AppCompatActivity {
         adapter.setAdapterItem(adminTableList);
 
 
-        OkHttpClient okHttpClient = new OkHttpClient();
-
         dbHelper = new DBHelper(Admin.this, version);
-
-        sqLiteDatabase = dbHelper.getWritableDatabase();
-        res = dbHelper.getTableData("adminTableList");
-        version ++;
-
+        version++;
 
 
     }
@@ -166,9 +192,12 @@ public class Admin extends AppCompatActivity {
         super.onStart();
         gender = null;
         gender = getIntent().getStringExtra("gender");
+        editor.putString(tableName + "gender", gender);
 
         guestNumber = null;
         guestNumber = getIntent().getStringExtra("guestNumber");
+        editor.putString(tableName + "guestNumber", guestNumber);
+        editor.commit();
 
         tableName = null;
         tableName = getIntent().getStringExtra("tableName");
@@ -182,8 +211,26 @@ public class Admin extends AppCompatActivity {
 
         }
         menuName = getIntent().getStringExtra("menuName");
-//        totalPrice = getIntent().getIntExtra("totalPrice", 0);
-//        Log.d(TAG, "totalPrice: " + totalPrice);
+
+        if (afterPaymentList != null) {
+            OrderSave orderSave = new OrderSave();
+
+
+            try {
+                boolean success = orderSave.orderSave(afterPaymentList);
+
+                Log.d(TAG, "success: " + success);
+
+                if (success == true) {
+                    deleteData();
+                    Log.d(TAG, "deleteData: ");
+                }
+
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+        }
 
     }
 
@@ -197,6 +244,7 @@ public class Admin extends AppCompatActivity {
             int tableNameInt = Integer.parseInt(tableName.replace("table", "")) - 1;
             adminTableList.get(tableNameInt).setAdminTableGender(gender);
             adminTableList.get(tableNameInt).setAdminTableGuestNumber(guestNumber);
+            // 이것도 쉐어드에 저장을 하고, 삭제하는 것으로..!
 
         } else if (tableStatement != null) {
             Log.d(TAG, "tableStatement not null: " + tableStatement);
@@ -209,7 +257,9 @@ public class Admin extends AppCompatActivity {
         } else if (menuName != null) {
             int tableNameInt = Integer.parseInt(tableName.replace("table", "")) - 1;
             adminTableList.get(tableNameInt).setAdminTableMenu(menuName);
+            Log.d(TAG, "setAdminTableMenu: " + menuName);
             adminTableList.get(tableNameInt).setAdminTablePrice(String.valueOf(totalPrice));
+            Log.d(TAG, "setAdminTablePrice: " + totalPrice);
 
         }
 
@@ -237,27 +287,72 @@ public class Admin extends AppCompatActivity {
 
         });
 
+        DialogCustom dialogCustom = new DialogCustom();
+
 
         adapter.setOnItemClickListener(new AdminTableAdapter.onItemClickListener() {
             @Override
             public void onItemClick(View view, int position) {
 
-                if (!adminTableList.get(position).getAdminTableMenu().contains("선불")) {
-                    showReceiptDialog(position, Admin.this);
+                Log.d(TAG, "onItemClick: " + position);
 
-                } else {
-                    Log.d(TAG, "onItemClick: 빈 좌석 or 선불 이용 좌석");
+                admin_sidebar_menu.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (adminTableList.get(position).getAdminTableMenu() == null) {
+                            dialogCustom.HandlerAlertDialog(Admin.this, "빈 좌석이거나 아직 주문하지 않은 좌석입니다.");
 
-                }
+                        } else if (adminTableList.get(position).getAdminTableMenu().contains("선불")) {
+                            dialogCustom.HandlerAlertDialog(Admin.this, "빈 좌석이거나 아직 주문하지 않은 좌석입니다.");
+
+                        } else {
+                            showReceiptDialog(position);
+
+                        }
+                    }
+                });
+
+                admin_sidebar_info.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+
+                    }
+                });
+
+                admin_sidebar_pay.setOnClickListener(new View.OnClickListener() {
+                    @RequiresApi(api = Build.VERSION_CODES.O)
+                    @Override
+                    public void onClick(View v) {
+
+                        // sqlite에서 정보 날리고, 서버로 데이터 보낼겨
+                        ArrayList<OrderList> orderLists = new ArrayList<>();
+                        orderLists = dbHelper.fetchMenuDetails(tableName, orderLists);
+
+                        if (adminTableList.get(position).getAdminTablePrice() != null) {
+                            totalPrice = Integer.parseInt(adminTableList.get(position).getAdminTablePrice());
+                            // 여기에 카카오 페이를 붙이겠읍니다.....
+                            Intent intent = new Intent(Admin.this, KakaoPay.class);
+                            intent.putExtra("menuName", getOrderMenuName(orderLists));
+                            intent.putExtra("menuPrice", totalPrice);
+                            intent.putExtra("tableName", tableName);
+                            intent.putExtra("jsonOrderList", getJson(orderLists));
+                            intent.putExtra("paymentStyle", "after");
+                            intent.putExtra("get_id", get_id);
+                            startActivity(intent);
+                        } else {
+                            dialogCustom.HandlerAlertDialog(Admin.this, "빈 좌석이거나 아직 주문하지 않은 좌석입니다.");
+                        }
 
 
-//                totalMenuList 여기 있는 데이터를 dialog에 띄울거야 (저장도 당연히 해야겠지)
+                    }
+                });
+
             }
         });
 
     }
 
-    public void showReceiptDialog(int position, Context context) {
+    public void showReceiptDialog(int position) {
         Dialog dialog = new Dialog(Admin.this);
         dialog.setContentView(R.layout.admin_receipt_dialog);
 
@@ -295,8 +390,77 @@ public class Admin extends AppCompatActivity {
         startActivity(intent);
     }
 
-    public String addCommasToNumber(int number){
+    public String addCommasToNumber(int number) {
         DecimalFormat decimalFormat = new DecimalFormat("#,###");
         return decimalFormat.format(number) + "원";
     }
+
+    public String getOrderMenuName(ArrayList<OrderList> orderLists) {
+
+        int menuQuantity = orderLists.size();
+
+        String menuName;
+
+        if (menuQuantity == 1) {
+            menuName = orderLists.get(0).getMenu();
+        } else {
+            menuName = orderLists.get(0).getMenu() + " 외" + Integer.toString(menuQuantity - 1);
+        }
+        Log.d(TAG, "menuName :" + menuName);
+
+        return menuName;
+    }
+
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public String getJson(ArrayList<OrderList> list) {
+        JSONObject jsonObject = new JSONObject();
+        JSONArray menujArray = new JSONArray();//배열이 필요할때
+
+        try {
+            for (int i = 0; i < list.size(); i++)//배열
+            {
+                JSONObject sObject = new JSONObject();//배열 내에 들어갈 json
+                sObject.put("menu", list.get(i).getMenu());
+                sObject.put("quantity", list.get(i).getQuantity());
+                sObject.put("price", list.get(i).getPrice());
+                menujArray.put(sObject);
+            }
+
+            jsonObject.put("table", tableName);
+            jsonObject.put("item", menujArray);
+
+            Log.d(TAG, "getJson: " + jsonObject.toString());
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return jsonObject.toString();
+    }
+
+
+    public void deleteData() {
+
+        runOnUiThread(new Runnable() {
+            @RequiresApi(api = Build.VERSION_CODES.O)
+            @Override
+            public void run() {
+
+                Log.d(TAG, "run: " + tableName);
+                dbHelper.deleteTableData(tableName);
+                editor.remove(tableName + "price");
+                editor.remove(tableName + "menu");
+                editor.commit();
+
+                int tableNameInt = Integer.parseInt(tableName.replace("table", "")) - 1;
+                Log.d(TAG, "tableNameInt: " + tableNameInt);
+                adminTableList.get(tableNameInt).setAdminTableMenu(null);
+                adminTableList.get(tableNameInt).setAdminTablePrice(null);
+                adapter.notifyItemChanged(tableNameInt);
+
+            }
+        });
+    }
+
+
 }

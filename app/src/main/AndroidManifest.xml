@@ -50,7 +50,8 @@
         <activity
             android:name=".Chatting.Client"
             android:windowSoftInputMode="adjustResize" />
-        <activity android:name=".Chatting.ChattingUI" />
+        <activity android:name=".Chatting.ChattingUI"
+            android:windowSoftInputMode="adjustResize"/>
 
         <activity android:name=".Activity.PopUp"
             android:theme="@android:style/Theme.Dialog"/>
@@ -64,10 +65,14 @@
         <activity android:name=".Activity.AdminPaymentAfterPopup"
             android:theme="@android:style/Theme.Dialog"/>
 
+        <activity android:name=".Activity.AdminPaymentBeforePopup"
+            android:theme="@android:style/Theme.Dialog"/>
+
         <activity android:name=".Activity.AdminSales"/>
 
         <activity android:name=".Activity.Admin"/>
         <activity android:name=".KakaoPay"/>
+        <activity android:name=".Kakao"/>
 
     </application>
 

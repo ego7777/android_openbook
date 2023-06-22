@@ -35,6 +35,8 @@ public class PaymentSelect extends AppCompatActivity {
         payment_select_after = findViewById(R.id.payment_select_after);
         payment_select_before = findViewById(R.id.payment_select_before);
 
+
+
     }
 
     @Override
