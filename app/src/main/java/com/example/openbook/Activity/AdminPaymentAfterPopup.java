@@ -54,7 +54,7 @@ public class AdminPaymentAfterPopup extends Activity {
     ArrayList<AdminTableList> adminTableList;
     DBHelper dbHelper;
 
-    int version = 1;
+    int version = 2;
 
     SharedPreferences sharedPreference;
     SharedPreferences.Editor editor;

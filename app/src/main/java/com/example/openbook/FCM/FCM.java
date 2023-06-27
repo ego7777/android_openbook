@@ -21,6 +21,7 @@ import com.example.openbook.Activity.AdminPaymentAfterPopup;
 import com.example.openbook.Activity.PopUp;
 import com.example.openbook.Chatting.ChattingUI;
 
+import com.example.openbook.Chatting.DBHelper;
 import com.example.openbook.R;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -34,6 +35,17 @@ import com.google.firebase.messaging.RemoteMessage;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.io.IOException;
+import java.util.Map;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.FormBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 
 public class FCM extends FirebaseMessagingService {
@@ -77,104 +89,67 @@ public class FCM extends FirebaseMessagingService {
     }
 
 
-    private RemoteViews getCustomDesign(String title, String message) {
-        RemoteViews remoteViews = new RemoteViews(getApplicationContext().getPackageName(), R.layout.notification);
-        remoteViews.setTextViewText(R.id.noti_title, title);
-        remoteViews.setTextViewText(R.id.noti_message, message);
-        remoteViews.setImageViewResource(R.id.logo, R.drawable.heart);
-        return remoteViews;
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.O)
+    @RequiresApi(api = Build.VERSION_CODES.Q)
     @Override
     public void onMessageReceived(@NonNull RemoteMessage message) {
         super.onMessageReceived(message);
 
         // 푸시메시지 수신시 할 작업을 작성
-
         Log.d(TAG, "From: " + message.getFrom());
-       
 
         // Check if message contains a notification payload.
-        if (message.getNotification() != null) {
-            Log.d(TAG, "Message Notification Body: " + message.getNotification().getBody());
-            Log.d(TAG, "Message Notification Title : " + message.getNotification().getTitle());
-            showNotification(message.getNotification().getTitle(),
-                    message.getNotification().getBody());
-        }else if(message.getData() != null){
-
-            Log.d(TAG, "onMessageReceived: " + message.getData());
-
-
-            //client가 채팅 요청하는 것
-            if(message.getData().containsKey("title")){
-                Log.d(TAG, "onMessageReceived title: " + message.getData().get("title"));
-                Log.d(TAG, "onMessageReceived body: " + message.getData().get("body"));
-                Log.d(TAG, "onMessageReceived clickTable: " +message.getData().get("clickTable"));
-                Log.d(TAG, "onMessageReceived ticket :" + message.getData().get("ticket"));
-
-                mHandler.postDelayed(new Runnable() {
-                    @RequiresApi(api = Build.VERSION_CODES.Q)
-                    @Override
-                    public void run() {
-                        showData(message.getData().get("title"),
-                                message.getData().get("body"),
-                                message.getData().get("clickTable"),
-                                message.getData().get("ticket"));
-                    }
-                },0);
-
-            //admin page table정보 update
-            }else if(message.getData().containsKey("gender")){
-                Log.d(TAG, "onMessageReceived gender: " + message.getData().get("gender"));
-                Log.d(TAG, "onMessageReceived guestNumber: " + message.getData().get("guestNumber"));
-                Log.d(TAG, "onMessageReceived tableName: " +message.getData().get("tableName"));
-
-                mHandler.postDelayed(new Runnable() {
-                    @RequiresApi(api = Build.VERSION_CODES.Q)
-                    @Override
-                    public void run() {
-                        adminTableInformation(message.getData().get("gender"),
-                                message.getData().get("guestNumber"),
-                                message.getData().get("tableName"));
-                    }
-                },0);
-
-                //admin page 선불좌석 표시
-            }else if(message.getData().containsKey("tableStatement")){
-                Log.d(TAG, "onMessageReceived state: " + message.getData().get("tableStatement"));
-                Log.d(TAG, "onMessageReceived tableNumber: " + message.getData().get("tableNumber"));
-
-                mHandler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        adminPaymentBefore(message.getData().get("tableStatement"),
-                                message.getData().get("tableNumber"));
-                    }
-                }, 0);
-
-            }else if(message.getData().containsKey("menuName")){
-                mHandler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        adminTableMenu(message.getData().get("tableName"),
-                                message.getData().get("menuName"),
-                                message.getData().get("item")
-                                );
-                    }
-                },0);
-            }
+        if (message.getData().size() > 0) {
+            handleDataMessage(message.getData());
         }
 
     }
 
-    public void adminTableMenu(String tableName, String menuSummary, String item){
-        int totalPrice=0;
+
+    @RequiresApi(api = Build.VERSION_CODES.Q)
+    private void handleDataMessage(Map<String, String> data) {
+        if (data.containsKey("title")) {
+            String title = data.get("title");
+            String body = data.get("body");
+            String clickTable = data.get("clickTable");
+            String ticket = data.get("ticket");
+
+            // 채팅 요청 처리 메소드 호출
+            handleChatRequest(title, body, clickTable, ticket);
+        } else if (data.containsKey("gender")) {
+            String gender = data.get("gender");
+            String guestNumber = data.get("guestNumber");
+            String tableName = data.get("tableName");
+
+            // admin page table 정보 업데이트 처리 메소드 호출
+            handleAdminTableInformation(gender, guestNumber, tableName);
+        } else if (data.containsKey("tableStatement")) {
+            String tableStatement = data.get("tableStatement");
+            String tableNumber = data.get("tableNumber");
+
+            // admin page 선불좌석 표시 처리 메소드 호출
+            handleAdminPaymentBefore(tableStatement, tableNumber);
+        } else if (data.containsKey("menuName")) {
+            String tableName = data.get("tableName");
+            String menuName = data.get("menuName");
+            String item = data.get("item");
+
+            // admin page 메뉴 표시 처리 메소드 호출
+            handleAdminTableMenu(tableName, menuName, item);
+        } else if (data.containsKey("action")) {
+            String tableName = data.get("tableName");
+
+            saveChattingData(tableName);
+        }
+    }
+
+
+    public void handleAdminTableMenu(String tableName, String menuSummary, String item) {
+        int totalPrice = 0;
 
         try {
             JSONArray jsonArray = new JSONArray(item);
 
-            for(int i=0; i<jsonArray.length(); i++){
+            for (int i = 0; i < jsonArray.length(); i++) {
                 JSONObject jsonObject = jsonArray.getJSONObject(i);
                 totalPrice = totalPrice + jsonObject.getInt("price");
 
@@ -205,14 +180,14 @@ public class FCM extends FirebaseMessagingService {
 
     }
 
-    public void adminTableInformation(String gender, String guestNumber, String tableName){
+    public void handleAdminTableInformation(String gender, String guestNumber, String tableName) {
         Intent intent = new Intent(this, Admin.class);
         intent.putExtra("gender", gender);
         intent.putExtra("guestNumber", guestNumber);
         intent.putExtra("tableName", tableName);
 
 
-        requestCode  = (int) System.currentTimeMillis();
+        requestCode = (int) System.currentTimeMillis();
 
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, requestCode, intent, PendingIntent.FLAG_IMMUTABLE);
@@ -226,39 +201,35 @@ public class FCM extends FirebaseMessagingService {
     }
 
 
-
-    public void adminPaymentBefore(String statement, String tableName){
+    public void handleAdminPaymentBefore(String statement, String tableName) {
         Intent intent = new Intent(this, AdminPaymentBeforePopup.class);
         intent.putExtra("tableStatement", statement);
         intent.putExtra("tableName", tableName);
         Log.d(TAG, "tableStatement: " + statement);
 
-        requestCode  = (int) System.currentTimeMillis();
+        requestCode = (int) System.currentTimeMillis();
 
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, requestCode, intent, PendingIntent.FLAG_IMMUTABLE);
 
-        try{
+        try {
             pendingIntent.send();
-        }catch (PendingIntent.CanceledException e){
+        } catch (PendingIntent.CanceledException e) {
             e.printStackTrace();
         }
 
     }
 
 
-
-
-
     @RequiresApi(api = Build.VERSION_CODES.Q)
-    public void showData(String title, String body, String clickTable, String ticket){
+    public void handleChatRequest(String title, String body, String clickTable, String ticket) {
         //popupActivity를 만들어서 띄우자
         Intent intent = new Intent(this, PopUp.class);
         intent.putExtra("notificationTitle", title);
         intent.putExtra("notificationBody", body);
         intent.putExtra("notificationClickTable", clickTable);
 
-        if(ticket == "yesTicket"){
+        if (ticket == "yesTicket") {
             intent.putExtra("profileTicket", ticket);
         }
 
@@ -272,50 +243,47 @@ public class FCM extends FirebaseMessagingService {
             e.printStackTrace();
         }
 
-
     }
 
 
+    public void saveChattingData(String tableName) {
+        int version = 2;
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    public void showNotification(String title, String message) {
-        //팝업 터치시 이동할 액티비티를 지정합니다.
+        DBHelper dbHelper = new DBHelper(FCM.this, version);
+        version++;
 
-        Intent intent = new Intent(this, ChattingUI.class);
-        //알림 채널 아이디 : 본인 하고싶으신대로...
-        String channel_id = "openBook_fcm";
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+        String chatData = dbHelper.chattingJson(tableName);
+        Log.d(TAG, "saveChattingData chatData: " + chatData);
 
+        OkHttpClient okHttpClient = new OkHttpClient();
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), channel_id)
-                .setSmallIcon(R.drawable.heart)
-                .setAutoCancel(true)
-                .setOnlyAlertOnce(false)
-                .setContentIntent(pendingIntent);
+        RequestBody formBody = new FormBody.Builder()
+                .add("tableName", tableName)
+                .add("chatData", chatData)
+                .build();
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            builder = builder.setContent(getCustomDesign(title, message));
-        } else {
-            builder = builder.setContentTitle(title)
-                    .setContentText(message)
-                    .setSmallIcon(R.drawable.heart);
-        }
+        Request request = new Request.Builder()
+                .url("http://3.36.225.141/SaveChattingData")
+                .post(formBody)
+                .build();
 
-        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        okHttpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                Log.d(TAG, "onFailure: " + e);
+            }
 
-        //알람 채널이 필요한 안드로이드 버전을 위한 코드
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                String responseBody = response.body().string();
+                Log.d(TAG, "onResponse: " + responseBody);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel notificationChannel = new NotificationChannel(channel_id, "OpenBook_FCM", NotificationManager.IMPORTANCE_HIGH);
-            notificationManager.createNotificationChannel(notificationChannel);
-        }
-
-        //알람 표시
-        notificationManager.notify(0, builder.build());
-
+                //저장되면 삭제
+            }
+        });
 
     }
+
 
     @Override
     public void onNewToken(@NonNull String token) {

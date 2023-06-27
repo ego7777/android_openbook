@@ -13,6 +13,10 @@ import androidx.annotation.Nullable;
 
 import com.example.openbook.Data.OrderList;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.net.URL;
 import java.util.ArrayList;
 
@@ -172,12 +176,49 @@ public class DBHelper extends SQLiteOpenHelper {
 
     }
 
+    public String chattingJson(String tableValue){
+        // SQLite 데이터베이스에서 데이터 가져오기
+        SQLiteDatabase db = this.getWritableDatabase();
+        String selectQuery = "SELECT * FROM chattingTable WHERE sender = ?";
+        Cursor cursor = db.rawQuery(selectQuery, new String[] { tableValue });
+
+        JSONArray jsonArray = new JSONArray();
+        if (cursor.moveToFirst()) {
+            do {
+                JSONObject jsonObject = new JSONObject();
+                try {
+                    String message = cursor.getString(1);
+                    String time = cursor.getString(cursor.getInt(2));
+                    String receiver = cursor.getString(4);
+
+                    jsonObject.put("message", message);
+                    jsonObject.put("time", time);
+                    jsonObject.put("receiver", receiver);
+
+                    jsonArray.put(jsonObject);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+
+    // JSON 형식으로 변환된 데이터 출력 또는 전송 등의 작업 수행
+        String jsonData = jsonArray.toString();
+        Log.d("ChatData", jsonData);
+
+        return jsonData;
+
+    }
 
 
 
-    public void deleteTableData(String tableValue) {
+
+
+
+    public void deleteTableData(String tableValue, String tableListName) {
         SQLiteDatabase db = getWritableDatabase();
-        String deleteQuery = "DELETE FROM adminTableList"  + " WHERE tableName = '" + tableValue + "'";
+        String deleteQuery = "DELETE FROM '" + tableListName  + "' WHERE tableName = '" + tableValue + "'";
         db.execSQL(deleteQuery);
         db.close();
     }

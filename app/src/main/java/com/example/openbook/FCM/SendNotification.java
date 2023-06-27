@@ -32,6 +32,56 @@ public class SendNotification {
     DatabaseReference mRootRef = FirebaseDatabase.getInstance().getReference();
 
 
+    public void saveChatting(String tableName){
+        mRootRef.child(tableName).child("fcmToken").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                String pushToken = (String) snapshot.getValue();
+
+                try{
+                    JSONObject notification = new JSONObject();
+
+                    notification.put("tableName", tableName);
+                    notification.put("action", "delete");
+
+                    RequestBody formBody = new FormBody.Builder()
+                            .add("to", pushToken)
+                            .add("notification", notification.toString())
+                            .build();
+
+                    Request request = new Request.Builder()
+                            .url("http://3.36.255.141/fcmPush.php")
+                            .addHeader("Authorization", "key=" + SERVER_KEY)
+                            .post(formBody)
+                            .build();
+
+                    okHttpClient.newCall(request).enqueue(new Callback() {
+                        @Override
+                        public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                            Log.d(TAG, "onFailure: " + e);
+                        }
+
+                        @Override
+                        public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                            String responseBody = response.body().string();
+                            Log.d(TAG, "onResponse: "  + responseBody);
+                        }
+                    });
+
+                }catch (JSONException e){
+                    e.printStackTrace();
+                }
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
+    }
+
     public void requestChatting(String clickTable, String get_id, String ticket, String message) {
 
         mRootRef.child(clickTable).child("fcmToken").addListenerForSingleValueEvent(new ValueEventListener() {
@@ -118,8 +168,6 @@ public class SendNotification {
                         Log.d(TAG, "body: " + response.body().string());
                     }
                 });
-
-
             }
 
             @Override
@@ -187,4 +235,6 @@ public class SendNotification {
             }
         });
     }
+
+
 }

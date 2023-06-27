@@ -21,7 +21,6 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -41,14 +40,13 @@ import com.example.openbook.DialogCustom;
 import com.example.openbook.FCM.FCM;
 import com.example.openbook.FCM.SendNotification;
 import com.example.openbook.KakaoPay;
-import com.example.openbook.OrderSave;
+import com.example.openbook.SaveOrderDeleteData;
 import com.example.openbook.R;
 import com.example.openbook.Data.TableInformation;
 import com.example.openbook.Data.CartList;
 import com.example.openbook.Data.MenuList;
 import com.example.openbook.Data.SideList;
 import com.example.openbook.Data.TableList;
-import com.example.openbook.TableQuantity;
 
 
 import org.json.JSONArray;
@@ -277,7 +275,7 @@ public class Menu extends AppCompatActivity {
         Log.d(TAG, "onStart_PaymentStyle :" + paymentStyle);
 
         if (returnOrderList != null) {
-            OrderSave orderSave = new OrderSave();
+            SaveOrderDeleteData orderSave = new SaveOrderDeleteData();
             try{
                 boolean success = orderSave.orderSave(returnOrderList);
 

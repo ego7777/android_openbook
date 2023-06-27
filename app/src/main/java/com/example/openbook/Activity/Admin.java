@@ -1,27 +1,15 @@
 package com.example.openbook.Activity;
 
 import android.app.Dialog;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.icu.text.DecimalFormat;
-import android.icu.text.UnicodeSetSpanner;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.util.Log;
 import android.view.View;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
-import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
@@ -33,12 +21,11 @@ import com.example.openbook.Adapter.AdminPopUpAdapter;
 import com.example.openbook.Adapter.AdminTableAdapter;
 import com.example.openbook.Chatting.DBHelper;
 import com.example.openbook.Data.AdminTableList;
-import com.example.openbook.Data.CartList;
 import com.example.openbook.Data.OrderList;
 import com.example.openbook.DialogCustom;
 import com.example.openbook.FCM.FCM;
 import com.example.openbook.KakaoPay;
-import com.example.openbook.OrderSave;
+import com.example.openbook.SaveOrderDeleteData;
 import com.example.openbook.R;
 import com.example.openbook.TableQuantity;
 
@@ -46,17 +33,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.FormBody;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 
 public class Admin extends AppCompatActivity {
 
@@ -75,7 +52,7 @@ public class Admin extends AppCompatActivity {
     int totalPrice;
 
     DBHelper dbHelper;
-    int version = 1;
+    int version = 2;
 
     SharedPreferences sharedPreference;
     SharedPreferences.Editor editor;
@@ -190,6 +167,7 @@ public class Admin extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
+
         gender = null;
         gender = getIntent().getStringExtra("gender");
         editor.putString(tableName + "gender", gender);
@@ -213,17 +191,19 @@ public class Admin extends AppCompatActivity {
         menuName = getIntent().getStringExtra("menuName");
 
         if (afterPaymentList != null) {
-            OrderSave orderSave = new OrderSave();
-
+            SaveOrderDeleteData orderSaveDeleteData = new SaveOrderDeleteData();
+            //저장하고,
 
             try {
-                boolean success = orderSave.orderSave(afterPaymentList);
+                boolean success = orderSaveDeleteData.orderSave(afterPaymentList);
 
                 Log.d(TAG, "success: " + success);
 
                 if (success == true) {
-                    deleteData();
+                    deleteLocalData(); //
                     Log.d(TAG, "deleteData: ");
+
+                    orderSaveDeleteData.deleteServerData(tableName); // 서버 데이터
                 }
 
             } catch (InterruptedException e) {
@@ -439,28 +419,38 @@ public class Admin extends AppCompatActivity {
     }
 
 
-    public void deleteData() {
+    public void deleteLocalData() {
 
         runOnUiThread(new Runnable() {
             @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void run() {
 
+                //서버에서도 데이터를 이동하는 것이 좋겠다...! 채팅 데이터를 서버로 보내야함 여기서 + 얘기만(gender)
+
                 Log.d(TAG, "run: " + tableName);
-                dbHelper.deleteTableData(tableName);
-                editor.remove(tableName + "price");
+                dbHelper.deleteTableData(tableName, "adminTableList"); //sqlite에서 지우고
+                editor.remove(tableName + "price"); //s.p에서도 지움
                 editor.remove(tableName + "menu");
+                editor.remove(tableName + "gender");
+                editor.remove(tableName + "guestName");
                 editor.commit();
 
                 int tableNameInt = Integer.parseInt(tableName.replace("table", "")) - 1;
                 Log.d(TAG, "tableNameInt: " + tableNameInt);
                 adminTableList.get(tableNameInt).setAdminTableMenu(null);
                 adminTableList.get(tableNameInt).setAdminTablePrice(null);
+                adminTableList.get(tableNameInt).setAdminTableGender(null);
+                adminTableList.get(tableNameInt).setAdminTableGuestNumber(null);
                 adapter.notifyItemChanged(tableNameInt);
 
             }
         });
     }
+
+
+
+
 
 
 }
