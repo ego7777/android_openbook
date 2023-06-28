@@ -1,5 +1,7 @@
 package com.example.openbook.Chatting;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -80,6 +82,8 @@ public class ChattingUI extends AppCompatActivity {
 
     ClientSocket clientSocket;
 
+    private BroadcastReceiver broadcastReceiver;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -100,6 +104,15 @@ public class ChattingUI extends AppCompatActivity {
 
         dbHelper = new DBHelper(ChattingUI.this, version);
         sqLiteDatabase = dbHelper.getWritableDatabase();
+
+        broadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (intent.getAction().equals("chattingDataArrived")){
+                    String message = intent.getStringExtra("message");
+                }
+            }
+        };
 
 
         /**
@@ -222,7 +235,7 @@ public class ChattingUI extends AppCompatActivity {
                         //서버에 의해 연결이 종료될 때 호출
                         m = "서버가 접속을 종료하였습니다.";
 
-                        clientSocket = new ClientSocket("3.36.255.141", 7777, get_id,  clientSocket.tableList);
+                        clientSocket = new ClientSocket(get_id, ChattingUI.this, clientSocket.tableList);
                         clientSocket.start();
                         loop = true;
 
@@ -320,7 +333,7 @@ public class ChattingUI extends AppCompatActivity {
 
             try {
 
-                clientSocket = new ClientSocket("3.36.255.141", 7777, get_id, clientSocket.tableList);
+                clientSocket = new ClientSocket(get_id, ChattingUI.this, clientSocket.tableList);
                 clientSocket.start();
 
                 loop = true;

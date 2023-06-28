@@ -495,7 +495,7 @@ public class Menu extends AppCompatActivity {
                         successOrder();
 
                         if (clientSocket == null) {
-                            clientSocket = new ClientSocket("3.36.255.141", 7777, get_id, tableList);
+                            clientSocket = new ClientSocket(get_id, Menu.this, tableList);
                             clientSocket.start();
                             Log.d(TAG, "연결?: ");
                         }

@@ -204,6 +204,7 @@ public class Admin extends AppCompatActivity {
                     Log.d(TAG, "deleteData: ");
 
                     orderSaveDeleteData.deleteServerData(tableName); // 서버 데이터
+                    Log.d(TAG, "deleteServerData: ");
                 }
 
             } catch (InterruptedException e) {
@@ -429,7 +430,7 @@ public class Admin extends AppCompatActivity {
                 //서버에서도 데이터를 이동하는 것이 좋겠다...! 채팅 데이터를 서버로 보내야함 여기서 + 얘기만(gender)
 
                 Log.d(TAG, "run: " + tableName);
-                dbHelper.deleteTableData(tableName, "adminTableList"); //sqlite에서 지우고
+                dbHelper.deleteTableData(tableName, "adminTableList", "tableName"); //sqlite에서 지우고
                 editor.remove(tableName + "price"); //s.p에서도 지움
                 editor.remove(tableName + "menu");
                 editor.remove(tableName + "gender");

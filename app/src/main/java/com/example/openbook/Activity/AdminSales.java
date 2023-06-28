@@ -424,9 +424,9 @@ public class AdminSales extends AppCompatActivity {
 
         } else if (duration.equals("week")) {
 
-            xAxis.setAxisMinimum(0.1f);
-            xAxis.setAxisMaximum(4.9f);
-//            xAxis.setAxisMaximum(0.1f);
+            xAxis.setAxisMinimum((float) (salesLists.get(0).getIntDate() - 0.9));
+            xAxis.setAxisMaximum((float) (salesLists.get(salesLists.size() - 1).getIntDate() + 0.9));
+
 
             xAxis.setValueFormatter(new IAxisValueFormatter() {
                 @Override

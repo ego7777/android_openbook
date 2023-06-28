@@ -1,7 +1,10 @@
 package com.example.openbook.Activity;
 
 import android.app.Dialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
@@ -15,6 +18,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -75,12 +79,12 @@ public class Table extends AppCompatActivity {
 
     ImageLoadTask task;
     String url;
-
+    BroadcastReceiver broadcastReceiver;
     updateTable updateTable;
-
 
     DrawableMethod drawableMethod;
     int tablePosition;
+    String responseBody;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -98,6 +102,18 @@ public class Table extends AppCompatActivity {
 
         clientSocket = (ClientSocket) getIntent().getSerializableExtra("clientSocket");
         tableList = (ArrayList<TableList>) getIntent().getSerializableExtra("tableList");
+
+        broadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if(intent.getAction().equals("tableInformationArrived")){
+                    String message = intent.getStringExtra("tableInformation");
+
+                    tableUpdate(message);
+                }
+            }
+        };
+
 
 
         if (clientSocket != null) {
@@ -180,12 +196,15 @@ public class Table extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        if (clientSocket != null) {
-            loop = true;
-            updateTable = new updateTable();
-            updateTable.start();
-            Log.d(TAG, "onResume table update 를 다시 시작한다~!");
-        }
+        IntentFilter intentFilter = new IntentFilter("tableInformationArrived");
+        LocalBroadcastManager.getInstance(Table.this).registerReceiver(broadcastReceiver, intentFilter);
+
+//        if (clientSocket != null) {
+//            loop = true;
+//            updateTable = new updateTable();
+//            updateTable.start();
+//            Log.d(TAG, "onResume table update 를 다시 시작한다~!");
+//        }
 
 
         /**
@@ -285,151 +304,102 @@ public class Table extends AppCompatActivity {
                 TextView table_info_close = dlg.findViewById(R.id.table_info_close);
 
 
-//                 GET 요청 객체 생성
-                Request.Builder builder = new Request.Builder()
-                        .url("http://3.36.255.141/tableInfoCk.php")
-                        .get();
 
-                builder.addHeader("table", "table" + clickTable);
-                Request request = builder.build();
-                Log.d(TAG, "request :" + request);
-
-
-                if (clickTable == myTable) {
+                try {
+                    String result = requestTableInfo();
                     /**
                      *  등록을 했으면 등록된 정보를 보여주고 등록 안했으면 하단 set
                      */
-                    okHttpClient.newCall(request).enqueue(new Callback() {
-                        @Override
-                        public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                            Log.d(TAG, "onFailure: " + e);
-                        }
+                    if(clickTable == myTable){
 
-                        @Override
-                        public void onResponse(@NonNull Call call, @NonNull Response response) {
+                        if(result.equals("없음")){
+                            MakeQR makeQR = new MakeQR();
+                            table_info_img.setImageBitmap(makeQR.clientQR(get_id));
+                            table_info_img.setClickable(false);
 
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    try {
-                                        String body = response.body().string();
+                            table_info_text.setVisibility(View.INVISIBLE);
 
-                                        if (body.equals("없음")) {
-                                            MakeQR makeQR = new MakeQR();
-                                            table_info_img.setImageBitmap(makeQR.clientQR(get_id));
-                                            table_info_img.setClickable(false);
+                            statement.setText("사진과 정보를 입력하시려면 다음 큐알로 입장해주세요 :)");
+                            table_info_gender.setVisibility(View.INVISIBLE);
+                            table_info_member.setVisibility(View.INVISIBLE);
 
-                                            table_info_text.setVisibility(View.INVISIBLE);
+                        }else if (result.startsWith("{")) {
+                            JSONObject jsonObject = new JSONObject(result);
 
-                                            statement.setText("사진과 정보를 입력하시려면 다음 큐알로 입장해주세요 :)");
-                                            table_info_gender.setVisibility(View.INVISIBLE);
-                                            table_info_member.setVisibility(View.INVISIBLE);
+                            String url = "http://3.36.255.141/image/"
+                                    + jsonObject.getString("img");
+                            Log.d(TAG, "url :" + url);
 
+                            task = new ImageLoadTask(Table.this, true, url, table_info_img);
+                            task.execute();
 
-                                        } else if (body.startsWith("{")) {
-                                            JSONObject jsonObject = new JSONObject(body);
+                            table_info_text.setText("다시 등록하시려면 \n프로필 사진을 터치해주세요!");
 
-                                            String url = "http://3.36.255.141/image/"
-                                                    + jsonObject.getString("img");
-                                            Log.d(TAG, "url :" + url);
-
-                                            task = new ImageLoadTask(Table.this, true, url, table_info_img);
-                                            task.execute();
-
-                                            table_info_text.setText("다시 등록하시려면 \n프로필 사진을 터치해주세요!");
-
-                                            statement.setText(jsonObject.getString("statement"));
-                                            table_info_gender.setText(jsonObject.getString("gender"));
-                                            table_info_member.setText(jsonObject.getString("guestNum"));
+                            statement.setText(jsonObject.getString("statement"));
+                            table_info_gender.setText(jsonObject.getString("gender"));
+                            table_info_member.setText(jsonObject.getString("guestNum"));
 
 
-                                        }//if-else 문
+                        }//if-else 문
+                    }else{
+                        if (result.equals("없음")) {
+                            table_info_text.setVisibility(View.INVISIBLE);
+                            statement.setText("정보를 입력하지 않은 테이블입니다.");
+                            table_info_gender.setVisibility(View.INVISIBLE);
+                            table_info_member.setVisibility(View.INVISIBLE);
 
-                                    } catch (IOException | JSONException e) {
-                                        e.printStackTrace();
-                                    }
-                                } //run
-                            }); // runOnUiThread
-                        } //onResponse
-                    });
+                            /**
+                             * table 정보 있을 때
+                             */
+                        } else if (result.startsWith("{")) {
+                            JSONObject jsonObject = new JSONObject(result);
 
-                } else {
-                    okHttpClient.newCall(request).enqueue(new Callback() {
-                        @Override
-                        public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                            Log.d(TAG, "onFailure: " + e);
-                        }
+                            url = "http://3.36.255.141/image/" + jsonObject.getString("img");
 
-                        @Override
-                        public void onResponse(@NonNull Call call, @NonNull Response response) {
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    try {
-                                        String body = response.body().string();
-
-                                        if (body.equals("없음")) {
-                                            table_info_text.setVisibility(View.INVISIBLE);
-                                            statement.setText("정보를 입력하지 않은 테이블입니다.");
-                                            table_info_gender.setVisibility(View.INVISIBLE);
-                                            table_info_member.setVisibility(View.INVISIBLE);
-
-                                            /**
-                                             * table 정보 있을 때
-                                             */
-                                        } else if (body.startsWith("{")) {
-                                            JSONObject jsonObject = new JSONObject(body);
-
-                                            url = "http://3.36.255.141/image/" + jsonObject.getString("img");
-
-                                            Log.d(TAG, "url :" + url);
+                            Log.d(TAG, "url :" + url);
 
 
-                                            if (tableInformationHashMap == null ||
-                                                    tableInformationHashMap.get(clickTable) == null ||
-                                                    tableInformationHashMap.get(clickTable).getUseTable() == 0) {
+                            if (tableInformationHashMap == null ||
+                                    tableInformationHashMap.get(clickTable) == null ||
+                                    tableInformationHashMap.get(clickTable).getUseTable() == 0) {
 
-                                                Log.d(TAG, "팝업 안에서 발생 null");
-                                                task = new ImageLoadTask(Table.this, false, url, table_info_img);
-                                                task.execute();
-
-
-                                            } else {
-
-                                                if (tableInformationHashMap.get(clickTable) == null) {
-                                                    Log.d(TAG, "팝업 안에서 발생 getUseTable null");
-                                                    task = new ImageLoadTask(Table.this, false, url, table_info_img);
-                                                    task.execute();
-
-                                                } else if (tableInformationHashMap.get(clickTable).getUseTable() == clickTable) {
-                                                    Log.d(TAG, "팝업 안에서 발생 getUseTable :" + tableInformationHashMap.get(clickTable).getUseTable());
-                                                    tableInformationHashMap.get(clickTable).setUsage(true);
-                                                    Log.d(TAG, "table 조회 :" + tableInformationHashMap.get(clickTable).isChattingAgree());
-                                                    task = new ImageLoadTask(Table.this, true, url, table_info_img);
-                                                    task.execute();
-                                                    table_info_text.setVisibility(View.INVISIBLE);
-                                                    table_info_img.setClickable(false);
-                                                }
+                                Log.d(TAG, "팝업 안에서 발생 null");
+                                task = new ImageLoadTask(Table.this, false, url, table_info_img);
+                                task.execute();
 
 
-                                            }
+                            } else {
 
-                                            statement.setText(jsonObject.getString("statement"));
-                                            table_info_gender.setText(jsonObject.getString("gender"));
-                                            table_info_member.setText(jsonObject.getString("guestNum"));
+                                if (tableInformationHashMap.get(clickTable) == null) {
+                                    Log.d(TAG, "팝업 안에서 발생 getUseTable null");
+                                    task = new ImageLoadTask(Table.this, false, url, table_info_img);
+                                    task.execute();
 
-                                        }
-
-                                    } catch (IOException | JSONException e) {
-                                        e.printStackTrace();
-                                    }
-
+                                } else if (tableInformationHashMap.get(clickTable).getUseTable() == clickTable) {
+                                    Log.d(TAG, "팝업 안에서 발생 getUseTable :" + tableInformationHashMap.get(clickTable).getUseTable());
+                                    tableInformationHashMap.get(clickTable).setUsage(true);
+                                    Log.d(TAG, "table 조회 :" + tableInformationHashMap.get(clickTable).isChattingAgree());
+                                    task = new ImageLoadTask(Table.this, true, url, table_info_img);
+                                    task.execute();
+                                    table_info_text.setVisibility(View.INVISIBLE);
+                                    table_info_img.setClickable(false);
                                 }
-                            });
-                        }
-                    });
 
-                } // else 문 끝
+
+                            }
+
+                            statement.setText(jsonObject.getString("statement"));
+                            table_info_gender.setText(jsonObject.getString("gender"));
+                            table_info_member.setText(jsonObject.getString("guestNum"));
+
+                        }
+                    }
+                } catch (InterruptedException | JSONException e) {
+                    e.printStackTrace();
+                }
+
+
+
 
                 /**
                  * 사진을 누르면 돈내고 사진 깔거냐고 물어보기
@@ -478,6 +448,48 @@ public class Table extends AppCompatActivity {
 
     } //onResume
 
+    private String requestTableInfo() throws InterruptedException {
+
+        //                 GET 요청 객체 생성
+        Request.Builder builder = new Request.Builder()
+                .url("http://3.36.255.141/tableInfoCk.php")
+                .get();
+
+        builder.addHeader("table", "table" + clickTable);
+        Request request = builder.build();
+        Log.d(TAG, "request :" + request);
+
+        okHttpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                Log.d(TAG, "onFailure: " + e);
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                if(response.isSuccessful()){
+                    String body = response.body().string();
+                    Log.d(TAG, "onResponse: " + body);
+                    responseBody = body;
+                }else{
+                    Log.d(TAG, "onResponse: fail");
+                }
+            }
+        });
+
+        if(responseBody == null){
+            Thread.sleep(250);
+        }
+
+        return responseBody;
+    }
+
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        LocalBroadcastManager.getInstance(Table.this).unregisterReceiver(broadcastReceiver);
+    }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -486,14 +498,6 @@ public class Table extends AppCompatActivity {
 
         loop = false;
         Log.d(TAG, "onStop loop false 맞아? " + loop);
-
-
-//        if(updateTable.isAlive()){
-//            updateTable.interrupt();
-//            Log.d(TAG, "onStop tableUpdate Thread 멈춤? " + updateTable.isInterrupted());
-
-//        }
-
 
     }
 
@@ -509,6 +513,46 @@ public class Table extends AppCompatActivity {
         startActivity(intent);
     }
 
+    public void tableUpdate(String line){
+        int table[];
+
+        try {
+            JSONArray jsonArray = new JSONArray(line);
+
+            table = new int[jsonArray.length()];
+
+
+            for (int j = 0; j < jsonArray.length(); j++) {
+                JSONObject jsonObject = jsonArray.getJSONObject(j);
+                table[j] = jsonObject.getInt("table");
+            }
+
+            Arrays.sort(table);
+            Log.d(TAG, "new table :" + Arrays.toString(table));
+
+            for (int i = 0; i < table.length; i++) {
+                if (table[i] != myTable) {
+
+                    int color = getColor(R.color.skyblue);
+                    tablePosition = table[i] -1;
+                    tableList.get(tablePosition).setViewType(2);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            adapter.changeItemColor(tablePosition, color);
+                        }
+                    });
+
+                } else {
+                    Log.d(TAG, "같음");
+                }
+            }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
     public class updateTable extends Thread {
 
         int table[];
@@ -522,6 +566,7 @@ public class Table extends AppCompatActivity {
             try {
                 networkReader = new BufferedReader(
                         new InputStreamReader(clientSocket.getSocket().getInputStream()));
+
 
 
                 Log.d(TAG, "networkReader :" + networkReader.ready());

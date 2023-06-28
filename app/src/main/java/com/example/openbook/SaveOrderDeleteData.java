@@ -65,6 +65,7 @@ public class SaveOrderDeleteData {
     public void deleteServerData(String tableName){
         //해당 테이블의 tableInfo를 지운다
         OkHttpClient okHttpClient = new OkHttpClient();
+        Log.d(TAG, "deleteServerData: 1");
 
         RequestBody formBody = new FormBody.Builder()
                 .add("tableName", tableName)
@@ -86,8 +87,13 @@ public class SaveOrderDeleteData {
                 String responseBody = response.body().string();
                 Log.d(TAG, "Delete onResponse: " + responseBody);
 
+                if(responseBody.equals("")){
+
+                }
+
                 SendNotification sendNotification = new SendNotification();
                 sendNotification.saveChatting(tableName);
+
 
             }
         });

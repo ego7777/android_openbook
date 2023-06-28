@@ -1,13 +1,19 @@
 package com.example.openbook.Chatting;
 
 
+import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
 
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 
 import androidx.annotation.RequiresApi;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 
+import com.example.openbook.Activity.Table;
 import com.example.openbook.Data.TableList;
 import com.example.openbook.R;
 
@@ -47,7 +53,8 @@ public class ClientSocket extends Thread implements Serializable{
     private static Socket socket;
     boolean loop;
 
-//    Context context;
+    Handler handler;
+    Context context;
 
     public ArrayList<TableList> getTableList() {
         return tableList;
@@ -55,13 +62,22 @@ public class ClientSocket extends Thread implements Serializable{
 
     ArrayList<TableList> tableList;
 
+    public ClientSocket(String get_id, Context context, Handler handler){
+        this.get_id = get_id;
+        this.handler = handler;
+        this.context = context;
+        socketAddress = new InetSocketAddress("3.36.255.141", 7777);
+
+    }
 
 
-    public ClientSocket(String ip, int port, String get_id, ArrayList<TableList> tableList) {
+
+    public ClientSocket(String get_id, Context context, ArrayList<TableList> tableList) {
         //서버 ip 주소와 사용할 포트번호로 소켓 어드레스 객체 생성
         this.get_id = get_id;
+        this.context = context;
         this.tableList = tableList;
-        socketAddress = new InetSocketAddress(ip, port);
+        socketAddress = new InetSocketAddress("3.36.255.141", 7777);
 
     }
 
@@ -89,14 +105,12 @@ public class ClientSocket extends Thread implements Serializable{
 
             //3. 데이터 입출력 메소드 설정
 
-//            ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-
             BufferedReader networkReader = new BufferedReader(
                     new InputStreamReader(socket.getInputStream()));
 
-            OutputStreamWriter o = new OutputStreamWriter(socket.getOutputStream());
+//            OutputStreamWriter o = new OutputStreamWriter(socket.getOutputStream());
             //outputStream: 출력 스트림
-            networkWrite = new BufferedWriter(o);
+//            networkWrite = new BufferedWriter(o);
 //            Log.d(TAG, "run: " + networkWrite);
 
 
@@ -106,35 +120,36 @@ public class ClientSocket extends Thread implements Serializable{
              *
              */
 
-//            objectOutputStream.writeObject(get_id+"_table");
-//            objectOutputStream.flush();
+            sendTableInfo();
 
-            networkWrite.write(get_id + "_table");
-            networkWrite.newLine();
-            networkWrite.flush();
-            Log.d(TAG, "id flush");
 
-            networkWrite = null;
+//            networkWrite.write(get_id + "_table");
+//            networkWrite.newLine();
+//            networkWrite.flush();
+//            Log.d(TAG, "id flush");
+//
+//            networkWrite = null;
 
-//            while(loop){
+            String line;
+
+            while((line = networkReader.readLine()) != null){
 //                String line = networkReader.readLine();
 //                Log.d(TAG, "line: " + line);
-//
-//                if(line.contains("[")){
-//                    tableData(line);
-//                }
-//
-//                if(line == null){
-//                    Log.d(TAG, "line null: ");
-//                    break;
-//                }
-//            }
 
+                Message message = Message.obtain();
+                message.obj = line;
 
+                if(line.contains("[")){
+                    receiveTableInfo(line);
+                }else{
+                    receiveChattingData(line);
+                }
 
-
-
-
+                if(line == null){
+                    Log.d(TAG, "line null: ");
+                    break;
+                }
+            }
 
         } catch (Exception e) {
 //            loop = false;
@@ -144,60 +159,39 @@ public class ClientSocket extends Thread implements Serializable{
         }
 
     }
-//
-//    public void tableData(String line){
-//        int table[];
-//        int temp;
-//        int myTable = Integer.parseInt(get_id.replace("table", ""));
-//        try {
-//            JSONArray jsonArray = new JSONArray(line);
-//
-//            table = new int[jsonArray.length()];
-//
-//
-//            for (int j = 0; j < jsonArray.length(); j++) {
-//                JSONObject jsonObject = jsonArray.getJSONObject(j);
-//                table[j] = jsonObject.getInt("table");
-//            }
-//
-//            Arrays.sort(table);
-//
-//
-//            Log.d(TAG, "new table :" + Arrays.toString(table));
-//            temp = 1000;
 
-//            for (int i = 0; i < table.length; i++) {
-//                if (table[i] != myTable) {
-//                    tableList.get(table[i] - 1).setTableColor(getDrawable(R.drawable.table_border_order));
-//                    tableList.get(table[i] - 1).setViewType(2);
-//                    Log.d(TAG, "update Table");
-//                    temp = table[i] - 1;
-//
-//                    if (temp != 1000) {
-//                        runOnUiThread(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                adapter.notifyItemChanged(temp);
-//                            }
-//                        });
-//                    }
-//
-//
-//                } else {
-//                    Log.d(TAG, "같음");
-//                }
-//            }
+    private void sendTableInfo(){
+
+        try {
+            OutputStreamWriter o =  new OutputStreamWriter(socket.getOutputStream());
+            networkWrite = new BufferedWriter(o);
+
+            networkWrite.write(get_id + "_table");
+            networkWrite.newLine();
+            networkWrite.flush();
+            Log.d(TAG, "id flush");
+
+            networkWrite = null;
 
 
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
+    }
 
-//        } catch (JSONException e) {
-//            e.printStackTrace();
-//        }
-//
-//
-//
-//    }
+    private void receiveTableInfo(String line){
+        Intent intent =new Intent("tableInformationArrived");
+        intent.putExtra("tableInformation", line);
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+    }
+
+    private void receiveChattingData(String line){
+        Intent intent = new Intent("chattingDataArrived");
+        intent.putExtra("chattingData", line);
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+    }
+
 
 
     public void quit() {

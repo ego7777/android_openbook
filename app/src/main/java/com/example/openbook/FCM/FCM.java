@@ -263,7 +263,7 @@ public class FCM extends FirebaseMessagingService {
                 .build();
 
         Request request = new Request.Builder()
-                .url("http://3.36.225.141/SaveChattingData")
+                .url("http://3.36.255.141/SaveChattingData.php")
                 .post(formBody)
                 .build();
 
@@ -279,6 +279,9 @@ public class FCM extends FirebaseMessagingService {
                 Log.d(TAG, "onResponse: " + responseBody);
 
                 //저장되면 삭제
+                if(responseBody.equals("success")){
+                    dbHelper.deleteTableData(tableName, "chattingTable", "sender");
+                }
             }
         });
 

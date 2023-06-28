@@ -188,7 +188,7 @@ public class DBHelper extends SQLiteOpenHelper {
                 JSONObject jsonObject = new JSONObject();
                 try {
                     String message = cursor.getString(1);
-                    String time = cursor.getString(cursor.getInt(2));
+                    String time = cursor.getString(2);
                     String receiver = cursor.getString(4);
 
                     jsonObject.put("message", message);
@@ -216,12 +216,14 @@ public class DBHelper extends SQLiteOpenHelper {
 
 
 
-    public void deleteTableData(String tableValue, String tableListName) {
+    public void deleteTableData(String tableValue, String tableListName, String column) {
         SQLiteDatabase db = getWritableDatabase();
-        String deleteQuery = "DELETE FROM '" + tableListName  + "' WHERE tableName = '" + tableValue + "'";
+        String deleteQuery = "DELETE FROM " + tableListName  + " WHERE " + column + " = '" + tableValue + "'";
         db.execSQL(deleteQuery);
         db.close();
     }
+
+
 
 
 
