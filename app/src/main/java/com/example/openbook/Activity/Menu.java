@@ -144,7 +144,7 @@ public class Menu extends AppCompatActivity {
         sendNotification = new SendNotification();
 
         if (paymentStyle.equals("before")) {
-            sendNotification.useTheTable(get_id, "사용");
+            sendNotification.usingTable(get_id, "사용");
         }
 
 
@@ -317,7 +317,7 @@ public class Menu extends AppCompatActivity {
         menuClose.setOnClickListener(view -> {
             //admin에게 fcm 날리기
             Log.d(TAG, "menuClose Click: ");
-            sendNotification.useTheTable(get_id, "종료");
+            sendNotification.usingTable(get_id, "종료");
 
             editor.remove("cart_list");
             editor.commit();
@@ -342,7 +342,7 @@ public class Menu extends AppCompatActivity {
                 intent.putExtra("get_id", get_id);
                 intent.putExtra("orderCk", orderCk);
                 intent.putExtra("tableList", tableList);
-                intent.putExtra("clientSocket", clientSocket);
+//                intent.putExtra("clientSocket", clientSocket);
                 intent.putExtra("paymentStyle", paymentStyle);
                 intent.putExtra("tableInformation", tableInformationHashMap);
                 startActivity(intent);

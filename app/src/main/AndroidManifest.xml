@@ -45,13 +45,27 @@
         <activity android:name=".Activity.SignUp" />
         <activity android:name=".Activity.PaymentSelect"/>
         <activity android:name=".Activity.Menu" />
-        <activity android:name=".Activity.Table" />
+
+        <activity android:name=".Activity.Table"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="tableInformationArrived"/>
+            </intent-filter>
+        </activity>
+
+
         <activity android:name=".Activity.CallServer" />
-        <activity
-            android:name=".Chatting.Client"
-            android:windowSoftInputMode="adjustResize" />
+
         <activity android:name=".Chatting.ChattingUI"
-            android:windowSoftInputMode="adjustResize"/>
+            android:windowSoftInputMode="adjustResize"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="chattingDataArrived"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="SendChattingData"/>
+            </intent-filter>
+        </activity>
 
         <activity android:name=".Activity.PopUp"
             android:theme="@android:style/Theme.Dialog"/>
@@ -73,6 +87,8 @@
         <activity android:name=".Activity.Admin"/>
         <activity android:name=".KakaoPay"/>
         <activity android:name=".Kakao"/>
+
+
 
     </application>
 

@@ -22,7 +22,7 @@ import com.example.openbook.Chatting.DBHelper;
 import com.example.openbook.Data.AdminTableList;
 import com.example.openbook.Data.OrderList;
 import com.example.openbook.R;
-import com.example.openbook.SharedPreference;
+
 import com.example.openbook.TableQuantity;
 
 import org.json.JSONArray;
@@ -30,7 +30,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+
 
 public class AdminPaymentAfterPopup extends Activity {
 

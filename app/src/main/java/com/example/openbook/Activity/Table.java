@@ -58,7 +58,6 @@ public class Table extends AppCompatActivity {
 
     ArrayList<TableList> tableList;
     HashMap<Integer, TableInformation> tableInformationHashMap;
-    ClientSocket clientSocket;
 
 
     int clickTable;
@@ -79,8 +78,21 @@ public class Table extends AppCompatActivity {
 
     ImageLoadTask task;
     String url;
-    BroadcastReceiver broadcastReceiver;
-    updateTable updateTable;
+
+    //액티비티가 onCreate 되면 자동으로 받는거고
+    BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d(TAG, "onReceive: 1");
+            if (intent.getAction().equals("tableInformationArrived")) {
+                Log.d(TAG, "onReceive: 2");
+                String message = intent.getStringExtra("tableInformation");
+                Log.d(TAG, "onReceive: " + message);
+                tableUpdate(message);
+            }
+        }
+    };
+
 
     DrawableMethod drawableMethod;
     int tablePosition;
@@ -94,58 +106,22 @@ public class Table extends AppCompatActivity {
 
         get_id = getIntent().getStringExtra("get_id");
         orderCk = getIntent().getBooleanExtra("orderCk", false);
-        Log.d(TAG, "orderCk :" + orderCk);
 
         paymentStyle = getIntent().getStringExtra("paymentStyle");
 
         myTable = Integer.parseInt(get_id.replace("table", ""));
 
-        clientSocket = (ClientSocket) getIntent().getSerializableExtra("clientSocket");
         tableList = (ArrayList<TableList>) getIntent().getSerializableExtra("tableList");
 
-        broadcastReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                if(intent.getAction().equals("tableInformationArrived")){
-                    String message = intent.getStringExtra("tableInformation");
-
-                    tableUpdate(message);
-                }
-            }
-        };
 
 
 
-        if (clientSocket != null) {
-            tableList = clientSocket.getTableList();
-            Log.d(TAG, "onCreate clientSocket exist :" + tableList.size());
-            Log.d(TAG, "TableList index 0 :" + tableList.get(0).getTableNum());
-
-        } else {
-
-            if (clientSocket == null) {
-                Log.d(TAG, "onCreate: clientSocket is null");
-            }
+        // 로컬 브로드캐스트 리시버 등록
+        IntentFilter intentFilter = new IntentFilter("tableInformationArrived");
+        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, intentFilter);
 
 
-            if (tableList == null) {
 
-//                for (int i = 1; i < table+1; i++) {
-//
-//                    if (i == myTable) {
-//                        tableList.add(new TableList("my Table", getDrawable(R.drawable.my_table_border), 0));
-//                    } else {
-//                        tableList.add(new TableList(i, getDrawable(R.drawable.table_border), 1));
-//                    }
-//
-//                }
-
-                Log.d(TAG, "onCreate tableList initial one");
-            } else {
-                Log.d(TAG, "table.class intent tableList size :" + tableList.size());
-
-            }
-        }
 
 
         tableInformationHashMap = (HashMap<Integer, TableInformation>) getIntent().getSerializableExtra("tableInformation");
@@ -199,21 +175,25 @@ public class Table extends AppCompatActivity {
         IntentFilter intentFilter = new IntentFilter("tableInformationArrived");
         LocalBroadcastManager.getInstance(Table.this).registerReceiver(broadcastReceiver, intentFilter);
 
-//        if (clientSocket != null) {
-//            loop = true;
-//            updateTable = new updateTable();
-//            updateTable.start();
-//            Log.d(TAG, "onResume table update 를 다시 시작한다~!");
-//        }
+
+        SharedPreferences sharedPreferences = getSharedPreferences("ActiveTable", MODE_PRIVATE);
+
+        //onCreate 되기 이전에 데이터들은 저장이 되었다가 가져오는 것
+        String activeTable = sharedPreferences.getString("ActiveTable", null);
+        if (tableList != null) {
+            tableUpdate(activeTable);
+        }else{
+            Log.d(TAG, "tableList null: ");
+        }
 
 
         /**
          * 여기는 bitmapArray 로 바꿔주는 로직이여
          */
-        drawableMethod = new DrawableMethod();
-
-        byte[] orderTableImage = drawableMethod.makeBitmap(getDrawable(R.drawable.table_border_order));
-        Log.d(TAG, "orderTableImage :" + orderTableImage);
+//        drawableMethod = new DrawableMethod();
+//
+//        byte[] orderTableImage = drawableMethod.makeBitmap(getDrawable(R.drawable.table_border_order));
+//        Log.d(TAG, "orderTableImage :" + orderTableImage);
 
         menu.setOnClickListener(this::moveToMenu);
 
@@ -270,7 +250,7 @@ public class Table extends AppCompatActivity {
                         intent.putExtra("get_id", get_id);
                         intent.putExtra("orderCk", orderCk);
                         intent.putExtra("tableInformation", tableInformationHashMap);
-                        intent.putExtra("clientSocket", clientSocket);
+
                         startActivity(intent);
 
                     }
@@ -304,15 +284,14 @@ public class Table extends AppCompatActivity {
                 TextView table_info_close = dlg.findViewById(R.id.table_info_close);
 
 
-
                 try {
                     String result = requestTableInfo();
                     /**
                      *  등록을 했으면 등록된 정보를 보여주고 등록 안했으면 하단 set
                      */
-                    if(clickTable == myTable){
+                    if (clickTable == myTable) {
 
-                        if(result.equals("없음")){
+                        if (result.equals("없음")) {
                             MakeQR makeQR = new MakeQR();
                             table_info_img.setImageBitmap(makeQR.clientQR(get_id));
                             table_info_img.setClickable(false);
@@ -323,7 +302,7 @@ public class Table extends AppCompatActivity {
                             table_info_gender.setVisibility(View.INVISIBLE);
                             table_info_member.setVisibility(View.INVISIBLE);
 
-                        }else if (result.startsWith("{")) {
+                        } else if (result.startsWith("{")) {
                             JSONObject jsonObject = new JSONObject(result);
 
                             String url = "http://3.36.255.141/image/"
@@ -341,7 +320,7 @@ public class Table extends AppCompatActivity {
 
 
                         }//if-else 문
-                    }else{
+                    } else {
                         if (result.equals("없음")) {
                             table_info_text.setVisibility(View.INVISIBLE);
                             statement.setText("정보를 입력하지 않은 테이블입니다.");
@@ -399,8 +378,6 @@ public class Table extends AppCompatActivity {
                 }
 
 
-
-
                 /**
                  * 사진을 누르면 돈내고 사진 깔거냐고 물어보기
                  */
@@ -424,7 +401,6 @@ public class Table extends AppCompatActivity {
                             intent.putExtra("clickTable", clickTable);
                             intent.putExtra("orderCk", orderCk);
                             intent.putExtra("tableInformation", tableInformationHashMap);
-                            intent.putExtra("clientSocket", clientSocket);
 
                             startActivity(intent);
                             dlg.dismiss();
@@ -467,17 +443,17 @@ public class Table extends AppCompatActivity {
 
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                if(response.isSuccessful()){
+                if (response.isSuccessful()) {
                     String body = response.body().string();
                     Log.d(TAG, "onResponse: " + body);
                     responseBody = body;
-                }else{
+                } else {
                     Log.d(TAG, "onResponse: fail");
                 }
             }
         });
 
-        if(responseBody == null){
+        if (responseBody == null) {
             Thread.sleep(250);
         }
 
@@ -491,15 +467,7 @@ public class Table extends AppCompatActivity {
         LocalBroadcastManager.getInstance(Table.this).unregisterReceiver(broadcastReceiver);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    @Override
-    protected void onStop() {
-        super.onStop();
 
-        loop = false;
-        Log.d(TAG, "onStop loop false 맞아? " + loop);
-
-    }
 
     public void moveToMenu(View view) {
         Intent intent = new Intent(Table.this, Menu.class);
@@ -507,13 +475,13 @@ public class Table extends AppCompatActivity {
         intent.putExtra("orderCk", orderCk);
         intent.putExtra("tableList", tableList);
         intent.putExtra("tableInformation", tableInformationHashMap);
-        intent.putExtra("clientSocket", clientSocket);
         intent.putExtra("paymentStyle", paymentStyle);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(intent);
     }
 
-    public void tableUpdate(String line){
+    public void tableUpdate(String line) {
+        Log.d(TAG, "tableUpdate: ");
         int table[];
 
         try {
@@ -534,7 +502,7 @@ public class Table extends AppCompatActivity {
                 if (table[i] != myTable) {
 
                     int color = getColor(R.color.skyblue);
-                    tablePosition = table[i] -1;
+                    tablePosition = table[i] - 1;
                     tableList.get(tablePosition).setViewType(2);
                     runOnUiThread(new Runnable() {
                         @Override
@@ -553,87 +521,7 @@ public class Table extends AppCompatActivity {
         }
     }
 
-    public class updateTable extends Thread {
 
-        int table[];
-        BufferedReader networkReader;
-
-        @RequiresApi(api = Build.VERSION_CODES.O)
-        @Override
-        public void run() {
-            super.run();
-
-            try {
-                networkReader = new BufferedReader(
-                        new InputStreamReader(clientSocket.getSocket().getInputStream()));
-
-
-
-                Log.d(TAG, "networkReader :" + networkReader.ready());
-                Log.d(TAG, "UI socket 연결 :" + clientSocket.getSocket().isConnected());
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            while (loop) {
-                try {
-//
-                    String line = networkReader.readLine();
-                    Log.d(TAG, "line : " + line);
-
-                    if (line.startsWith("[")) {
-                        JSONArray jsonArray = new JSONArray(line);
-
-                        table = new int[jsonArray.length()];
-
-
-                        for (int j = 0; j < jsonArray.length(); j++) {
-                            JSONObject jsonObject = jsonArray.getJSONObject(j);
-                            table[j] = jsonObject.getInt("table");
-                        }
-
-                        Arrays.sort(table);
-
-
-                        Log.d(TAG, "new table :" + Arrays.toString(table));
-
-
-                        for (int i = 0; i < table.length; i++) {
-                            if (table[i] != myTable) {
-
-                                int color = getColor(R.color.skyblue);
-                                tablePosition = table[i] -1;
-                                tableList.get(tablePosition).setViewType(2);
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        adapter.changeItemColor(tablePosition, color);
-                                    }
-                                });
-
-                            } else {
-                                Log.d(TAG, "같음");
-                            }
-                        }
-                    }
-
-
-                    if (line == null) {
-                        break;
-                    }
-
-                } catch (IOException | JSONException e) {
-                    e.printStackTrace();
-                    Log.d(TAG, "while 문 e :" + e);
-                }
-            }
-            networkReader = null;
-            Log.d(TAG, "run: out?");
-
-
-        }
-    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {

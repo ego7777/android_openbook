@@ -18,6 +18,8 @@ import androidx.core.app.NotificationCompat;
 import com.example.openbook.Activity.Admin;
 import com.example.openbook.Activity.AdminPaymentBeforePopup;
 import com.example.openbook.Activity.AdminPaymentAfterPopup;
+import com.example.openbook.Activity.Menu;
+import com.example.openbook.Activity.PaymentSelect;
 import com.example.openbook.Activity.PopUp;
 import com.example.openbook.Chatting.ChattingUI;
 
@@ -233,6 +235,8 @@ public class FCM extends FirebaseMessagingService {
             intent.putExtra("profileTicket", ticket);
         }
 
+        //여기서 거절을 하면 앞으로 채팅 요청 못하게 만들어야해...!
+
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
 
@@ -281,6 +285,10 @@ public class FCM extends FirebaseMessagingService {
                 //저장되면 삭제
                 if(responseBody.equals("success")){
                     dbHelper.deleteTableData(tableName, "chattingTable", "sender");
+
+                    //하고 PaymentSelect.java로 이동....!해야해...!
+                    Intent intent = new Intent(FCM.this, PaymentSelect.class);
+                    startActivity(intent);
                 }
             }
         });

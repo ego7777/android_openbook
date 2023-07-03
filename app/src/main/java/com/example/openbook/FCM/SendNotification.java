@@ -178,7 +178,7 @@ public class SendNotification {
 
     }
 
-    public void useTheTable(String get_id, String statement) {
+    public void usingTable(String get_id, String statement) {
 
         mRootRef.child("admin").child("fcmToken").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override

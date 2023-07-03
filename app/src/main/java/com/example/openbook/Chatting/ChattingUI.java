@@ -1,8 +1,10 @@
 package com.example.openbook.Chatting;
 
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
@@ -19,6 +21,7 @@ import android.widget.TextView;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -29,12 +32,6 @@ import com.example.openbook.R;
 import com.example.openbook.Data.TableInformation;
 import com.example.openbook.Data.ChattingList;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.InterruptedIOException;
-import java.io.OutputStreamWriter;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -45,9 +42,9 @@ public class ChattingUI extends AppCompatActivity {
 
     String TAG = "chatUI";
 
-    String get_id;
+    String get_id, time;
     int table_num;
-    String time;
+
 
     ArrayList<ChattingList> chatLists;
     ChattingAdapter chattingAdapter;
@@ -66,23 +63,39 @@ public class ChattingUI extends AppCompatActivity {
     boolean loop = true;
 
     public static final int MSG_CONNECT = 1;
-    public static final int MSG_RECEIVE = 2;
     public static final int MSG_SEND = 3;
     public static final int MSG_CLIENT_STOP = 4;
     public static final int MSG_SERVER_STOP = 5;
-    public static final int MSG_ERROR = 6;
 
 
     LocalDateTime localTime = LocalDateTime.now();
 
-    BufferedWriter networkWrite = null;
-    updateUI updateUI;
-
     HashMap<Integer, TableInformation> tableInformationHashMap;
 
-    ClientSocket clientSocket;
 
-    private BroadcastReceiver broadcastReceiver;
+    BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equals("chattingDataArrived")) {
+                String message = intent.getStringExtra("chattingData");
+                Log.d(TAG, "onReceive: " + message);
+                chattingUpdate(message);
+            }
+        }
+    };
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        IntentFilter intentFilter = new IntentFilter("chattingDataArrived");
+        LocalBroadcastManager.getInstance(ChattingUI.this).registerReceiver(broadcastReceiver, intentFilter);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        LocalBroadcastManager.getInstance(ChattingUI.this).unregisterReceiver(broadcastReceiver);
+    }
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -91,9 +104,6 @@ public class ChattingUI extends AppCompatActivity {
 
         table_num = getIntent().getIntExtra("tableNumber", 0);
         get_id = getIntent().getStringExtra("get_id");
-
-        clientSocket = (ClientSocket) getIntent().getSerializableExtra("clientSocket");
-
 
         tableInformationHashMap = (HashMap<Integer, TableInformation>) getIntent().getSerializableExtra("tableInformation");
         Log.d(TAG, "tableInformation :" + tableInformationHashMap);
@@ -105,43 +115,19 @@ public class ChattingUI extends AppCompatActivity {
         dbHelper = new DBHelper(ChattingUI.this, version);
         sqLiteDatabase = dbHelper.getWritableDatabase();
 
-        broadcastReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                if (intent.getAction().equals("chattingDataArrived")){
-                    String message = intent.getStringExtra("message");
-                }
-            }
-        };
-
 
         /**
          * AppBar 설정
          */
         TextView menu = findViewById(R.id.appbar_menu_menu);
-        menu.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(), Menu.class);
-                intent.putExtra("id", get_id);
-                intent.putExtra("orderCk", true);
-                intent.putExtra("clientSocket", clientSocket);
-                intent.putExtra("TableInformation", tableInformationHashMap);
-                startActivity(intent);
-            }
+        menu.setOnClickListener(view ->{
+            moveActivity(Menu.class);
         });
 
+
         TextView table = findViewById(R.id.appbar_menu_table);
-        table.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(), Table.class);
-                intent.putExtra("get_id", get_id);
-                intent.putExtra("orderCk", true);
-                intent.putExtra("clientSocket", clientSocket);
-                intent.putExtra("TableInformation", tableInformationHashMap);
-                startActivity(intent);
-            }
+        table.setOnClickListener(view ->{
+            moveActivity(Table.class);
         });
 
         TextView table_number = findViewById(R.id.appbar_menu_table_number);
@@ -215,16 +201,6 @@ public class ChattingUI extends AppCompatActivity {
                 switch (msg.what) {
                     case MSG_CONNECT:
                         m = "정상적으로 서버에 접속하였습니다.";
-
-                        if (clientSocket.getSocket().isConnected()) {
-                            updateUI = new updateUI();
-                            updateUI.start();
-                            Log.d(TAG, "UI update Thread 시작");
-
-                        } else {
-                            Log.d(TAG, "소켓 없어서 새로 생성:" + clientSocket.getSocket().isConnected());
-                        }
-
                         break;
 
                     case MSG_CLIENT_STOP:
@@ -234,10 +210,6 @@ public class ChattingUI extends AppCompatActivity {
                     case MSG_SERVER_STOP:
                         //서버에 의해 연결이 종료될 때 호출
                         m = "서버가 접속을 종료하였습니다.";
-
-                        clientSocket = new ClientSocket(get_id, ChattingUI.this, clientSocket.tableList);
-                        clientSocket.start();
-                        loop = true;
 
                         Message toMain = mMainHandler.obtainMessage();
                         toMain.what = MSG_CONNECT;
@@ -290,18 +262,8 @@ public class ChattingUI extends AppCompatActivity {
          * 채팅방 나가면
          */
         TextView chat_back = findViewById(R.id.chatting_back);
-        chat_back.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(ChattingUI.this, Table.class);
-                intent.putExtra("get_id", get_id);
-                intent.putExtra("orderCk", true);
-                intent.putExtra("tableInformation", tableInformationHashMap);
-                intent.putExtra("clientSocket", clientSocket);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                startActivity(intent);
-
-            }
+        chat_back.setOnClickListener(view ->{
+            moveActivity(Table.class);
         });
 
 
@@ -328,35 +290,14 @@ public class ChattingUI extends AppCompatActivity {
         });
 
 
-        if (clientSocket.getSocket() == null) {
-            Log.d(TAG, "clientSocket null");
-
-            try {
-
-                clientSocket = new ClientSocket(get_id, ChattingUI.this, clientSocket.tableList);
-                clientSocket.start();
-
-                loop = true;
-
-                Message toMain = mMainHandler.obtainMessage();
-                toMain.what = MSG_CONNECT;
-                mMainHandler.sendMessage(toMain);
-
-            } catch (Exception e) {
-                loop = false;
-                Log.d(TAG, "clientSocket 연결 오류 :" + e);
-            }
-
-        } else {
-            Log.d(TAG, "onCreate: clientSocket is not null");
-            Message toMain = mMainHandler.obtainMessage();
-            toMain.what = MSG_CONNECT;
-            mMainHandler.sendMessage(toMain);
-
-        }
+        Message toMain = mMainHandler.obtainMessage();
+        toMain.what = MSG_CONNECT;
+        mMainHandler.sendMessage(toMain);
 
 
     }
+
+
 
     class ServiceHandler extends Handler {
         public ServiceHandler(Looper looper) {
@@ -369,21 +310,13 @@ public class ChattingUI extends AppCompatActivity {
 
             switch (msg.what) {
                 case MSG_SEND:
-                    try {
-                        networkWrite = new BufferedWriter
-                                (new OutputStreamWriter(clientSocket.getSocket().getOutputStream()));
 
-                        networkWrite.write((String) msg.obj);
-                        networkWrite.newLine();
-                        networkWrite.flush();
+                    Intent intent = new Intent("SendChattingData");
+                    intent.putExtra("sendToServer", (String) msg.obj);
+                    LocalBroadcastManager.getInstance(ChattingUI.this).sendBroadcast(intent);
 
-//                        메세지가 성공적으로 전송되었다면 전송한 문자열 화면에 출력
-                        toMain.what = MSG_SEND;
-
-                    } catch (IOException e) {
-                        toMain.what = MSG_ERROR;
-                        Log.d(TAG, "handleMessage: e " + e);
-                    }
+//                  메세지가 성공적으로 전송되었다면 전송한 문자열 화면에 출력
+                    toMain.what = MSG_SEND;
                     toMain.obj = msg.obj;
                     mMainHandler.sendMessage(toMain);
                     break;
@@ -392,136 +325,67 @@ public class ChattingUI extends AppCompatActivity {
                 case MSG_CLIENT_STOP:
                 case MSG_SERVER_STOP:
                     //quit 메소드 호출
-                    try {
-                        clientSocket.getSocket().close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+
                     Log.d(TAG, "handleMessage: quit");
-//                    clientSocket.getSocket() = null;
+
                     break;
             }
         }
 
     } //ServiceHandler inner class
 
-    public class updateUI extends Thread {
+    public void chattingUpdate(String line) {
 
-        BufferedReader networkReader;
+        Runnable showUpdate = new Runnable() {
+            @Override
+            public void run() {
+
+                String temp[] = line.split("_");
 
 
-        @Override
-        public void run() {
-            super.run();
+                if (temp[0].equals("read")) {
+
+                    for (int i = 0; i < chatLists.size(); i++) {
+                        chatLists.get(i).setRead("읽음");
+                    }
+                    chattingAdapter.notifyItemChanged(chatLists.lastIndexOf(1));
 
 
-            try {
-                networkReader = new BufferedReader(
-                        new InputStreamReader(clientSocket.getSocket().getInputStream()));
+                } else {
+                    //table1 형태
+                    String receiver = temp[1];
 
-                Log.d(TAG, "networkReader :" + networkReader.ready());
+                    temp[1] = temp[1].replace("table", "");
 
-                Log.d(TAG, "UI socket 연결 :" + clientSocket.getSocket().isConnected());
-            } catch (IOException e) {
-                e.printStackTrace();
+
+                    if (String.valueOf(table_num).equals(temp[1])) {
+                        //처음엔 읽었는지 안읽었는지 모르니까 공란으로 넘겨버림
+                        chatLists.add(new ChattingList(temp[0], 0, localTime.format(DateTimeFormatter.ofPattern("HH:mm")), ""));
+                        Log.d(TAG, "showUpdate : " + line);
+
+
+                        chattingAdapter.notifyDataSetChanged();
+                        chatting_view.smoothScrollToPosition(chatLists.size());
+
+                        time = localTime.format(DateTimeFormatter.ofPattern("HH:mm"));
+
+                        dbHelper.insertChattingData(temp[0], time, receiver, get_id, "");
+                        Log.d(TAG, "전송 받은거 저장");
+                    } // 해당 테이블에 데이터 넣어주기
+                } // 읽음 처리 if문
+
             }
+        };
 
-
-            while (loop) {
-                try {
-                    String line = networkReader.readLine();
-                    Log.d(TAG, "run: " + line);
-
-                    //서버로부터 FIN 패킷(서버로 연결된 세션의 종료를 알리는 패킷)을 수신하면 read() 메소드는 null을 반환
-                    if (line == null)
-                        break;
-
-                    Runnable showUpdate = new Runnable() {
-                        @Override
-                        public void run() {
-
-                            String temp[] = line.split("_");
-//                            int chatListLast = 0;
-
-                            if (temp[0].equals("read")) {
-
-                                for (int i = 0; i < chatLists.size(); i++) {
-                                    chatLists.get(i).setRead("읽음");
-                                }
-//                                Log.d(TAG, "chatListLast : " + chatListLast);
-
-//                                chatLists.get(chatListLast).setRead("읽음");
-                                chattingAdapter.notifyItemChanged(chatLists.lastIndexOf(1));
-
-
-                            } else {
-                                //table1 형태
-                                String receiver = temp[1];
-
-                                temp[1] = temp[1].replace("table", "");
-
-
-                                if (String.valueOf(table_num).equals(temp[1])) {
-                                    //처음엔 읽었는지 안읽었는지 모르니까 공란으로 넘겨버림
-                                    chatLists.add(new ChattingList(temp[0], 0, localTime.format(DateTimeFormatter.ofPattern("HH:mm")), ""));
-                                    Log.d(TAG, "showUpdate : " + line);
-
-//                                    chattingAdapter.setAdapterItem(chatLists);
-                                    chattingAdapter.notifyDataSetChanged();
-                                    chatting_view.smoothScrollToPosition(chatLists.size());
-
-                                    time = localTime.format(DateTimeFormatter.ofPattern("HH:mm"));
-
-                                    dbHelper.insertChattingData(temp[0], time, receiver, get_id, "");
-                                    Log.d(TAG, "전송 받은거 저장");
-                                } // 해당 테이블에 데이터 넣어주기
-                            } // 읽음 처리 if문
-
-                        }
-                    };
-
-                    mMainHandler.post(showUpdate);
-
-                } catch (InterruptedIOException e) {
-
-                } catch (IOException e) {
-                    Log.d(TAG, "run whie(loop)문 e " + e);
-                    break;
-                }
-            }
-
-            try {
-                if (networkWrite != null) {
-                    networkWrite.close();
-                    networkWrite = null;
-                }
-
-                if (networkReader != null) {
-                    networkReader.close();
-                    networkReader = null;
-                }
-
-                if (clientSocket.getSocket() != null) {
-                    clientSocket.getSocket().close();
-//                    clientSocket.socket = null;
-                }
-
-
-                if (loop) {
-                    loop = false;
-                    Message toMain = mMainHandler.obtainMessage();
-                    toMain.what = MSG_SERVER_STOP;
-                    toMain.obj = "네트워크가 끊어졌습니다.";
-                    mMainHandler.sendMessage(toMain);
-                }
-            } catch (IOException e) {
-                Log.d(TAG, "run: e " + e);
-                Message toMain = mMainHandler.obtainMessage();
-                toMain.what = MSG_ERROR;
-                toMain.obj = "소켓을 닫지 못했습니다.";
-                mMainHandler.sendMessage(toMain);
-            }
-
-        }
+        mMainHandler.post(showUpdate);
     }
+
+    public void moveActivity(Class activity){
+        Intent intent = new Intent(ChattingUI.this, activity);
+        intent.putExtra("get_id", get_id);
+        intent.putExtra("orderCk", true);
+        intent.putExtra("TableInformation", tableInformationHashMap);
+        startActivity(intent);
+    }
+
 }

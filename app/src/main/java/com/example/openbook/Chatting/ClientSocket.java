@@ -1,8 +1,11 @@
 package com.example.openbook.Chatting;
 
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.os.Build;
 
 import android.os.Handler;
@@ -31,6 +34,8 @@ import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -46,11 +51,11 @@ public class ClientSocket extends Thread implements Serializable{
 
     String get_id;
 
-    public static Socket getSocket() {
+    public Socket getSocket() {
         return socket;
     }
 
-    private static Socket socket;
+    public Socket socket;
     boolean loop;
 
     Handler handler;
@@ -61,6 +66,9 @@ public class ClientSocket extends Thread implements Serializable{
     }
 
     ArrayList<TableList> tableList;
+
+    private SharedPreferences sharedPreferences;
+    private SharedPreferences.Editor editor;
 
     public ClientSocket(String get_id, Context context, Handler handler){
         this.get_id = get_id;
@@ -80,6 +88,28 @@ public class ClientSocket extends Thread implements Serializable{
         socketAddress = new InetSocketAddress("3.36.255.141", 7777);
 
     }
+
+    //액티비티가 onCreate 되면 자동으로 받는거고
+    BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d(TAG, "onReceive: 1");
+            if (intent.getAction().equals("SendChattingData")) {
+                Log.d(TAG, "onReceive: 2");
+                String message = intent.getStringExtra("sendToServer");
+                Log.d(TAG, "onReceive: " + message);
+
+                Thread thread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        sendToServer(message);
+                    }
+                });
+                thread.start();
+
+            }
+        }
+    };
 
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -108,38 +138,24 @@ public class ClientSocket extends Thread implements Serializable{
             BufferedReader networkReader = new BufferedReader(
                     new InputStreamReader(socket.getInputStream()));
 
-//            OutputStreamWriter o = new OutputStreamWriter(socket.getOutputStream());
-            //outputStream: 출력 스트림
-//            networkWrite = new BufferedWriter(o);
-//            Log.d(TAG, "run: " + networkWrite);
-
-
-
             /**
              * 소켓이 생성이 되면 테이블 Id 값을 넘겨준다.
-             *
              */
+            sendToServer(get_id + "_table");
 
-            sendTableInfo();
+            // 로컬 브로드캐스트 리시버 등록
+            IntentFilter intentFilter = new IntentFilter("SendChattingData");
+            LocalBroadcastManager.getInstance(context).registerReceiver(broadcastReceiver, intentFilter);
 
 
-//            networkWrite.write(get_id + "_table");
-//            networkWrite.newLine();
-//            networkWrite.flush();
-//            Log.d(TAG, "id flush");
-//
-//            networkWrite = null;
+            while(loop){
 
-            String line;
+                String line = networkReader.readLine();
+                Log.d(TAG, "line: " + line);
 
-            while((line = networkReader.readLine()) != null){
-//                String line = networkReader.readLine();
-//                Log.d(TAG, "line: " + line);
-
-                Message message = Message.obtain();
-                message.obj = line;
 
                 if(line.contains("[")){
+                    Log.d(TAG, "run: 4");
                     receiveTableInfo(line);
                 }else{
                     receiveChattingData(line);
@@ -160,18 +176,20 @@ public class ClientSocket extends Thread implements Serializable{
 
     }
 
-    private void sendTableInfo(){
+    private void sendToServer(String message){
 
         try {
             OutputStreamWriter o =  new OutputStreamWriter(socket.getOutputStream());
             networkWrite = new BufferedWriter(o);
 
-            networkWrite.write(get_id + "_table");
+            networkWrite.write(message);
             networkWrite.newLine();
             networkWrite.flush();
             Log.d(TAG, "id flush");
 
             networkWrite = null;
+
+            loop = true;
 
 
         } catch (IOException e) {
@@ -180,13 +198,38 @@ public class ClientSocket extends Thread implements Serializable{
 
     }
 
+
     private void receiveTableInfo(String line){
+
+        sharedPreferences = context.getSharedPreferences("ActiveTable", Context.MODE_PRIVATE);
+        editor = sharedPreferences.edit();
+
+        editor.putString("ActiveTable", line);
+        editor.commit();
+
+
         Intent intent =new Intent("tableInformationArrived");
         intent.putExtra("tableInformation", line);
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+
     }
 
     private void receiveChattingData(String line){
+        /**
+         * sendMsg[0] : message
+         * sendMsg[1] : 보낸 테이블 번호 (table + table_num)
+         */
+        String sendMsg[] = line.split("_");
+
+        LocalDateTime localTime = LocalDateTime.now();
+
+        String time = localTime.format(DateTimeFormatter.ofPattern("HH:mm"));
+
+        //정상적으로 리사이클러뷰에 올라가면 db에 저장
+        DBHelper dbHelper = new DBHelper(context, 2);
+        dbHelper.insertChattingData(sendMsg[0], time, get_id, sendMsg[1], "");
+
+
         Intent intent = new Intent("chattingDataArrived");
         intent.putExtra("chattingData", line);
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
