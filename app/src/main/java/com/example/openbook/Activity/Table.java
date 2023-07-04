@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -32,6 +33,7 @@ import com.example.openbook.QRcode.MakeQR;
 import com.example.openbook.R;
 import com.example.openbook.Data.TableInformation;
 import com.example.openbook.Data.TableList;
+import com.example.openbook.TableQuantity;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -60,17 +62,13 @@ public class Table extends AppCompatActivity {
     HashMap<Integer, TableInformation> tableInformationHashMap;
 
 
-    int clickTable;
+    int clickTable, myTable;
     TableAdapter adapter;
 
     OkHttpClient okHttpClient = new OkHttpClient();
 
-    TextView menu;
+    TextView appbarMenu, requestChatting, checkInformation;
     LinearLayout table_sidebar;
-    TextView chatting;
-    TextView info;
-
-    int myTable;
     String get_id, paymentStyle;
 
     boolean orderCk = false;
@@ -142,7 +140,7 @@ public class Table extends AppCompatActivity {
         /**
          * Appbar: Menu 누르면 이동
          */
-        menu = findViewById(R.id.appbar_menu_menu);
+        appbarMenu = findViewById(R.id.appbar_menu_menu);
 
         RecyclerView table_grid = findViewById(R.id.tableGrid);
         adapter = new TableAdapter(tableList, myTable);
@@ -153,7 +151,6 @@ public class Table extends AppCompatActivity {
         //어댑터 연결
         table_grid.setAdapter(adapter);
 
-//        adapter.setAdapterItem(tableList);
 
 
         //오른쪽 사이드 메뉴
@@ -161,8 +158,8 @@ public class Table extends AppCompatActivity {
         table_sidebar.setVisibility(View.INVISIBLE);
 
 
-        chatting = findViewById(R.id.chatting);
-        info = findViewById(R.id.take_info);
+        requestChatting = findViewById(R.id.chatting);
+        checkInformation = findViewById(R.id.take_info);
 
     } //onCreate
 
@@ -181,9 +178,24 @@ public class Table extends AppCompatActivity {
         //onCreate 되기 이전에 데이터들은 저장이 되었다가 가져오는 것
         String activeTable = sharedPreferences.getString("ActiveTable", null);
         if (tableList != null) {
+
             tableUpdate(activeTable);
+
         }else{
-            Log.d(TAG, "tableList null: ");
+            TableQuantity tableQuantity = new TableQuantity();
+            int tableFromDB = tableQuantity.getTableQuantity();
+
+            tableList = new ArrayList<>();
+
+            for (int i = 1; i < tableFromDB + 1; i++) {
+                if (i == myTable) {
+                    tableList.add(new TableList(get_id, (Drawable) null, 0));
+                } else {
+                    tableList.add(new TableList(i, (Drawable) null, 1));
+                }
+            }
+
+            tableUpdate(activeTable);
         }
 
 
@@ -195,7 +207,7 @@ public class Table extends AppCompatActivity {
 //        byte[] orderTableImage = drawableMethod.makeBitmap(getDrawable(R.drawable.table_border_order));
 //        Log.d(TAG, "orderTableImage :" + orderTableImage);
 
-        menu.setOnClickListener(this::moveToMenu);
+        appbarMenu.setOnClickListener(this::moveToMenu);
 
 
         /**
@@ -221,18 +233,19 @@ public class Table extends AppCompatActivity {
          * 1. 내가 주문을 안했으면 주문하라고 팝업이 뜨고
          * 2. 상대방이 주문을 안했으면 알려주기
          */
-        chatting.setOnClickListener(new View.OnClickListener() {
+        requestChatting.setOnClickListener(new View.OnClickListener() {
             @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void onClick(View view) {
 
                 if (!orderCk) {
-                    alertDialog.showAlertDialog(Table.this,
-                            "주문 후 채팅이 가능합니다.");
+                    alertDialog.showAlertDialog(Table.this, "주문 후 채팅이 가능합니다.");
 
                 } else if (clickTable == myTable) {
+
                     alertDialog.showAlertDialog(Table.this,
                             "나의 채팅방 입니다. 다른 테이블과 채팅해보세요!");
+
                 } else if (tableList.get(clickTable - 1).getViewType() == 2) {
 
                     if (tableInformationHashMap.get(clickTable) == null ||
@@ -244,11 +257,12 @@ public class Table extends AppCompatActivity {
                         Log.d(TAG, "채팅 신청");
 
                     } else if (tableInformationHashMap.get(clickTable).isChattingAgree()) {
-                        Log.d(TAG, "Chatting Agree");
+
                         Intent intent = new Intent(Table.this, ChattingUI.class);
                         intent.putExtra("tableNumber", clickTable);
                         intent.putExtra("get_id", get_id);
                         intent.putExtra("orderCk", orderCk);
+                        intent.putExtra("paymentStyle", paymentStyle);
                         intent.putExtra("tableInformation", tableInformationHashMap);
 
                         startActivity(intent);
@@ -267,7 +281,7 @@ public class Table extends AppCompatActivity {
         /**
          * info 누르면 해당 테이블 정보 볼 수 있게
          */
-        info.setOnClickListener(new View.OnClickListener() {
+        checkInformation.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 

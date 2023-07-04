@@ -211,6 +211,15 @@ public class DBHelper extends SQLiteOpenHelper {
 
     }
 
+    public void upDateIsRead(String myTable, String otherTable) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String updateQuery = "UPDATE chattingTable SET read = '' WHERE receiver = '" + otherTable + "' AND sender = '" + myTable + "'";
+
+        db.execSQL(updateQuery);
+    }
+
+
+
 
 
 

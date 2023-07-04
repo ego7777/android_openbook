@@ -93,11 +93,9 @@ public class ClientSocket extends Thread implements Serializable{
     BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d(TAG, "onReceive: 1");
             if (intent.getAction().equals("SendChattingData")) {
-                Log.d(TAG, "onReceive: 2");
                 String message = intent.getStringExtra("sendToServer");
-                Log.d(TAG, "onReceive: " + message);
+                Log.d(TAG, "onReceive message: " + message);
 
                 Thread thread = new Thread(new Runnable() {
                     @Override
@@ -154,9 +152,15 @@ public class ClientSocket extends Thread implements Serializable{
                 Log.d(TAG, "line: " + line);
 
 
+
                 if(line.contains("[")){
-                    Log.d(TAG, "run: 4");
+
                     receiveTableInfo(line);
+
+                }else if(line.contains("isRead")){
+
+                    receiveIsRead(line);
+
                 }else{
                     receiveChattingData(line);
                 }
@@ -218,21 +222,49 @@ public class ClientSocket extends Thread implements Serializable{
         /**
          * sendMsg[0] : message
          * sendMsg[1] : 보낸 테이블 번호 (table + table_num)
+         * sendMsg[2] : 안읽음(1)/읽음(0)
          */
         String sendMsg[] = line.split("_");
+
 
         LocalDateTime localTime = LocalDateTime.now();
 
         String time = localTime.format(DateTimeFormatter.ofPattern("HH:mm"));
 
-        //정상적으로 리사이클러뷰에 올라가면 db에 저장
+        //db에 저장
         DBHelper dbHelper = new DBHelper(context, 2);
-        dbHelper.insertChattingData(sendMsg[0], time, get_id, sendMsg[1], "");
+        dbHelper.insertChattingData(sendMsg[0], time, get_id, sendMsg[1], sendMsg[2]);
 
 
         Intent intent = new Intent("chattingDataArrived");
         intent.putExtra("chattingData", line);
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+    }
+
+    private void receiveIsRead(String line){
+        /**
+         * sendMsg[1] : isRead
+         * sendMsg[0] : 보낸 테이블 번호
+         */
+
+        String sendMsg[] = line.split("_");
+
+        //table1 형태
+        String receiver = sendMsg[1];
+
+        DBHelper dbHelper = new DBHelper(context, 2);
+        //db 수정하기
+        dbHelper.upDateIsRead(get_id, receiver);
+
+        Log.d(TAG, "receiveIsRead: 1");
+
+        Intent intent = new Intent("isReadArrived");
+        intent.putExtra("isRead", line);
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+
+        Log.d(TAG, "receiveIsRead: 2");
+
+
     }
 
 

@@ -65,6 +65,9 @@
             <intent-filter>
                 <action android:name="SendChattingData"/>
             </intent-filter>
+            <intent-filter>
+                <action android:name="isReadArrived"/>
+            </intent-filter>
         </activity>
 
         <activity android:name=".Activity.PopUp"
@@ -86,8 +89,6 @@
 
         <activity android:name=".Activity.Admin"/>
         <activity android:name=".KakaoPay"/>
-        <activity android:name=".Kakao"/>
-
 
 
     </application>

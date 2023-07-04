@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -28,9 +29,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.openbook.Activity.Table;
 import com.example.openbook.Adapter.ChattingAdapter;
 import com.example.openbook.Activity.Menu;
+import com.example.openbook.Data.TableList;
 import com.example.openbook.R;
 import com.example.openbook.Data.TableInformation;
 import com.example.openbook.Data.ChattingList;
+import com.example.openbook.TableQuantity;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -42,7 +45,7 @@ public class ChattingUI extends AppCompatActivity {
 
     String TAG = "chatUI";
 
-    String get_id, time;
+    String get_id, time, paymentStyle;
     int table_num;
 
 
@@ -60,7 +63,6 @@ public class ChattingUI extends AppCompatActivity {
     ServiceHandler mServiceHandler;
     HandlerThread thread;
 
-    boolean loop = true;
 
     public static final int MSG_CONNECT = 1;
     public static final int MSG_SEND = 3;
@@ -69,6 +71,7 @@ public class ChattingUI extends AppCompatActivity {
 
 
     LocalDateTime localTime = LocalDateTime.now();
+    ArrayList<TableList> tableList;
 
     HashMap<Integer, TableInformation> tableInformationHashMap;
 
@@ -76,19 +79,46 @@ public class ChattingUI extends AppCompatActivity {
     BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
+            Log.d(TAG, "onReceive: ");
+
             if (intent.getAction().equals("chattingDataArrived")) {
                 String message = intent.getStringExtra("chattingData");
-                Log.d(TAG, "onReceive: " + message);
+                Log.d(TAG, "onReceive message: " + message);
                 chattingUpdate(message);
+
+            }else if(intent.getAction().equals("isReadArrived")) {
+                Log.d(TAG, "onReceive isRead: ");
+                String message = intent.getStringExtra("isRead");
+                Log.d(TAG, "onReceive isRead: " + message);
+                isReadUpdate(message);
             }
+
         }
     };
 
     @Override
     protected void onResume() {
         super.onResume();
-        IntentFilter intentFilter = new IntentFilter("chattingDataArrived");
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction("chattingDataArrived");
+        intentFilter.addAction("isReadArrived");
+        Log.d(TAG, "등록 되는거야?: ");
         LocalBroadcastManager.getInstance(ChattingUI.this).registerReceiver(broadcastReceiver, intentFilter);
+
+        TableQuantity tableQuantity = new TableQuantity();
+        int tableFromDB = tableQuantity.getTableQuantity();
+
+        tableList = new ArrayList<>();
+
+        int myTable = Integer.parseInt(get_id.replace("table", ""));
+
+        for (int i = 1; i < tableFromDB + 1; i++) {
+            if (i == myTable) {
+                tableList.add(new TableList(get_id, (Drawable) null, 0));
+            } else {
+                tableList.add(new TableList(i, (Drawable) null, 1));
+            }
+        }
     }
 
     @Override
@@ -104,6 +134,7 @@ public class ChattingUI extends AppCompatActivity {
 
         table_num = getIntent().getIntExtra("tableNumber", 0);
         get_id = getIntent().getStringExtra("get_id");
+        paymentStyle = getIntent().getStringExtra("paymentStyle");
 
         tableInformationHashMap = (HashMap<Integer, TableInformation>) getIntent().getSerializableExtra("tableInformation");
         Log.d(TAG, "tableInformation :" + tableInformationHashMap);
@@ -120,13 +151,13 @@ public class ChattingUI extends AppCompatActivity {
          * AppBar 설정
          */
         TextView menu = findViewById(R.id.appbar_menu_menu);
-        menu.setOnClickListener(view ->{
+        menu.setOnClickListener(view -> {
             moveActivity(Menu.class);
         });
 
 
         TextView table = findViewById(R.id.appbar_menu_table);
-        table.setOnClickListener(view ->{
+        table.setOnClickListener(view -> {
             moveActivity(Table.class);
         });
 
@@ -167,11 +198,11 @@ public class ChattingUI extends AppCompatActivity {
         while (res.moveToNext()) {
             //sender 가 get_id인 것은 viewType 1로
             if (res.getString(3).equals(get_id) && res.getString(4).equals("table" + table_num)) {
-                chatLists.add(new ChattingList(res.getString(1), 1, res.getString(2), ""));
+                chatLists.add(new ChattingList(res.getString(1), 1, res.getString(2), res.getString(5)));
 
                 //receiver 가 table_num 인 것은 viewType 0으로
             } else if (res.getString(3).equals("table" + table_num) && res.getString(4).equals(get_id)) {
-                chatLists.add(new ChattingList(res.getString(1), 0, res.getString(2), ""));
+                chatLists.add(new ChattingList(res.getString(1), 0, res.getString(2), res.getString(5)));
             }
         }
 
@@ -220,7 +251,6 @@ public class ChattingUI extends AppCompatActivity {
                     case MSG_SEND:
                         //메세지 전송 시 호출
 
-
                         /**
                          * sendMsg[0] : 내 테이블 번호 (get_id)
                          * sendMsg[1] : 메세지
@@ -230,14 +260,14 @@ public class ChattingUI extends AppCompatActivity {
 
                         time = localTime.format(DateTimeFormatter.ofPattern("HH:mm"));
 
-                        chatLists.add(new ChattingList(sendMsg[1], 1, time, ""));
+                        chatLists.add(new ChattingList(sendMsg[1], 1, time, "1"));
                         Log.d(TAG, "전송된 메세지 : " + sendMsg[1]);
 
                         chattingAdapter.setAdapterItem(chatLists);
                         chatting_view.smoothScrollToPosition(chatLists.size());
 
                         //정상적으로 리사이클러뷰에 올라가면 db에 저장
-                        dbHelper.insertChattingData(sendMsg[1], time, get_id, sendMsg[2], "");
+                        dbHelper.insertChattingData(sendMsg[1], time, get_id, sendMsg[2], "1");
 
 //                        imm.hideSoftInputFromWindow(chat_edit.getWindowToken(), 0);
 
@@ -262,7 +292,7 @@ public class ChattingUI extends AppCompatActivity {
          * 채팅방 나가면
          */
         TextView chat_back = findViewById(R.id.chatting_back);
-        chat_back.setOnClickListener(view ->{
+        chat_back.setOnClickListener(view -> {
             moveActivity(Table.class);
         });
 
@@ -296,7 +326,6 @@ public class ChattingUI extends AppCompatActivity {
 
 
     }
-
 
 
     class ServiceHandler extends Handler {
@@ -339,40 +368,46 @@ public class ChattingUI extends AppCompatActivity {
         Runnable showUpdate = new Runnable() {
             @Override
             public void run() {
+                /**
+                 * sendMsg[0] : message
+                 * sendMsg[1] : 보낸 테이블 번호 (table + table_num)
+                 * sendMsg[2] : 안읽음(0)/읽음(1)
+                 */
 
-                String temp[] = line.split("_");
+                String message[] = line.split("_");
 
+                //table1 형태
+                String receiver = message[1];
 
-                if (temp[0].equals("read")) {
-
-                    for (int i = 0; i < chatLists.size(); i++) {
-                        chatLists.get(i).setRead("읽음");
-                    }
-                    chattingAdapter.notifyItemChanged(chatLists.lastIndexOf(1));
-
-
-                } else {
-                    //table1 형태
-                    String receiver = temp[1];
-
-                    temp[1] = temp[1].replace("table", "");
+                message[1] = message[1].replace("table", "");
 
 
-                    if (String.valueOf(table_num).equals(temp[1])) {
-                        //처음엔 읽었는지 안읽었는지 모르니까 공란으로 넘겨버림
-                        chatLists.add(new ChattingList(temp[0], 0, localTime.format(DateTimeFormatter.ofPattern("HH:mm")), ""));
-                        Log.d(TAG, "showUpdate : " + line);
+                if (String.valueOf(table_num).equals(message[1])) {
+                    //처음엔 읽었는지 안읽었는지 모르니까 공란으로 넘겨버림
+                    chatLists.add(new ChattingList(message[0], 0, localTime.format(DateTimeFormatter.ofPattern("HH:mm")), ""));
+                    Log.d(TAG, "showUpdate : " + line);
 
 
-                        chattingAdapter.notifyDataSetChanged();
-                        chatting_view.smoothScrollToPosition(chatLists.size());
+                    chattingAdapter.notifyDataSetChanged();
+                    chatting_view.smoothScrollToPosition(chatLists.size());
 
-                        time = localTime.format(DateTimeFormatter.ofPattern("HH:mm"));
+                    time = localTime.format(DateTimeFormatter.ofPattern("HH:mm"));
 
-                        dbHelper.insertChattingData(temp[0], time, receiver, get_id, "");
-                        Log.d(TAG, "전송 받은거 저장");
-                    } // 해당 테이블에 데이터 넣어주기
-                } // 읽음 처리 if문
+                    dbHelper.insertChattingData(message[0], time, receiver, get_id, "");
+                    Log.d(TAG, "전송 받은거 저장");
+
+
+                    //상대방한테 알려줘야지
+                    Intent intent = new Intent("SendChattingData");
+                    /**
+                     * 읽음_from_to
+                     */
+                    intent.putExtra("sendToServer", "isRead_"+get_id+"_table" + table_num);
+                    LocalBroadcastManager.getInstance(ChattingUI.this).sendBroadcast(intent);
+
+
+                } // 해당 테이블에 데이터 넣어주기
+
 
             }
         };
@@ -380,11 +415,54 @@ public class ChattingUI extends AppCompatActivity {
         mMainHandler.post(showUpdate);
     }
 
-    public void moveActivity(Class activity){
+    private void isReadUpdate(String line){
+
+        Runnable isReadUpdate =new Runnable() {
+            @Override
+            public void run() {
+                /**
+                 * sendMsg[0] : isRead
+                 * sendMsg[1] : 보낸 테이블 번호 (get_id)
+                 * sendMsg[2] : 나의 테이블 (table + tableNum)
+                 */
+
+                Log.d(TAG, "isReadUpdate: ");
+
+                String message[] = line.split("_");
+
+
+
+                message[0] = message[0].replace("table", "");
+                Log.d(TAG, "run: " + message[0]);
+
+                if(String.valueOf(table_num).equals(message[0])){
+
+                    for(int i =0; i<chatLists.size(); i++){
+                        chatLists.get(i).setRead("");
+                        Log.d(TAG, "setRead: ");
+                    }
+
+                    chattingAdapter.notifyDataSetChanged();
+                }
+            }
+        };
+
+        mMainHandler.post(isReadUpdate);
+
+
+
+    }
+
+
+
+
+    public void moveActivity(Class activity) {
         Intent intent = new Intent(ChattingUI.this, activity);
         intent.putExtra("get_id", get_id);
         intent.putExtra("orderCk", true);
+        intent.putExtra("tableList", tableList);
         intent.putExtra("TableInformation", tableInformationHashMap);
+        intent.putExtra("paymentStyle", paymentStyle);
         startActivity(intent);
     }
 
