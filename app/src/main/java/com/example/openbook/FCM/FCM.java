@@ -1,30 +1,22 @@
 package com.example.openbook.FCM;
 
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
-import android.widget.RemoteViews;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
-import androidx.core.app.NotificationCompat;
 
 import com.example.openbook.Activity.Admin;
 import com.example.openbook.Activity.AdminPaymentBeforePopup;
 import com.example.openbook.Activity.AdminPaymentAfterPopup;
-import com.example.openbook.Activity.Menu;
 import com.example.openbook.Activity.PaymentSelect;
-import com.example.openbook.Activity.PopUp;
-import com.example.openbook.Chatting.ChattingUI;
+import com.example.openbook.Activity.PopUpChatting;
 
 import com.example.openbook.Chatting.DBHelper;
-import com.example.openbook.R;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DatabaseReference;
@@ -97,7 +89,7 @@ public class FCM extends FirebaseMessagingService {
         super.onMessageReceived(message);
 
         // 푸시메시지 수신시 할 작업을 작성
-        Log.d(TAG, "From: " + message.getFrom());
+        Log.d(TAG, "From: " + message.getData());
 
         // Check if message contains a notification payload.
         if (message.getData().size() > 0) {
@@ -111,6 +103,7 @@ public class FCM extends FirebaseMessagingService {
     private void handleDataMessage(Map<String, String> data) {
         if (data.containsKey("title")) {
             String title = data.get("title");
+            Log.d(TAG, "handleDataMessage title: "+title);
             String body = data.get("body");
             String clickTable = data.get("clickTable");
             String ticket = data.get("ticket");
@@ -226,7 +219,7 @@ public class FCM extends FirebaseMessagingService {
     @RequiresApi(api = Build.VERSION_CODES.Q)
     public void handleChatRequest(String title, String body, String clickTable, String ticket) {
         //popupActivity를 만들어서 띄우자
-        Intent intent = new Intent(this, PopUp.class);
+        Intent intent = new Intent(this, PopUpChatting.class);
         intent.putExtra("notificationTitle", title);
         intent.putExtra("notificationBody", body);
         intent.putExtra("notificationClickTable", clickTable);

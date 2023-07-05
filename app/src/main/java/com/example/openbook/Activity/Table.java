@@ -25,13 +25,15 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.openbook.Adapter.TableAdapter;
 import com.example.openbook.Chatting.ChattingUI;
-import com.example.openbook.Chatting.ClientSocket;
+import com.example.openbook.Data.CartList;
+import com.example.openbook.Data.ChattingData;
+import com.example.openbook.Data.MyData;
 import com.example.openbook.DialogCustom;
-import com.example.openbook.DrawableMethod;
+import com.example.openbook.FCM.SendNotification;
 import com.example.openbook.ImageLoadTask;
 import com.example.openbook.QRcode.MakeQR;
 import com.example.openbook.R;
-import com.example.openbook.Data.TableInformation;
+import com.example.openbook.Data.TicketData;
 import com.example.openbook.Data.TableList;
 import com.example.openbook.TableQuantity;
 
@@ -39,10 +41,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -57,9 +57,14 @@ import okhttp3.Response;
 public class Table extends AppCompatActivity {
 
     String TAG = "TableTAG";
-
+    MyData myData;
+    HashMap<String, TicketData> ticketDataHashMap;
+    HashMap<String, ChattingData> chattingDataHashMap;
     ArrayList<TableList> tableList;
-    HashMap<Integer, TableInformation> tableInformationHashMap;
+
+    //다이얼로그
+    ImageView table_info_img;
+    TextView statement, table_info_text, table_info_gender, table_info_member, table_info_close;
 
 
     int clickTable, myTable;
@@ -69,10 +74,6 @@ public class Table extends AppCompatActivity {
 
     TextView appbarMenu, requestChatting, checkInformation;
     LinearLayout table_sidebar;
-    String get_id, paymentStyle;
-
-    boolean orderCk = false;
-    boolean loop = false;
 
     ImageLoadTask task;
     String url;
@@ -81,18 +82,14 @@ public class Table extends AppCompatActivity {
     BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d(TAG, "onReceive: 1");
             if (intent.getAction().equals("tableInformationArrived")) {
-                Log.d(TAG, "onReceive: 2");
                 String message = intent.getStringExtra("tableInformation");
-                Log.d(TAG, "onReceive: " + message);
                 tableUpdate(message);
             }
         }
     };
 
 
-    DrawableMethod drawableMethod;
     int tablePosition;
     String responseBody;
 
@@ -102,16 +99,14 @@ public class Table extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.table_activity);
 
-        get_id = getIntent().getStringExtra("get_id");
-        orderCk = getIntent().getBooleanExtra("orderCk", false);
+        myData = (MyData) getIntent().getSerializableExtra("myData");
+        Log.d(TAG, "myData Id: " + myData.getId());
+        Log.d(TAG, "myData IsOrder: " + myData.isOrder());
 
-        paymentStyle = getIntent().getStringExtra("paymentStyle");
-
-        myTable = Integer.parseInt(get_id.replace("table", ""));
-
+        chattingDataHashMap = (HashMap<String, ChattingData>) getIntent().getSerializableExtra("chattingData");
+        ticketDataHashMap = (HashMap<String, TicketData>) getIntent().getSerializableExtra("ticketData");
         tableList = (ArrayList<TableList>) getIntent().getSerializableExtra("tableList");
-
-
+        Log.d(TAG, "tableList size: " + tableList.size());
 
 
         // 로컬 브로드캐스트 리시버 등록
@@ -119,22 +114,9 @@ public class Table extends AppCompatActivity {
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, intentFilter);
 
 
-
-
-
-        tableInformationHashMap = (HashMap<Integer, TableInformation>) getIntent().getSerializableExtra("tableInformation");
-        Log.d(TAG, "tableInformation :" + tableInformationHashMap);
-
-        if (tableInformationHashMap == null) {
-            tableInformationHashMap = new HashMap<>();
-            Log.d(TAG, "onCreate tableInformation initial one");
-        } else {
-            Log.d(TAG, "intent tableInformation size :" + tableInformationHashMap.size());
-
-        }
-
+        myTable = Integer.parseInt(myData.getId().replace("table", ""));
         TextView table_num = findViewById(R.id.appbar_menu_table_number);
-        table_num.setText(get_id);
+        table_num.setText(myData.getId());
 
 
         /**
@@ -150,7 +132,6 @@ public class Table extends AppCompatActivity {
 
         //어댑터 연결
         table_grid.setAdapter(adapter);
-
 
 
         //오른쪽 사이드 메뉴
@@ -181,7 +162,7 @@ public class Table extends AppCompatActivity {
 
             tableUpdate(activeTable);
 
-        }else{
+        } else {
             TableQuantity tableQuantity = new TableQuantity();
             int tableFromDB = tableQuantity.getTableQuantity();
 
@@ -189,7 +170,7 @@ public class Table extends AppCompatActivity {
 
             for (int i = 1; i < tableFromDB + 1; i++) {
                 if (i == myTable) {
-                    tableList.add(new TableList(get_id, (Drawable) null, 0));
+                    tableList.add(new TableList(myData.getId(), (Drawable) null, 0));
                 } else {
                     tableList.add(new TableList(i, (Drawable) null, 1));
                 }
@@ -218,8 +199,6 @@ public class Table extends AppCompatActivity {
             public void onItemClick(View view, int position) {
                 table_sidebar.setVisibility(View.VISIBLE);
                 clickTable = position + 1;
-                Log.d(TAG, "onItemClick: clickTable " + clickTable);
-                Log.d(TAG, "onItemClick: position " + position);
 
             }
         });
@@ -238,7 +217,7 @@ public class Table extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                if (!orderCk) {
+                if (!myData.isOrder()) {
                     alertDialog.showAlertDialog(Table.this, "주문 후 채팅이 가능합니다.");
 
                 } else if (clickTable == myTable) {
@@ -248,22 +227,23 @@ public class Table extends AppCompatActivity {
 
                 } else if (tableList.get(clickTable - 1).getViewType() == 2) {
 
-                    if (tableInformationHashMap.get(clickTable) == null ||
-                            !tableInformationHashMap.get(clickTable).isChattingAgree()) {
+                    if (chattingDataHashMap == null ||
+                            !chattingDataHashMap.get("table" + clickTable).isChattingAgree()) {
+
                         alertDialog.chattingRequest(Table.this,
                                 clickTable + "번 테이블과 채팅을 하시겠습니까?" +
                                         "\n<추신> 채팅 전 테이블 정보를 입력하는 것을 추천드립니다!",
-                                "table" + clickTable, get_id);
+                                "table" + clickTable, myData.getId());
                         Log.d(TAG, "채팅 신청");
 
-                    } else if (tableInformationHashMap.get(clickTable).isChattingAgree()) {
+                    } else if (chattingDataHashMap.get("table" + clickTable).isChattingAgree()) {
 
                         Intent intent = new Intent(Table.this, ChattingUI.class);
                         intent.putExtra("tableNumber", clickTable);
-                        intent.putExtra("get_id", get_id);
-                        intent.putExtra("orderCk", orderCk);
-                        intent.putExtra("paymentStyle", paymentStyle);
-                        intent.putExtra("tableInformation", tableInformationHashMap);
+                        intent.putExtra("myData", myData);
+                        intent.putExtra("chattingData", chattingDataHashMap);
+                        intent.putExtra("ticketData", ticketDataHashMap);
+                        intent.putExtra("tableList", tableList);
 
                         startActivity(intent);
 
@@ -290,102 +270,27 @@ public class Table extends AppCompatActivity {
                 dlg.show();
 
 
-                ImageView table_info_img = dlg.findViewById(R.id.table_info_img);
-                TextView table_info_text = dlg.findViewById(R.id.table_info_text);
-                TextView statement = dlg.findViewById(R.id.statement);
-                TextView table_info_gender = dlg.findViewById(R.id.table_info_gender);
-                TextView table_info_member = dlg.findViewById(R.id.table_info_member);
-                TextView table_info_close = dlg.findViewById(R.id.table_info_close);
+                table_info_img = dlg.findViewById(R.id.table_info_img);
+                table_info_text = dlg.findViewById(R.id.table_info_text);
+                statement = dlg.findViewById(R.id.statement);
+                table_info_gender = dlg.findViewById(R.id.table_info_gender);
+                table_info_member = dlg.findViewById(R.id.table_info_member);
+                table_info_close = dlg.findViewById(R.id.table_info_close);
 
 
                 try {
                     String result = requestTableInfo();
+                    Log.d(TAG, "url result: " + result);
                     /**
                      *  등록을 했으면 등록된 정보를 보여주고 등록 안했으면 하단 set
                      */
                     if (clickTable == myTable) {
 
-                        if (result.equals("없음")) {
-                            MakeQR makeQR = new MakeQR();
-                            table_info_img.setImageBitmap(makeQR.clientQR(get_id));
-                            table_info_img.setClickable(false);
+                        handleMyTableInfo(result);
 
-                            table_info_text.setVisibility(View.INVISIBLE);
-
-                            statement.setText("사진과 정보를 입력하시려면 다음 큐알로 입장해주세요 :)");
-                            table_info_gender.setVisibility(View.INVISIBLE);
-                            table_info_member.setVisibility(View.INVISIBLE);
-
-                        } else if (result.startsWith("{")) {
-                            JSONObject jsonObject = new JSONObject(result);
-
-                            String url = "http://3.36.255.141/image/"
-                                    + jsonObject.getString("img");
-                            Log.d(TAG, "url :" + url);
-
-                            task = new ImageLoadTask(Table.this, true, url, table_info_img);
-                            task.execute();
-
-                            table_info_text.setText("다시 등록하시려면 \n프로필 사진을 터치해주세요!");
-
-                            statement.setText(jsonObject.getString("statement"));
-                            table_info_gender.setText(jsonObject.getString("gender"));
-                            table_info_member.setText(jsonObject.getString("guestNum"));
-
-
-                        }//if-else 문
                     } else {
-                        if (result.equals("없음")) {
-                            table_info_text.setVisibility(View.INVISIBLE);
-                            statement.setText("정보를 입력하지 않은 테이블입니다.");
-                            table_info_gender.setVisibility(View.INVISIBLE);
-                            table_info_member.setVisibility(View.INVISIBLE);
+                        handleOtherTableInfo(result);
 
-                            /**
-                             * table 정보 있을 때
-                             */
-                        } else if (result.startsWith("{")) {
-                            JSONObject jsonObject = new JSONObject(result);
-
-                            url = "http://3.36.255.141/image/" + jsonObject.getString("img");
-
-                            Log.d(TAG, "url :" + url);
-
-
-                            if (tableInformationHashMap == null ||
-                                    tableInformationHashMap.get(clickTable) == null ||
-                                    tableInformationHashMap.get(clickTable).getUseTable() == 0) {
-
-                                Log.d(TAG, "팝업 안에서 발생 null");
-                                task = new ImageLoadTask(Table.this, false, url, table_info_img);
-                                task.execute();
-
-
-                            } else {
-
-                                if (tableInformationHashMap.get(clickTable) == null) {
-                                    Log.d(TAG, "팝업 안에서 발생 getUseTable null");
-                                    task = new ImageLoadTask(Table.this, false, url, table_info_img);
-                                    task.execute();
-
-                                } else if (tableInformationHashMap.get(clickTable).getUseTable() == clickTable) {
-                                    Log.d(TAG, "팝업 안에서 발생 getUseTable :" + tableInformationHashMap.get(clickTable).getUseTable());
-                                    tableInformationHashMap.get(clickTable).setUsage(true);
-                                    Log.d(TAG, "table 조회 :" + tableInformationHashMap.get(clickTable).isChattingAgree());
-                                    task = new ImageLoadTask(Table.this, true, url, table_info_img);
-                                    task.execute();
-                                    table_info_text.setVisibility(View.INVISIBLE);
-                                    table_info_img.setClickable(false);
-                                }
-
-
-                            }
-
-                            statement.setText(jsonObject.getString("statement"));
-                            table_info_gender.setText(jsonObject.getString("gender"));
-                            table_info_member.setText(jsonObject.getString("guestNum"));
-
-                        }
                     }
                 } catch (InterruptedException | JSONException e) {
                     e.printStackTrace();
@@ -402,19 +307,20 @@ public class Table extends AppCompatActivity {
 
                         if (clickTable == myTable) {
                             MakeQR makeQR = new MakeQR();
-                            table_info_img.setImageBitmap(makeQR.clientQR(get_id));
+                            table_info_img.setImageBitmap(makeQR.clientQR(myData.getId()));
                             table_info_text.setVisibility(View.INVISIBLE);
 
                         } else {
 
-                            Intent intent = new Intent(Table.this, PopUp.class);
+                            Intent intent = new Intent(Table.this, PopUpProfile.class);
                             intent.putExtra("title", "프로필 조회권 구매");
                             intent.putExtra("body", "프로필 조회권을 구매하시겠습니까?\n** 프로필 조회권 2000원");
 
-                            intent.putExtra("get_id", get_id);
+                            intent.putExtra("myData", myData);
                             intent.putExtra("clickTable", clickTable);
-                            intent.putExtra("orderCk", orderCk);
-                            intent.putExtra("tableInformation", tableInformationHashMap);
+                            intent.putExtra("chattingData", chattingDataHashMap);
+                            intent.putExtra("ticketData", ticketDataHashMap);
+                            intent.putExtra("tableList", tableList);
 
                             startActivity(intent);
                             dlg.dismiss();
@@ -459,17 +365,17 @@ public class Table extends AppCompatActivity {
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 if (response.isSuccessful()) {
                     String body = response.body().string();
-                    Log.d(TAG, "onResponse: " + body);
+                    Log.d(TAG, "requestTableInfo onResponse: " + body);
                     responseBody = body;
                 } else {
-                    Log.d(TAG, "onResponse: fail");
+                    Log.d(TAG, "requestTableInfo onResponse: fail");
                 }
             }
         });
 
-        if (responseBody == null) {
-            Thread.sleep(250);
-        }
+
+        Thread.sleep(250);
+
 
         return responseBody;
     }
@@ -482,14 +388,13 @@ public class Table extends AppCompatActivity {
     }
 
 
-
     public void moveToMenu(View view) {
         Intent intent = new Intent(Table.this, Menu.class);
-        intent.putExtra("get_id", get_id);
-        intent.putExtra("orderCk", orderCk);
+        intent.putExtra("myData", myData);
+        intent.putExtra("chattingData", chattingDataHashMap);
+        intent.putExtra("ticketData", ticketDataHashMap);
         intent.putExtra("tableList", tableList);
-        intent.putExtra("tableInformation", tableInformationHashMap);
-        intent.putExtra("paymentStyle", paymentStyle);
+
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(intent);
     }
@@ -535,21 +440,134 @@ public class Table extends AppCompatActivity {
         }
     }
 
+    private void handleMyTableInfo(String result) throws JSONException {
+
+        if (result.equals("없음")) {
+            MakeQR makeQR = new MakeQR();
+            table_info_img.setImageBitmap(makeQR.clientQR(myData.getId()));
+            table_info_img.setClickable(false);
+
+            table_info_text.setVisibility(View.INVISIBLE);
+
+            statement.setText("사진과 정보를 입력하시려면 다음 큐알로 입장해주세요 :)");
+            table_info_gender.setVisibility(View.INVISIBLE);
+            table_info_member.setVisibility(View.INVISIBLE);
+
+        } else if (result.startsWith("{")) {
+            JSONObject jsonObject = new JSONObject(result);
+
+            String url = "http://3.36.255.141/image/"
+                    + jsonObject.getString("img");
+            Log.d(TAG, "url :" + url);
+
+            task = new ImageLoadTask(Table.this, true, url, table_info_img);
+            task.execute();
+
+            table_info_text.setText("다시 등록하시려면 \n프로필 사진을 터치해주세요!");
+
+            statement.setText(jsonObject.getString("statement"));
+            table_info_gender.setText(jsonObject.getString("gender"));
+            table_info_member.setText(jsonObject.getString("guestNum"));
+        }
+    }
+
+    private void handleOtherTableInfo(String result) throws JSONException {
+
+        if (result.equals("없음")) {
+            table_info_text.setVisibility(View.INVISIBLE);
+            statement.setText("정보를 입력하지 않은 테이블입니다.");
+            table_info_gender.setVisibility(View.INVISIBLE);
+            table_info_member.setVisibility(View.INVISIBLE);
+
+            /**
+             * table 정보 있을 때
+             */
+        } else if (result.startsWith("{")) {
+            JSONObject jsonObject = new JSONObject(result);
+
+            url = "http://3.36.255.141/image/" + jsonObject.getString("img");
+
+
+            if(ticketDataHashMap != null){
+                Log.d(TAG, "ticket: " + ticketDataHashMap.get("table"+clickTable).getUseTable());
+            }
+            //전체를 조회해서...?
+
+
+            /**
+             * 티켓 유무
+             */
+            if (ticketDataHashMap == null ||
+                    ticketDataHashMap.get("table"+clickTable) == null) {
+
+                Log.d(TAG, "티켓 없어서 블러 처리");
+                task = new ImageLoadTask(Table.this, false, url, table_info_img);
+                task.execute();
+
+
+            } else if (ticketDataHashMap.get("table" + clickTable).getUseTable().equals("table" + clickTable)) {
+                //만약 티켓을 가지고 있다면?
+
+
+                Log.d(TAG, "티켓 사용 유무 :" + ticketDataHashMap.get("table" + clickTable).getUseTable());
+
+                ticketDataHashMap.get("table" + clickTable).setIsUsed(true);
+                Log.d(TAG, "table 조회 :" + ticketDataHashMap.get("table" + clickTable).isUsed());
+                task = new ImageLoadTask(Table.this, true, url, table_info_img);
+                task.execute();
+                table_info_text.setVisibility(View.INVISIBLE);
+                table_info_img.setClickable(false);
+
+                SendNotification sendNotification = new SendNotification();
+
+                String whoBuy = ticketDataHashMap.get("table" + clickTable).getWhoBuy();
+                sendNotification.sendMenu(sendTicketToAdmin(whoBuy));
+
+            }
+
+            statement.setText(jsonObject.getString("statement"));
+            table_info_gender.setText(jsonObject.getString("gender"));
+            table_info_member.setText(jsonObject.getString("guestNum"));
+
+        }
+    }
 
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        get_id = data.getStringExtra("get_id");
-        Log.d(TAG, "onActivityResult get_id :" + get_id);
+        myData = (MyData) data.getSerializableExtra("myData");
+        Log.d(TAG, "onActivityResult myData Id: " + myData.getId());
+        Log.d(TAG, "onActivityResult myData IsOrder: " + myData.isOrder());
 
-        orderCk = data.getBooleanExtra("orderCk", orderCk);
-        Log.d(TAG, "onActivityResult orderCk :" + orderCk);
+        chattingDataHashMap = (HashMap<String, ChattingData>) data.getSerializableExtra("chattingData");
+        Log.d(TAG, "onActivityResult chattingData: " + chattingDataHashMap);
 
-        tableInformationHashMap = data.getParcelableExtra("tableInformation");
-        Log.d(TAG, "onActivityResult tableInformationHashMap :" + tableInformationHashMap);
+        ticketDataHashMap = (HashMap<String, TicketData>) data.getSerializableExtra("ticketData");
+        Log.d(TAG, "onActivityResult ticketData :" + ticketDataHashMap);
 
+    }
+
+    public String sendTicketToAdmin(String whoBuy) {
+        JSONObject jsonObject = new JSONObject();
+
+        try {
+            JSONArray menujArray = new JSONArray();//배열이 필요할때
+
+            jsonObject.put("menu", "profileTicket");
+            jsonObject.put("price", 2000);
+            jsonObject.put("quantity", 1);
+            menujArray.put(jsonObject);
+
+            jsonObject.put("item", menujArray);
+            jsonObject.put("menuName", "profileTicket");
+            jsonObject.put("tableName", whoBuy);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return jsonObject.toString();
     }
 }
 

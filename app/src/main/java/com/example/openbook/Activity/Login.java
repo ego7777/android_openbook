@@ -13,6 +13,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.example.openbook.Data.AdminTableList;
+import com.example.openbook.Data.MyData;
 import com.example.openbook.DialogCustom;
 import com.example.openbook.R;
 import com.example.openbook.TableQuantity;
@@ -51,8 +52,6 @@ public class Login extends AppCompatActivity {
     String local_id;
     String TAG = "login_log";
 
-//    SharedPreferences pref;
-//    SharedPreferences.Editor editor;
     ArrayList<AdminTableList> adminTableList;
     int tableFromDB;
 
@@ -136,7 +135,7 @@ public class Login extends AppCompatActivity {
 
                                             } else if (responseData.equals("성공")) {
 
-                                                startActivityString(PaymentSelect.class,"get_id", local_id);
+                                                startActivityString(PaymentSelect.class,"myData", local_id);
 
                                             } else if (responseData.equals("admin")){
 
@@ -314,10 +313,9 @@ public class Login extends AppCompatActivity {
     // 문자열 인텐트 전달 함수
     public void startActivityString(Class c, String name, String sendString) {
         Intent intent = new Intent(getApplicationContext(), c);
-        intent.putExtra(name, sendString);
-        intent.putExtra("tableFromDB", tableFromDB);
+        MyData myData = new MyData(sendString, tableFromDB, null, false);
+        intent.putExtra(name, myData);
         startActivity(intent);
-        // 화면전환 애니메이션 없애기
         overridePendingTransition(0, 0);
     }
 
@@ -325,7 +323,6 @@ public class Login extends AppCompatActivity {
     // FLAG_ACTIVITY_CLEAR_TOP = 불러올 액티비티 위에 쌓인 액티비티 지운다.
     public void startActivityTableList(Class c, ArrayList tableList, String tableListName,String id) {
         Intent intent = new Intent(getApplicationContext(), c);
-//        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         intent.putExtra(tableListName, tableList);
         intent.putExtra("get_id", id);
         startActivity(intent);

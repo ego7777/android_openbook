@@ -61,30 +61,18 @@ public class ClientSocket extends Thread implements Serializable{
     Handler handler;
     Context context;
 
-    public ArrayList<TableList> getTableList() {
-        return tableList;
-    }
 
-    ArrayList<TableList> tableList;
 
     private SharedPreferences sharedPreferences;
     private SharedPreferences.Editor editor;
 
-    public ClientSocket(String get_id, Context context, Handler handler){
-        this.get_id = get_id;
-        this.handler = handler;
-        this.context = context;
-        socketAddress = new InetSocketAddress("3.36.255.141", 7777);
-
-    }
 
 
 
-    public ClientSocket(String get_id, Context context, ArrayList<TableList> tableList) {
+    public ClientSocket(String get_id, Context context) {
         //서버 ip 주소와 사용할 포트번호로 소켓 어드레스 객체 생성
         this.get_id = get_id;
         this.context = context;
-        this.tableList = tableList;
         socketAddress = new InetSocketAddress("3.36.255.141", 7777);
 
     }

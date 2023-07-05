@@ -70,7 +70,10 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".Activity.PopUp"
+        <activity android:name=".Activity.PopUpChatting"
+            android:theme="@android:style/Theme.Dialog"/>
+
+        <activity android:name=".Activity.PopUpProfile"
             android:theme="@android:style/Theme.Dialog"/>
 
         <activity android:name=".Activity.AdminModifyTableQuantity"

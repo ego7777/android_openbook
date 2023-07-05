@@ -35,6 +35,8 @@ import com.example.openbook.Adapter.MenuAdapter;
 import com.example.openbook.Adapter.SideListViewAdapter;
 import com.example.openbook.Chatting.ClientSocket;
 import com.example.openbook.Chatting.DBHelper;
+import com.example.openbook.Data.ChattingData;
+import com.example.openbook.Data.MyData;
 import com.example.openbook.Deco.menu_recyclerview_deco;
 import com.example.openbook.DialogCustom;
 import com.example.openbook.FCM.FCM;
@@ -42,7 +44,7 @@ import com.example.openbook.FCM.SendNotification;
 import com.example.openbook.KakaoPay;
 import com.example.openbook.SaveOrderDeleteData;
 import com.example.openbook.R;
-import com.example.openbook.Data.TableInformation;
+import com.example.openbook.Data.TicketData;
 import com.example.openbook.Data.CartList;
 import com.example.openbook.Data.MenuList;
 import com.example.openbook.Data.SideList;
@@ -71,21 +73,15 @@ public class Menu extends AppCompatActivity {
     String TAG = "menuTAG";
 
     int totalPrice, myTable;
-    boolean orderCk = false;
-    boolean infoCk = false;
 
     ArrayList<MenuList> menuLists;
     ArrayList<CartList> cartLists;
     ArrayList<TableList> tableList;
     ListView menuNavigation;
 
-    HashMap<Integer, TableInformation> tableInformationHashMap;
 
     SharedPreferences pref;
     SharedPreferences.Editor editor;
-
-    String get_id, paymentStyle;
-    int tableFromDB;
 
     TextView appbarMenuTable, appbarOrderList, cartOrderPrice;
 
@@ -108,6 +104,11 @@ public class Menu extends AppCompatActivity {
 
     SendNotification sendNotification;
 
+    MyData myData;
+    HashMap<String, ChattingData> chattingDataHashMap;
+    HashMap<String, TicketData> ticketDataHashMap;
+
+
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -115,36 +116,32 @@ public class Menu extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.menu_activity);
 
-        get_id = getIntent().getStringExtra("get_id");
-        paymentStyle = getIntent().getStringExtra("paymentStyle");
-        tableFromDB = getIntent().getIntExtra("tableFromDB", 20);
-        Log.d(TAG, "tableFromDB: " + tableFromDB);
-        orderCk = getIntent().getBooleanExtra("orderCk", false);
+        myData = (MyData) getIntent().getSerializableExtra("myData");
+        Log.d(TAG, "myData paymentStyle: " + myData.getPaymentStyle());
+        Log.d(TAG, "myData isOrder: " + myData.isOrder());
 
-        clientSocket = (ClientSocket) getIntent().getSerializableExtra("clientSocket");
+        chattingDataHashMap = (HashMap<String, ChattingData>) getIntent().getSerializableExtra("chattingData");
+        Log.d(TAG, "chattingData size: " + chattingDataHashMap);
+
+        ticketDataHashMap = (HashMap<String, TicketData>) getIntent().getSerializableExtra("ticketData");
 
 
-        tableInformationHashMap = (HashMap<Integer, TableInformation>) getIntent().getSerializableExtra("tableInformation");
         tableList = (ArrayList<TableList>) getIntent().getSerializableExtra("tableList");
 
-        if (tableInformationHashMap == null) {
-            Log.d(TAG, "onCreate tableInformation null");
-        } else {
-            Log.d(TAG, "menu.class intent tableInformation size:" + tableInformationHashMap.size());
-        }
+
 
 
         /**
          * 로그인을 성공하면 id, token을 firebase realtime db에 저장
          */
         Intent fcm = new Intent(getApplicationContext(), FCM.class);
-        fcm.putExtra("get_id", get_id);
+        fcm.putExtra("get_id", myData.getId());
         startService(fcm);
 
         sendNotification = new SendNotification();
 
-        if (paymentStyle.equals("before")) {
-            sendNotification.usingTable(get_id, "사용");
+        if (myData.getPaymentStyle().equals("before")) {
+            sendNotification.usingTable(myData.getId(), "사용");
         }
 
 
@@ -152,11 +149,11 @@ public class Menu extends AppCompatActivity {
          * AppBar: 로그인하면 table number 바로 나오는거
          */
         TextView table_number = findViewById(R.id.appbar_menu_table_number);
-        table_number.setText(get_id);
+        table_number.setText(myData.getId());
 
         menuClose = findViewById(R.id.menu_close);
 
-        if (paymentStyle.equals("after")) {
+        if (myData.getPaymentStyle().equals("after")) {
             menuClose.setVisibility(View.GONE);
         }
         appbarMenuTable = findViewById(R.id.appbar_menu_table);
@@ -272,7 +269,7 @@ public class Menu extends AppCompatActivity {
 
         String returnOrderList = getIntent().getStringExtra("orderList");
         Log.d(TAG, "onStart_returnOrderList : " + returnOrderList);
-        Log.d(TAG, "onStart_PaymentStyle :" + paymentStyle);
+        Log.d(TAG, "onStart_PaymentStyle :" + myData.getPaymentStyle());
 
         if (returnOrderList != null) {
             SaveOrderDeleteData orderSave = new SaveOrderDeleteData();
@@ -283,7 +280,7 @@ public class Menu extends AppCompatActivity {
                     successOrder();
                     Log.d(TAG, "successOrder 성공: ");
                 } else {
-                    orderCk = false;
+                    myData.setOrder(false);
                 }
             }catch (InterruptedException e){
                 e.printStackTrace();
@@ -317,7 +314,7 @@ public class Menu extends AppCompatActivity {
         menuClose.setOnClickListener(view -> {
             //admin에게 fcm 날리기
             Log.d(TAG, "menuClose Click: ");
-            sendNotification.usingTable(get_id, "종료");
+            sendNotification.usingTable(myData.getId(), "종료");
 
             editor.remove("cart_list");
             editor.commit();
@@ -332,19 +329,11 @@ public class Menu extends AppCompatActivity {
         appbarMenuTable.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
-                if (clientSocket != null && clientSocket.getTableList() != null) {
-                    tableList = clientSocket.getTableList();
-
-                }
-
                 Intent intent = new Intent(getApplicationContext(), Table.class);
-                intent.putExtra("get_id", get_id);
-                intent.putExtra("orderCk", orderCk);
+                intent.putExtra("myData", myData);
+                intent.putExtra("chattingData", chattingDataHashMap);
+                intent.putExtra("ticketData", ticketDataHashMap);
                 intent.putExtra("tableList", tableList);
-//                intent.putExtra("clientSocket", clientSocket);
-                intent.putExtra("paymentStyle", paymentStyle);
-                intent.putExtra("tableInformation", tableInformationHashMap);
                 startActivity(intent);
             }
         });
@@ -488,29 +477,26 @@ public class Menu extends AppCompatActivity {
 
                 } else {
 
-                    if (paymentStyle.equals("after")) {
+                    if (myData.getPaymentStyle().equals("after")) {
                         // fcm으로 날리고
                         sendNotification.sendMenu(adminOrderMenuList(cartLists));
-                        Log.d(TAG, "onClick: ");
                         successOrder();
 
                         if (clientSocket == null) {
-                            clientSocket = new ClientSocket(get_id, Menu.this, tableList);
+                            clientSocket = new ClientSocket(myData.getId(), Menu.this);
                             clientSocket.start();
-                            Log.d(TAG, "연결?: ");
                         }
 
 
 
-                    } else if (paymentStyle.equals("before")) {
+                    } else if (myData.getPaymentStyle().equals("before")) {
 
                         // 여기에 카카오 페이를 붙이겠읍니다.....
                         Intent intent = new Intent(Menu.this, KakaoPay.class);
                         intent.putExtra("menuName", getOrderMenuName(cartLists));
                         intent.putExtra("menuPrice", totalPrice);
-                        intent.putExtra("jsonOrderList", getJson(get_id, cartLists));
-                        intent.putExtra("paymentStyle", paymentStyle);
-                        intent.putExtra("get_id", get_id);
+                        intent.putExtra("jsonOrderList", getJson(myData.getId(), cartLists));
+                        intent.putExtra("myData", myData);
                         startActivity(intent);
 
 
@@ -518,18 +504,15 @@ public class Menu extends AppCompatActivity {
                         Log.d(TAG, "order click : paymentStyle이 없어..");
                     }
 
+                    myData.setOrder(true);
 
-                    if (infoCk == false) {
-                        infoCk = true;
-                        orderCk = true;
-                    }
 
                 } // cartList에 데이터 if-else
             }
         }); //주문하기 click event
 
 
-        myTable = Integer.parseInt(get_id.replace("table", ""));
+        myTable = Integer.parseInt(myData.getId().replace("table", ""));
 
 
         if (tableList == null) {
@@ -537,9 +520,9 @@ public class Menu extends AppCompatActivity {
 
             tableList = new ArrayList<>();
 
-            for (int i = 1; i < tableFromDB + 1; i++) {
+            for (int i = 1; i < myData.getTableFromDB() + 1; i++) {
                 if (i == myTable) {
-                    tableList.add(new TableList(get_id, (Drawable) null, 0));
+                    tableList.add(new TableList(myData.getId(), (Drawable) null, 0));
                 } else {
                     tableList.add(new TableList(i, (Drawable) null, 1));
                 }
@@ -589,7 +572,7 @@ public class Menu extends AppCompatActivity {
 
             jsonObject.put("item", menujArray);
             jsonObject.put("menuName", getOrderMenuName(cartLists));
-            jsonObject.put("tableName", get_id);
+            jsonObject.put("tableName", myData.getId());
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -697,7 +680,7 @@ public class Menu extends AppCompatActivity {
 
 
     public void successOrder() {
-        orderCk = true;
+
         cartLists = new ArrayList<>();
         cartAdapter.setAdapterItem(cartLists);
         totalPrice = 0;

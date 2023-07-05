@@ -4,10 +4,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.webkit.WebResourceRequest;
-import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -15,12 +13,12 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.openbook.Activity.Admin;
 import com.example.openbook.Activity.Menu;
+import com.example.openbook.Data.MyData;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.io.InputStream;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -44,14 +42,14 @@ public class KakaoPay extends AppCompatActivity {
     String tidPin;
     String pgToken;
 
-    String get_id;
     String menuName, tableName;
     int menuPrice;
     String jsonOrderList;
-    String paymentStyle;
 
 
     String tempUrl = null;
+
+    MyData myData;
 
 
     @Override
@@ -59,12 +57,14 @@ public class KakaoPay extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.kakaopay_activity);
 
-        get_id = getIntent().getStringExtra("get_id");
+        myData = (MyData) getIntent().getSerializableExtra("myData");
+        Log.d(TAG, "myData id: " + myData.getId());
+        Log.d(TAG, "myData paymentStyle: " + myData.getPaymentStyle());
+
         menuName = getIntent().getStringExtra("menuName");
         menuPrice = getIntent().getIntExtra("menuPrice", 0);
         Log.d(TAG, "menuPrice: " + menuPrice);
         jsonOrderList = getIntent().getStringExtra("jsonOrderList");
-        paymentStyle = getIntent().getStringExtra("paymentStyle");
 
         // 웹 뷰 설정
         webView = findViewById(R.id.kakaopay_webview);
@@ -239,9 +239,9 @@ public class KakaoPay extends AppCompatActivity {
                     JSONObject orderList = new JSONObject(jsonOrderList);
                     orderList.put("orderTime", time);
 
-                    if(get_id.equals("admin")){
+                    if(myData.getId().equals("admin")){
                         Intent intent = new Intent(KakaoPay.this, Admin.class);
-                        intent.putExtra("get_id", get_id);
+                        intent.putExtra("get_id", "admin");
                         intent.putExtra("tableName", tableName);
                         intent.putExtra("orderList", orderList.toString());
                         // 돌아가면 데이터 지우는 것으로.....?!
@@ -256,8 +256,7 @@ public class KakaoPay extends AppCompatActivity {
                     }else{
                         Intent intent = new Intent(KakaoPay.this, Menu.class);
                         intent.putExtra("orderList", orderList.toString());
-                        intent.putExtra("paymentStyle", paymentStyle);
-                        intent.putExtra("get_id", get_id);
+                        intent.putExtra("myData", myData);
 
                         runOnUiThread(new Runnable() {
                             @Override

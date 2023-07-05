@@ -29,9 +29,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.openbook.Activity.Table;
 import com.example.openbook.Adapter.ChattingAdapter;
 import com.example.openbook.Activity.Menu;
+import com.example.openbook.Data.ChattingData;
+import com.example.openbook.Data.MyData;
 import com.example.openbook.Data.TableList;
 import com.example.openbook.R;
-import com.example.openbook.Data.TableInformation;
+import com.example.openbook.Data.TicketData;
 import com.example.openbook.Data.ChattingList;
 import com.example.openbook.TableQuantity;
 
@@ -45,7 +47,7 @@ public class ChattingUI extends AppCompatActivity {
 
     String TAG = "chatUI";
 
-    String get_id, time, paymentStyle;
+    String time;
     int table_num;
 
 
@@ -73,7 +75,9 @@ public class ChattingUI extends AppCompatActivity {
     LocalDateTime localTime = LocalDateTime.now();
     ArrayList<TableList> tableList;
 
-    HashMap<Integer, TableInformation> tableInformationHashMap;
+    MyData myData;
+    HashMap<String, ChattingData> chattingDataHashMap;
+    HashMap<String, TicketData> ticketDataHashMap;
 
 
     BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
@@ -102,19 +106,18 @@ public class ChattingUI extends AppCompatActivity {
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction("chattingDataArrived");
         intentFilter.addAction("isReadArrived");
-        Log.d(TAG, "등록 되는거야?: ");
         LocalBroadcastManager.getInstance(ChattingUI.this).registerReceiver(broadcastReceiver, intentFilter);
 
-        TableQuantity tableQuantity = new TableQuantity();
-        int tableFromDB = tableQuantity.getTableQuantity();
+//        TableQuantity tableQuantity = new TableQuantity();
+//        int tableFromDB = tableQuantity.getTableQuantity();
 
         tableList = new ArrayList<>();
 
-        int myTable = Integer.parseInt(get_id.replace("table", ""));
+        int myTable = Integer.parseInt(myData.getId().replace("table", ""));
 
-        for (int i = 1; i < tableFromDB + 1; i++) {
+        for (int i = 1; i < myData.getTableFromDB() + 1; i++) {
             if (i == myTable) {
-                tableList.add(new TableList(get_id, (Drawable) null, 0));
+                tableList.add(new TableList(myData.getId(), (Drawable) null, 0));
             } else {
                 tableList.add(new TableList(i, (Drawable) null, 1));
             }
@@ -133,14 +136,19 @@ public class ChattingUI extends AppCompatActivity {
         setContentView(R.layout.chatting);
 
         table_num = getIntent().getIntExtra("tableNumber", 0);
-        get_id = getIntent().getStringExtra("get_id");
-        paymentStyle = getIntent().getStringExtra("paymentStyle");
-
-        tableInformationHashMap = (HashMap<Integer, TableInformation>) getIntent().getSerializableExtra("tableInformation");
-        Log.d(TAG, "tableInformation :" + tableInformationHashMap);
+        myData = (MyData) getIntent().getSerializableExtra("myData");
+        Log.d(TAG, "myData ID: " + myData.getId());
+        Log.d(TAG, "myData paymentStyle: " + myData.getPaymentStyle());
 
 
-        tableInformationHashMap.get(table_num).setChattingAgree(true);
+        ticketDataHashMap = (HashMap<String, TicketData>) getIntent().getSerializableExtra("ticketData");
+        Log.d(TAG, "ticketData :" + ticketDataHashMap);
+
+        chattingDataHashMap = (HashMap<String, ChattingData>) getIntent().getSerializableExtra("chattingData");
+        Log.d(TAG, "chattingData: " + chattingDataHashMap);
+
+
+        chattingDataHashMap.get("table"+table_num).setChattingAgree(true);
         version++;
 
         dbHelper = new DBHelper(ChattingUI.this, version);
@@ -162,8 +170,7 @@ public class ChattingUI extends AppCompatActivity {
         });
 
         TextView table_number = findViewById(R.id.appbar_menu_table_number);
-        table_number.setText(get_id);
-        Log.d(TAG, "get_id: " + get_id);
+        table_number.setText(myData.getId());
 
         /**
          * 채팅방 메뉴 설정
@@ -197,11 +204,11 @@ public class ChattingUI extends AppCompatActivity {
 
         while (res.moveToNext()) {
             //sender 가 get_id인 것은 viewType 1로
-            if (res.getString(3).equals(get_id) && res.getString(4).equals("table" + table_num)) {
+            if (res.getString(3).equals(myData.getId()) && res.getString(4).equals("table" + table_num)) {
                 chatLists.add(new ChattingList(res.getString(1), 1, res.getString(2), res.getString(5)));
 
                 //receiver 가 table_num 인 것은 viewType 0으로
-            } else if (res.getString(3).equals("table" + table_num) && res.getString(4).equals(get_id)) {
+            } else if (res.getString(3).equals("table" + table_num) && res.getString(4).equals(myData.getId())) {
                 chatLists.add(new ChattingList(res.getString(1), 0, res.getString(2), res.getString(5)));
             }
         }
@@ -267,7 +274,7 @@ public class ChattingUI extends AppCompatActivity {
                         chatting_view.smoothScrollToPosition(chatLists.size());
 
                         //정상적으로 리사이클러뷰에 올라가면 db에 저장
-                        dbHelper.insertChattingData(sendMsg[1], time, get_id, sendMsg[2], "1");
+                        dbHelper.insertChattingData(sendMsg[1], time, myData.getId(), sendMsg[2], "1");
 
 //                        imm.hideSoftInputFromWindow(chat_edit.getWindowToken(), 0);
 
@@ -310,7 +317,7 @@ public class ChattingUI extends AppCompatActivity {
                     Message msg = mServiceHandler.obtainMessage();
 
                     msg.what = MSG_SEND;
-                    msg.obj = get_id + "_" + chat_edit.getText().toString() + "_table" + table_num;
+                    msg.obj = myData.getId() + "_" + chat_edit.getText().toString() + "_table" + table_num;
                     Log.d(TAG, "msg 전송 :" + (String) msg.obj);
 
                     mServiceHandler.sendMessage(msg);
@@ -393,7 +400,7 @@ public class ChattingUI extends AppCompatActivity {
 
                     time = localTime.format(DateTimeFormatter.ofPattern("HH:mm"));
 
-                    dbHelper.insertChattingData(message[0], time, receiver, get_id, "");
+                    dbHelper.insertChattingData(message[0], time, receiver, myData.getId(), "");
                     Log.d(TAG, "전송 받은거 저장");
 
 
@@ -402,7 +409,7 @@ public class ChattingUI extends AppCompatActivity {
                     /**
                      * 읽음_from_to
                      */
-                    intent.putExtra("sendToServer", "isRead_"+get_id+"_table" + table_num);
+                    intent.putExtra("sendToServer", "isRead_"+myData.getId()+"_table" + table_num);
                     LocalBroadcastManager.getInstance(ChattingUI.this).sendBroadcast(intent);
 
 
@@ -458,11 +465,10 @@ public class ChattingUI extends AppCompatActivity {
 
     public void moveActivity(Class activity) {
         Intent intent = new Intent(ChattingUI.this, activity);
-        intent.putExtra("get_id", get_id);
-        intent.putExtra("orderCk", true);
+        intent.putExtra("myData", myData);
+        intent.putExtra("chattingData", chattingDataHashMap);
         intent.putExtra("tableList", tableList);
-        intent.putExtra("TableInformation", tableInformationHashMap);
-        intent.putExtra("paymentStyle", paymentStyle);
+        intent.putExtra("ticketData", ticketDataHashMap);
         startActivity(intent);
     }
 

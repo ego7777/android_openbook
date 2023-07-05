@@ -8,6 +8,7 @@ import android.widget.Button;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.openbook.Data.MyData;
 import com.example.openbook.Data.TableList;
 import com.example.openbook.R;
 
@@ -15,8 +16,7 @@ import java.util.ArrayList;
 
 public class PaymentSelect extends AppCompatActivity {
 
-    String get_id;
-    int tableFromDB;
+    MyData myData;
 
     Button payment_select_after;
     Button payment_select_before;
@@ -28,9 +28,9 @@ public class PaymentSelect extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.payment_select_activity);
 
-        get_id = getIntent().getStringExtra("get_id");
-        tableFromDB = getIntent().getIntExtra("tableFromDB", 20);
-        Log.d(TAG, "tableFromDB: " + tableFromDB);
+        myData = (MyData) getIntent().getSerializableExtra("myData");
+        Log.d(TAG, "myData id: " + myData.getId());
+        Log.d(TAG, "myData table: " + myData.getTableFromDB());
 
         payment_select_after = findViewById(R.id.payment_select_after);
         payment_select_before = findViewById(R.id.payment_select_before);
@@ -55,9 +55,8 @@ public class PaymentSelect extends AppCompatActivity {
 
     public void startActivityString(String paymentStyle){
         Intent intent = new Intent(PaymentSelect.this, Menu.class);
-        intent.putExtra("get_id", get_id);
-        intent.putExtra("paymentStyle", paymentStyle);
-        intent.putExtra("tableFromDB", tableFromDB);
+        myData.setPaymentStyle(paymentStyle);
+        intent.putExtra("myData", myData);
         startActivity(intent);
         overridePendingTransition(0, 0);
     }
