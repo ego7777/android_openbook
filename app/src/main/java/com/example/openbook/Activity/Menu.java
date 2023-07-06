@@ -2,7 +2,10 @@ package com.example.openbook.Activity;
 
 
 import android.app.Dialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -26,6 +29,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -108,6 +112,20 @@ public class Menu extends AppCompatActivity {
     HashMap<String, ChattingData> chattingDataHashMap;
     HashMap<String, TicketData> ticketDataHashMap;
 
+    //액티비티가 onCreate 되면 자동으로 받는거고
+    BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equals("chattingRequestArrived")) {
+                String fcmData = intent.getStringExtra("fcmData");
+
+                SendToPopUpChatting sendToPopUpChatting = new SendToPopUpChatting();
+                sendToPopUpChatting.sendToPopUpChatting(Menu.this, myData,
+                        chattingDataHashMap, ticketDataHashMap, tableList, fcmData);
+            }
+        }
+    };
+
 
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -115,6 +133,11 @@ public class Menu extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.menu_activity);
+
+
+        // 로컬 브로드캐스트 리시버 등록
+        IntentFilter intentFilter = new IntentFilter("chattingRequestArrived");
+        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, intentFilter);
 
         myData = (MyData) getIntent().getSerializableExtra("myData");
         Log.d(TAG, "myData paymentStyle: " + myData.getPaymentStyle());
@@ -311,6 +334,9 @@ public class Menu extends AppCompatActivity {
         super.onResume();
         //사용자와 상호작용 하는 단계, 어플 기능은 여기서
 
+        IntentFilter intentFilter = new IntentFilter("chattingRequestArrived");
+        LocalBroadcastManager.getInstance(Menu.this).registerReceiver(broadcastReceiver, intentFilter);
+
         menuClose.setOnClickListener(view -> {
             //admin에게 fcm 날리기
             Log.d(TAG, "menuClose Click: ");
@@ -442,6 +468,10 @@ public class Menu extends AppCompatActivity {
 
                 } else if (where.equals("직원호출")) {
                     Intent intent = new Intent(Menu.this, CallServer.class);
+                    intent.putExtra("myData", myData);
+                    intent.putExtra("chattingData", chattingDataHashMap);
+                    intent.putExtra("ticketData", ticketDataHashMap);
+                    intent.putExtra("tableList", tableList);
                     startActivity(intent);
 
                 }
@@ -714,4 +744,11 @@ public class Menu extends AppCompatActivity {
 
 
     }
+
+    @Override
+    public void onBackPressed() {
+        //안드로이드 백버튼 막기
+        return;
+    }
+
 }

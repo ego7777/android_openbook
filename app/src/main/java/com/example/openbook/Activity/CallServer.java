@@ -1,6 +1,10 @@
 package com.example.openbook.Activity;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
+import android.telecom.Call;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
@@ -15,11 +19,16 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.openbook.Adapter.CartAdapter;
 import com.example.openbook.Adapter.RequestAdapter;
 
+import com.example.openbook.Data.ChattingData;
+import com.example.openbook.Data.MyData;
+import com.example.openbook.Data.TableList;
+import com.example.openbook.Data.TicketData;
 import com.example.openbook.R;
 import com.example.openbook.Data.CartList;
 import com.example.openbook.Data.RequestList;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class CallServer extends AppCompatActivity {
 
@@ -28,19 +37,46 @@ public class CallServer extends AppCompatActivity {
     ArrayList<CartList> cartLists;
 
     int pos = 1000;
+    MyData myData;
+    HashMap<String, ChattingData> chattingDataHashMap;
+    HashMap<String, TicketData> ticketDataHashMap;
+    ArrayList<TableList> tableLists;
+
+    //액티비티가 onCreate 되면 자동으로 받는거고
+    BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equals("chattingRequestArrived")) {
+                String fcmData = intent.getStringExtra("fcmData");
+
+                SendToPopUpChatting sendToPopUpChatting = new SendToPopUpChatting();
+                sendToPopUpChatting.sendToPopUpChatting(CallServer.this, myData,
+                        chattingDataHashMap, ticketDataHashMap, tableLists, fcmData);
+            }
+        }
+    };
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.call_server_activity);
 
+        myData = (MyData) getIntent().getSerializableExtra("myData");
+        chattingDataHashMap = (HashMap<String, ChattingData>) getIntent().getSerializableExtra("chattingData");
+        ticketDataHashMap = (HashMap<String, TicketData>) getIntent().getSerializableExtra("ticketData");
+        tableLists = (ArrayList<TableList>) getIntent().getSerializableExtra("tableList");
 
         TextView close = findViewById(R.id.call_server_close);
         close.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
-                finish();
+                Intent intent = new Intent(CallServer.this, Menu.class);
+                intent.putExtra("myData", myData);
+                intent.putExtra("chattingData", chattingDataHashMap);
+                intent.putExtra("ticketData", ticketDataHashMap);
+
+                startActivity(intent);
             }
         });
 

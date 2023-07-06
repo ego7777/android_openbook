@@ -23,6 +23,9 @@ import com.example.openbook.Data.TicketData;
 import com.example.openbook.Data.TableList;
 import com.example.openbook.TableQuantity;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -31,14 +34,18 @@ public class PopUpChatting extends Activity {
     String TAG = "chattingPopUpTAG";
     int tableNumber;
 
-    String title;
-    String body;
+    String fcmData, title, body;
+
     int clickTable;
-    ArrayList<TableList> tableList;
 
     MyData myData;
     HashMap<String, ChattingData> chattingDataHashMap;
     HashMap<String, TicketData> ticketDataHashMap;
+    ArrayList<TableList> tableList;
+
+    TextView popup_title, popup_body;
+
+    JSONObject jsonObject;
 
 
     @Override
@@ -47,52 +54,36 @@ public class PopUpChatting extends Activity {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.popup);
 
-        TextView popup_title = findViewById(R.id.popup_title);
-        TextView popup_body = findViewById(R.id.popup_body);
+        popup_title = findViewById(R.id.popup_title);
+        popup_body = findViewById(R.id.popup_body);
 
-        title = getIntent().getStringExtra("notificationTitle");
-        Log.d(TAG, "title: " + title);
-        body = getIntent().getStringExtra("notificationBody");
+
+        fcmData = getIntent().getStringExtra("fcmData");
+        Log.d(TAG, "fcm Data: " + fcmData);
+
+        handleFCMData(fcmData);
+
+
+
         tableList = (ArrayList<TableList>) getIntent().getSerializableExtra("tableList");
 
-        tableNumber = Integer.parseInt(title.replace("table", ""));
-
-
-
-
-
-
         myData = (MyData) getIntent().getSerializableExtra("myData");
-        Log.d(TAG, "myData: " + myData);
 //        Log.d(TAG, "myData ID :" + myData.getId());
 //        Log.d(TAG, "myData IsOrder: " + myData.isOrder());
 
-        String myTableID = getIntent().getStringExtra("notificationClickTable");
-
-        if (myData == null) {
-
-            TableQuantity tableQuantity = new TableQuantity();
-            int tableFromDB = tableQuantity.getTableQuantity();
-
-            myData = new MyData(myTableID, tableFromDB, "after", true);
-            Log.d(TAG, "myData reCreate ID: " + myData.getId());
-        }
-
-
-        clickTable = getIntent().getIntExtra("clickTable", 0);
-        Log.d(TAG, "clickTable :" + "table" + clickTable);
+        chattingDataHashMap = (HashMap<String, ChattingData>) getIntent().getSerializableExtra("chattingData");
+//        Log.d(TAG, "intent chattingData: " + chattingDataHashMap);
 
         ticketDataHashMap = (HashMap<String, TicketData>) getIntent().getSerializableExtra("ticketData");
-        Log.d(TAG, "intent ticketData :" + ticketDataHashMap);
+//        Log.d(TAG, "intent ticketData :" + ticketDataHashMap);
 
-        if (ticketDataHashMap == null) {
-            ticketDataHashMap = new HashMap<>();
-            Log.d(TAG, "initial ticketData");
+        if(chattingDataHashMap == null){
+            chattingDataHashMap = new HashMap<>();
         }
 
-
-        popup_title.setText(title);
-        popup_body.setText(body);
+        if(ticketDataHashMap == null){
+            ticketDataHashMap = new HashMap<>();
+        }
 
 
     }
@@ -102,19 +93,21 @@ public class PopUpChatting extends Activity {
     protected void onResume() {
         super.onResume();
 
+
         Button popup_yes = findViewById(R.id.popup_button_yes);
         Button popup_no = findViewById(R.id.popup_button_no);
+
 
         /**
          * 받는 쪽 event
          */
 
         if (body.contains("요청")) {
+
             popup_yes.setOnClickListener(new View.OnClickListener() {
                 @RequiresApi(api = Build.VERSION_CODES.O)
                 @Override
                 public void onClick(View v) {
-                    Log.d(TAG, "요청포함");
                     // 여기서 yes를 누르면 그 후로는 바로 chatUI로 넘어가게 해야함
                     String requestTable = "table" + tableNumber;
 
@@ -262,6 +255,33 @@ public class PopUpChatting extends Activity {
         //안드로이드 백버튼 막기
         return;
     }
+
+    public void handleFCMData(String fcmData) {
+
+        try {
+            JSONObject jsonObject = new JSONObject(fcmData);
+            Log.d(TAG, "json: ");
+            title = jsonObject.getString("title");
+            Log.d(TAG, "json title: " + title);
+            body = jsonObject.getString("body");
+            Log.d(TAG, "json body: " + body);
+            String ticket = jsonObject.getString("ticket");
+            Log.d(TAG, "ticket: " + ticket);
+            String myTableID = jsonObject.getString("clickTable");
+            Log.d(TAG, "clickTable: " + myTableID);
+
+            tableNumber = Integer.parseInt(title.replace("table", ""));
+
+            popup_title.setText(title);
+            popup_body.setText(body);
+
+        } catch (JSONException e) {
+            Log.d(TAG, "handleFCMData error: " + e);
+        }
+
+
+    }
+
 
 
 }

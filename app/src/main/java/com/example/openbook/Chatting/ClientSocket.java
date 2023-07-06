@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.os.Build;
 
 import android.os.Handler;
@@ -51,14 +52,10 @@ public class ClientSocket extends Thread implements Serializable{
 
     String get_id;
 
-    public Socket getSocket() {
-        return socket;
-    }
-
     public Socket socket;
     boolean loop;
 
-    Handler handler;
+
     Context context;
 
 
@@ -146,7 +143,7 @@ public class ClientSocket extends Thread implements Serializable{
                     receiveTableInfo(line);
 
                 }else if(line.contains("isRead")){
-
+                    Log.d(TAG, "isRead: ");
                     receiveIsRead(line);
 
                 }else{
@@ -234,15 +231,22 @@ public class ClientSocket extends Thread implements Serializable{
          * sendMsg[1] : isRead
          * sendMsg[0] : 보낸 테이블 번호
          */
+        Log.d(TAG, "receiveIsRead: ");
 
         String sendMsg[] = line.split("_");
 
         //table1 형태
         String receiver = sendMsg[1];
+        Log.d(TAG, "receiver: " + receiver);
 
         DBHelper dbHelper = new DBHelper(context, 2);
         //db 수정하기
         dbHelper.upDateIsRead(get_id, receiver);
+
+//        Cursor cursor = dbHelper.getTableData("chattingTable");
+//        if(cursor.getString(3).equals(get_id)){
+//            Log.d(TAG, "수정 됨?: " + cursor.getString(5));
+//        }
 
         Log.d(TAG, "receiveIsRead: 1");
 

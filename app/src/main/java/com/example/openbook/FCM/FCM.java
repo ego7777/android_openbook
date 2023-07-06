@@ -9,6 +9,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.example.openbook.Activity.Admin;
 import com.example.openbook.Activity.AdminPaymentBeforePopup;
@@ -102,15 +103,12 @@ public class FCM extends FirebaseMessagingService {
     @RequiresApi(api = Build.VERSION_CODES.Q)
     private void handleDataMessage(Map<String, String> data) {
         if (data.containsKey("title")) {
-            String title = data.get("title");
-            Log.d(TAG, "handleDataMessage title: "+title);
-            String body = data.get("body");
-            String clickTable = data.get("clickTable");
-            String ticket = data.get("ticket");
+            Log.d(TAG, "handleDataMessage: " + data);
 
             // 채팅 요청 처리 메소드 호출
-            handleChatRequest(title, body, clickTable, ticket);
+            handleChatRequest(data);
         } else if (data.containsKey("gender")) {
+
             String gender = data.get("gender");
             String guestNumber = data.get("guestNumber");
             String tableName = data.get("tableName");
@@ -217,28 +215,36 @@ public class FCM extends FirebaseMessagingService {
 
 
     @RequiresApi(api = Build.VERSION_CODES.Q)
-    public void handleChatRequest(String title, String body, String clickTable, String ticket) {
+    public void handleChatRequest(Map<String, String> data) {
         //popupActivity를 만들어서 띄우자
-        Intent intent = new Intent(this, PopUpChatting.class);
-        intent.putExtra("notificationTitle", title);
-        intent.putExtra("notificationBody", body);
-        intent.putExtra("notificationClickTable", clickTable);
 
-        if (ticket == "yesTicket") {
-            intent.putExtra("profileTicket", ticket);
+        //broadcast로 넘겨줘서
+        try{
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("title", data.get("title"));
+            jsonObject.put("body", data.get("body"));
+            jsonObject.put("ticket", data.get("ticket"));
+            jsonObject.put("clickTable", data.get("clickTable"));
+
+            Intent intent = new Intent("chattingRequestArrived");
+            intent.putExtra("fcmData", jsonObject.toString());
+            LocalBroadcastManager.getInstance(FCM.this).sendBroadcast(intent);
+
+        }catch (JSONException e){
+            Log.d(TAG, "e: " + e);
         }
 
         //여기서 거절을 하면 앞으로 채팅 요청 못하게 만들어야해...!
 
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
-
-        try {
-            pendingIntent.send();
-
-        } catch (PendingIntent.CanceledException e) {
-            e.printStackTrace();
-        }
+//        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+//        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+//
+//        try {
+//            pendingIntent.send();
+//
+//        } catch (PendingIntent.CanceledException e) {
+//            e.printStackTrace();
+//        }
 
     }
 

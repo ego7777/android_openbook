@@ -83,8 +83,16 @@ public class Table extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals("tableInformationArrived")) {
+
                 String message = intent.getStringExtra("tableInformation");
                 tableUpdate(message);
+
+            }else if (intent.getAction().equals("chattingRequestArrived")) {
+                String fcmData = intent.getStringExtra("fcmData");
+
+                SendToPopUpChatting sendToPopUpChatting = new SendToPopUpChatting();
+                sendToPopUpChatting.sendToPopUpChatting(Table.this, myData,
+                                chattingDataHashMap, ticketDataHashMap, tableList, fcmData);
             }
         }
     };
@@ -107,11 +115,6 @@ public class Table extends AppCompatActivity {
         ticketDataHashMap = (HashMap<String, TicketData>) getIntent().getSerializableExtra("ticketData");
         tableList = (ArrayList<TableList>) getIntent().getSerializableExtra("tableList");
         Log.d(TAG, "tableList size: " + tableList.size());
-
-
-        // 로컬 브로드캐스트 리시버 등록
-        IntentFilter intentFilter = new IntentFilter("tableInformationArrived");
-        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, intentFilter);
 
 
         myTable = Integer.parseInt(myData.getId().replace("table", ""));
@@ -149,9 +152,11 @@ public class Table extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
-        IntentFilter intentFilter = new IntentFilter("tableInformationArrived");
-        LocalBroadcastManager.getInstance(Table.this).registerReceiver(broadcastReceiver, intentFilter);
+        //로컬 브로드 캐스트 등록
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction("tableInformationArrived");
+        intentFilter.addAction("chattingRequestArrived");
+        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, intentFilter);
 
 
         SharedPreferences sharedPreferences = getSharedPreferences("ActiveTable", MODE_PRIVATE);
@@ -180,13 +185,6 @@ public class Table extends AppCompatActivity {
         }
 
 
-        /**
-         * 여기는 bitmapArray 로 바꿔주는 로직이여
-         */
-//        drawableMethod = new DrawableMethod();
-//
-//        byte[] orderTableImage = drawableMethod.makeBitmap(getDrawable(R.drawable.table_border_order));
-//        Log.d(TAG, "orderTableImage :" + orderTableImage);
 
         appbarMenu.setOnClickListener(this::moveToMenu);
 
@@ -554,11 +552,12 @@ public class Table extends AppCompatActivity {
 
         try {
             JSONArray menujArray = new JSONArray();//배열이 필요할때
+            JSONObject object = new JSONObject();
 
-            jsonObject.put("menu", "profileTicket");
-            jsonObject.put("price", 2000);
-            jsonObject.put("quantity", 1);
-            menujArray.put(jsonObject);
+            object.put("menu", "profileTicket");
+            object.put("price", 2000);
+            object.put("quantity", 1);
+            menujArray.put(object);
 
             jsonObject.put("item", menujArray);
             jsonObject.put("menuName", "profileTicket");
@@ -568,6 +567,12 @@ public class Table extends AppCompatActivity {
         }
 
         return jsonObject.toString();
+    }
+
+    @Override
+    public void onBackPressed() {
+        //안드로이드 백버튼 막기
+        return;
     }
 }
 

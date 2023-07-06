@@ -26,6 +26,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.openbook.Activity.SendToPopUpChatting;
 import com.example.openbook.Activity.Table;
 import com.example.openbook.Adapter.ChattingAdapter;
 import com.example.openbook.Activity.Menu;
@@ -95,6 +96,13 @@ public class ChattingUI extends AppCompatActivity {
                 String message = intent.getStringExtra("isRead");
                 Log.d(TAG, "onReceive isRead: " + message);
                 isReadUpdate(message);
+
+            }else if (intent.getAction().equals("chattingRequestArrived")) {
+                String fcmData = intent.getStringExtra("fcmData");
+
+                SendToPopUpChatting sendToPopUpChatting = new SendToPopUpChatting();
+                sendToPopUpChatting.sendToPopUpChatting(ChattingUI.this, myData,
+                        chattingDataHashMap, ticketDataHashMap, tableList, fcmData);
             }
 
         }
@@ -106,10 +114,9 @@ public class ChattingUI extends AppCompatActivity {
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction("chattingDataArrived");
         intentFilter.addAction("isReadArrived");
+        intentFilter.addAction("chattingRequestArrived");
         LocalBroadcastManager.getInstance(ChattingUI.this).registerReceiver(broadcastReceiver, intentFilter);
 
-//        TableQuantity tableQuantity = new TableQuantity();
-//        int tableFromDB = tableQuantity.getTableQuantity();
 
         tableList = new ArrayList<>();
 
@@ -472,4 +479,9 @@ public class ChattingUI extends AppCompatActivity {
         startActivity(intent);
     }
 
+    @Override
+    public void onBackPressed() {
+        //안드로이드 백버튼 막기
+        return;
+    }
 }

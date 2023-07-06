@@ -81,6 +81,7 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> 
         int color;
 
         if (position == lastClickedPosition) {
+            //여기가 1순위여야함
             color = holder.itemView.getContext().getColor(R.color.blue_purple);
             holder.itemView.setBackgroundColor(color);
         } else if (position == myTable - 1) {
@@ -93,6 +94,7 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> 
 
 
         Integer orderedTable = positionColorMap.get(position);
+        Log.d(TAG, "orderTable: " + orderedTable);
 
         if(orderedTable != null){
             if (orderedTable.equals(lastClickedPosition)) {
@@ -164,6 +166,7 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> 
 
                             notifyItemChanged(lastClickedPosition);
                             lastClickedPosition = position;
+                            Log.d(TAG, "lastClickedPosition: " + lastClickedPosition);
                             notifyItemChanged(position);
                         }
                     }

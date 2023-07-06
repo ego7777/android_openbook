@@ -23,7 +23,7 @@ import java.util.ArrayList;
 public class DBHelper extends SQLiteOpenHelper {
 
     static String DBName = "OpenbookLocal.db";
-
+    String TAG = "dbHelperTAG";
 
 
 
@@ -214,8 +214,9 @@ public class DBHelper extends SQLiteOpenHelper {
     public void upDateIsRead(String myTable, String otherTable) {
         SQLiteDatabase db = this.getWritableDatabase();
         String updateQuery = "UPDATE chattingTable SET read = '' WHERE receiver = '" + otherTable + "' AND sender = '" + myTable + "'";
-
+        Log.d(TAG, "upDateIsRead: ");
         db.execSQL(updateQuery);
+        Log.d(TAG, "upDateIsRead: done? ");
     }
 
 
