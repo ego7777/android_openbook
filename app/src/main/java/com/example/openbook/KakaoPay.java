@@ -50,7 +50,7 @@ public class KakaoPay extends AppCompatActivity {
     String tempUrl = null;
 
     MyData myData;
-
+    String get_id;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -58,8 +58,11 @@ public class KakaoPay extends AppCompatActivity {
         setContentView(R.layout.kakaopay_activity);
 
         myData = (MyData) getIntent().getSerializableExtra("myData");
-        Log.d(TAG, "myData id: " + myData.getId());
-        Log.d(TAG, "myData paymentStyle: " + myData.getPaymentStyle());
+//        Log.d(TAG, "myData id: " + myData.getId());
+//        Log.d(TAG, "myData paymentStyle: " + myData.getPaymentStyle());
+
+        get_id = getIntent().getStringExtra("get_id");
+        Log.d(TAG, "get_id: " + get_id);
 
         menuName = getIntent().getStringExtra("menuName");
         menuPrice = getIntent().getIntExtra("menuPrice", 0);
@@ -239,7 +242,7 @@ public class KakaoPay extends AppCompatActivity {
                     JSONObject orderList = new JSONObject(jsonOrderList);
                     orderList.put("orderTime", time);
 
-                    if(myData.getId().equals("admin")){
+                    if(get_id.equals("admin")){
                         Intent intent = new Intent(KakaoPay.this, Admin.class);
                         intent.putExtra("get_id", "admin");
                         intent.putExtra("tableName", tableName);
@@ -250,6 +253,7 @@ public class KakaoPay extends AppCompatActivity {
                             @Override
                             public void run() {
                                 startActivity(intent);
+                                overridePendingTransition(0, 0);
                             }
                         });
 

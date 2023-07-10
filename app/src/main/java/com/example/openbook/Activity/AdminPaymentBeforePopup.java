@@ -92,6 +92,7 @@ public class AdminPaymentBeforePopup extends Activity {
             intent.putExtra("tableName", tableName);
 
             startActivity(intent);
+            overridePendingTransition(0, 0);
             handler.removeCallbacksAndMessages(null);
         });
 

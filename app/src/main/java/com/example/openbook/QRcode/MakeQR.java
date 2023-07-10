@@ -19,7 +19,7 @@ public class MakeQR {
 
         {
             try {
-                bitMatrix = multiFormatWriter.encode(text, BarcodeFormat.QR_CODE,200,200);
+                bitMatrix = multiFormatWriter.encode(text, BarcodeFormat.QR_CODE,500,500);
             } catch (WriterException e) {
                 e.printStackTrace();
             }

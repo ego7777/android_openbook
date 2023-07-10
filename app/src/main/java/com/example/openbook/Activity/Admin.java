@@ -8,8 +8,10 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
@@ -24,6 +26,8 @@ import com.example.openbook.Data.AdminTableList;
 import com.example.openbook.Data.OrderList;
 import com.example.openbook.DialogCustom;
 import com.example.openbook.FCM.FCM;
+import com.example.openbook.FCM.SendNotification;
+import com.example.openbook.ImageLoadTask;
 import com.example.openbook.KakaoPay;
 import com.example.openbook.SaveOrderDeleteData;
 import com.example.openbook.R;
@@ -33,7 +37,14 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.ArrayList;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class Admin extends AppCompatActivity {
 
@@ -59,13 +70,16 @@ public class Admin extends AppCompatActivity {
 
     String afterPaymentList;
 
+    //다이얼로그
+    ImageView table_info_img;
+    TextView statement, table_info_text, table_info_gender, table_info_member, table_info_close;
+    String responseBody;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.admin_activity);
 
-        overridePendingTransition(0, 0);
 
         adminTableList = (ArrayList<AdminTableList>) getIntent().getSerializableExtra("adminTableList");
         afterPaymentList = getIntent().getStringExtra("orderList");
@@ -253,13 +267,10 @@ public class Admin extends AppCompatActivity {
             }
         });
 
-        appbar_admin_addMenu.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // 메뉴 이름, 가격, 이미지를 등록하면 서버로 들어가서 menuList Db에 등록된다
-                startActivityClass(AdminModifyMenu.class);
 
-            }
+        appbar_admin_addMenu.setOnClickListener(view -> {
+            // 메뉴 이름, 가격, 이미지를 등록하면 서버로 들어가서 menuList Db에 등록된다
+            startActivityClass(AdminModifyMenu.class);
         });
 
         appbar_admin_modifyTable.setOnClickListener(view -> {
@@ -267,6 +278,7 @@ public class Admin extends AppCompatActivity {
 
 
         });
+
 
         DialogCustom dialogCustom = new DialogCustom();
 
@@ -296,7 +308,33 @@ public class Admin extends AppCompatActivity {
                 admin_sidebar_info.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        Dialog dlg = new Dialog(Admin.this);
+                        dlg.setContentView(R.layout.table_infomation);
+                        dlg.show();
 
+
+                        table_info_img = dlg.findViewById(R.id.table_info_img);
+                        table_info_text = dlg.findViewById(R.id.table_info_text);
+                        statement = dlg.findViewById(R.id.statement);
+                        table_info_gender = dlg.findViewById(R.id.table_info_gender);
+                        table_info_member = dlg.findViewById(R.id.table_info_member);
+                        table_info_close = dlg.findViewById(R.id.table_info_close);
+
+                        try {
+                            String result = requestTableInfo(position + 1);
+
+                            handleOtherTableInfo(result);
+
+                        } catch (InterruptedException | JSONException e) {
+                            e.printStackTrace();
+                        }
+
+                        table_info_close.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                dlg.dismiss();
+                            }
+                        });
                     }
                 });
 
@@ -449,9 +487,73 @@ public class Admin extends AppCompatActivity {
         });
     }
 
+    private String requestTableInfo(int clickTable) throws InterruptedException {
+
+        //                 GET 요청 객체 생성
+        Request.Builder builder = new Request.Builder()
+                .url("http://3.36.255.141/tableInfoCk.php")
+                .get();
+
+        builder.addHeader("table", "table" + clickTable);
+        Request request = builder.build();
+        Log.d(TAG, "request :" + request);
+
+        OkHttpClient okHttpClient = new OkHttpClient();
+
+        okHttpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                Log.d(TAG, "onFailure: " + e);
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    String body = response.body().string();
+                    Log.d(TAG, "requestTableInfo onResponse: " + body);
+                    responseBody = body;
+                } else {
+                    Log.d(TAG, "requestTableInfo onResponse: fail");
+                }
+            }
+        });
 
 
+        Thread.sleep(250);
 
+
+        return responseBody;
+    }
+
+    private void handleOtherTableInfo(String result) throws JSONException {
+
+        if (result.equals("없음")) {
+            table_info_text.setVisibility(View.INVISIBLE);
+            statement.setText("정보를 입력하지 않은 테이블입니다.");
+            table_info_gender.setVisibility(View.GONE);
+            table_info_member.setVisibility(View.GONE);
+
+            /**
+             * table 정보 있을 때
+             */
+        } else if (result.startsWith("{")) {
+            JSONObject jsonObject = new JSONObject(result);
+
+            String url = "http://3.36.255.141/image/" + jsonObject.getString("img");
+
+
+            ImageLoadTask task = new ImageLoadTask(Admin.this, true, url, table_info_img);
+            task.execute();
+            table_info_text.setVisibility(View.INVISIBLE);
+            table_info_img.setClickable(false);
+
+
+            statement.setText(jsonObject.getString("statement"));
+            table_info_gender.setText(jsonObject.getString("gender"));
+            table_info_member.setText(jsonObject.getString("guestNum"));
+
+        }
+    }
 
 
 }

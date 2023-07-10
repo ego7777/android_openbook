@@ -39,8 +39,6 @@ public class AdminModifyTableQuantity extends Activity {
     TextView tableNumber;
     TextView cancel;
 
-    SharedPreferences pref;
-    SharedPreferences.Editor editor;
     TableQuantity tableQuantity;
 
     ArrayList<AdminTableList> adminTableList;
@@ -67,9 +65,7 @@ public class AdminModifyTableQuantity extends Activity {
         /**
          * adminTableList가 없으면 member db에 접근해서 가져오기
          */
-//        pref = getSharedPreferences("TableNumber", MODE_PRIVATE);
-//
-//        editor = pref.edit();
+
 
         if(adminTableList == null){
 

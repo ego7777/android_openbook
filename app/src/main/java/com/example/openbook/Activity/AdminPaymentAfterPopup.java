@@ -201,6 +201,7 @@ public class AdminPaymentAfterPopup extends Activity {
             intent.putExtra("adminTableList", adminTableList);
 
             startActivity(intent);
+            overridePendingTransition(0, 0);
             handler.removeCallbacksAndMessages(null);
         });
 
@@ -214,6 +215,7 @@ public class AdminPaymentAfterPopup extends Activity {
                 intent.putExtra("adminTableList", adminTableList);
 
                 startActivity(intent);
+                overridePendingTransition(0, 0);
             }
         }, 5000);
 

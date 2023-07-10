@@ -193,15 +193,19 @@ public class AdminSales extends AppCompatActivity {
                 String body = response.body().string();
                 Log.d(TAG, "onResponse: " + body);
 
+
                 try {
-                    if (body != null) {
+                    if(body.equals("없음")){
+                        chart.clear();
+                        chart.setNoDataText("매출데이터가 존재하지 않습니다.");
+                        chart.setNoDataTextColor(Color.RED);
+                        chart.invalidate();
+
+
+                    }else if(body != null){
                         getSalesInfo(duration, body);
 
                     }
-//                    else if (body == null) {
-//                        setChart(null, duration);
-//                    }
-
 
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -215,6 +219,8 @@ public class AdminSales extends AppCompatActivity {
     }
 
 
+
+
     @RequiresApi(api = Build.VERSION_CODES.O)
     public void getSalesInfo(String duration, String data) throws JSONException, ParseException {
 
@@ -222,23 +228,24 @@ public class AdminSales extends AppCompatActivity {
 
         ArrayList<AdminSalesList> salesLists = new ArrayList();
 
-        JSONArray jsonArray = new JSONArray(data);
-
-        for (int i = 0; i < jsonArray.length(); i++) {
-
-            JSONObject jsonObject = jsonArray.getJSONObject(i);
-
-            LocalDateTime date = LocalDateTime.parse(jsonObject.getString("orderTime"),
-                    dateTimeFormatter);
 
 
-            int totalPrice = jsonObject.getInt("totalPrice");
+            JSONArray jsonArray = new JSONArray(data);
 
-            salesLists.add(new AdminSalesList(date, totalPrice));
-            Log.d(TAG, "getSalesInfo: " + salesLists.get(i).getLocalDateTime());
+            for (int i = 0; i < jsonArray.length(); i++) {
 
-        }
+                JSONObject jsonObject = jsonArray.getJSONObject(i);
 
+                LocalDateTime date = LocalDateTime.parse(jsonObject.getString("orderTime"),
+                        dateTimeFormatter);
+
+                int totalPrice = jsonObject.getInt("totalPrice");
+
+                salesLists.add(new AdminSalesList(date, totalPrice));
+                Log.d(TAG, "getSalesInfo: " + salesLists.get(i).getLocalDateTime());
+
+            }
+            
         sortData(salesLists, duration);
     }
 
@@ -248,7 +255,6 @@ public class AdminSales extends AppCompatActivity {
 
         //중복되는 날짜 금액 합산
         HashMap<Integer, Integer> hashMap = new HashMap<>();
-
 
         ArrayList<AdminSalesList> salesListFinal = new ArrayList<>();
         String title;
@@ -367,6 +373,8 @@ public class AdminSales extends AppCompatActivity {
         ArrayList<BarEntry> entries = new ArrayList<>();
         BarData barData = new BarData();
         BarDataSet barDataSet;
+
+
 
 
         if (duration.equals("today")) {

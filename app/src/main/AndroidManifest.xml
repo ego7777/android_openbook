@@ -21,7 +21,8 @@
         android:usesCleartextTraffic="true"
         android:windowSoftInputMode="adjustResize"
         tools:targetApi="31"
-        android:hardwareAccelerated="true">
+        android:hardwareAccelerated="false"
+        android:vmSafeMode="true">
 
         <service android:name=".FCM.FCM"
             android:enabled="true"

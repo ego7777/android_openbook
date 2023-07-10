@@ -60,9 +60,9 @@ public class AdminPopUpAdapter extends RecyclerView.Adapter<AdminPopUpAdapter.Vi
     class ViewHolder extends RecyclerView.ViewHolder {
 
         TextView admin_popup_payment;
-        TextView admin_popup_menu_name;
-        TextView admin_popup_menu_quantity;
-        TextView admin_popup_menu_price;
+        TextView admin_receipt_dialog_item_menuName;
+        TextView admin_receipt_dialog_item_menuCount;
+        TextView admin_receipt_dialog_item_menuPrice;
 
         int position;
         int viewType;
@@ -73,9 +73,9 @@ public class AdminPopUpAdapter extends RecyclerView.Adapter<AdminPopUpAdapter.Vi
 
             admin_popup_payment = itemView.findViewById(R.id.admin_popup_payment_body);
 
-            admin_popup_menu_name = itemView.findViewById(R.id.admin_popup_menu_name);
-            admin_popup_menu_quantity = itemView.findViewById(R.id.admin_popup_menu_quantity);
-            admin_popup_menu_price = itemView.findViewById(R.id.admin_popup_menu_price);
+            admin_receipt_dialog_item_menuName = itemView.findViewById(R.id.admin_receipt_dialog_item_menuName);
+            admin_receipt_dialog_item_menuCount = itemView.findViewById(R.id.admin_receipt_dialog_item_menuCount);
+            admin_receipt_dialog_item_menuPrice = itemView.findViewById(R.id.admin_receipt_dialog_item_menuPrice);
 
 
             itemView.setOnClickListener(new View.OnClickListener() {
@@ -107,9 +107,9 @@ public class AdminPopUpAdapter extends RecyclerView.Adapter<AdminPopUpAdapter.Vi
         }
 
         void onBindMenu(OrderList items){
-            admin_popup_menu_name.setText(items.getMenu());
-            admin_popup_menu_quantity.setText(String.valueOf(items.getQuantity()));
-            admin_popup_menu_price.setText(String.valueOf(items.getPrice()));
+            admin_receipt_dialog_item_menuName.setText(items.getMenu());
+            admin_receipt_dialog_item_menuCount.setText(String.valueOf(items.getQuantity()));
+            admin_receipt_dialog_item_menuPrice.setText(String.valueOf(items.getPrice()));
         }
 
     }
@@ -122,7 +122,7 @@ public class AdminPopUpAdapter extends RecyclerView.Adapter<AdminPopUpAdapter.Vi
         if (viewType == TYPE_STATEMENT) {
             return R.layout.admin_popup_enter_out;
         } else {
-            return R.layout.admin_popup_menu;
+            return R.layout.admin_receipt_dialog_item;
         }
     }
 

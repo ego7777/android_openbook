@@ -18,6 +18,7 @@ import com.example.openbook.Activity.PaymentSelect;
 import com.example.openbook.Activity.PopUpChatting;
 
 import com.example.openbook.Chatting.DBHelper;
+import com.example.openbook.Data.MyData;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DatabaseReference;
@@ -287,6 +288,10 @@ public class FCM extends FirebaseMessagingService {
 
                     //하고 PaymentSelect.java로 이동....!해야해...!
                     Intent intent = new Intent(FCM.this, PaymentSelect.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    MyData myData = new MyData(tableName, 0, null, false);
+                    intent.putExtra("myData", myData);
+
                     startActivity(intent);
                 }
             }

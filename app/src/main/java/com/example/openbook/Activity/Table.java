@@ -163,7 +163,9 @@ public class Table extends AppCompatActivity {
 
         //onCreate 되기 이전에 데이터들은 저장이 되었다가 가져오는 것
         String activeTable = sharedPreferences.getString("ActiveTable", null);
-        if (tableList != null) {
+        Log.d(TAG, "activeTable: " + activeTable);
+
+        if (tableList != null ) {
 
             tableUpdate(activeTable);
 
@@ -401,6 +403,11 @@ public class Table extends AppCompatActivity {
         Log.d(TAG, "tableUpdate: ");
         int table[];
 
+        if(line == null){
+            Log.d(TAG, "tableUpdate line null: " + line);
+            return;
+        }
+
         try {
             JSONArray jsonArray = new JSONArray(line);
 
@@ -448,8 +455,8 @@ public class Table extends AppCompatActivity {
             table_info_text.setVisibility(View.INVISIBLE);
 
             statement.setText("사진과 정보를 입력하시려면 다음 큐알로 입장해주세요 :)");
-            table_info_gender.setVisibility(View.INVISIBLE);
-            table_info_member.setVisibility(View.INVISIBLE);
+            table_info_gender.setVisibility(View.GONE);
+            table_info_member.setVisibility(View.GONE);
 
         } else if (result.startsWith("{")) {
             JSONObject jsonObject = new JSONObject(result);

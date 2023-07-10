@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.openbook.Data.MyData;
 import com.example.openbook.Data.TableList;
 import com.example.openbook.R;
+import com.example.openbook.TableQuantity;
 
 import java.util.ArrayList;
 
@@ -30,7 +31,14 @@ public class PaymentSelect extends AppCompatActivity {
 
         myData = (MyData) getIntent().getSerializableExtra("myData");
         Log.d(TAG, "myData id: " + myData.getId());
-        Log.d(TAG, "myData table: " + myData.getTableFromDB());
+
+        if(myData.getTableFromDB() == 0){
+            Log.d(TAG, "tableFromDB ZERO: ");
+            TableQuantity tableQuantity = new TableQuantity();
+            int tableFromDB = tableQuantity.getTableQuantity();
+            myData.setTableFromDB(tableFromDB);
+            Log.d(TAG, "tableFromDB: " + myData.getTableFromDB());
+        }
 
         payment_select_after = findViewById(R.id.payment_select_after);
         payment_select_before = findViewById(R.id.payment_select_before);

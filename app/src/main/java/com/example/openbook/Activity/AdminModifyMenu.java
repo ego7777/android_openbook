@@ -3,6 +3,8 @@ package com.example.openbook.Activity;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.MotionEvent;
 import android.view.Window;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -17,6 +19,8 @@ import java.util.ArrayList;
 
 public class AdminModifyMenu extends Activity {
 
+    String TAG = "AdminModifyMenuTAG";
+
     String get_id;
     ArrayList<AdminTableList> adminTableList;
 
@@ -30,8 +34,9 @@ public class AdminModifyMenu extends Activity {
         setContentView(R.layout.admin_modify_menu);
 
         get_id = getIntent().getStringExtra("get_id");
+        Log.d(TAG, "id: " + get_id);
         adminTableList = (ArrayList<AdminTableList>) getIntent().getSerializableExtra("adminTableList");
-
+        Log.d(TAG, "adminTableList: " + adminTableList);
 
         cancel = findViewById(R.id.admin_modify_menu_cancel);
         qrCode = findViewById(R.id.admin_modify_menu_qrCode);
@@ -53,6 +58,20 @@ public class AdminModifyMenu extends Activity {
         });
 
 
+    }
 
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        //바깥 레이어 클릭해도 안닫히게 하기
+        if (event.getAction() == MotionEvent.ACTION_OUTSIDE) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public void onBackPressed() {
+        //안드로이드 백버튼 막기
+        return;
     }
 }

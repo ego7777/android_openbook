@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="1000dp"
+    android:layout_width="700dp"
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
@@ -11,7 +11,7 @@
         android:orientation="horizontal">
 
         <TextView
-            android:layout_width="900dp"
+            android:layout_width="600dp"
             android:layout_height="wrap_content"
             android:background="@color/red_pink"
             android:text="메뉴 추가/삭제"
@@ -39,6 +39,6 @@
         android:layout_width="300dp"
         android:layout_height="300dp"
         android:layout_gravity="center"
-        android:layout_margin="100dp"/>
+        android:layout_margin="80dp"/>
 
 </LinearLayout>
