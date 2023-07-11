@@ -11,6 +11,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -64,7 +65,8 @@ public class Table extends AppCompatActivity {
 
     //다이얼로그
     ImageView table_info_img;
-    TextView statement, table_info_text, table_info_gender, table_info_member, table_info_close;
+    TextView table_info_statement, table_info_text, table_info_gender, table_info_member;
+    Button table_info_close;
 
 
     int clickTable, myTable;
@@ -265,14 +267,14 @@ public class Table extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                Dialog dlg = new Dialog(Table.this);
-                dlg.setContentView(R.layout.table_infomation);
+                Dialog dlg = new Dialog(Table.this, R.style.RadiusDialogStyle);
+                dlg.setContentView(R.layout.table_information_dialog);
                 dlg.show();
 
 
                 table_info_img = dlg.findViewById(R.id.table_info_img);
                 table_info_text = dlg.findViewById(R.id.table_info_text);
-                statement = dlg.findViewById(R.id.statement);
+                table_info_statement = dlg.findViewById(R.id.table_info_statement);
                 table_info_gender = dlg.findViewById(R.id.table_info_gender);
                 table_info_member = dlg.findViewById(R.id.table_info_member);
                 table_info_close = dlg.findViewById(R.id.table_info_close);
@@ -454,7 +456,7 @@ public class Table extends AppCompatActivity {
 
             table_info_text.setVisibility(View.INVISIBLE);
 
-            statement.setText("사진과 정보를 입력하시려면 다음 큐알로 입장해주세요 :)");
+            table_info_statement.setText("사진과 정보를 입력하시려면 다음 큐알로 입장해주세요 :)");
             table_info_gender.setVisibility(View.GONE);
             table_info_member.setVisibility(View.GONE);
 
@@ -470,7 +472,7 @@ public class Table extends AppCompatActivity {
 
             table_info_text.setText("다시 등록하시려면 \n프로필 사진을 터치해주세요!");
 
-            statement.setText(jsonObject.getString("statement"));
+            table_info_statement.setText(jsonObject.getString("statement"));
             table_info_gender.setText(jsonObject.getString("gender"));
             table_info_member.setText(jsonObject.getString("guestNum"));
         }
@@ -480,7 +482,7 @@ public class Table extends AppCompatActivity {
 
         if (result.equals("없음")) {
             table_info_text.setVisibility(View.INVISIBLE);
-            statement.setText("정보를 입력하지 않은 테이블입니다.");
+            table_info_statement.setText("정보를 입력하지 않은 테이블입니다.");
             table_info_gender.setVisibility(View.INVISIBLE);
             table_info_member.setVisibility(View.INVISIBLE);
 
@@ -530,7 +532,7 @@ public class Table extends AppCompatActivity {
 
             }
 
-            statement.setText(jsonObject.getString("statement"));
+            table_info_statement.setText(jsonObject.getString("statement"));
             table_info_gender.setText(jsonObject.getString("gender"));
             table_info_member.setText(jsonObject.getString("guestNum"));
 

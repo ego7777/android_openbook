@@ -11,7 +11,9 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.annotation.UiThread;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.renderscript.Sampler;
 
 import com.example.openbook.Data.AdminSalesList;
 import com.example.openbook.Data.AdminTableList;
@@ -195,14 +197,19 @@ public class AdminSales extends AppCompatActivity {
 
 
                 try {
-                    if(body.equals("없음")){
-                        chart.clear();
-                        chart.setNoDataText("매출데이터가 존재하지 않습니다.");
-                        chart.setNoDataTextColor(Color.RED);
-                        chart.invalidate();
+                    if (body.equals("없음")) {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                chart.clear();
+                                chart.setNoDataText("매출데이터가 존재하지 않습니다.");
+                                chart.setNoDataTextColor(Color.RED);
+                                chart.invalidate();
+                            }
+                        });
 
 
-                    }else if(body != null){
+                    } else if (body != null) {
                         getSalesInfo(duration, body);
 
                     }
@@ -219,8 +226,6 @@ public class AdminSales extends AppCompatActivity {
     }
 
 
-
-
     @RequiresApi(api = Build.VERSION_CODES.O)
     public void getSalesInfo(String duration, String data) throws JSONException, ParseException {
 
@@ -229,23 +234,22 @@ public class AdminSales extends AppCompatActivity {
         ArrayList<AdminSalesList> salesLists = new ArrayList();
 
 
+        JSONArray jsonArray = new JSONArray(data);
 
-            JSONArray jsonArray = new JSONArray(data);
+        for (int i = 0; i < jsonArray.length(); i++) {
 
-            for (int i = 0; i < jsonArray.length(); i++) {
+            JSONObject jsonObject = jsonArray.getJSONObject(i);
 
-                JSONObject jsonObject = jsonArray.getJSONObject(i);
+            LocalDateTime date = LocalDateTime.parse(jsonObject.getString("orderTime"),
+                    dateTimeFormatter);
 
-                LocalDateTime date = LocalDateTime.parse(jsonObject.getString("orderTime"),
-                        dateTimeFormatter);
+            int totalPrice = jsonObject.getInt("totalPrice");
 
-                int totalPrice = jsonObject.getInt("totalPrice");
+            salesLists.add(new AdminSalesList(date, totalPrice));
+            Log.d(TAG, "getSalesInfo: " + salesLists.get(i).getLocalDateTime());
 
-                salesLists.add(new AdminSalesList(date, totalPrice));
-                Log.d(TAG, "getSalesInfo: " + salesLists.get(i).getLocalDateTime());
+        }
 
-            }
-            
         sortData(salesLists, duration);
     }
 
@@ -255,6 +259,7 @@ public class AdminSales extends AppCompatActivity {
 
         //중복되는 날짜 금액 합산
         HashMap<Integer, Integer> hashMap = new HashMap<>();
+//        HashMap<String, Integer> testHashMap = new HashMap<>();
 
         ArrayList<AdminSalesList> salesListFinal = new ArrayList<>();
         String title;
@@ -304,13 +309,23 @@ public class AdminSales extends AppCompatActivity {
             //중복되는 날짜 금액 합산
             for (int i = 0; i < salesLists.size(); i++) {
 
-                int weekOfMonth = salesLists.get(i).getLocalDateTime().get(WeekFields.ISO.weekOfMonth());
+                int month = salesLists.get(i).getLocalDateTime().getMonthValue();
+//                Log.d(TAG, "month: " + month);
 
-                if (hashMap.get(weekOfMonth) == null) {
-                    hashMap.put(weekOfMonth, salesLists.get(i).getTotalPrice());
+                int weekOfMonth = salesLists.get(i).getLocalDateTime().get(WeekFields.SUNDAY_START.weekOfMonth());
+//                Log.d(TAG, "sortData weekOfMonth: " + weekOfMonth);
+
+
+                String date = String.valueOf(month) + String.valueOf(weekOfMonth);
+                Log.d(TAG, "date: " + date);
+
+                int dateKey = Integer.parseInt(date);
+
+                if (hashMap.get(dateKey) == null) {
+                    hashMap.put(dateKey, salesLists.get(i).getTotalPrice());
                 } else {
-                    Integer duplicatedPrice = hashMap.get(weekOfMonth) + salesLists.get(i).getTotalPrice();
-                    hashMap.replace(weekOfMonth, duplicatedPrice);
+                    Integer duplicatedPrice = hashMap.get(dateKey) + salesLists.get(i).getTotalPrice();
+                    hashMap.replace(dateKey, duplicatedPrice);
                 }
 
             } // for문 끝
@@ -349,13 +364,12 @@ public class AdminSales extends AppCompatActivity {
         }
 
 
-        Log.d(TAG, "sortData:  Integer");
-
         hashMap.forEach((Key, Value) -> {
 
             salesListFinal.add(new AdminSalesList(Key, Value));
 
         });
+//        }
 
 
         title = LocalDate.parse(salesLists.get(0).getLocalDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))) + "   ~   "
@@ -373,8 +387,6 @@ public class AdminSales extends AppCompatActivity {
         ArrayList<BarEntry> entries = new ArrayList<>();
         BarData barData = new BarData();
         BarDataSet barDataSet;
-
-
 
 
         if (duration.equals("today")) {
@@ -432,33 +444,49 @@ public class AdminSales extends AppCompatActivity {
 
         } else if (duration.equals("week")) {
 
-            xAxis.setAxisMinimum((float) (salesLists.get(0).getIntDate() - 0.9));
-            xAxis.setAxisMaximum((float) (salesLists.get(salesLists.size() - 1).getIntDate() + 0.9));
+            xAxis.setAxisMinimum((float) -0.9);
+            xAxis.setAxisMaximum((float) salesLists.size());
 
 
             xAxis.setValueFormatter(new IAxisValueFormatter() {
                 @Override
                 public String getFormattedValue(float value, AxisBase axis) {
-                    return (int) value + "주";
+
+                    int index = (int) value;
+                    Log.d(TAG, "getFormattedValue: " + index);
+
+                    if (index >= 0 && index < salesLists.size()) {
+                        int month = (salesLists.get(index).getIntDate() / 10); // 정수 부분은 월
+                        int week = (salesLists.get(index).getIntDate() % 10); // 소수 부분은 주차
+
+                        return month + "월 " + week + "주차";
+                    }
+
+                    return ""; // 유효하지 않은 인덱스일 경우 빈 문자열 반환
+
                 }
             });
 
 
             for (int i = 0; i < salesLists.size(); i++) {
 
-                int week = salesLists.get(i).getIntDate();
+//                int week = salesLists.get(i).getIntDate();
+//                Log.d(TAG, "setChart week: " + week);
 
                 int price = salesLists.get(i).getTotalPrice();
+                Log.d(TAG, "setChart price: " + price);
 
-                entries.add(new BarEntry(week, price));
-
+                entries.add(new BarEntry(i, price));
             }
 
 
         } else if (duration.equals("month")) {
 
-            xAxis.setAxisMinimum(0.1f);
-            xAxis.setAxisMaximum(12.9f);
+//            xAxis.setAxisMinimum(0.1f);
+//            xAxis.setAxisMaximum(12.9f);
+
+            xAxis.setAxisMinimum((float) (salesLists.get(0).getIntDate() - 0.9));
+            xAxis.setAxisMaximum((float) (salesLists.get(salesLists.size() - 1).getIntDate() + 0.9));
 
 
             xAxis.setValueFormatter(new IAxisValueFormatter() {
@@ -480,8 +508,8 @@ public class AdminSales extends AppCompatActivity {
             }
 
         } else if (duration.equals("year")) {
-            xAxis.setAxisMinimum((float) (salesLists.get(0).getIntDate()-0.9));
-            xAxis.setAxisMaximum((float) (salesLists.get(salesLists.size()-1).getIntDate()+0.9));
+            xAxis.setAxisMinimum((float) (salesLists.get(0).getIntDate() - 0.9));
+            xAxis.setAxisMaximum((float) (salesLists.get(salesLists.size() - 1).getIntDate() + 0.9));
             xAxis.setValueFormatter(new IAxisValueFormatter() {
                 @Override
                 public String getFormattedValue(float value, AxisBase axis) {
@@ -489,7 +517,7 @@ public class AdminSales extends AppCompatActivity {
                 }
             });
 
-            for(int i=0; i<salesLists.size(); i++){
+            for (int i = 0; i < salesLists.size(); i++) {
                 int year = salesLists.get(i).getIntDate();
                 int price = salesLists.get(i).getTotalPrice();
 
@@ -512,7 +540,14 @@ public class AdminSales extends AppCompatActivity {
 
 
         chart.setData(barData);
-        chart.invalidate(); // 차트 업데이트
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                chart.invalidate(); // 차트 업데이트
+            }
+        });
+
     }
 
 

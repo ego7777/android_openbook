@@ -53,6 +53,7 @@ public class AdminModifyMenu extends Activity {
             Intent intent = new Intent(AdminModifyMenu.this, Admin.class);
             intent.putExtra("get_id", get_id);
             intent.putExtra("adminTableList", adminTableList);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(intent);
             overridePendingTransition(0, 0);
         });

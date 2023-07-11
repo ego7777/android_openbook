@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="RadiusDialogStyle" parent="@android:style/Theme.Dialog">
+        <item name="android:windowBackground">@drawable/table_information_dialog_frame</item>
+        <item name="android:windowMinWidthMajor">60%</item>
+        <item name="android:windowMinWidthMinor">60%</item>
+    </style>
+
+</resources>

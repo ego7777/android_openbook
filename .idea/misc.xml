@@ -29,6 +29,7 @@
         <entry key="app/src/main/res/drawable/table_border.xml" value="0.1725" />
         <entry key="app/src/main/res/drawable/table_border_click.xml" value="0.1325" />
         <entry key="app/src/main/res/drawable/table_border_order.xml" value="0.1" />
+        <entry key="app/src/main/res/drawable/table_information_dialog_frame.xml" value="0.136" />
         <entry key="app/src/main/res/drawable/table_select.xml" value="0.1085" />
         <entry key="app/src/main/res/drawable/table_unpress.xml" value="0.1085" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.20742753623188406" />
@@ -88,6 +89,7 @@
         <entry key="app/src/main/res/layout/table_gridview.xml" value="0.1" />
         <entry key="app/src/main/res/layout/table_gridview_item.xml" value="0.1" />
         <entry key="app/src/main/res/layout/table_infomation.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/table_information_dialog.xml" value="0.29987834549878345" />
         <entry key="app/src/main/res/menu/sidebar.xml" value="0.15442708333333333" />
         <entry key="app/src/main/res/xml/theme_start.xml" value="0.22076155938349953" />
       </map>
