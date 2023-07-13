@@ -19,7 +19,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Openbook"
         android:usesCleartextTraffic="true"
-        android:windowSoftInputMode="adjustResize"
+        android:windowSoftInputMode="adjustUnspecified|adjustPan"
         tools:targetApi="31"
         android:hardwareAccelerated="false"
         android:vmSafeMode="true">

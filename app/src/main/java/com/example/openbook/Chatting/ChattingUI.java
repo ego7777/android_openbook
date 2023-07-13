@@ -16,6 +16,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -84,7 +85,6 @@ public class ChattingUI extends AppCompatActivity {
     BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d(TAG, "onReceive: ");
 
             if (intent.getAction().equals("chattingDataArrived")) {
                 String message = intent.getStringExtra("chattingData");
@@ -92,7 +92,6 @@ public class ChattingUI extends AppCompatActivity {
                 chattingUpdate(message);
 
             }else if(intent.getAction().equals("isReadArrived")) {
-                Log.d(TAG, "onReceive isRead: ");
                 String message = intent.getStringExtra("isRead");
                 Log.d(TAG, "onReceive isRead: " + message);
                 isReadUpdate(message);
@@ -211,12 +210,14 @@ public class ChattingUI extends AppCompatActivity {
 
         while (res.moveToNext()) {
             //sender 가 get_id인 것은 viewType 1로
-            if (res.getString(3).equals(myData.getId()) && res.getString(4).equals("table" + table_num)) {
+            if (res.getString(3).equals(myData.getId())
+                    && res.getString(4).equals("table" + table_num)) {
                 chatLists.add(new ChattingList(res.getString(1), 1, res.getString(2), res.getString(5)));
-
+                Log.d(TAG, "viewType: 오른쪽: " + res.getString(1));
                 //receiver 가 table_num 인 것은 viewType 0으로
             } else if (res.getString(3).equals("table" + table_num) && res.getString(4).equals(myData.getId())) {
                 chatLists.add(new ChattingList(res.getString(1), 0, res.getString(2), res.getString(5)));
+                Log.d(TAG, "viewType 왼쪽: " + res.getString(1));
             }
         }
 
@@ -296,7 +297,7 @@ public class ChattingUI extends AppCompatActivity {
                         m = "에러 발생!";
                         break;
                 }
-                Log.d(TAG, "handlerMessage : " + m);
+//                Log.d(TAG, "handlerMessage : " + m);
 
             }
         };
@@ -328,6 +329,9 @@ public class ChattingUI extends AppCompatActivity {
                     Log.d(TAG, "msg 전송 :" + (String) msg.obj);
 
                     mServiceHandler.sendMessage(msg);
+
+                    InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                    inputMethodManager.hideSoftInputFromWindow(chat_send.getWindowToken(), 0);
 
                 }
             }

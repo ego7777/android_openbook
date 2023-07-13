@@ -218,7 +218,7 @@ public class ClientSocket extends Thread implements Serializable{
 
         //db에 저장
         DBHelper dbHelper = new DBHelper(context, 2);
-        dbHelper.insertChattingData(sendMsg[0], time, get_id, sendMsg[1], sendMsg[2]);
+        dbHelper.insertChattingData(sendMsg[0], time, sendMsg[1],get_id, sendMsg[2]);
 
 
         Intent intent = new Intent("chattingDataArrived");

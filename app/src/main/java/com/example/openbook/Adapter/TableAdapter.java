@@ -16,6 +16,7 @@ import com.example.openbook.Data.TableList;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> {
 
@@ -96,8 +97,10 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> 
         Integer orderedTable = positionColorMap.get(position);
         Log.d(TAG, "orderTable: " + orderedTable);
 
+
+
         if(orderedTable != null){
-            if (orderedTable.equals(lastClickedPosition)) {
+            if (position == lastClickedPosition) {
                 Log.d(TAG, "equal ");
                 color = holder.itemView.getContext().getColor(R.color.blue_purple);
                 holder.itemView.setBackgroundColor(color);

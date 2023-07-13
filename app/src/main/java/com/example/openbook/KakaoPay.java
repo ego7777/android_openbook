@@ -58,11 +58,16 @@ public class KakaoPay extends AppCompatActivity {
         setContentView(R.layout.kakaopay_activity);
 
         myData = (MyData) getIntent().getSerializableExtra("myData");
-//        Log.d(TAG, "myData id: " + myData.getId());
+        Log.d(TAG, "myData id: " + myData.getId());
 //        Log.d(TAG, "myData paymentStyle: " + myData.getPaymentStyle());
 
         get_id = getIntent().getStringExtra("get_id");
         Log.d(TAG, "get_id: " + get_id);
+
+        if(get_id == null){
+            get_id = myData.getId();
+            Log.d(TAG, "get_id null: " + get_id);
+        }
 
         menuName = getIntent().getStringExtra("menuName");
         menuPrice = getIntent().getIntExtra("menuPrice", 0);

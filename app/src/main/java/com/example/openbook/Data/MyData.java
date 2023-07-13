@@ -8,12 +8,22 @@ public class MyData implements Serializable {
     int tableFromDB;
     String paymentStyle;
     boolean isOrder;
+    boolean usedTable;
 
-    public MyData(String id, int tableFromDB, String paymentStyle, boolean isOrder){
+    public MyData(String id, int tableFromDB, String paymentStyle, boolean isOrder, boolean usedTable){
         this.id = id;
         this.tableFromDB = tableFromDB;
         this.paymentStyle = paymentStyle;
         this.isOrder = isOrder;
+        this.usedTable = usedTable;
+    }
+
+    public boolean isUsedTable() {
+        return usedTable;
+    }
+
+    public void setUsedTable(boolean usedTable){
+        this.usedTable = usedTable;
     }
 
     public String getId() {

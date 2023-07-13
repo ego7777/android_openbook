@@ -55,7 +55,7 @@
         <entry key="app/src/main/res/layout/call_server.xml" value="0.1" />
         <entry key="app/src/main/res/layout/call_server_activity.xml" value="0.14460562103354488" />
         <entry key="app/src/main/res/layout/cart_listview_item.xml" value="0.25" />
-        <entry key="app/src/main/res/layout/chatting.xml" value="0.165" />
+        <entry key="app/src/main/res/layout/chatting.xml" value="0.4301809692382813" />
         <entry key="app/src/main/res/layout/chatting_item_receive.xml" value="0.25" />
         <entry key="app/src/main/res/layout/chatting_item_recieve.xml" value="0.2302810516772439" />
         <entry key="app/src/main/res/layout/chatting_item_sender.xml" value="0.2302810516772439" />
@@ -69,7 +69,8 @@
         <entry key="app/src/main/res/layout/login_activity.xml" value="0.15820489573889393" />
         <entry key="app/src/main/res/layout/menu.xml" value="0.165" />
         <entry key="app/src/main/res/layout/menu2.xml" value="0.1" />
-        <entry key="app/src/main/res/layout/menu_activity.xml" value="0.2092010498046875" />
+        <entry key="app/src/main/res/layout/menu_activity.xml" value="0.11328125" />
+        <entry key="app/src/main/res/layout/menu_activity2.xml" value="0.29987834549878345" />
         <entry key="app/src/main/res/layout/menu_gridview_item.xml" value="0.10416666666666667" />
         <entry key="app/src/main/res/layout/menu_gridview_item_empty.xml" value="0.1" />
         <entry key="app/src/main/res/layout/menu_item_temp.xml" value="0.1" />

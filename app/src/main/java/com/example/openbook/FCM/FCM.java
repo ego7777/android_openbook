@@ -289,7 +289,7 @@ public class FCM extends FirebaseMessagingService {
                     //하고 PaymentSelect.java로 이동....!해야해...!
                     Intent intent = new Intent(FCM.this, PaymentSelect.class);
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    MyData myData = new MyData(tableName, 0, null, false);
+                    MyData myData = new MyData(tableName, 0, null, false, false);
                     intent.putExtra("myData", myData);
 
                     startActivity(intent);

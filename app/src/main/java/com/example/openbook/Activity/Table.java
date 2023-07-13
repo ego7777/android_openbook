@@ -202,6 +202,10 @@ public class Table extends AppCompatActivity {
                 table_sidebar.setVisibility(View.VISIBLE);
                 clickTable = position + 1;
 
+                if(myData.getPaymentStyle().equals("before")){
+                    requestChatting.setVisibility(View.GONE);
+                }
+
             }
         });
 

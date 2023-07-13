@@ -313,7 +313,7 @@ public class Login extends AppCompatActivity {
     // 문자열 인텐트 전달 함수
     public void startActivityString(Class c, String name, String sendString) {
         Intent intent = new Intent(getApplicationContext(), c);
-        MyData myData = new MyData(sendString, tableFromDB, null, false);
+        MyData myData = new MyData(sendString, tableFromDB, null, false, false);
         intent.putExtra(name, myData);
         startActivity(intent);
         overridePendingTransition(0, 0);

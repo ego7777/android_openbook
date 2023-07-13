@@ -1,6 +1,7 @@
 package com.example.openbook.Activity;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
@@ -31,6 +32,12 @@ public class PaymentSelect extends AppCompatActivity {
 
         myData = (MyData) getIntent().getSerializableExtra("myData");
         Log.d(TAG, "myData id: " + myData.getId());
+
+        SharedPreferences pref = getSharedPreferences("cart_list", MODE_PRIVATE);
+
+        SharedPreferences.Editor editor = pref.edit();
+
+        editor.remove("order_list");
 
         if(myData.getTableFromDB() == 0){
             Log.d(TAG, "tableFromDB ZERO: ");
