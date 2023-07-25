@@ -19,8 +19,8 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Openbook"
         android:usesCleartextTraffic="true"
-        android:windowSoftInputMode="adjustUnspecified|adjustPan"
         tools:targetApi="31"
+        android:windowSoftInputMode="adjustUnspecified|adjustPan"
         android:hardwareAccelerated="false"
         android:vmSafeMode="true">
 
@@ -43,7 +43,8 @@
         </activity>
 
         <activity android:name=".Activity.Login" />
-        <activity android:name=".Activity.SignUp" />
+        <activity android:name=".Activity.SignUp"
+            android:windowSoftInputMode="adjustResize"/>
         <activity android:name=".Activity.PaymentSelect"/>
         <activity android:name=".Activity.Menu" />
 
@@ -58,7 +59,6 @@
         <activity android:name=".Activity.CallServer" />
 
         <activity android:name=".Chatting.ChattingUI"
-            android:windowSoftInputMode="adjustResize"
             android:exported="true">
             <intent-filter>
                 <action android:name="chattingDataArrived"/>

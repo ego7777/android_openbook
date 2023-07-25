@@ -461,6 +461,8 @@ public class ChattingUI extends AppCompatActivity {
                     }
 
                     chattingAdapter.notifyDataSetChanged();
+
+                    dbHelper.upDateIsRead(myData.getId(), "table"+table_num);
                 }
             }
         };

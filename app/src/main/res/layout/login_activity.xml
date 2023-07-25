@@ -1,115 +1,177 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="@color/black">
 
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center">
+    <TextView
+        android:id="@+id/login_text_id"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="ID"
-            android:textSize="30sp"
-            android:textColor="@color/white"
-            android:textStyle="bold"/>
-
-        <EditText
-            android:id="@+id/login_id"
-            android:layout_width="230dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="20dp"
-            android:padding="10dp"
-            android:hint="아이디를 입력하세요"
-            android:textSize="20sp"
-            android:textColor="@color/black"
-            android:background="@drawable/border_gray"/>
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        android:text="I D"
+        android:textColor="@color/white"
+        android:textStyle="bold"
         android:gravity="center"
-        android:layout_marginTop="20dp">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="PW"
-            android:textSize="30sp"
-            android:textColor="@color/white"
-            android:textStyle="bold"/>
+        android:autoSizeMaxTextSize="40sp"
+        android:autoSizeMinTextSize="30sp"
+        android:autoSizeTextType="uniform"
 
-        <EditText
-            android:id="@+id/login_pw"
-            android:layout_width="230dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:padding="10dp"
-            android:hint="비밀번호를 입력하세요"
-            android:textSize="20sp"
-            android:textColor="@color/black"
-            android:ems="10"
-            android:inputType="textPassword"
-            android:background="@drawable/border_gray"/>
+        android:layout_marginTop="100dp"
+        android:layout_marginStart="200dp"
 
-    </LinearLayout>
+        android:layout_marginBottom="50dp"
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        app:layout_constraintHorizontal_weight="1"
+        app:layout_constraintVertical_weight="1"
+
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/login_editText_id"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/login_text_password"/>
+
+    <EditText
+        android:id="@+id/login_editText_id"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@drawable/border_gray"
+        android:hint="아이디를 입력하세요"
+        android:padding="10dp"
+
+        android:textColor="@color/black"
+        android:textSize="25sp"
+
+        android:layout_marginTop="100dp"
+        android:layout_marginEnd="300dp"
+        android:layout_marginBottom="50dp"
+
+        app:layout_constraintHorizontal_weight="2"
+        app:layout_constraintVertical_weight="1"
+
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/login_text_id"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/login_pw"/>
+
+
+    <TextView
+        android:id="@+id/login_text_password"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:text="PW"
+        android:textColor="@color/white"
+        android:textStyle="bold"
         android:gravity="center"
-        android:layout_marginTop="30dp">
 
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/login"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="login"
-            android:textColor="@color/black"
-            android:background="@drawable/radius_10dp_lime"/>
+        android:autoSizeMinTextSize="20sp"
+        android:autoSizeMaxTextSize="40sp"
+        android:autoSizeTextType="uniform"
 
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/signup"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="sign up"
-            android:textColor="@color/black"
-            android:layout_marginStart="30dp"
-            android:background="@drawable/radius_10dp_lime"/>
+        android:layout_marginStart="200dp"
+        android:layout_marginBottom="50dp"
 
+        app:layout_constraintHorizontal_weight="1"
+        app:layout_constraintVertical_weight="1"
 
-    </LinearLayout>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/login_text_id"
+        app:layout_constraintEnd_toStartOf="@id/login_pw"
+        app:layout_constraintBottom_toTopOf="@id/login_button"/>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:layout_marginTop="10dp">
+    <EditText
+        android:id="@+id/login_pw"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@drawable/border_gray"
+        android:ems="10"
+        android:hint="비밀번호를 입력하세요"
+        android:inputType="textPassword"
+        android:padding="10dp"
+        android:textColor="@color/black"
 
-        <com.google.android.gms.common.SignInButton
-            android:id="@+id/google_login"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+        android:textSize="25sp"
 
+        android:layout_marginEnd="300dp"
+        android:layout_marginBottom="50dp"
 
+        app:layout_constraintHorizontal_weight="2"
+        app:layout_constraintVertical_weight="1"
 
-    </LinearLayout>
-
-
-
-
+        app:layout_constraintStart_toEndOf="@id/login_text_password"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/login_editText_id"
+        app:layout_constraintBottom_toTopOf="@id/signup_button"/>
 
 
-</LinearLayout>
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/login_button"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@drawable/radius_10dp_lime"
+        android:text="login"
+        android:textColor="@color/black"
+
+        android:autoSizeMinTextSize="20sp"
+        android:autoSizeMaxTextSize="30sp"
+        android:autoSizeTextType="uniform"
+
+        android:layout_marginStart="300dp"
+        android:layout_marginBottom="50dp"
+
+        app:layout_constraintHorizontal_weight="0.5"
+        app:layout_constraintVertical_weight="1"
+
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/signup_button"
+        app:layout_constraintTop_toBottomOf="@id/login_text_password"
+        app:layout_constraintBottom_toTopOf="@id/google_login"/>
+
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/signup_button"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+
+
+        android:autoSizeMaxTextSize="30sp"
+        android:autoSizeMinTextSize="20sp"
+        android:autoSizeTextType="uniform"
+        android:background="@drawable/radius_10dp_lime"
+
+        android:text="sign up"
+        android:textColor="@color/black"
+
+        android:layout_marginBottom="50dp"
+        android:layout_marginStart="100dp"
+        android:layout_marginEnd="300dp"
+
+        app:layout_constraintHorizontal_weight="0.5"
+        app:layout_constraintVertical_weight="1"
+
+        app:layout_constraintBottom_toTopOf="@id/google_login"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/login_button"
+        app:layout_constraintTop_toBottomOf="@id/login_pw" />
+
+    <com.google.android.gms.common.SignInButton
+        android:id="@+id/google_login"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+
+        android:layout_marginBottom="100dp"
+        android:layout_marginStart="350dp"
+        android:layout_marginEnd="350dp"
+
+        app:layout_constraintHorizontal_weight="0.5"
+        app:layout_constraintVertical_weight="1"
+
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/signup_button"/>
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

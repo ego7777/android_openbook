@@ -22,13 +22,16 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.openbook.Adapter.AdminPopUpAdapter;
 import com.example.openbook.Adapter.TableAdapter;
 import com.example.openbook.Chatting.ChattingUI;
 import com.example.openbook.Data.CartList;
 import com.example.openbook.Data.ChattingData;
 import com.example.openbook.Data.MyData;
+import com.example.openbook.Data.OrderList;
 import com.example.openbook.DialogCustom;
 import com.example.openbook.FCM.SendNotification;
 import com.example.openbook.ImageLoadTask;
@@ -74,7 +77,7 @@ public class Table extends AppCompatActivity {
 
     OkHttpClient okHttpClient = new OkHttpClient();
 
-    TextView appbarMenu, requestChatting, checkInformation;
+    TextView appbarMenu, appbarOrderList, requestChatting, checkInformation;
     LinearLayout table_sidebar;
 
     ImageLoadTask task;
@@ -128,6 +131,8 @@ public class Table extends AppCompatActivity {
          * Appbar: Menu 누르면 이동
          */
         appbarMenu = findViewById(R.id.appbar_menu_menu);
+
+        appbarOrderList = findViewById(R.id.appbar_menu_orderList);
 
         RecyclerView table_grid = findViewById(R.id.tableGrid);
         adapter = new TableAdapter(tableList, myTable);
@@ -191,6 +196,13 @@ public class Table extends AppCompatActivity {
 
 
         appbarMenu.setOnClickListener(this::moveToMenu);
+
+        appbarOrderList.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+//                showReceiptDialog();
+            }
+        });
 
 
         /**
@@ -587,6 +599,8 @@ public class Table extends AppCompatActivity {
         //안드로이드 백버튼 막기
         return;
     }
+
+
 }
 
 

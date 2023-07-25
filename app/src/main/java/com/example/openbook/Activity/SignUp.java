@@ -1,8 +1,8 @@
 package com.example.openbook.Activity;
 
-import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -31,12 +31,12 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class SignUp extends AppCompatActivity {
-    String TAG = "signup_log";
+    String TAG = "SignupTAG";
     String url = "http://3.36.255.141/signup.php";
 
     String overlapCk="0";
+    OkHttpClient okHttpClient;
 
-    Dialog dlg;
 
 
     @Override
@@ -48,8 +48,8 @@ public class SignUp extends AppCompatActivity {
          * 뒤로가기
          */
 
-        TextView back = findViewById(R.id.signup_back);
-        back.setOnClickListener(new View.OnClickListener() {
+        TextView cancel = findViewById(R.id.signup_cancel);
+        cancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 finish();
@@ -58,19 +58,20 @@ public class SignUp extends AppCompatActivity {
 
 
 
-        EditText id = findViewById(R.id.signup_id);
-        EditText pw = findViewById(R.id.signup_pw);
-        EditText pw_confirm = findViewById(R.id.signup_pw_confirm);
-        EditText phone = findViewById(R.id.signup_phone);
-        EditText email = findViewById(R.id.signup_email);
+        EditText idEditText = findViewById(R.id.signup_id);
+        EditText pwEditText = findViewById(R.id.signup_pw);
+        EditText pwConfirmEditText = findViewById(R.id.signup_pw_confirm);
+        EditText phoneEditText = findViewById(R.id.signup_phone);
+        EditText emailEditText = findViewById(R.id.signup_email);
 
-        Button overlap = findViewById(R.id.overlap);
-        Button register = findViewById(R.id.register);
+        Button checkDuplicateButton = findViewById(R.id.overlap);
+        Button registerButton = findViewById(R.id.register);
 
-        TextView id_overlap_ck = findViewById(R.id.id_overlap_ck);
-        TextView pw_ck = findViewById(R.id.pw_ck);
+        TextView duplicateWarning = findViewById(R.id.id_overlap_ck);
+        TextView passwordWarning = findViewById(R.id.pw_ck);
 
         DialogCustom dlg = new DialogCustom();
+        okHttpClient = new OkHttpClient();
 
         /**
          * 비밀번호 암호화 하세유...!!!!
@@ -81,107 +82,111 @@ public class SignUp extends AppCompatActivity {
         /**
          * 아이디 중복 확인
          */
-        overlap.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                RequestBody overlap_id = new FormBody.Builder()
-                        .add("overlap_id", id.getText().toString().trim())
-                        .build();
 
-                OkHttpClient overlap_client = new OkHttpClient();
-                Request request = new Request.Builder()
-                        .url("http://3.36.255.141/overlap.php")
-                        .post(overlap_id)
-                        .build();
-                Log.d(TAG, "request :" + request);
 
-                overlap_client.newCall(request).enqueue(new Callback() {
-                    @Override
-                    public void onFailure(Call call, IOException e) {
-                        e.printStackTrace();
-                        Log.d(TAG, "onFailure: " + e);
-                    }
+            checkDuplicateButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
 
-                    @Override
-                    public void onResponse(Call call, final Response response) throws IOException {
+                    if (checkDuplicateButton.getText().toString().equals("수정")) {
+                        Log.d(TAG, "수정: ");
+                        idEditText.setEnabled(true);
+                        idEditText.setText(""); // 아이디 입력 값 초기화
+                        checkDuplicateButton.setText("중복확인");
+                        duplicateWarning.setText(""); // 중복 경고 메시지 초기화
+                    } else {
+                        Log.d(TAG, "중복확인: ");
+                        RequestBody overlap_id = new FormBody.Builder()
+                                .add("overlap_id", idEditText.getText().toString().trim())
+                                .build();
 
-                        // 서브 스레드 Ui 변경 할 경우 에러
-                        // 메인스레드 Ui 설정
-                        runOnUiThread(new Runnable() {
+                        Request request = new Request.Builder()
+                                .url("http://3.36.255.141/overlap.php")
+                                .post(overlap_id)
+                                .build();
+                        Log.d(TAG, "request :" + request);
+
+                        okHttpClient.newCall(request).enqueue(new Callback() {
                             @Override
-                            public void run() {
-                                try {
+                            public void onFailure(Call call, IOException e) {
+                                Log.d(TAG, "onFailure: " + e);
+                            }
 
-                                    if (!response.isSuccessful()) {
-                                        // 응답 실패
-                                        Log.d(TAG, "응답실패" + response);
-                                        Toast.makeText(getApplicationContext(), "네트워크 문제 발생", Toast.LENGTH_SHORT).show();
+                            @Override
+                            public void onResponse(Call call, final Response response) {
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        try {
 
-                                    } else {
-                                        // 응답 성공
-                                        Log.d(TAG, "응답 성공");
-                                        final String responseOverlap = response.body().string().trim();
-                                        //회원 가입할 때 중복확인 안하거나, 중복되면 가입 못하게 하려고 변수 저장
-                                        overlapCk = responseOverlap;
+                                            if (!response.isSuccessful()) {
+                                                // 응답 실패
+                                                Log.d(TAG, "응답실패" + response);
+                                                Toast.makeText(getApplicationContext(), "네트워크 문제 발생", Toast.LENGTH_SHORT).show();
 
-                                        id.addTextChangedListener(new TextWatcher() {
-                                            @Override
-                                            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                                            } else {
+                                                // 응답 성공
+                                                Log.d(TAG, "응답 성공");
+                                                final String responseOverlap = response.body().string().trim();
+                                                //회원 가입할 때 중복확인 안하거나, 중복되면 가입 못하게 하려고 변수 저장
+                                                overlapCk = responseOverlap;
 
+                                                Log.d(TAG, "responseOverlap : " + responseOverlap);
+                                                if (responseOverlap.equals("1")) {
+                                                    duplicateWarning.setText("사용할 수 없는 아이디 입니다.");
+                                                    duplicateWarning.setTextColor(Color.RED);
+                                                    idEditText.setTextColor(Color.RED);
+
+                                                } else {
+                                                    Log.d(TAG, "사용할 수 있는 아이디 입니다." + responseOverlap);
+                                                    duplicateWarning.setText("사용 할 수 있는 아이디 입니다.");
+                                                    duplicateWarning.setTextColor(getColor(R.color.blue_purple));
+                                                    idEditText.setTextColor(Color.BLACK);
+                                                    idEditText.setEnabled(false);
+                                                    checkDuplicateButton.setText("수정");
+                                                    Log.d(TAG, "idEditText enable: " + idEditText.isEnabled());
+
+
+                                                }
                                             }
 
-                                            @Override
-                                            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                                                overlapCk = "0";
-                                            }
-
-                                            @Override
-                                            public void afterTextChanged(Editable editable) {
-
-                                            }
-                                        });
-
-                                        Log.d(TAG, "responseOverlap : " + responseOverlap);
-                                        if (responseOverlap.equals("1")) {
-                                            id_overlap_ck.setText("사용할 수 없는 아이디 입니다.");
-                                            id_overlap_ck.setTextColor(Color.RED);
-                                            id.setTextColor(Color.RED);
-
-                                        } else {
-                                            Log.d(TAG, "사용할 수 있는 아이디 입니다." + responseOverlap);
-                                            id_overlap_ck.setText("사용 할 수 있는 아이디 입니다.");
-                                            id_overlap_ck.setTextColor(Color.BLACK);
-                                            id.setTextColor(Color.BLACK);
-
+                                        } catch (Exception e) {
+                                            e.printStackTrace();
                                         }
                                     }
-
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
+                                });
                             }
                         });
                     }
-                });
-            }
-        });
+                }
+            });
 
-        pw_confirm.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+
+
+
+
+
+
+
+
+
+
+        pwConfirmEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View view, boolean b) {
-                if(!pw.getText().toString().equals(pw_confirm.getText().toString())){
-                    pw_ck.setText("비밀번호가 일치하지 않습니다.");
-                    pw_ck.setTextColor(Color.RED);
+                if(!pwEditText.getText().toString().equals(pwConfirmEditText.getText().toString())){
+                    passwordWarning.setText("비밀번호가 일치하지 않습니다.");
+                    passwordWarning.setTextColor(Color.RED);
                 }else{
-                    pw_ck.setText("");
-                    pw_ck.setTextColor(Color.BLACK);
+                    passwordWarning.setText("");
+                    passwordWarning.setTextColor(Color.BLACK);
                 }
             }
         });
 
 
 
-        register.setOnClickListener(new View.OnClickListener() {
+        registerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 boolean matcher_email;
@@ -190,14 +195,14 @@ public class SignUp extends AppCompatActivity {
                 /**
                  * 이메일 형식
                  */
-                String emailCk = email.getText().toString().trim();
+                String emailCk = emailEditText.getText().toString().trim();
                 Pattern pattern = android.util.Patterns.EMAIL_ADDRESS;
                 matcher_email = pattern.matcher(emailCk).matches();
 
                 /**
                  * 핸드폰 형식
                  */
-                String phoneCk = phone.getText().toString().trim();
+                String phoneCk = phoneEditText.getText().toString().trim();
                 Log.d(TAG, "phoneCk1 :" + phoneCk);
 
                 Pattern pattern_phone = Pattern.compile("^01(?:0|1|[6-9])-(?:\\d{3}|\\d{4})-\\d{4}$");
@@ -206,22 +211,22 @@ public class SignUp extends AppCompatActivity {
                 matcher_phone = pattern_phone.matcher(phoneCk).matches();
                 Log.d(TAG, "matcher_phone1 : " + matcher_phone);
 
-                if (id.getText().toString().isEmpty()) {
+                if (idEditText.getText().toString().isEmpty()) {
 
                     dlg.showAlertDialog(SignUp.this, "아이디를 입력해주세요.");
 
-                }else if (pw.getText().toString().isEmpty()) {
+                }else if (pwEditText.getText().toString().isEmpty()) {
 
                     dlg.showAlertDialog(SignUp.this, "비밀번호를 입력해주세요.");
 
-                }else if (phone.getText().toString().isEmpty()) {
+                }else if (phoneEditText.getText().toString().isEmpty()) {
 
                     dlg.showAlertDialog(SignUp.this, "핸드폰 번호를 입력해주세요.");
 
-                }else if (email.getText().toString().isEmpty()) {
+                }else if (emailEditText.getText().toString().isEmpty()) {
                     dlg.showAlertDialog(SignUp.this,"이메일을 입력해주세요.");
 
-                }else if (!pw.getText().toString().equals(pw_confirm.getText().toString())) {
+                }else if (!pwEditText.getText().toString().equals(pwConfirmEditText.getText().toString())) {
                     dlg.showAlertDialog(SignUp.this,"비밀번호가 일치하지 않습니다.");
 
                 }else if(overlapCk.equals("1") ) {
@@ -245,15 +250,14 @@ public class SignUp extends AppCompatActivity {
                 }else{
                     // POST 파라미터 추가
                     RequestBody formBody = new FormBody.Builder()
-                            .add("id", id.getText().toString().trim())
-                            .add("pw", pw.getText().toString().trim())
-                            .add("phone",phone.getText().toString().trim())
-                            .add("email",email.getText().toString().trim())
+                            .add("id", idEditText.getText().toString().trim())
+                            .add("pw", pwEditText.getText().toString().trim())
+                            .add("phone",phoneEditText.getText().toString().trim())
+                            .add("email",emailEditText.getText().toString().trim())
                             .build();
                     Log.d(TAG, "formBody : " + formBody);
 
                     // 요청 만들기
-                    OkHttpClient client = new OkHttpClient();
                     Request request = new Request.Builder()
                             .url(url)
                             .post(formBody)
@@ -261,7 +265,7 @@ public class SignUp extends AppCompatActivity {
                     Log.d(TAG, "request :" +request);
 
                     // 응답 콜백
-                    client.newCall(request).enqueue(new Callback() {
+                    okHttpClient.newCall(request).enqueue(new Callback() {
                         @Override
                         public void onFailure(Call call, IOException e) {
 
@@ -321,4 +325,5 @@ public class SignUp extends AppCompatActivity {
         // 화면전환 애니메이션 없애기
         overridePendingTransition(0, 0);
     }
+
 }

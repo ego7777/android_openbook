@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.openbook.Data.AdminTableList;
@@ -27,6 +28,7 @@ import com.google.android.gms.tasks.Task;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -71,9 +73,9 @@ public class Login extends AppCompatActivity {
         /**
          * 아이디, 비밀번호 입력
          */
-        EditText id = findViewById(R.id.login_id);
+        EditText id = findViewById(R.id.login_editText_id);
         EditText pw = findViewById(R.id.login_pw);
-        Button login = findViewById(R.id.login);
+        Button login = findViewById(R.id.login_button);
 
         DialogCustom dialogCustom = new DialogCustom();
 
@@ -159,7 +161,7 @@ public class Login extends AppCompatActivity {
         /**
          * 회원가입
          */
-        Button signup = findViewById(R.id.signup);
+        Button signup = findViewById(R.id.signup_button);
         signup.setOnClickListener(new View.OnClickListener() {
 
             @Override
@@ -186,6 +188,11 @@ public class Login extends AppCompatActivity {
         Log.d(TAG, "gsc: " + gsc);
 
         SignInButton google_login = findViewById(R.id.google_login);
+
+        TextView google_login_textView = (TextView) google_login.getChildAt(0);
+        google_login_textView.setText("Continue With Google");
+        google_login_textView.setTextSize(20);
+
         google_login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
