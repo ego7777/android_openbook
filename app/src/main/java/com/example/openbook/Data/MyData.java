@@ -9,13 +9,23 @@ public class MyData implements Serializable {
     String paymentStyle;
     boolean isOrder;
     boolean usedTable;
+    int identifier;
 
-    public MyData(String id, int tableFromDB, String paymentStyle, boolean isOrder, boolean usedTable){
+    public MyData(String id, int tableFromDB, String paymentStyle, boolean isOrder, boolean usedTable, int identifier){
         this.id = id;
         this.tableFromDB = tableFromDB;
         this.paymentStyle = paymentStyle;
         this.isOrder = isOrder;
         this.usedTable = usedTable;
+        this.identifier = identifier;
+    }
+
+    public int getIdentifier() {
+        return identifier;
+    }
+
+    public void setIdentifier(int identifier) {
+        this.identifier = identifier;
     }
 
     public boolean isUsedTable() {

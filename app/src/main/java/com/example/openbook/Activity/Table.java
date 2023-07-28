@@ -112,6 +112,8 @@ public class Table extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.table_activity);
 
+        overridePendingTransition(0, 0);
+
         myData = (MyData) getIntent().getSerializableExtra("myData");
         Log.d(TAG, "myData Id: " + myData.getId());
         Log.d(TAG, "myData IsOrder: " + myData.isOrder());
@@ -122,9 +124,11 @@ public class Table extends AppCompatActivity {
         Log.d(TAG, "tableList size: " + tableList.size());
 
 
-        myTable = Integer.parseInt(myData.getId().replace("table", ""));
-        TextView table_num = findViewById(R.id.appbar_menu_table_number);
-        table_num.setText(myData.getId());
+        if(!myData.getId().equals("구글로그인")){
+            myTable = Integer.parseInt(myData.getId().replace("table", ""));
+            TextView table_num = findViewById(R.id.appbar_menu_table_number);
+            table_num.setText(myData.getId());
+        }
 
 
         /**

@@ -52,7 +52,7 @@ public class Login extends AppCompatActivity {
     String personName;
 
     String local_id;
-    String TAG = "login_log";
+    String TAG = "LoginTAG";
 
     ArrayList<AdminTableList> adminTableList;
     int tableFromDB;
@@ -166,6 +166,7 @@ public class Login extends AppCompatActivity {
 
             @Override
             public void onClick(View view) {
+//                Intent intent = new Intent(Login.this, SignupTest.class);
                 Intent intent = new Intent(Login.this, SignUp.class);
                 startActivity(intent);
             }
@@ -252,7 +253,6 @@ public class Login extends AppCompatActivity {
                         .add("id", personId)
                         .add("email", personEmail)
                         .build();
-                Log.d(TAG, "formbody");
 
                 OkHttpClient google_client = new OkHttpClient();
 
@@ -260,38 +260,30 @@ public class Login extends AppCompatActivity {
                         .url("http://3.36.255.141/google_signup.php")
                         .post(formBody)
                         .build();
-                Log.d(TAG, "request :" + request);
 
 
                 google_client.newCall(request).enqueue(new Callback() {
                     @Override
                     public void onFailure(Call call, IOException e) {
-
-                        e.printStackTrace();
                         Log.d(TAG, "onFailure: " + e);
                     }
 
                     @Override
-                    public void onResponse(Call call, final Response response) throws IOException {
-
-                        // 서브 스레드 Ui 변경 할 경우 에러
-                        // 메인스레드 Ui 설정
+                    public void onResponse(Call call, final Response response) {
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
                                 try {
                                     if (!response.isSuccessful()) {
-                                        Log.d(TAG, "응답실패" + response);
+                                        Log.d(TAG, "응답실패 : " + response);
                                         Toast.makeText(getApplicationContext(), "네트워크 문제 발생", Toast.LENGTH_SHORT).show();
 
                                     } else {
                                         // 응답 성공
                                         final String responseData = response.body().string();
                                         if (responseData.equals("성공")) {
-                                            Toast.makeText(getApplicationContext(), "로그인에 성공했습니다.", Toast.LENGTH_LONG).show();
-                                            Intent intent = new Intent(Login.this, PaymentSelect.class);
-                                            intent.putExtra("get_id", local_id);
-                                            startActivity(intent);
+                                            Toast.makeText(Login.this, "로그인에 성공했습니다.", Toast.LENGTH_LONG).show();
+                                            startActivityString(PaymentSelect.class, "myData", "구글로그인");
 
                                         } else {
                                             Log.d(TAG, "회원가입에 실패 했습니다." + responseData);
@@ -320,7 +312,7 @@ public class Login extends AppCompatActivity {
     // 문자열 인텐트 전달 함수
     public void startActivityString(Class c, String name, String sendString) {
         Intent intent = new Intent(getApplicationContext(), c);
-        MyData myData = new MyData(sendString, tableFromDB, null, false, false);
+        MyData myData = new MyData(sendString, tableFromDB, null, false, false, 0);
         intent.putExtra(name, myData);
         startActivity(intent);
         overridePendingTransition(0, 0);
@@ -342,20 +334,6 @@ public class Login extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
-
-        if (account == null) {
-            Log.d(TAG, "로그인이 필요합니다.");
-        } else {
-            Log.d(TAG, "이미 로그인 중입니다.");
-            Intent intent = new Intent(Login.this, PaymentSelect.class);
-            intent.putExtra("get_id", local_id);
-            Log.d(TAG, "onStart: local_id " + local_id);
-            startActivity(intent);
-        }
-
-
-
 
         if(adminTableList == null || adminTableList.isEmpty()){
             adminTableList = new ArrayList<>();
@@ -367,7 +345,7 @@ public class Login extends AppCompatActivity {
 
             for(int i=1; i<tableFromDB+1; i++){
                 adminTableList.add(new AdminTableList("table"+i,
-                        null, null, null, null));
+                        null, null, null, null, 0, 0));
 
                 JSONObject jsonObject = new JSONObject();
                 try {

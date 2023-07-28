@@ -94,7 +94,7 @@
 
 
                     <TextView
-                        android:id="@+id/cart_order_price"
+                        android:id="@+id/cart_order_total_price"
                         android:layout_width="0dp"
                         android:layout_height="60dp"
                         android:layout_marginStart="20dp"

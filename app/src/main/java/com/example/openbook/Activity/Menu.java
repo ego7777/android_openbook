@@ -77,7 +77,7 @@ import okhttp3.Response;
 
 public class Menu extends AppCompatActivity {
 
-    String TAG = "menuTAG";
+    String TAG = "MenuTAG";
 
     int totalPrice, myTable;
 
@@ -90,7 +90,7 @@ public class Menu extends AppCompatActivity {
     SharedPreferences pref;
     SharedPreferences.Editor editor;
 
-    TextView appbarMenuTable, appbarOrderList, cartOrderPrice;
+    TextView appbarMenuTable, appbarOrderList, cartOrderTotalPrice;
 
     CartAdapter cartAdapter;
     MenuAdapter menuAdapter;
@@ -137,6 +137,8 @@ public class Menu extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.menu_activity);
 
+        overridePendingTransition(0, 0);
+
 
         // 로컬 브로드캐스트 리시버 등록
         IntentFilter intentFilter = new IntentFilter("chattingRequestArrived");
@@ -145,6 +147,7 @@ public class Menu extends AppCompatActivity {
         myData = (MyData) getIntent().getSerializableExtra("myData");
         Log.d(TAG, "myData paymentStyle: " + myData.getPaymentStyle());
         Log.d(TAG, "myData isOrder: " + myData.isOrder());
+        Log.d(TAG, "myData identifier: " + myData.getIdentifier());
 
         chattingDataHashMap = (HashMap<String, ChattingData>) getIntent().getSerializableExtra("chattingData");
         Log.d(TAG, "chattingData size: " + chattingDataHashMap);
@@ -167,7 +170,8 @@ public class Menu extends AppCompatActivity {
         sendNotification = new SendNotification();
 
         if (myData.getPaymentStyle().equals("before") && myData.isUsedTable()==false) {
-            sendNotification.usingTable(myData.getId(), "사용");
+            sendNotification.usingTable(myData.getId(), "사용", myData.getIdentifier());
+            Log.d(TAG, "usingTable identifier: " + myData.getIdentifier());
             myData.setUsedTable(true);
         }
 
@@ -204,7 +208,7 @@ public class Menu extends AppCompatActivity {
         pref = getSharedPreferences("cart_list", MODE_PRIVATE);
         editor = pref.edit();
 
-        cartOrderPrice = findViewById(R.id.cart_order_price);
+        cartOrderTotalPrice = findViewById(R.id.cart_order_total_price);
         cartOrderButton = findViewById(R.id.cart_order_button);
 
         /**
@@ -317,18 +321,22 @@ public class Menu extends AppCompatActivity {
 
         String savedJson = pref.getString("cart_list", null);
 
-
+        //저장된 cart_list가 존재하면 띄운다..!
         if (savedJson != null) {
             cartLists = getSharedPreference(savedJson);
-            cartAdapter.setAdapterItem(cartLists);
+
 
             for (CartList menu : cartLists) {
                 totalPrice += menu.getMenu_price() * menu.getMenu_quantity();
+                Log.d(TAG, "shared price: " + totalPrice);
+                int price = menu.getMenu_price() * menu.getMenu_quantity();
+                menu.setMenu_price(price);
             }
 
             String commaTotalPrice = addCommasToNumber(totalPrice);
 
-            cartOrderPrice.setText("합계 : " + commaTotalPrice);
+            cartOrderTotalPrice.setText("합계 : " + commaTotalPrice);
+            cartAdapter.setAdapterItem(cartLists);
         }
 
     } //onStart()
@@ -346,7 +354,7 @@ public class Menu extends AppCompatActivity {
         menuClose.setOnClickListener(view -> {
             //admin에게 fcm 날리기
             Log.d(TAG, "menuClose Click: ");
-            sendNotification.usingTable(myData.getId(), "종료");
+            sendNotification.usingTable(myData.getId(), "종료", 0);
             Log.d(TAG, "종료: ");
 
             editor.remove("cart_list");
@@ -356,6 +364,8 @@ public class Menu extends AppCompatActivity {
             Intent intent = new Intent(Menu.this, PaymentSelect.class);
             myData.setPaymentStyle(null);
             myData.setOrder(false);
+            myData.setUsedTable(false);
+            myData.setIdentifier(0);
             intent.putExtra("myData", myData);
             startActivity(intent);
 
@@ -391,17 +401,28 @@ public class Menu extends AppCompatActivity {
         cartAdapter.setOnItemClickListener(new CartAdapter.OnItemClickListener() {
             @Override
             public void onPlusClick(View view, int position) {
+
+                int beforePrice;
+
+                if(cartLists.get(position).getMenu_quantity() == 1){
+                    beforePrice = cartLists.get(position).getMenu_price();
+                    Log.d(TAG, "beforePrice 1: " + beforePrice);
+                }else{
+                    beforePrice = cartLists.get(position).getMenu_price()/cartLists.get(position).getMenu_quantity();
+                    Log.d(TAG, "beforePrice 2: " + beforePrice);
+                }
+
                 int add = cartLists.get(position).getMenu_quantity() + 1;
                 cartLists.get(position).setMenu_quantity(add);
 
-                int price = add * cartLists.get(position).getMenu_price();
-                cartLists.get(position).setMenu_price(price);
+                int addPrice = add * beforePrice;
+                cartLists.get(position).setMenu_price(addPrice);
 
-                totalPrice = totalPrice + cartLists.get(position).getMenu_price();
+                totalPrice = totalPrice + beforePrice;
 
                 String commaTotalPrice = addCommasToNumber(totalPrice);
 
-                cartOrderPrice.setText("합계 : " + commaTotalPrice);
+                cartOrderTotalPrice.setText("합계 : " + commaTotalPrice);
                 cartAdapter.setAdapterItem(cartLists);
 
                 cartSharedPreference("cart_list");
@@ -409,17 +430,34 @@ public class Menu extends AppCompatActivity {
 
             @Override
             public void onMinusClick(View view, int position) {
-                int minus = cartLists.get(position).getMenu_quantity() - 1;
-                totalPrice = totalPrice - cartLists.get(position).getMenu_price();
-                if (minus == 0) {
-                    cartLists.remove(position);
-                } else {
+                int beforePrice;
 
+                if(cartLists.get(position).getMenu_quantity() == 1){
+
+                    beforePrice = cartLists.get(position).getMenu_price();
+                    totalPrice = totalPrice - beforePrice;
+
+                    cartLists.remove(position);
+
+                }else{
+                    beforePrice = cartLists.get(position).getMenu_price()/cartLists.get(position).getMenu_quantity();
+                    Log.d(TAG, "minus beforePrice: " + beforePrice);
+
+                    int minus = cartLists.get(position).getMenu_quantity() - 1;
                     cartLists.get(position).setMenu_quantity(minus);
+
+                    int minusPrice = minus * beforePrice;
+                    cartLists.get(position).setMenu_price(minusPrice);
+
+                    totalPrice = totalPrice - beforePrice;
                 }
 
-                String commaTotalPrice = addCommasToNumber(totalPrice);
-                cartOrderPrice.setText("합계 : " + commaTotalPrice);
+                if(totalPrice == 0){
+                    cartOrderTotalPrice.setText("");
+                }else{
+                    String commaTotalPrice = addCommasToNumber(totalPrice);
+                    cartOrderTotalPrice.setText("합계 : " + commaTotalPrice);
+                }
 
                 cartAdapter.setAdapterItem(cartLists);
                 cartSharedPreference("cart_list");
@@ -428,11 +466,17 @@ public class Menu extends AppCompatActivity {
 
             @Override
             public void onDeleteClick(View view, int position) {
-                int delete_quantity = cartLists.get(position).getMenu_quantity();
                 int delete_price = cartLists.get(position).getMenu_price();
 
-                totalPrice = totalPrice - (delete_price * delete_quantity);
-                cartOrderPrice.setText("합계: " + String.valueOf(totalPrice) + "원");
+                totalPrice = totalPrice - delete_price;
+
+                if(totalPrice == 0){
+                    cartOrderTotalPrice.setText("");
+                }else{
+                    String commaTotalPrice = addCommasToNumber(totalPrice);
+                    cartOrderTotalPrice.setText("합계: " + commaTotalPrice);
+                }
+
 
                 cartLists.remove(position);
 
@@ -452,7 +496,6 @@ public class Menu extends AppCompatActivity {
 
             @Override
             public void onItemClick(View view, String name, int price, int position) {
-
                 //중복되는 메뉴의 포지션 값 get
                 for (int i = 0; i < cartLists.size(); i++) {
                     if (cartLists.get(i).getMenu_name().equals(name)) {
@@ -467,23 +510,21 @@ public class Menu extends AppCompatActivity {
                 } else {
                     menuQuantity = cartLists.get(pos).getMenu_quantity() + 1;
                     cartLists.get(pos).setMenu_quantity(menuQuantity);
-                    // 가격 오르는거
-                    int priceTemp = cartLists.get(pos).getMenu_price() * menuQuantity;
 
-                    cartLists.get(pos).setMenu_price(priceTemp);
-
+                    int addPrice = price * menuQuantity;
+                    cartLists.get(pos).setMenu_price(addPrice);
                 }
 
                 cartAdapter.setAdapterItem(cartLists);
 
                 pos = 1000;
 
-
                 totalPrice = totalPrice + price;
+                Log.d(TAG, "totalPrice: " + totalPrice);
 
                 String commaTotalPrice = addCommasToNumber(totalPrice);
 
-                cartOrderPrice.setText("합계 : " + commaTotalPrice);
+                cartOrderTotalPrice.setText("합계 : " + commaTotalPrice);
 
                 cartSharedPreference("cart_list");
 
@@ -583,7 +624,10 @@ public class Menu extends AppCompatActivity {
         }); //주문하기 click event
 
 
-        myTable = Integer.parseInt(myData.getId().replace("table", ""));
+        if(!myData.getId().equals("구글로그인")){
+            myTable = Integer.parseInt(myData.getId().replace("table", ""));
+        }
+
 
 
         if (tableList == null) {
@@ -660,7 +704,7 @@ public class Menu extends AppCompatActivity {
             try {
                 jsonObject.put("menu", menu.getMenu_name());
                 jsonObject.put("quantity", menu.getMenu_quantity());
-                jsonObject.put("price", menu.getMenu_price());
+                jsonObject.put("price", menu.getMenu_price()/menu.getMenu_quantity());
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -797,7 +841,7 @@ public class Menu extends AppCompatActivity {
         cartLists = new ArrayList<>();
         cartAdapter.setAdapterItem(cartLists);
         totalPrice = 0;
-        cartOrderPrice.setText("");
+        cartOrderTotalPrice.setText("");
 
         editor.remove("cart_list");
         editor.commit();

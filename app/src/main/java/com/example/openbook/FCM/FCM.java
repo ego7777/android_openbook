@@ -46,7 +46,7 @@ import okhttp3.Response;
 
 public class FCM extends FirebaseMessagingService {
 
-    String TAG = "FCM";
+    String TAG = "FcmTAG";
     String get_id;
     int requestCode;
     Handler mHandler = new Handler(Looper.getMainLooper());
@@ -119,9 +119,11 @@ public class FCM extends FirebaseMessagingService {
         } else if (data.containsKey("tableStatement")) {
             String tableStatement = data.get("tableStatement");
             String tableNumber = data.get("tableNumber");
+            int identifier = Integer.parseInt(data.get("tableIdentifier"));
+            Log.d(TAG, "handleDataMessage identifier: " + identifier);
 
             // admin page 선불좌석 표시 처리 메소드 호출
-            handleAdminPaymentBefore(tableStatement, tableNumber);
+            handleAdminPaymentBefore(tableStatement, tableNumber, identifier);
         } else if (data.containsKey("menuName")) {
             String tableName = data.get("tableName");
             String menuName = data.get("menuName");
@@ -195,10 +197,11 @@ public class FCM extends FirebaseMessagingService {
     }
 
 
-    public void handleAdminPaymentBefore(String statement, String tableName) {
+    public void handleAdminPaymentBefore(String statement, String tableName, int identifier) {
         Intent intent = new Intent(this, AdminPaymentBeforePopup.class);
         intent.putExtra("tableStatement", statement);
         intent.putExtra("tableName", tableName);
+        intent.putExtra("tableIdentifier", identifier);
         Log.d(TAG, "tableStatement: " + statement);
 
         requestCode = (int) System.currentTimeMillis();
@@ -289,7 +292,7 @@ public class FCM extends FirebaseMessagingService {
                     //하고 PaymentSelect.java로 이동....!해야해...!
                     Intent intent = new Intent(FCM.this, PaymentSelect.class);
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    MyData myData = new MyData(tableName, 0, null, false, false);
+                    MyData myData = new MyData(tableName, 0, null, false, false, 0);
                     intent.putExtra("myData", myData);
 
                     startActivity(intent);

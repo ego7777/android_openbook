@@ -2,10 +2,7 @@ package com.example.openbook.Activity;
 
 import android.content.Intent;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -30,24 +27,22 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class SignUp extends AppCompatActivity {
+public class SignupTest extends AppCompatActivity {
+
     String TAG = "SignupTAG";
     String url = "http://3.36.255.141/signup.php";
 
-    String overlapCk = "0";
+    String overlapCk="0";
     OkHttpClient okHttpClient;
 
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.signup_activity);
+        setContentView(R.layout.signup_test);
 
-        /**
-         * 뒤로가기
-         */
 
-        TextView cancel = findViewById(R.id.signup_cancel);
+        TextView cancel = findViewById(R.id.signup_cancel_button);
         cancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -56,17 +51,18 @@ public class SignUp extends AppCompatActivity {
         });
 
 
-        EditText idEditText = findViewById(R.id.signup_id);
-        EditText pwEditText = findViewById(R.id.signup_pw);
-        EditText pwConfirmEditText = findViewById(R.id.signup_pw_confirm);
-        EditText phoneEditText = findViewById(R.id.signup_phone);
-        EditText emailEditText = findViewById(R.id.signup_email);
 
-        Button checkDuplicateButton = findViewById(R.id.overlap);
-        Button registerButton = findViewById(R.id.register);
+        EditText idEditText = findViewById(R.id.signup_editText_id);
+        EditText pwEditText = findViewById(R.id.signup_editText_password);
+        EditText pwConfirmEditText = findViewById(R.id.signup_editText_check_password);
+        EditText phoneEditText = findViewById(R.id.signup_editText_phone);
+        EditText emailEditText = findViewById(R.id.signup_editText_email);
 
-        TextView duplicateWarning = findViewById(R.id.id_overlap_ck);
-        TextView passwordWarning = findViewById(R.id.pw_ck);
+        Button checkDuplicateButton = findViewById(R.id.signup_duplicate_button);
+        Button registerButton = findViewById(R.id.signup_register_button);
+
+        TextView duplicateWarning = findViewById(R.id.signup_duplicate_warning);
+        TextView passwordWarning = findViewById(R.id.signup_textview_password_warning);
 
         DialogCustom dlg = new DialogCustom();
         okHttpClient = new OkHttpClient();
@@ -74,6 +70,7 @@ public class SignUp extends AppCompatActivity {
         /**
          * 비밀번호 암호화 하세유...!!!!
          */
+
 
 
         /**
@@ -91,8 +88,6 @@ public class SignUp extends AppCompatActivity {
                     idEditText.setText(""); // 아이디 입력 값 초기화
                     checkDuplicateButton.setText("중복확인");
                     duplicateWarning.setText(""); // 중복 경고 메시지 초기화
-                    overlapCk = "0";
-
                 } else {
                     Log.d(TAG, "중복확인: ");
                     RequestBody overlap_id = new FormBody.Builder()
@@ -161,18 +156,28 @@ public class SignUp extends AppCompatActivity {
         });
 
 
+
+
+
+
+
+
+
+
+
         pwConfirmEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View view, boolean b) {
-                if (!pwEditText.getText().toString().equals(pwConfirmEditText.getText().toString())) {
+                if(!pwEditText.getText().toString().equals(pwConfirmEditText.getText().toString())){
                     passwordWarning.setText("비밀번호가 일치하지 않습니다.");
                     passwordWarning.setTextColor(Color.RED);
-                } else {
+                }else{
                     passwordWarning.setText("");
                     passwordWarning.setTextColor(Color.BLACK);
                 }
             }
         });
+
 
 
         registerButton.setOnClickListener(new View.OnClickListener() {
@@ -202,47 +207,47 @@ public class SignUp extends AppCompatActivity {
 
                 if (idEditText.getText().toString().isEmpty()) {
 
-                    dlg.showAlertDialog(SignUp.this, "아이디를 입력해주세요.");
+                    dlg.showAlertDialog(SignupTest.this, "아이디를 입력해주세요.");
 
-                } else if (pwEditText.getText().toString().isEmpty()) {
+                }else if (pwEditText.getText().toString().isEmpty()) {
 
-                    dlg.showAlertDialog(SignUp.this, "비밀번호를 입력해주세요.");
+                    dlg.showAlertDialog(SignupTest.this, "비밀번호를 입력해주세요.");
 
-                } else if (phoneEditText.getText().toString().isEmpty()) {
+                }else if (phoneEditText.getText().toString().isEmpty()) {
 
-                    dlg.showAlertDialog(SignUp.this, "핸드폰 번호를 입력해주세요.");
+                    dlg.showAlertDialog(SignupTest.this, "핸드폰 번호를 입력해주세요.");
 
-                } else if (emailEditText.getText().toString().isEmpty()) {
-                    dlg.showAlertDialog(SignUp.this, "이메일을 입력해주세요.");
+                }else if (emailEditText.getText().toString().isEmpty()) {
+                    dlg.showAlertDialog(SignupTest.this,"이메일을 입력해주세요.");
 
-                } else if (!pwEditText.getText().toString().equals(pwConfirmEditText.getText().toString())) {
-                    dlg.showAlertDialog(SignUp.this, "비밀번호가 일치하지 않습니다.");
+                }else if (!pwEditText.getText().toString().equals(pwConfirmEditText.getText().toString())) {
+                    dlg.showAlertDialog(SignupTest.this,"비밀번호가 일치하지 않습니다.");
 
-                } else if (overlapCk.equals("1")) {
-                    dlg.showAlertDialog(SignUp.this, "사용할 수 없는 아이디 입니다.");
+                }else if(overlapCk.equals("1") ) {
+                    dlg.showAlertDialog(SignupTest.this,"사용할 수 없는 아이디 입니다.");
 
-                } else if (overlapCk.equals("0")) {
-                    dlg.showAlertDialog(SignUp.this, "아이디 중복확인을 해주세요.");
+                }else if(overlapCk.equals("0")) {
+                    dlg.showAlertDialog(SignupTest.this,"아이디 중복확인을 해주세요.");
 
-                } else if (!matcher_phone) {
-                    dlg.showAlertDialog(SignUp.this, "핸드폰 번호를 형식에 맞게 입력해주세요.");
+                }else if(!matcher_phone){
+                    dlg.showAlertDialog(SignupTest.this,"핸드폰 번호를 형식에 맞게 입력해주세요.");
 
 
                     Log.d(TAG, "phoneCk2 : " + phoneCk);
                     Log.d(TAG, "matcher_phone2 :" + matcher_phone);
 
-                } else if (!matcher_email) {
-                    dlg.showAlertDialog(SignUp.this, "이메일을 형식에 맞게 입력해주세요.");
+                }else if(!matcher_email){
+                    dlg.showAlertDialog(SignupTest.this,"이메일을 형식에 맞게 입력해주세요.");
 
                     Log.d(TAG, "email.getText : " + emailCk);
                     Log.d(TAG, "matcher_email :" + matcher_email);
-                } else {
+                }else{
                     // POST 파라미터 추가
                     RequestBody formBody = new FormBody.Builder()
                             .add("id", idEditText.getText().toString().trim())
                             .add("pw", pwEditText.getText().toString().trim())
-                            .add("phone", phoneEditText.getText().toString().trim())
-                            .add("email", emailEditText.getText().toString().trim())
+                            .add("phone",phoneEditText.getText().toString().trim())
+                            .add("email",emailEditText.getText().toString().trim())
                             .build();
                     Log.d(TAG, "formBody : " + formBody);
 
@@ -251,7 +256,7 @@ public class SignUp extends AppCompatActivity {
                             .url(url)
                             .post(formBody)
                             .build();
-                    Log.d(TAG, "request :" + request);
+                    Log.d(TAG, "request :" +request);
 
                     // 응답 콜백
                     okHttpClient.newCall(request).enqueue(new Callback() {
@@ -278,11 +283,11 @@ public class SignUp extends AppCompatActivity {
                                         } else {
                                             Log.d(TAG, "응답 성공");
                                             final String responseData = response.body().string();
-                                            if (responseData.equals("성공")) {
+                                            if(responseData.equals("성공")) {
                                                 Toast.makeText(getApplicationContext(), "회원가입에 성공했습니다.", Toast.LENGTH_LONG).show();
                                                 startActivityflag(Login.class);
                                                 Log.d(TAG, "Login.class");
-                                            } else {
+                                            }else {
                                                 Log.d(TAG, "회원가입에 실패 했습니다." + responseData);
                                                 Toast.makeText(getApplicationContext(), "회원가입에 실패했습니다.", Toast.LENGTH_LONG).show();
                                             }
@@ -296,9 +301,12 @@ public class SignUp extends AppCompatActivity {
                         }
                     });
                 }
-            }
-        });
+            }});
     }
+
+
+
+
 
 
     // 인텐트 화면전환
@@ -312,3 +320,4 @@ public class SignUp extends AppCompatActivity {
     }
 
 }
+

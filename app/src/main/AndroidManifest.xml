@@ -43,8 +43,8 @@
         </activity>
 
         <activity android:name=".Activity.Login" />
-        <activity android:name=".Activity.SignUp"
-            android:windowSoftInputMode="adjustResize"/>
+        <activity android:name=".Activity.SignUp"/>
+        <activity android:name=".Activity.SignupTest" />
         <activity android:name=".Activity.PaymentSelect"/>
         <activity android:name=".Activity.Menu" />
 

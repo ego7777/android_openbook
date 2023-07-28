@@ -24,7 +24,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class SendNotification {
-    String TAG = "SendNotification";
+    String TAG = "SendNotificationTAG";
 
     OkHttpClient okHttpClient = new OkHttpClient();
 
@@ -178,7 +178,7 @@ public class SendNotification {
 
     }
 
-    public void usingTable(String get_id, String statement) {
+    public void usingTable(String tableID, String statement, int identifier) {
 
         mRootRef.child("admin").child("fcmToken").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -188,14 +188,18 @@ public class SendNotification {
                 JSONObject jsonObject = new JSONObject();
 
                 try {
-                    jsonObject.put("tableNumber", get_id);
+                    jsonObject.put("tableNumber", tableID);
 
                     if (statement.equals("사용")) {
+                        Log.d(TAG, "사용 identifier: " + identifier);
                         jsonObject.put("tableStatement", "선불 이용 좌석");
+                        jsonObject.put("tableIdentifier", identifier);
 
 
                     } else if (statement.equals("종료")) {
+                        Log.d(TAG, "종료 identifier: " + identifier);
                         jsonObject.put("tableStatement", "");
+                        jsonObject.put("tableIdentifier", identifier);
                     }
 
                 } catch (JSONException e) {

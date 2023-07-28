@@ -26,6 +26,7 @@ public class OrderList {
         this.statement = statement;
     }
 
+
     public int getViewType(){
         return viewType;
     }

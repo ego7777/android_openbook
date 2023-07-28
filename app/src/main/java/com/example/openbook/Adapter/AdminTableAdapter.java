@@ -1,7 +1,6 @@
 package com.example.openbook.Adapter;
 
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,10 +17,11 @@ import java.util.ArrayList;
 
 public class AdminTableAdapter extends RecyclerView.Adapter<AdminTableAdapter.ViewHolder> {
 
-    String TAG = "adminTableAdapter_TAG";
+    String TAG = "adminTableAdapterTAG";
     ArrayList<AdminTableList> table = new ArrayList<>();
 
     private int lastClickedPosition = -1;
+
 
     public interface onItemClickListener {
         void onItemClick(View view, int position);
@@ -37,9 +37,9 @@ public class AdminTableAdapter extends RecyclerView.Adapter<AdminTableAdapter.Vi
     @Override
     public AdminTableAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.admin_table_gridview_item, parent, false);
+                .inflate(getViewSrc(viewType), parent, false);
 
-        return new AdminTableAdapter.ViewHolder(view);
+        return new AdminTableAdapter.ViewHolder(view, viewType);
     }
 
     @Override
@@ -75,16 +75,25 @@ public class AdminTableAdapter extends RecyclerView.Adapter<AdminTableAdapter.Vi
         TextView admin_grid_gender;
         TextView admin_grid_guestNum;
 
-        int position;
+        TextView admin_grid_statement;
 
-        public ViewHolder(@NonNull View itemView) {
+        int position, viewType;
+
+        public ViewHolder(@NonNull View itemView, int viewType) {
             super(itemView);
+            this.viewType = viewType;
 
-            admin_grid_number = itemView.findViewById(R.id.admin_grid_number);
-            admin_grid_menu = itemView.findViewById(R.id.admin_grid_menu);
-            admin_grid_price = itemView.findViewById(R.id.admin_grid_price);
-            admin_grid_gender = itemView.findViewById(R.id.admin_grid_gender);
-            admin_grid_guestNum = itemView.findViewById(R.id.admin_grid_guestNum);
+            if(viewType == TYPE_AFTER){
+                admin_grid_number = itemView.findViewById(R.id.admin_grid_number);
+                admin_grid_menu = itemView.findViewById(R.id.admin_grid_menu);
+                admin_grid_price = itemView.findViewById(R.id.admin_grid_price);
+                admin_grid_gender = itemView.findViewById(R.id.admin_grid_gender);
+                admin_grid_guestNum = itemView.findViewById(R.id.admin_grid_guestNum);
+            }else{
+                admin_grid_number = itemView.findViewById(R.id.admin_grid_number_before);
+                admin_grid_statement = itemView.findViewById(R.id.admin_grid_statement);
+            }
+
 
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -108,24 +117,46 @@ public class AdminTableAdapter extends RecyclerView.Adapter<AdminTableAdapter.Vi
 
         void onBind(AdminTableList items){
 
+            if(viewType == TYPE_AFTER){
+                onBindAfter(items);
+            }else{
+                onBindBefore(items);
+            }
+        }
 
+        void onBindAfter(AdminTableList items){
             admin_grid_number.setText(items.getAdminTableNumber());
             admin_grid_menu.setText(items.getAdminTableMenu());
             admin_grid_price.setText(items.getAdminTablePrice());
             admin_grid_gender.setText(items.getAdminTableGender());
             admin_grid_guestNum.setText(items.getAdminTableGuestNumber());
+        }
 
-            if(items!= null && items.getAdminTableMenu() != null){
-                if(items.getAdminTableMenu().contains("선불")){
-
-                    admin_grid_menu.setTextColor(Color.RED);
-                }
-            }
-
-
-
+        void onBindBefore(AdminTableList items){
+            admin_grid_number.setText(items.getAdminTableNumber());
+            admin_grid_statement.setText(items.getAdminTableStatement());
+            admin_grid_statement.setTextColor(Color.RED);
         }
 
     }
 
+    private int TYPE_AFTER = 101;
+    private int TYPE_BEFORE = 102;
+
+    private int getViewSrc(int viewType){
+        if(viewType == TYPE_AFTER){
+            return R.layout.admin_table_gridview_item_after;
+        }else{
+            return R.layout.admin_table_gridview_itme_before;
+        }
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        if(table.get(position).getViewType() == 0){
+            return TYPE_AFTER;
+        }else{
+            return TYPE_BEFORE;
+        }
+    }
 }

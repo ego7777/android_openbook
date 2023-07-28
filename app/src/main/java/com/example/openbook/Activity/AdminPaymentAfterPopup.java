@@ -240,16 +240,22 @@ public class AdminPaymentAfterPopup extends Activity {
                 int price = sharedPreference.getInt("table" + i + "price", 0);
                 Log.d(TAG, "price: " + price);
 
+                int viewType = sharedPreference.getInt("table" + i + "viewType", 0);
+                Log.d(TAG, "viewType: " + viewType);
+
+                int identifier = sharedPreference.getInt("table" + i + "tableIdentifier", 0);
+                Log.d(TAG, "identifier: " + identifier);
+
                 if (summary != null) {
                     adminTableList.add(new AdminTableList("table" + i,
-                            summary, String.valueOf(price), null, null));
+                            summary, String.valueOf(price), null, null, viewType,identifier));
 
                 } else {
                     adminTableList.add(new AdminTableList("table" + i,
                             null,
                             null,
                             null,
-                            null));
+                            null, 0, 0));
                 }
 
             }// for문 끝

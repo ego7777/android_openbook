@@ -5,6 +5,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 
 import okhttp3.Call;
@@ -16,7 +17,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class TableQuantity {
-    String TAG = "TableQuantity_Activity";
+    String TAG = "TableQuantityTAG";
 
     OkHttpClient okHttpClient;
     RequestBody formBody;
@@ -26,7 +27,8 @@ public class TableQuantity {
 
     public int getTableQuantity()  {
 
-        okHttpClient = new OkHttpClient();
+        okHttpClient = new OkHttpClient.Builder()
+                .connectTimeout(9999, TimeUnit.SECONDS).build();
 
         formBody = new FormBody.Builder()
                 .add("request", "getTableQuantity")
@@ -61,13 +63,15 @@ public class TableQuantity {
 
         if(tableQuantity == 0){
             try {
-                Thread.sleep(1000);
+                Log.d(TAG, "0: ");
+                Thread.sleep(1200);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+            Log.d(TAG, "sleep 1200: " + tableQuantity);
             return tableQuantity;
         }
-
+        Log.d(TAG, "return tableQuantity: " + tableQuantity);
         return tableQuantity;
 
     }

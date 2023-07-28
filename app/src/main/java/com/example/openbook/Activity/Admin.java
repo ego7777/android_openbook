@@ -61,7 +61,7 @@ public class Admin extends AppCompatActivity {
     String get_id;
 
     String gender, guestNumber, tableName, tableStatement, menuName;
-    int totalPrice;
+    int totalPrice, tableIdentifier;
 
     DBHelper dbHelper;
     int version = 2;
@@ -81,6 +81,8 @@ public class Admin extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.admin_activity);
+
+        overridePendingTransition(0, 0);
 
 
         adminTableList = (ArrayList<AdminTableList>) getIntent().getSerializableExtra("adminTableList");
@@ -124,16 +126,23 @@ public class Admin extends AppCompatActivity {
                 String guestNumber = sharedPreference.getString("table" + i + "guestNumber", null);
                 Log.d(TAG, "guestNumber: " + guestNumber);
 
+                int viewType = sharedPreference.getInt("table" + i + "viewType", 0);
+                Log.d(TAG, "viewType: " + viewType);
+
+                int identifier = sharedPreference.getInt("table" + i + "tableIdentifier", 0);
+                Log.d(TAG, "identifier: " + identifier);
+
+
                 if (summary != null) {
                     adminTableList.add(new AdminTableList("table" + i,
-                            summary, String.valueOf(price), gender, guestNumber));
+                            summary, String.valueOf(price), gender, guestNumber, viewType, identifier));
 
                 } else {
                     adminTableList.add(new AdminTableList("table" + i,
                             null,
                             null,
                             null,
-                            null));
+                            null,0, 0));
                 }
 
             }// for문 끝
@@ -191,12 +200,19 @@ public class Admin extends AppCompatActivity {
         guestNumber = null;
         guestNumber = getIntent().getStringExtra("guestNumber");
         editor.putString(tableName + "guestNumber", guestNumber);
-        editor.commit();
+
 
         tableName = null;
         tableName = getIntent().getStringExtra("tableName");
 
         tableStatement = getIntent().getStringExtra("tableStatement");
+        editor.putString(tableName + "tableStatement", tableStatement);
+
+        tableIdentifier = getIntent().getIntExtra("tableIdentifier", 0);
+        Log.d(TAG, "Intent tableIdentifier: " + tableIdentifier);
+        editor.putInt(tableName + "tableIdentifier", tableIdentifier);
+        editor.commit();
+
 
 
         if (menuName != null) {
@@ -248,8 +264,14 @@ public class Admin extends AppCompatActivity {
 
             int tableNameInt = Integer.parseInt(tableName.replace("table", "")) - 1;
             Log.d(TAG, "tableNameInt: " + tableNameInt);
-            adminTableList.get(tableNameInt).setAdminTableMenu(tableStatement);
-            adminTableList.get(tableNameInt).setAdminTablePrice("");
+            adminTableList.get(tableNameInt).setAdminTableStatement(tableStatement);
+            adminTableList.get(tableNameInt).setViewType(1);
+
+            editor.putInt(tableName +"viewType", 1);
+            editor.commit();
+
+            adminTableList.get(tableNameInt).setAdminTableIdentifier(tableIdentifier);
+
 
         } else if (menuName != null) {
             int tableNameInt = Integer.parseInt(tableName.replace("table", "")) - 1;
@@ -294,16 +316,26 @@ public class Admin extends AppCompatActivity {
                 admin_sidebar_menu.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if (adminTableList.get(position).getAdminTableMenu() == null) {
-                            dialogCustom.HandlerAlertDialog(Admin.this, "빈 좌석이거나 아직 주문하지 않은 좌석입니다.");
-
-                        } else if (adminTableList.get(position).getAdminTableMenu().contains("선불")) {
-                            dialogCustom.HandlerAlertDialog(Admin.this, "빈 좌석이거나 아직 주문하지 않은 좌석입니다.");
-
-                        } else {
+                        if(adminTableList.get(position).getAdminTableMenu() != null ||
+                        adminTableList.get(position).getAdminTableStatement() != null){
                             showReceiptDialog(position);
-
+                        }else{
+                            dialogCustom.HandlerAlertDialog(Admin.this, "빈 좌석이거나 아직 주문하지 않은 좌석입니다.");
                         }
+
+
+//                        if (adminTableList.get(position).getAdminTableMenu() == null ) {
+//
+//                            dialogCustom.HandlerAlertDialog(Admin.this, "빈 좌석이거나 아직 주문하지 않은 좌석입니다.");
+//
+//                        } else if (adminTableList.get(position).getAdminTableStatement() == null) {
+//                            dialogCustom.HandlerAlertDialog(Admin.this, "빈 좌석이거나 아직 주문하지 않은 좌석입니다.");
+//                            Log.d(TAG, "선불: ");
+//                        }
+//                        else {
+//                            showReceiptDialog(position);
+//
+//                        }
                     }
                 });
 
@@ -382,7 +414,20 @@ public class Admin extends AppCompatActivity {
 
         ArrayList<OrderList> adminOrderList = new ArrayList<>();
 
-        adminOrderList = dbHelper.fetchMenuDetails(tableName, adminOrderList);
+        if(adminTableList.get(position).getViewType() == 0){
+
+            adminOrderList = dbHelper.fetchMenuDetails(tableName, adminOrderList);
+
+        }else{
+            OrderData orderData = new OrderData();
+
+            String data = orderData.getOrderData(tableName, tableIdentifier);
+            Log.d(TAG, "showReceiptDialog data: " + data);
+
+            adminOrderList = orderData.setArrayList(tableName, data, adminOrderList);
+        }
+
+ 
 
         TextView adminReceiptCancel = dialog.findViewById(R.id.admin_receipt_cancel);
         TextView adminReceiptTotalPrice = dialog.findViewById(R.id.admin_receipt_totalPrice);
@@ -404,6 +449,7 @@ public class Admin extends AppCompatActivity {
             dialog.dismiss();
         });
     }
+
 
     public void startActivityClass(Class activity) {
         Intent intent = new Intent(Admin.this, activity);

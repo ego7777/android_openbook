@@ -90,7 +90,7 @@ public class AdminModifyTableQuantity extends Activity {
         plus.setOnClickListener(view -> {
             table = table+1;
             adminTableList.add(new AdminTableList("table"+String.valueOf(table),
-                    null, null, null, null));
+                    null, null, null, null, 0, 0));
             Log.d(TAG, "adminTableList add : " + adminTableList.get(table-1).getAdminTableNumber());
             tableNumber.setText(String.valueOf(table));
         });

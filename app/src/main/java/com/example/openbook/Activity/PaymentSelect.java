@@ -15,6 +15,7 @@ import com.example.openbook.R;
 import com.example.openbook.TableQuantity;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 public class PaymentSelect extends AppCompatActivity {
 
@@ -23,7 +24,7 @@ public class PaymentSelect extends AppCompatActivity {
     Button payment_select_after;
     Button payment_select_before;
 
-    String TAG = "paymentSelect_TAG";
+    String TAG = "paymentSelectTAG";
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -60,17 +61,21 @@ public class PaymentSelect extends AppCompatActivity {
 
 
         payment_select_after.setOnClickListener(view ->{
-            startActivityString("after");
+            startActivityString("after", 0);
         });
 
         payment_select_before.setOnClickListener(view ->{
-            startActivityString("before");
+            int identifier = hashCode();
+            Log.d(TAG, "identifier: " + identifier);
+
+            startActivityString("before", identifier);
         });
     }
 
-    public void startActivityString(String paymentStyle){
+    public void startActivityString(String paymentStyle, int identifier){
         Intent intent = new Intent(PaymentSelect.this, Menu.class);
         myData.setPaymentStyle(paymentStyle);
+        myData.setIdentifier(identifier);
         intent.putExtra("myData", myData);
         startActivity(intent);
         overridePendingTransition(0, 0);

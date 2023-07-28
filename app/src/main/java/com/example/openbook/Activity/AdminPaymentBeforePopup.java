@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.TextView;
@@ -21,7 +22,10 @@ import java.util.ArrayList;
 
 public class AdminPaymentBeforePopup extends Activity {
 
+    String TAG = "AdminPaymentBeforePopupTAG";
+
     String tableStatement, tableName;
+    int tableIdentifier;
 
     ArrayList<OrderList> orderLists;
     AdminPopUpAdapter adminPopUpAdapter;
@@ -65,6 +69,9 @@ public class AdminPaymentBeforePopup extends Activity {
 
         tableStatement = getIntent().getStringExtra("tableStatement");
 //        Log.d(TAG, "tableStatement: " + tableStatement);
+
+        tableIdentifier = getIntent().getIntExtra("tableIdentifier", 0);
+        Log.d(TAG, "tableIdentifier: " + tableIdentifier);
     }
 
     @Override
@@ -90,6 +97,7 @@ public class AdminPaymentBeforePopup extends Activity {
             Intent intent = new Intent(AdminPaymentBeforePopup.this, Admin.class);
             intent.putExtra("tableStatement", tableStatement);
             intent.putExtra("tableName", tableName);
+            intent.putExtra("tableIdentifier", tableIdentifier);
 
             startActivity(intent);
             overridePendingTransition(0, 0);
@@ -102,6 +110,7 @@ public class AdminPaymentBeforePopup extends Activity {
                 Intent intent = new Intent(AdminPaymentBeforePopup.this, Admin.class);
                 intent.putExtra("tableStatement", tableStatement);
                 intent.putExtra("tableName", tableName);
+                intent.putExtra("tableIdentifier", tableIdentifier);
 
                 startActivity(intent);
             }
