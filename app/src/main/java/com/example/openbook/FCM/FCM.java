@@ -19,6 +19,8 @@ import com.example.openbook.Activity.PopUpChatting;
 
 import com.example.openbook.Chatting.DBHelper;
 import com.example.openbook.Data.MyData;
+import com.example.openbook.DialogCustom;
+import com.example.openbook.MyApplication;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DatabaseReference;
@@ -51,6 +53,8 @@ public class FCM extends FirebaseMessagingService {
     int requestCode;
     Handler mHandler = new Handler(Looper.getMainLooper());
 
+    OkHttpClient okHttpClient;
+
 
     @Override
     protected Intent getStartCommandIntent(Intent originalIntent) {
@@ -82,6 +86,30 @@ public class FCM extends FirebaseMessagingService {
         Log.d(TAG, "saveToken: " + token);
 
         conditionRef.setValue(userData);
+
+        okHttpClient = new OkHttpClient();
+
+        RequestBody formBody = new FormBody.Builder().
+                add("id", id).
+                add("token", token).
+                build();
+
+        Request httpRequest = new Request.Builder()
+                .url("http://3.36.255.141/RegisterToken.php")
+                .post(formBody)
+                .build();
+
+        okHttpClient.newCall(httpRequest).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                Log.d(TAG, "token onFailure: " + e);
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                Log.d(TAG, "onResponse: " + response.body().string());
+            }
+        });
     }
 
 
@@ -117,6 +145,7 @@ public class FCM extends FirebaseMessagingService {
             // admin page table 정보 업데이트 처리 메소드 호출
             handleAdminTableInformation(gender, guestNumber, tableName);
         } else if (data.containsKey("tableStatement")) {
+
             String tableStatement = data.get("tableStatement");
             String tableNumber = data.get("tableNumber");
             int identifier = Integer.parseInt(data.get("tableIdentifier"));
@@ -124,22 +153,52 @@ public class FCM extends FirebaseMessagingService {
 
             // admin page 선불좌석 표시 처리 메소드 호출
             handleAdminPaymentBefore(tableStatement, tableNumber, identifier);
-        } else if (data.containsKey("menuName")) {
+        } else if (data.containsKey("menuName") && !data.containsKey("state")) {
+            Log.d(TAG, "handleDataMessage menuName: ");
+
             String tableName = data.get("tableName");
             String menuName = data.get("menuName");
             String item = data.get("item");
 
+            int identifier;
+            if(data.get("identifier") == null){
+                identifier = 0;
+            }else{
+                identifier = Integer.parseInt(data.get("identifier"));
+            }
+
             // admin page 메뉴 표시 처리 메소드 호출
-            handleAdminTableMenu(tableName, menuName, item);
+            handleAdminTableMenu(tableName, menuName, item, identifier);
         } else if (data.containsKey("action")) {
+
             String tableName = data.get("tableName");
 
             saveChattingData(tableName);
+
+        } else if(data.get("state").equals("gift") && data.containsKey("menuName")){
+            Log.d(TAG, "handleDataMessage state: ");
+            String tableName = data.get("tableName");
+            String menu = data.get("menuName");
+
+            handleGiftOtherTable(tableName, menu);
+
+
+            //admin에게도 보내야함
+
         }
     }
 
+    public void handleGiftOtherTable(String tableName, String menuName){
+        Intent intent = new Intent("giftArrived");
+        intent.putExtra("tableName", tableName);
+        intent.putExtra("menuName", menuName);
+        LocalBroadcastManager.getInstance(FCM.this).sendBroadcast(intent);
 
-    public void handleAdminTableMenu(String tableName, String menuSummary, String item) {
+    }
+
+
+
+    public void handleAdminTableMenu(String tableName, String menuSummary, String item, int identifier) {
         int totalPrice = 0;
 
         try {
@@ -161,6 +220,7 @@ public class FCM extends FirebaseMessagingService {
         intent.putExtra("totalPrice", totalPrice);
         intent.putExtra("totalMenuList", item);
         intent.putExtra("tableName", tableName);
+        intent.putExtra("identifier", identifier);
 
         requestCode = (int) System.currentTimeMillis();
 

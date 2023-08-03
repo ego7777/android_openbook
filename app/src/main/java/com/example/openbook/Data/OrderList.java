@@ -6,11 +6,20 @@ import java.io.Serializable;
 public class OrderList {
 
     String tableName, menu;
-    int quantity, price;
+    int quantity, price, identifier;
 
     String statement;
 
     int viewType; // 0->in/out, 1->menu
+
+//    public OrderList(int viewType, String tableName, String menu, int quantity, int price, int identifier){
+//        this.viewType = viewType;
+//        this.tableName = tableName;
+//        this.menu = menu;
+//        this.quantity = quantity;
+//        this.price = price;
+//        this.identifier = identifier;
+//    }
 
     public OrderList(int viewType, String tableName, String menu, int quantity, int price){
         this.viewType = viewType;

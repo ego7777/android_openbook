@@ -57,7 +57,7 @@
 
 
             <TextView
-                android:id="@+id/send_somthing"
+                android:id="@+id/send_gift"
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
                 android:text="선물하기"

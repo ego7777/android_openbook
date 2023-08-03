@@ -11,6 +11,7 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
+import com.example.openbook.Data.MenuList;
 import com.example.openbook.Data.OrderList;
 
 import org.json.JSONArray;
@@ -61,7 +62,8 @@ public class DBHelper extends SQLiteOpenHelper {
                 "tableName VARCHAR(20) not null," +
                 "menuName VARCHAR(20) not null," +
                 "menuQuantity INT not null, " +
-                "menuPrice INT not null)";
+                "menuPrice INT not null, "+
+                "identifier INT not null)";
 
         db.execSQL(queryAdmin);
 
@@ -97,13 +99,14 @@ public class DBHelper extends SQLiteOpenHelper {
         return true;
     }
 
-    public boolean insertMenuData(String menuName, int menuPrice, String menuImage, int menuType) {
+    public boolean insertMenuData(String menuName, int menuPrice, String menuImage, int menuType, int identifier) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put("menuName", menuName);
         contentValues.put("menuPrice", menuPrice);
         contentValues.put("menuImage", menuImage);
         contentValues.put("menuType", menuType);
+        contentValues.put("identifier", identifier);
 
         long result = db.insert("menuListTable", null, contentValues);
         if (result == -1) {
@@ -112,13 +115,14 @@ public class DBHelper extends SQLiteOpenHelper {
         return true;
     }
 
-    public boolean insertAdminData(String tableName, String menuName, int menuQuantity, int menuPrice) {
+    public boolean insertAdminData(String tableName, String menuName, int menuQuantity, int menuPrice, int identifier) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put("tableName", tableName);
         contentValues.put("menuName", menuName);
         contentValues.put("menuQuantity", menuQuantity);
         contentValues.put("menuPrice", menuPrice);
+        contentValues.put("identifier", identifier);
 
 
         long result = db.insert("adminTableList", null, contentValues);
@@ -128,7 +132,7 @@ public class DBHelper extends SQLiteOpenHelper {
         return true;
     }
 
-    public void addMenu(String tableNumber, String menu, int quantity, int price) {
+    public void addMenu(String tableNumber, String menu, int quantity, int price, int identifier) {
         SQLiteDatabase db = this.getWritableDatabase();
 
         String checkMenu = "SELECT * FROM adminTableList " +
@@ -150,7 +154,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
         }else{
             // 메뉴 이름이 존재하지 않는 경우
-            insertAdminData(tableNumber, menu, quantity, price);
+            insertAdminData(tableNumber, menu, quantity, price, identifier);
         }
 
     }
@@ -167,6 +171,7 @@ public class DBHelper extends SQLiteOpenHelper {
             String menuName = cursor.getString(2);
             int menuQuantity = cursor.getInt(3);
             int menuPrice = cursor.getInt(4);
+            int identifier = cursor.getInt(5);
 
             list.add(new OrderList(1, tableNumber, menuName, menuQuantity, menuPrice));
 
@@ -174,6 +179,35 @@ public class DBHelper extends SQLiteOpenHelper {
 
         return list;
 
+    }
+
+    public ArrayList getTableData(ArrayList list){
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        // SQL 쿼리 실행하여 원하는 데이터 가져오기
+        String[] columns = {"menuName", "menuPrice", "menuImage", "menuType"};
+        String[] menuNames = {"소주", "병맥주", "초코에몽", "Idh"};
+        String selection = "menuName IN (?, ?, ?, ?)";
+        Cursor cursor = db.query("menuListTable", columns, selection, menuNames, null, null, null);
+
+        // 가져온 데이터 처리
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+
+                String name = cursor.getString(0);
+                Log.d(TAG, "getTableData name : " + name);
+                int price = cursor.getInt(1);
+                Log.d(TAG, "getTableData price : " + price);
+                String image = cursor.getString(2);
+                Log.d(TAG, "getTableData image: " + image);
+                int type = cursor.getInt(3);
+                Log.d(TAG, "getTableData type: " + type);
+                list.add(new MenuList(image, name, price, type, 1));
+            }
+            cursor.close();
+        }
+
+            return list;
     }
 
     public String chattingJson(String tableValue){
@@ -232,6 +266,8 @@ public class DBHelper extends SQLiteOpenHelper {
         db.execSQL(deleteQuery);
         db.close();
     }
+
+
 
 
 

@@ -49,7 +49,6 @@ public class ClientSocket extends Thread implements Serializable{
 
     final int connection_timeout = 999999;
     BufferedWriter networkWrite;
-
     String get_id;
 
     public Socket socket;
@@ -57,13 +56,8 @@ public class ClientSocket extends Thread implements Serializable{
 
 
     Context context;
-
-
-
     private SharedPreferences sharedPreferences;
     private SharedPreferences.Editor editor;
-
-
 
 
     public ClientSocket(String get_id, Context context) {

@@ -46,7 +46,6 @@ public class KakaoPay extends AppCompatActivity {
     int menuPrice;
     String jsonOrderList;
 
-
     String tempUrl = null;
 
     MyData myData;
@@ -58,8 +57,9 @@ public class KakaoPay extends AppCompatActivity {
         setContentView(R.layout.kakaopay_activity);
 
         myData = (MyData) getIntent().getSerializableExtra("myData");
-        Log.d(TAG, "myData id: " + myData.getId());
-//        Log.d(TAG, "myData paymentStyle: " + myData.getPaymentStyle());
+        if(myData != null){
+            Log.d(TAG, "myData id: " + myData.getId());
+        }
 
         get_id = getIntent().getStringExtra("get_id");
         Log.d(TAG, "get_id: " + get_id);

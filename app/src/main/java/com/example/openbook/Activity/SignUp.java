@@ -161,9 +161,15 @@ public class SignUp extends AppCompatActivity {
         });
 
 
-        pwConfirmEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+
+        pwConfirmEditText.addTextChangedListener(new TextWatcher() {
             @Override
-            public void onFocusChange(View view, boolean b) {
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
                 if (!pwEditText.getText().toString().equals(pwConfirmEditText.getText().toString())) {
                     passwordWarning.setText("비밀번호가 일치하지 않습니다.");
                     passwordWarning.setTextColor(Color.RED);
@@ -171,6 +177,11 @@ public class SignUp extends AppCompatActivity {
                     passwordWarning.setText("");
                     passwordWarning.setTextColor(Color.BLACK);
                 }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
             }
         });
 
@@ -273,18 +284,17 @@ public class SignUp extends AppCompatActivity {
                                     try {
                                         if (!response.isSuccessful()) {
                                             Log.d(TAG, "응답실패");
-                                            Toast.makeText(getApplicationContext(), "네트워크 문제 발생", Toast.LENGTH_SHORT).show();
+                                            Toast.makeText(SignUp.this, "네트워크 문제 발생", Toast.LENGTH_SHORT).show();
 
                                         } else {
                                             Log.d(TAG, "응답 성공");
                                             final String responseData = response.body().string();
                                             if (responseData.equals("성공")) {
-                                                Toast.makeText(getApplicationContext(), "회원가입에 성공했습니다.", Toast.LENGTH_LONG).show();
+                                                Toast.makeText(SignUp.this, "회원가입에 성공했습니다.", Toast.LENGTH_LONG).show();
                                                 startActivityflag(Login.class);
-                                                Log.d(TAG, "Login.class");
                                             } else {
                                                 Log.d(TAG, "회원가입에 실패 했습니다." + responseData);
-                                                Toast.makeText(getApplicationContext(), "회원가입에 실패했습니다.", Toast.LENGTH_LONG).show();
+                                                Toast.makeText(SignUp.this, "회원가입에 실패했습니다.", Toast.LENGTH_LONG).show();
                                             }
                                         }
 
@@ -304,8 +314,8 @@ public class SignUp extends AppCompatActivity {
     // 인텐트 화면전환
     // FLAG_ACTIVITY_CLEAR_TOP = 불러올 액티비티 위에 쌓인 액티비티 지운다.
     public void startActivityflag(Class c) {
-        Intent intent = new Intent(getApplicationContext(), c);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        Intent intent = new Intent(SignUp.this, c);
+//        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(intent);
         // 화면전환 애니메이션 없애기
         overridePendingTransition(0, 0);

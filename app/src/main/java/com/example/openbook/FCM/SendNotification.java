@@ -114,12 +114,12 @@ public class SendNotification {
                     okHttpClient.newCall(httpRequest).enqueue(new Callback() {
                         @Override
                         public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                            Log.d(TAG, "onFailure: " + e);
+                            Log.d(TAG, "chatting onFailure: " + e);
                         }
 
                         @Override
                         public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                            Log.d(TAG, "body: " + response.body().string());
+                            Log.d(TAG, "chatting body: " + response.body().string());
                         }
                     });
 
@@ -160,12 +160,12 @@ public class SendNotification {
                 okHttpClient.newCall(httpRequest).enqueue(new Callback() {
                     @Override
                     public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                        Log.d(TAG, "onFailure: " + e);
+                        Log.d(TAG, "menu onFailure: " + e);
                     }
 
                     @Override
                     public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                        Log.d(TAG, "body: " + response.body().string());
+                        Log.d(TAG, "menu body: " + response.body().string());
                     }
                 });
             }

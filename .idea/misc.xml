@@ -82,7 +82,11 @@
         <entry key="app/src/main/res/layout/order_complete.xml" value="0.1" />
         <entry key="app/src/main/res/layout/payment_select.xml" value="0.14621633176571183" />
         <entry key="app/src/main/res/layout/payment_select_activity.xml" value="0.13349514563106796" />
-        <entry key="app/src/main/res/layout/popup.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/popup.xml" value="0.335" />
+        <entry key="app/src/main/res/layout/send_gift.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/send_gift_dialog.xml" value="0.375" />
+        <entry key="app/src/main/res/layout/send_gift_quantity_dialog.xml" value="0.25" />
+        <entry key="app/src/main/res/layout/send_gift_select_dialog.xml" value="0.3529714965820313" />
         <entry key="app/src/main/res/layout/send_heart.xml" value="0.2302810516772439" />
         <entry key="app/src/main/res/layout/send_heart_dlg.xml" value="0.1" />
         <entry key="app/src/main/res/layout/side_listview_item.xml" value="0.1" />
@@ -90,6 +94,7 @@
         <entry key="app/src/main/res/layout/signup_activity.xml" value="0.3359375" />
         <entry key="app/src/main/res/layout/signup_test.xml" value="0.25" />
         <entry key="app/src/main/res/layout/table.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/table_activity.xml" value="0.28284671532846717" />
         <entry key="app/src/main/res/layout/table_gridview.xml" value="0.1" />
         <entry key="app/src/main/res/layout/table_gridview_item.xml" value="0.1" />
         <entry key="app/src/main/res/layout/table_infomation.xml" value="0.1" />

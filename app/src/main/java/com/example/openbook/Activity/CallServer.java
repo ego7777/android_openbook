@@ -42,6 +42,8 @@ public class CallServer extends AppCompatActivity {
     HashMap<String, TicketData> ticketDataHashMap;
     ArrayList<TableList> tableLists;
 
+    SendToPopUp sendToPopUp = new SendToPopUp();
+
     //액티비티가 onCreate 되면 자동으로 받는거고
     BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -49,9 +51,14 @@ public class CallServer extends AppCompatActivity {
             if (intent.getAction().equals("chattingRequestArrived")) {
                 String fcmData = intent.getStringExtra("fcmData");
 
-                SendToPopUpChatting sendToPopUpChatting = new SendToPopUpChatting();
-                sendToPopUpChatting.sendToPopUpChatting(CallServer.this, myData,
+                sendToPopUp.sendToPopUpChatting(CallServer.this, myData,
                         chattingDataHashMap, ticketDataHashMap, tableLists, fcmData);
+            }else if(intent.getAction().equals("giftArrived")){
+                String from = intent.getStringExtra("tableName");
+                String menuName = intent.getStringExtra("menuName");
+
+                sendToPopUp.sendToPopUpGift(CallServer.this, myData,
+                        chattingDataHashMap, ticketDataHashMap, tableLists, from, menuName);
             }
         }
     };

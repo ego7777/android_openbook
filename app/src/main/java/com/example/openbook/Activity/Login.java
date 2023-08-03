@@ -166,9 +166,9 @@ public class Login extends AppCompatActivity {
 
             @Override
             public void onClick(View view) {
-//                Intent intent = new Intent(Login.this, SignupTest.class);
                 Intent intent = new Intent(Login.this, SignUp.class);
                 startActivity(intent);
+                overridePendingTransition(0, 0);
             }
         });
 
@@ -357,17 +357,8 @@ public class Login extends AppCompatActivity {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-
-
             }
-
             Log.d(TAG, "onStart Table Size: " + adminTableList.size());
-
-
         }
-
-
-
-
     }
 }

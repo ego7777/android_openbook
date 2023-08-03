@@ -160,14 +160,11 @@
 
         <TextView
             android:id="@+id/pw_ck"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="@color/red"
-
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/linear4"
-            app:layout_constraintBottom_toTopOf="@id/linear5"/>
+            android:gravity="center"
+            android:layout_marginEnd="25dp"/>
 
         <LinearLayout
             android:id="@+id/linear5"

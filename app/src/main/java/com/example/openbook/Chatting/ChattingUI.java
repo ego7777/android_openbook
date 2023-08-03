@@ -27,7 +27,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.openbook.Activity.SendToPopUpChatting;
+import com.example.openbook.Activity.SendToPopUp;
 import com.example.openbook.Activity.Table;
 import com.example.openbook.Adapter.ChattingAdapter;
 import com.example.openbook.Activity.Menu;
@@ -81,6 +81,7 @@ public class ChattingUI extends AppCompatActivity {
     HashMap<String, ChattingData> chattingDataHashMap;
     HashMap<String, TicketData> ticketDataHashMap;
 
+    SendToPopUp sendToPopUp = new SendToPopUp();
 
     BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -98,10 +99,15 @@ public class ChattingUI extends AppCompatActivity {
 
             }else if (intent.getAction().equals("chattingRequestArrived")) {
                 String fcmData = intent.getStringExtra("fcmData");
-
-                SendToPopUpChatting sendToPopUpChatting = new SendToPopUpChatting();
-                sendToPopUpChatting.sendToPopUpChatting(ChattingUI.this, myData,
+                sendToPopUp.sendToPopUpChatting(ChattingUI.this, myData,
                         chattingDataHashMap, ticketDataHashMap, tableList, fcmData);
+
+            }else if(intent.getAction().equals("giftArrived")){
+                String from = intent.getStringExtra("tableName");
+                String menuName = intent.getStringExtra("menuName");
+
+                sendToPopUp.sendToPopUpGift(ChattingUI.this, myData,
+                        chattingDataHashMap, ticketDataHashMap, tableList, from, menuName);
             }
 
         }
@@ -110,10 +116,12 @@ public class ChattingUI extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction("chattingDataArrived");
         intentFilter.addAction("isReadArrived");
         intentFilter.addAction("chattingRequestArrived");
+        intentFilter.addAction("giftArrived");
         LocalBroadcastManager.getInstance(ChattingUI.this).registerReceiver(broadcastReceiver, intentFilter);
 
 
@@ -159,6 +167,8 @@ public class ChattingUI extends AppCompatActivity {
 
         dbHelper = new DBHelper(ChattingUI.this, version);
         sqLiteDatabase = dbHelper.getWritableDatabase();
+
+
 
 
         /**
@@ -297,7 +307,7 @@ public class ChattingUI extends AppCompatActivity {
                         m = "에러 발생!";
                         break;
                 }
-//                Log.d(TAG, "handlerMessage : " + m);
+                Log.d(TAG, "handlerMessage : " + m);
 
             }
         };
@@ -306,8 +316,8 @@ public class ChattingUI extends AppCompatActivity {
         /**
          * 채팅방 나가면
          */
-        TextView chat_back = findViewById(R.id.chatting_back);
-        chat_back.setOnClickListener(view -> {
+        TextView chattingBack = findViewById(R.id.chatting_back);
+        chattingBack.setOnClickListener(view -> {
             moveActivity(Table.class);
         });
 
@@ -441,7 +451,6 @@ public class ChattingUI extends AppCompatActivity {
                 /**
                  * sendMsg[0] : isRead
                  * sendMsg[1] : 보낸 테이블 번호 (get_id)
-                 * sendMsg[2] : 나의 테이블 (table + tableNum)
                  */
 
                 Log.d(TAG, "isReadUpdate: ");

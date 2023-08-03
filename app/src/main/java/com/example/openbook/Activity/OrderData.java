@@ -70,6 +70,7 @@ public class OrderData {
                 int menuPrice = jsonObject.getInt("price");
                 int menuQuantity = jsonObject.getInt("quantity");
                 int totalPrice = jsonObject.getInt("totalPrice");
+//                int identifier = jsonObject.getInt("identifier");
 
                 list.add(new OrderList(1,tableName, menuName, menuPrice, menuQuantity));
 

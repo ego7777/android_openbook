@@ -90,9 +90,11 @@ public class Admin extends AppCompatActivity {
         Log.d(TAG, "orderList: " + afterPaymentList);
 
         get_id = getIntent().getStringExtra("get_id");
+        Log.d(TAG, "get_id intent: " + get_id);
 
         if (get_id == null) {
             get_id = "admin";
+            Log.d(TAG, "get_id: " + get_id);
         }
 
 

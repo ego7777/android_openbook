@@ -45,8 +45,6 @@ public class PopUpChatting extends Activity {
 
     TextView popup_title, popup_body;
 
-    JSONObject jsonObject;
-
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -85,14 +83,12 @@ public class PopUpChatting extends Activity {
             ticketDataHashMap = new HashMap<>();
         }
 
-
     }
 
 
     @Override
     protected void onResume() {
         super.onResume();
-
 
         Button popup_yes = findViewById(R.id.popup_button_yes);
         Button popup_no = findViewById(R.id.popup_button_no);

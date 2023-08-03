@@ -114,6 +114,7 @@ public class Menu extends AppCompatActivity {
     MyData myData;
     HashMap<String, ChattingData> chattingDataHashMap;
     HashMap<String, TicketData> ticketDataHashMap;
+    SendToPopUp sendToPopUp = new SendToPopUp();
 
     //액티비티가 onCreate 되면 자동으로 받는거고
     BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
@@ -122,9 +123,15 @@ public class Menu extends AppCompatActivity {
             if (intent.getAction().equals("chattingRequestArrived")) {
                 String fcmData = intent.getStringExtra("fcmData");
 
-                SendToPopUpChatting sendToPopUpChatting = new SendToPopUpChatting();
-                sendToPopUpChatting.sendToPopUpChatting(Menu.this, myData,
+                sendToPopUp.sendToPopUpChatting(Menu.this, myData,
                         chattingDataHashMap, ticketDataHashMap, tableList, fcmData);
+            }else if(intent.getAction().equals("giftArrived")){
+                String from = intent.getStringExtra("tableName");
+                String menuName = intent.getStringExtra("menuName");
+
+                sendToPopUp.sendToPopUpGift(Menu.this, myData,
+                        chattingDataHashMap, ticketDataHashMap, tableList, from, menuName);
+
             }
         }
     };
@@ -141,7 +148,9 @@ public class Menu extends AppCompatActivity {
 
 
         // 로컬 브로드캐스트 리시버 등록
-        IntentFilter intentFilter = new IntentFilter("chattingRequestArrived");
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction("chattingRequestArrived");
+        intentFilter.addAction("giftArrived");
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, intentFilter);
 
         myData = (MyData) getIntent().getSerializableExtra("myData");
@@ -605,7 +614,7 @@ public class Menu extends AppCompatActivity {
                         Intent intent = new Intent(Menu.this, KakaoPay.class);
                         intent.putExtra("menuName", getOrderMenuName(cartLists));
                         intent.putExtra("menuPrice", totalPrice);
-                        intent.putExtra("jsonOrderList", getJson(myData.getId(), cartLists));
+                        intent.putExtra("jsonOrderList", getJson(myData.getId(), cartLists, myData.getIdentifier()));
                         intent.putExtra("myData", myData);
                         startActivity(intent);
 
@@ -688,6 +697,8 @@ public class Menu extends AppCompatActivity {
             jsonObject.put("item", menujArray);
             jsonObject.put("menuName", getOrderMenuName(cartLists));
             jsonObject.put("tableName", myData.getId());
+            jsonObject.put("identifier", 0);
+
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -776,7 +787,7 @@ public class Menu extends AppCompatActivity {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    public String getJson(String get_id, ArrayList<CartList> list) {
+    public String getJson(String get_id, ArrayList<CartList> list, int identifier) {
         JSONObject obj = new JSONObject();
         try {
             menujArray = new JSONArray();//배열이 필요할때
@@ -790,6 +801,7 @@ public class Menu extends AppCompatActivity {
             }
             obj.put("table", get_id);
             obj.put("item", menujArray);//배열을 넣음
+            obj.put("identifier", identifier);
 
             Log.d(TAG, "getJson: " + obj.toString());
 
@@ -819,7 +831,7 @@ public class Menu extends AppCompatActivity {
                 dbHelper.insertMenuData(jsonObject.getString("menu"),
                         jsonObject.getInt("price"),
                         url,
-                        jsonObject.getInt("type"));
+                        jsonObject.getInt("type"), 0);
             }
 
         } catch (JSONException e) {

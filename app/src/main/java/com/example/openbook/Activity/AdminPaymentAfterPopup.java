@@ -36,11 +36,13 @@ public class AdminPaymentAfterPopup extends Activity {
 
     String TAG = "AdminPopUp_TAG";
 
-    String tableName;
+    String tableName, menuName;
 
     String newMenuSummary, oldMenuSummary, totalMenuList;
 
-    int oldTotalPrice, newTotalPrice, tableNumber;
+    int menuPrice, menuQuantity; //SendGiftAdmin 으로 받아오는 data
+
+    int oldTotalPrice, newTotalPrice, tableNumber, identifier;
 
     ArrayList<OrderList> orderLists;
     AdminPopUpAdapter adminPopUpAdapter;
@@ -97,9 +99,14 @@ public class AdminPaymentAfterPopup extends Activity {
     protected void onStart() {
         super.onStart();
 
+        identifier = getIntent().getIntExtra("identifier", 0);
+        Log.d(TAG, "identifier intent : " + identifier);
 
         tableName = getIntent().getStringExtra("tableName");
         Log.d(TAG, "tableName: " + tableName);
+
+        menuName = getIntent().getStringExtra("menuName");
+        Log.d(TAG, "onStart menuName: " + menuName);
 
         tableNumber = Integer.parseInt(tableName.replace("table", ""));
 //        Log.d(TAG, "tableNumber: " + tableNumber);
@@ -129,6 +136,23 @@ public class AdminPaymentAfterPopup extends Activity {
         //menuName : ex) 목살스테이크 외 2
         newTotalPrice = getIntent().getIntExtra("totalPrice", 0);
         Log.d(TAG, "newTotalPrice Intent: " + newTotalPrice);
+
+        menuPrice = getIntent().getIntExtra("menuPrice", 0);
+        Log.d(TAG, "menuPrice intent: " + menuPrice);
+
+        menuQuantity = getIntent().getIntExtra("menuQuantity", 0);
+        Log.d(TAG, "menuQuantity intent: " + menuQuantity);
+
+//        if(menuQuantity != 0){
+//            if (oldMenuSummary != null){
+//                newMenuSummary = summarizeMenu(oldMenuSummary, menuQuantity);
+//                newTotalPrice = oldTotalPrice + menuPrice;
+//            }
+//
+//            editor.putString(tableName + "menu", newMenuSummary);
+//            editor.putInt(tableName + "price", newTotalPrice);
+//            editor.commit();
+//        }
 
         if (newMenuSummary != null) {
 
@@ -177,11 +201,14 @@ public class AdminPaymentAfterPopup extends Activity {
                     int menuQuantity = jsonObject.getInt("quantity");
                     int menuPrice = jsonObject.getInt("price");
 
+//                    orderLists.add(new OrderList(1, tableName,
+//                            menuName, menuQuantity, menuPrice, identifier));
+
                     orderLists.add(new OrderList(1, tableName,
                             menuName, menuQuantity, menuPrice));
 
                     //기존에 있으면 개수만 증가, 아니면 추가
-                    dbHelper.addMenu(tableName, menuName, menuQuantity, menuPrice);
+                    dbHelper.addMenu(tableName, menuName, menuQuantity, menuPrice, 0);
 
                 }
 
@@ -284,6 +311,7 @@ public class AdminPaymentAfterPopup extends Activity {
     }
 
     public int getAdditionalCount(String newMenu) {
+
         if(newMenu.contains("외")){
             String getCountString = newMenu.substring(newMenu.length()-1);
             Log.d(TAG, "getCount: " + getCountString);
@@ -293,7 +321,8 @@ public class AdminPaymentAfterPopup extends Activity {
 
             return getCountInt;
 
-        }else{
+        }
+        else{
             int getCountInt = 1;
 
             return getCountInt;

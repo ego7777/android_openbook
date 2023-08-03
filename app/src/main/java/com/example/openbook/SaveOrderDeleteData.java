@@ -24,6 +24,8 @@ public class SaveOrderDeleteData {
 
     public boolean orderSave(String json) throws InterruptedException {
 
+        Log.d(TAG, "orderSave json: " + json);
+
         OkHttpClient okHttpClient = new OkHttpClient();
 
         RequestBody formBody = new FormBody.Builder()

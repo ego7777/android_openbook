@@ -25,9 +25,6 @@ import java.util.ArrayList;
 
 public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
     ArrayList<MenuList> menuItem;
-    ArrayList<MenuList> menuItem1;
-    ArrayList<MenuList> menuItem2;
-    ArrayList<MenuList> menuItem3;
 
     String TAG = "RecyclerViewAdapter";
     Bitmap bitmap = null;
@@ -140,12 +137,14 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
             if (viewType == TYPE_NO) {
                 onBindNo(item);
             } else if (viewType == TYPE_YES) {
+                Log.d(TAG, "onBindYES: ");
                 onBindYes(item);
             }
         }
 
         void onBindYes(MenuList items) throws MalformedURLException {
             URL url = new URL(items.getUrl());
+            Log.d(TAG, "onBindYes url : " + url);
 
             Thread bitmapThread = new Thread(){
                 @Override
@@ -166,7 +165,9 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
                 bitmapThread.join();
                 menu_image.setImageBitmap(bitmap);
                 menu_name.setText(items.getMenu_name());
+                Log.d(TAG, "onBindYes menuName: " + items.getMenu_name());
                 menu_price.setText(String.valueOf(items.getMenu_price()));
+                Log.d(TAG, "onBindYes menuPrice: " + items.getMenu_price());
 
             }catch (Exception e){
                 e.printStackTrace();
@@ -188,6 +189,7 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
     // view type
     private int TYPE_NO = 101;
     private int TYPE_YES = 102;
+
 
 
     private int getViewSrc(int viewType) {
