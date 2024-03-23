@@ -21,7 +21,6 @@ import com.example.openbook.FCM.SendNotification;
 import com.example.openbook.R;
 import com.example.openbook.Data.TicketData;
 import com.example.openbook.Data.TableList;
-import com.example.openbook.TableQuantity;
 
 import org.json.JSONException;
 import org.json.JSONObject;

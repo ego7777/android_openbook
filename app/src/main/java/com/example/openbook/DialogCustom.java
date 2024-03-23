@@ -31,7 +31,6 @@ public class DialogCustom {
                 })
                 .setIcon(R.drawable.warning);
 
-
         AlertDialog alertDialog = builder.create();
         alertDialog.show();
     }

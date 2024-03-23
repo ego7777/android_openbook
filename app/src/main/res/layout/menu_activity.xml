@@ -1,147 +1,134 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:orientation="vertical"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/black">
+    android:background="@color/black"
+    android:orientation="vertical">
+
+    <!--    <LinearLayout-->
+    <!--        android:layout_width="match_parent"-->
+    <!--        android:layout_height="match_parent"-->
+    <!--        android:orientation="vertical"-->
+
+    <!--        app:layout_constraintBottom_toBottomOf="parent"-->
+    <!--        app:layout_constraintEnd_toEndOf="parent"-->
+    <!--        app:layout_constraintStart_toStartOf="parent"-->
+    <!--        app:layout_constraintTop_toTopOf="parent">-->
+
+    <include
+        layout="@layout/appbar_menu"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
+        android:orientation="horizontal">
 
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
 
-        <include
-            layout="@layout/appbar_menu"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+        <ListView
+            android:id="@+id/menu_navigation"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="start"
+            android:layout_weight="1" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/menu_recyclerview"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_weight="6"
+            android:nestedScrollingEnabled="false"
+            android:overScrollMode="never" />
+
 
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:orientation="horizontal">
+            android:layout_marginTop="30dp"
 
+            android:layout_weight="3"
+            android:backgroundTint="@color/zxing_transparent"
+            android:orientation="vertical">
 
-            <ListView
-                android:id="@+id/menu_navigation"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_gravity="start"
-                android:layout_weight="1"/>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/light_green"
+                android:gravity="center"
+                android:padding="10dp"
+                android:text="CART"
+                android:textColor="@color/black"
+                android:textSize="20sp"
+                android:textStyle="bold" />
 
             <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/menu_recyclerview"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:nestedScrollingEnabled="false"
-                android:overScrollMode="never"
-                android:layout_weight="6"/>
+                android:id="@+id/menu_cart_recyclerview"
+                android:layout_width="match_parent"
+                android:layout_height="250dp"
+                android:layout_gravity="end"
+                android:background="@color/white" />
 
 
-
-
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/dark_gray" />
 
 
             <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_marginTop="30dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                android:background="@color/white"
+                android:orientation="horizontal"
+                android:paddingTop="5dp"
+                android:paddingBottom="5dp">
 
-                android:orientation="vertical"
-                android:layout_weight="3"
-                android:backgroundTint="@color/zxing_transparent">
 
                 <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:padding="10dp"
-                    android:background="@color/light_green"
+                    android:id="@+id/cart_order_total_price"
+                    android:layout_width="0dp"
+                    android:layout_height="60dp"
+                    android:layout_marginStart="20dp"
+                    android:layout_weight="7"
+                    android:autoSizeMaxTextSize="20sp"
+                    android:autoSizeTextType="uniform"
                     android:gravity="center"
-                    android:text="CART"
                     android:textColor="@color/black"
-                    android:textSize="20sp"
                     android:textStyle="bold" />
 
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/menu_cart_recyclerview"
-                    android:layout_width="match_parent"
-                    android:layout_height="250dp"
-                    android:layout_gravity="end"
-                    android:background="@color/white"/>
-
-
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="@color/dark_gray"/>
-
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="20dp"
-                    android:paddingTop="5dp"
-                    android:paddingBottom="5dp"
-                    android:orientation="horizontal"
-                    android:background="@color/white">
-
-
-                    <TextView
-                        android:id="@+id/cart_order_total_price"
-                        android:layout_width="0dp"
-                        android:layout_height="60dp"
-                        android:layout_marginStart="20dp"
-                        android:gravity="center"
-                        android:textColor="@color/black"
-                        android:autoSizeTextType="uniform"
-                        android:autoSizeMaxTextSize="20sp"
-                        android:textStyle="bold"
-                        android:layout_weight="7"/>
-
-
-                    <androidx.appcompat.widget.AppCompatButton
-                        android:id="@+id/cart_order_button"
-                        android:layout_width="0dp"
-                        android:layout_height="40dp"
-                        android:layout_marginEnd="30dp"
-                        android:background="@drawable/radius_10dp_lime"
-                        android:backgroundTint="@color/blue_purple"
-                        android:gravity="center"
-                        android:text="주문하기"
-                        android:textStyle="bold"
-                        android:textColor="@color/black"
-                        android:autoSizeTextType="uniform"
-                        android:autoSizeMaxTextSize="20sp"
-                        android:layout_weight="3"/>
-
-
-                </LinearLayout>
 
                 <androidx.appcompat.widget.AppCompatButton
-                    android:id="@+id/menu_close"
-                    android:layout_width="300dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:text="종료하기"
-                    android:textStyle="bold"
-                    android:textColor="@color/white"
-                    android:textSize="30sp"
-                    android:background="@drawable/radius_10dp_white"
-                    android:backgroundTint="@color/purple_700"/>
+                    android:id="@+id/cart_order_button"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_marginEnd="30dp"
+                    android:layout_weight="3"
+                    android:autoSizeMaxTextSize="20sp"
+                    android:autoSizeTextType="uniform"
+                    android:background="@drawable/radius_10dp_lime"
+                    android:backgroundTint="@color/blue_purple"
+                    android:gravity="center"
+                    android:text="주문하기"
+                    android:textColor="@color/black"
+                    android:textStyle="bold" />
+
 
             </LinearLayout>
 
-
-
-
-
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/menu_close"
+                android:layout_width="300dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:background="@drawable/radius_10dp_white"
+                android:backgroundTint="@color/purple_700"
+                android:text="종료하기"
+                android:textColor="@color/white"
+                android:textSize="30sp"
+                android:textStyle="bold" />
 
         </LinearLayout>
 
@@ -149,5 +136,6 @@
     </LinearLayout>
 
 
+</LinearLayout>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+

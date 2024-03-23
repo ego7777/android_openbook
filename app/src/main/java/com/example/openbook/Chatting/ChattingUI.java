@@ -37,7 +37,6 @@ import com.example.openbook.Data.TableList;
 import com.example.openbook.R;
 import com.example.openbook.Data.TicketData;
 import com.example.openbook.Data.ChattingList;
-import com.example.openbook.TableQuantity;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

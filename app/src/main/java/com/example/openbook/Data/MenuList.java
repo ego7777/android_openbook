@@ -1,9 +1,5 @@
 package com.example.openbook.Data;
 
-import android.net.Uri;
-
-import java.net.URL;
-
 public class MenuList {
     String url;
     String menuName;

@@ -15,12 +15,9 @@ import com.example.openbook.Activity.Admin;
 import com.example.openbook.Activity.AdminPaymentBeforePopup;
 import com.example.openbook.Activity.AdminPaymentAfterPopup;
 import com.example.openbook.Activity.PaymentSelect;
-import com.example.openbook.Activity.PopUpChatting;
 
 import com.example.openbook.Chatting.DBHelper;
 import com.example.openbook.Data.MyData;
-import com.example.openbook.DialogCustom;
-import com.example.openbook.MyApplication;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DatabaseReference;

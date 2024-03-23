@@ -10,12 +10,8 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.openbook.Data.MyData;
-import com.example.openbook.Data.TableList;
 import com.example.openbook.R;
 import com.example.openbook.TableQuantity;
-
-import java.util.ArrayList;
-import java.util.Random;
 
 public class PaymentSelect extends AppCompatActivity {
 

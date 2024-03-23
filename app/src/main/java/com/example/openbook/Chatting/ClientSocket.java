@@ -6,24 +6,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.database.Cursor;
 import android.os.Build;
 
-import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-
-import com.example.openbook.Activity.Table;
-import com.example.openbook.Data.TableList;
-import com.example.openbook.R;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -37,8 +26,6 @@ import java.net.Socket;
 import java.net.SocketAddress;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
 
 
 @RequiresApi(api = Build.VERSION_CODES.O)

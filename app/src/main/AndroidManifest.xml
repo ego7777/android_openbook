@@ -10,7 +10,7 @@
 
 
     <application
-        android:name=".MyApplication"
+        android:name="com.example.openbook.MyApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -26,7 +26,7 @@
         android:largeHeap="true"
         android:vmSafeMode="true">
 
-        <service android:name=".FCM.FCM"
+        <service android:name="com.example.openbook.FCM.FCM"
             android:enabled="true"
             android:exported="false">
             <intent-filter>
@@ -35,7 +35,7 @@
         </service>
 
         <activity
-            android:name=".Activity.Intro"
+            android:name="com.example.openbook.startActivity.StartActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -44,12 +44,12 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".Activity.Login" />
-        <activity android:name=".Activity.SignUp"/>
-        <activity android:name=".Activity.PaymentSelect"/>
-        <activity android:name=".Activity.Menu" />
+<!--        <activity android:name=".startActivity.Login" />-->
+        <activity android:name="com.example.openbook.startActivity.SignUp"/>
+        <activity android:name="com.example.openbook.Activity.PaymentSelect"/>
+        <activity android:name="com.example.openbook.Activity.Menu" />
 
-        <activity android:name=".Activity.Table"
+        <activity android:name="com.example.openbook.Activity.Table"
             android:exported="true">
             <intent-filter>
                 <action android:name="tableInformationArrived"/>
@@ -57,9 +57,9 @@
         </activity>
 
 
-        <activity android:name=".Activity.CallServer" />
+        <activity android:name="com.example.openbook.Activity.CallServer" />
 
-        <activity android:name=".Chatting.ChattingUI"
+        <activity android:name="com.example.openbook.Chatting.ChattingUI"
             android:exported="true">
             <intent-filter>
                 <action android:name="chattingDataArrived"/>
@@ -72,31 +72,31 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".Activity.PopUpChatting"
+        <activity android:name="com.example.openbook.Activity.PopUpChatting"
             android:theme="@android:style/Theme.Dialog"/>
 
-        <activity android:name=".Activity.PopUpProfile"
+        <activity android:name="com.example.openbook.Activity.PopUpProfile"
             android:theme="@android:style/Theme.Dialog"/>
 
-        <activity android:name=".Activity.PopUpGift"
+        <activity android:name="com.example.openbook.Activity.PopUpGift"
             android:theme="@android:style/Theme.Dialog"/>
 
-        <activity android:name=".Activity.AdminModifyTableQuantity"
+        <activity android:name="com.example.openbook.Activity.AdminModifyTableQuantity"
             android:theme="@android:style/Theme.Dialog"/>
 
-        <activity android:name=".Activity.AdminModifyMenu"
+        <activity android:name="com.example.openbook.Activity.AdminModifyMenu"
             android:theme="@android:style/Theme.Dialog"/>
 
-        <activity android:name=".Activity.AdminPaymentAfterPopup"
+        <activity android:name="com.example.openbook.Activity.AdminPaymentAfterPopup"
             android:theme="@android:style/Theme.Dialog"/>
 
-        <activity android:name=".Activity.AdminPaymentBeforePopup"
+        <activity android:name="com.example.openbook.Activity.AdminPaymentBeforePopup"
             android:theme="@android:style/Theme.Dialog"/>
 
-        <activity android:name=".Activity.AdminSales"/>
+        <activity android:name="com.example.openbook.Activity.AdminSales"/>
 
-        <activity android:name=".Activity.Admin"/>
-        <activity android:name=".KakaoPay"/>
+        <activity android:name="com.example.openbook.Activity.Admin"/>
+        <activity android:name="com.example.openbook.KakaoPay"/>
 
 
     </application>

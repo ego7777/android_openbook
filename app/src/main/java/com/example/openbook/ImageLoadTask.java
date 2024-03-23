@@ -7,8 +7,6 @@ import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.ImageView;
 
-import com.example.openbook.Activity.Table;
-
 import java.net.URL;
 import java.util.HashMap;
 

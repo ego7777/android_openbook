@@ -1,8 +1,6 @@
 package com.example.openbook.Data;
 
 
-import java.io.Serializable;
-
 public class OrderList {
 
     String tableName, menu;

@@ -1,9 +1,5 @@
 package com.example.openbook.Data;
 
-import com.example.openbook.Activity.Admin;
-import com.example.openbook.Activity.AdminSales;
-
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public class AdminSalesList {

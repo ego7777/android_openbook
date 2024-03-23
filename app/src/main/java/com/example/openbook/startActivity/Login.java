@@ -1,10 +1,9 @@
-package com.example.openbook.Activity;
+package com.example.openbook.startActivity;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -13,6 +12,9 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.openbook.Activity.Admin;
+import com.example.openbook.Activity.PaymentSelect;
+import com.example.openbook.BuildConfig;
 import com.example.openbook.Data.AdminTableList;
 import com.example.openbook.Data.MyData;
 import com.example.openbook.DialogCustom;
@@ -28,7 +30,6 @@ import com.google.android.gms.tasks.Task;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.w3c.dom.Text;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -46,8 +47,6 @@ public class Login extends AppCompatActivity {
     GoogleSignInOptions gso;
     GoogleSignInClient gsc;
 
-    String server_client_id = "520510988286-vq6c4kmjph9iatf225qkkjkpj5g1gjgp.apps.googleusercontent.com";
-
     String personId;
     String personName;
 
@@ -61,11 +60,9 @@ public class Login extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.login_activity);
+        setContentView(R.layout.fragment_login);
 
         final OkHttpClient client = new OkHttpClient();
-
-
 
 
 
@@ -74,7 +71,7 @@ public class Login extends AppCompatActivity {
          * 아이디, 비밀번호 입력
          */
         EditText id = findViewById(R.id.login_editText_id);
-        EditText pw = findViewById(R.id.login_pw);
+        EditText pw = findViewById(R.id.login_editText_pw);
         Button login = findViewById(R.id.login_button);
 
         DialogCustom dialogCustom = new DialogCustom();
@@ -178,11 +175,13 @@ public class Login extends AppCompatActivity {
          */
 //         사용자 데이터를 요청을 위한 로그인 옵션 설정
 //         DEFAULT_SIGN_IN parameter: 유저 ID, 기본 프로필 정보 요청 시 사용
+
+        String server_client_id = BuildConfig.GOOGLE_API_KEY;
+
         gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail() // email addresses도 요청함
                 .requestIdToken(server_client_id)
                 .build();
-        Log.d(TAG, "gso");
 
 //         gso로 객체 생성
         gsc = GoogleSignIn.getClient(Login.this, gso);
@@ -208,12 +207,6 @@ public class Login extends AppCompatActivity {
     }
 
 
-//    private void signIn() {
-//        Intent signInIntent = gsc.getSignInIntent();
-//        Log.d(TAG, "signInIntent: ");
-//        startActivityForResult(signInIntent, 1000);
-//        Log.d(TAG, "signIn: ");
-//    }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -223,12 +216,7 @@ public class Login extends AppCompatActivity {
             Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
             Log.d(TAG, "task : " + task);
 
-//            try{
-//                task.getResult(ApiException.class);
-//                navigateToMain();
-//            }catch (ApiException e){
-//                Log.d(TAG, "onActivityResult: " + e);
-//            }
+
             handleSignInResult(task);
         }
     }

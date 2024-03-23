@@ -1,8 +1,7 @@
-package com.example.openbook.Activity;
+package com.example.openbook.startActivity;
 
 import android.content.Intent;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -41,7 +40,7 @@ public class SignUp extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.signup_activity);
+        setContentView(R.layout.fragment_signup);
 
         /**
          * 뒤로가기
@@ -62,10 +61,10 @@ public class SignUp extends AppCompatActivity {
         EditText phoneEditText = findViewById(R.id.signup_phone);
         EditText emailEditText = findViewById(R.id.signup_email);
 
-        Button checkDuplicateButton = findViewById(R.id.overlap);
+        Button checkDuplicateButton = findViewById(R.id.signup_overlap);
         Button registerButton = findViewById(R.id.register);
 
-        TextView duplicateWarning = findViewById(R.id.id_overlap_ck);
+        TextView duplicateWarning = findViewById(R.id.signup_id_overlap_ck);
         TextView passwordWarning = findViewById(R.id.pw_ck);
 
         DialogCustom dlg = new DialogCustom();
