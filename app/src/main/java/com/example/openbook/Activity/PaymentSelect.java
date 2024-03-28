@@ -34,7 +34,7 @@ public class PaymentSelect extends AppCompatActivity {
 
         SharedPreferences.Editor editor = pref.edit();
 
-        editor.remove("order_list");
+        editor.remove("orderList");
 
         if(myData.getTableFromDB() == 0){
             Log.d(TAG, "tableFromDB ZERO: ");
@@ -48,13 +48,11 @@ public class PaymentSelect extends AppCompatActivity {
         payment_select_before = findViewById(R.id.payment_select_before);
 
 
-
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-
 
         payment_select_after.setOnClickListener(view ->{
             startActivityString("after", 0);

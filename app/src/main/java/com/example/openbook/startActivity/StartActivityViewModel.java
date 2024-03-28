@@ -66,32 +66,12 @@ public class StartActivityViewModel extends ViewModel {
             }
         };
 
-        model.requestLogin(id, password, callbackLogin);
+//        model.requestLogin(id, password, callbackLogin);
 
     }
 
-    public void checkIdDuplication(String id){
 
-        if(id.isEmpty()){
-            signUpIdWarning.setValue("아이디를 입력해주세요.");
-        }else{
-            signUpIdWarning.setValue("");
-            requestIdDuplication(id);
-        }
-    }
 
-    public void requestIdDuplication(String id){
-        Log.d(TAG, "requestIdDuplication: " + id);
-        callbackIdDuplication = new Function<String, Void>() {
-            @Override
-            public Void apply(String s) {
-                Log.d(TAG, "Duplication callback: " + s);
-                return apply(s);
-            }
-        };
-
-        model.requestIdDuplication(id, callbackIdDuplication);
-    }
 
 
 }

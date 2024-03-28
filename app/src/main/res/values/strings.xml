@@ -2,4 +2,13 @@
     <string name="app_name">openbook</string>
     <string name="open">open</string>
     <string name="closed">closed</string>
+
+    <string name="networkError">"네트워크 오류가 발생하였습니다. 다시 시도해주세요."</string>
+
+    <string-array name="sideMenu">
+        <item>"메인안주"</item>
+        <item>"주류"</item>
+        <item>"사이드"</item>
+        <item>"직원호출"</item>
+    </string-array>
 </resources>

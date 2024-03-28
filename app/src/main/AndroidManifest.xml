@@ -19,9 +19,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Openbook"
+        android:windowSoftInputMode="adjustPan"
         android:usesCleartextTraffic="true"
         tools:targetApi="31"
-        android:windowSoftInputMode="adjustUnspecified|adjustPan"
         android:hardwareAccelerated="false"
         android:largeHeap="true"
         android:vmSafeMode="true">
@@ -35,7 +35,7 @@
         </service>
 
         <activity
-            android:name="com.example.openbook.startActivity.StartActivity"
+            android:name="com.example.openbook.Activity.IntroFragment"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -44,8 +44,9 @@
             </intent-filter>
         </activity>
 
-<!--        <activity android:name=".startActivity.Login" />-->
+        <activity android:name=".Activity.Login" />
         <activity android:name="com.example.openbook.startActivity.SignUp"/>
+
         <activity android:name="com.example.openbook.Activity.PaymentSelect"/>
         <activity android:name="com.example.openbook.Activity.Menu" />
 

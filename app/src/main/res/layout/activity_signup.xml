@@ -1,0 +1,372 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/black"
+    android:paddingBottom="50dp">
+
+    <TextView
+        android:id="@+id/signup_textview_id"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+
+        android:layout_marginStart="200dp"
+        android:layout_marginTop="50dp"
+        android:layout_marginBottom="15dp"
+        android:autoSizeMaxTextSize="30sp"
+        android:autoSizeMinTextSize="20sp"
+        android:autoSizeTextType="uniform"
+        android:gravity="center"
+
+        android:text="아이디"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+
+        app:layout_constraintBottom_toTopOf="@id/signup_duplicate_warning"
+        app:layout_constraintEnd_toStartOf="@id/signup_editText_id"
+        app:layout_constraintHorizontal_weight="7.7"
+        app:layout_constraintStart_toStartOf="parent"
+
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_weight="1" />
+
+    <EditText
+        android:id="@+id/signup_editText_id"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="50dp"
+
+        android:layout_marginBottom="15dp"
+        android:background="@color/white"
+        android:hint="아이디를 입력해주세요"
+
+        android:maxLength="10"
+        android:padding="10dp"
+        android:textColor="@color/black"
+        android:textSize="25sp"
+
+        android:maxLines="1"
+        android:inputType="text"
+
+        app:layout_constraintBottom_toTopOf="@id/signup_duplicate_warning"
+        app:layout_constraintEnd_toStartOf="@id/signup_duplicate_button"
+        app:layout_constraintHorizontal_weight="8"
+        app:layout_constraintStart_toEndOf="@id/signup_textview_id"
+
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_weight="1" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/signup_duplicate_button"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="50dp"
+
+        android:layout_marginTop="50dp"
+        android:layout_marginEnd="200dp"
+        android:layout_marginBottom="15dp"
+
+        android:autoSizeMaxTextSize="30sp"
+        android:autoSizeMinTextSize="15sp"
+        android:autoSizeTextType="uniform"
+
+        android:background="@drawable/radius_10dp_lime"
+        android:padding="10dp"
+        android:text="중복확인"
+        android:textStyle="bold"
+
+        app:layout_constraintBottom_toTopOf="@id/signup_duplicate_warning"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_weight="3"
+        app:layout_constraintStart_toEndOf="@id/signup_editText_id"
+
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_weight="1" />
+
+
+    <TextView
+        android:id="@+id/signup_duplicate_warning"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:gravity="center"
+
+        android:text="사용할 수 없는 아이디 입니다."
+        android:textColor="@color/red"
+        android:textSize="20sp"
+        android:visibility="gone"
+
+        app:layout_constraintBottom_toTopOf="@id/signup_editText_password"
+
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.53"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/signup_editText_id"
+
+        app:layout_constraintVertical_weight="0.5" />
+
+    <TextView
+        android:id="@+id/signup_textview_password"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+
+        android:layout_marginStart="200dp"
+        android:layout_marginTop="15dp"
+        android:layout_marginBottom="15dp"
+        android:autoSizeMaxTextSize="30sp"
+        android:autoSizeMinTextSize="20sp"
+        android:autoSizeTextType="uniform"
+        android:gravity="center"
+
+        android:text="비밀번호"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+
+        app:layout_constraintBottom_toTopOf="@id/signup_textview_check_password"
+        app:layout_constraintEnd_toStartOf="@id/signup_editText_password"
+        app:layout_constraintHorizontal_weight="2.55"
+        app:layout_constraintStart_toStartOf="parent"
+
+        app:layout_constraintTop_toBottomOf="@id/signup_duplicate_warning"
+        app:layout_constraintVertical_weight="1" />
+
+    <EditText
+        android:id="@+id/signup_editText_password"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="15dp"
+        android:layout_marginEnd="200dp"
+        android:background="@color/white"
+        android:hint="비밀번호를 입력해주세요"
+
+        android:inputType="textPassword"
+        android:maxLines="1"
+        android:padding="10dp"
+        android:textColor="@color/black"
+        android:textSize="25sp"
+
+        app:layout_constraintBottom_toTopOf="@id/signup_editText_check_password"
+        app:layout_constraintEnd_toEndOf="parent"
+
+        app:layout_constraintHorizontal_weight="4"
+        app:layout_constraintStart_toEndOf="@id/signup_textview_password"
+        app:layout_constraintTop_toBottomOf="@id/signup_duplicate_warning"
+        app:layout_constraintVertical_weight="1" />
+
+    <TextView
+        android:id="@+id/signup_textview_check_password"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="200dp"
+        android:layout_marginTop="30dp"
+
+        android:layout_marginBottom="15dp"
+        android:autoSizeMaxTextSize="30sp"
+        android:autoSizeMinTextSize="20sp"
+        android:autoSizeTextType="uniform"
+        android:gravity="center"
+        android:text="비밀번호 확인"
+        android:textColor="@color/white"
+
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@id/signup_textview_password_warning"
+        app:layout_constraintEnd_toStartOf="@id/signup_editText_check_password"
+
+        app:layout_constraintHorizontal_weight="2.55"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/signup_textview_password"
+        app:layout_constraintVertical_weight="1" />
+
+    <EditText
+        android:id="@+id/signup_editText_check_password"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="30dp"
+        android:layout_marginEnd="200dp"
+        android:layout_marginBottom="15dp"
+
+        android:background="@color/white"
+        android:hint="비밀번호를 입력해주세요"
+        android:maxLines="1"
+        android:inputType="textPassword"
+        android:padding="10dp"
+        android:textColor="@color/black"
+
+        android:textSize="25sp"
+        app:layout_constraintBottom_toTopOf="@id/signup_textview_password_warning"
+        app:layout_constraintEnd_toEndOf="parent"
+
+        app:layout_constraintHorizontal_weight="4"
+        app:layout_constraintStart_toEndOf="@id/signup_textview_check_password"
+        app:layout_constraintTop_toBottomOf="@id/signup_editText_password"
+        app:layout_constraintVertical_weight="1" />
+
+
+    <TextView
+        android:id="@+id/signup_textview_password_warning"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:gravity="center"
+        android:text="비밀번호가 일치하지 않습니다."
+
+        android:textColor="@color/red"
+
+        android:textSize="20sp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/signup_editText_phone"
+        app:layout_constraintEnd_toEndOf="parent"
+
+        app:layout_constraintHorizontal_bias="0.53"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/signup_editText_check_password"
+        app:layout_constraintVertical_weight="0.5" />
+
+
+    <TextView
+        android:id="@+id/signup_textview_phone"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="200dp"
+        android:layout_marginTop="15dp"
+
+        android:autoSizeMaxTextSize="30sp"
+        android:autoSizeMinTextSize="20sp"
+        android:autoSizeTextType="uniform"
+        android:gravity="center"
+        android:text="전화번호"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+
+        app:layout_constraintBottom_toTopOf="@id/signup_textview_email"
+        app:layout_constraintEnd_toStartOf="@id/signup_editText_phone"
+
+        app:layout_constraintHorizontal_weight="2.6"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/signup_textview_password_warning"
+        app:layout_constraintVertical_weight="1" />
+
+    <EditText
+        android:id="@+id/signup_editText_phone"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="15dp"
+        android:layout_marginEnd="200dp"
+        android:background="@color/white"
+
+        android:hint="010-1234-5678"
+        android:padding="10dp"
+        android:textColor="@color/black"
+        android:textSize="25sp"
+        android:maxLines="1"
+        android:inputType="text"
+
+        app:layout_constraintBottom_toTopOf="@id/signup_editText_email"
+        app:layout_constraintEnd_toEndOf="parent"
+
+        app:layout_constraintHorizontal_weight="4"
+        app:layout_constraintStart_toEndOf="@id/signup_textview_phone"
+        app:layout_constraintTop_toBottomOf="@id/signup_textview_password_warning"
+        app:layout_constraintVertical_weight="1" />
+
+    <TextView
+        android:id="@+id/signup_textview_email"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="200dp"
+        android:layout_marginTop="30dp"
+
+        android:autoSizeMaxTextSize="30sp"
+        android:autoSizeMinTextSize="20sp"
+        android:autoSizeTextType="uniform"
+        android:gravity="center"
+        android:text="이메일"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+
+        app:layout_constraintBottom_toTopOf="@id/signup_register_button"
+        app:layout_constraintEnd_toStartOf="@id/signup_editText_email"
+
+        app:layout_constraintHorizontal_weight="2.6"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/signup_textview_phone"
+        app:layout_constraintVertical_weight="1" />
+
+    <EditText
+        android:id="@+id/signup_editText_email"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="30dp"
+
+        android:layout_marginEnd="200dp"
+        android:background="@color/white"
+        android:hint="stella@naver.com"
+        android:paddingStart="10dp"
+
+        android:textColor="@color/black"
+        android:textSize="25sp"
+        android:inputType="text"
+        android:maxLines="1"
+
+        app:layout_constraintBottom_toTopOf="@id/signup_cancel_button"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_weight="4"
+        app:layout_constraintStart_toEndOf="@id/signup_textview_email"
+        app:layout_constraintTop_toBottomOf="@id/signup_editText_phone"
+        app:layout_constraintVertical_weight="1" />
+
+
+
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/signup_register_button"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="250dp"
+        android:layout_marginTop="200dp"
+
+        android:layout_marginEnd="100dp"
+
+        android:autoSizeMaxTextSize="30sp"
+        android:autoSizeMinTextSize="15sp"
+        android:autoSizeTextType="uniform"
+        android:background="@drawable/radius_10dp_lime"
+
+        android:padding="10dp"
+        android:text="회원가입"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+
+        app:layout_constraintEnd_toStartOf="@id/signup_cancel_button"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/signup_textview_email"
+        app:layout_constraintVertical_weight="1" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/signup_cancel_button"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="200dp"
+        android:layout_marginEnd="250dp"
+
+        android:autoSizeMaxTextSize="30sp"
+        android:autoSizeMinTextSize="15sp"
+        android:autoSizeTextType="uniform"
+        android:background="@drawable/radius_10dp_lime"
+        android:padding="10dp"
+
+        android:text="취소"
+        android:textStyle="bold"
+
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/signup_register_button"
+        app:layout_constraintTop_toBottomOf="@id/signup_editText_email"
+        app:layout_constraintVertical_weight="1" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+
+
+

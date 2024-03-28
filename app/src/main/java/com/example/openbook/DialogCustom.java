@@ -29,7 +29,7 @@ public class DialogCustom {
                         dialog.dismiss();
                     }
                 })
-                .setIcon(R.drawable.warning);
+                .setIcon(R.drawable.openbook_logo);
 
         AlertDialog alertDialog = builder.create();
         alertDialog.show();

@@ -4,7 +4,7 @@ plugins {
     id 'com.google.firebase.firebase-perf'
 }
 
-def Properties properties = new Properties()
+Properties properties = new Properties()
 properties.load(project.rootProject.file('local.properties').newDataInputStream())
 
 android {
@@ -20,6 +20,7 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("String", "GOOGLE_API_KEY", properties.getProperty("GOOGLE_API_KEY"))
+        buildConfigField("String", "SERVER_IP", properties.getProperty("SERVER_IP"))
 
         renderscriptTargetApi 18
         renderscriptSupportModeEnabled true
@@ -55,9 +56,8 @@ dependencies {
     implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
     implementation 'com.squareup.retrofit2:converter-scalars:2.9.0'
 
-
-    //google
-    implementation 'com.google.android.gms:play-services-auth:20.3.0'
+    //google login
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
 
 
     //QRcode
@@ -65,7 +65,7 @@ dependencies {
 
 
     //FCM
-    implementation platform('com.google.firebase:firebase-bom:31.2.3')
+    implementation(platform("com.google.firebase:firebase-bom:32.3.1"))
     implementation 'com.google.firebase:firebase-messaging:23.1.0'
     implementation 'androidx.work:work-runtime:2.7.1'
     implementation 'com.google.firebase:firebase-database:20.1.0'

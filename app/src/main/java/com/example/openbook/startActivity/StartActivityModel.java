@@ -26,7 +26,7 @@ public class StartActivityModel {
             .build();
 
     RetrofitService service = retrofit.create(RetrofitService.class);
-    public void requestLogin(String id, String password, Function<LoginResponseModel, Void> callback){
+    public void requestLogin(int id, int password, Function<LoginResponseModel, Void> callback){
        service.requestLogin(id, password).enqueue(new Callback<LoginResponseModel>() {
            @Override
            public void onResponse(Call<LoginResponseModel> call, Response<LoginResponseModel> response) {
@@ -45,22 +45,5 @@ public class StartActivityModel {
 
     }
 
-    public void requestIdDuplication(String id, Function<String, Void> callback){
-        Log.d(TAG, "requestIdDuplication Model: " + id);
-        service.requestIdDuplication(id).enqueue(new Callback<String>() {
-            @Override
-            public void onResponse(Call<String> call, Response<String> response) {
-                Log.d(TAG, "Duplication onResponse: " + response.body());
-                if(response.isSuccessful()){
-                    callback.apply(response.body());
-                }
-            }
 
-            @Override
-            public void onFailure(Call<String> call, Throwable t) {
-                Log.d(TAG, "Duplication onFailure: " + t.getMessage());
-                callback.apply("failed");
-            }
-        });
-    }
 }
