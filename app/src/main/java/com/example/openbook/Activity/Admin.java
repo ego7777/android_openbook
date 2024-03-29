@@ -25,7 +25,7 @@ import com.example.openbook.Adapter.AdminTableAdapter;
 import com.example.openbook.Chatting.DBHelper;
 import com.example.openbook.Data.AdminTableList;
 import com.example.openbook.Data.OrderList;
-import com.example.openbook.DialogCustom;
+import com.example.openbook.DialogManager;
 import com.example.openbook.FCM.FCM;
 import com.example.openbook.ImageLoadTask;
 import com.example.openbook.KakaoPay;
@@ -109,44 +109,44 @@ public class Admin extends AppCompatActivity {
             adminTableList = new ArrayList<>();
             TableQuantity tableQuantity = new TableQuantity();
 
-            int table = tableQuantity.getTableQuantity();
-            Log.d(TAG, "tableQuantity : " + table);
+//            int table = tableQuantity.getTableQuantity();
+//            Log.d(TAG, "tableQuantity : " + table);
 
 
-            for (int i = 1; i < table + 1; i++) {
-
-                String summary = sharedPreference.getString("table" + i + "menu", null);
-                Log.d(TAG, "summary: " + summary);
-
-                int price = sharedPreference.getInt("table" + i + "price", 0);
-                Log.d(TAG, "price: " + price);
-
-                String gender = sharedPreference.getString("table" + i + "gender", null);
-                Log.d(TAG, "gender: " + gender);
-
-                String guestNumber = sharedPreference.getString("table" + i + "guestNumber", null);
-                Log.d(TAG, "guestNumber: " + guestNumber);
-
-                int viewType = sharedPreference.getInt("table" + i + "viewType", 0);
-                Log.d(TAG, "viewType: " + viewType);
-
-                int identifier = sharedPreference.getInt("table" + i + "tableIdentifier", 0);
-                Log.d(TAG, "identifier: " + identifier);
-
-
-                if (summary != null) {
-                    adminTableList.add(new AdminTableList("table" + i,
-                            summary, String.valueOf(price), gender, guestNumber, viewType, identifier));
-
-                } else {
-                    adminTableList.add(new AdminTableList("table" + i,
-                            null,
-                            null,
-                            null,
-                            null,0, 0));
-                }
-
-            }// for문 끝
+//            for (int i = 1; i < table + 1; i++) {
+//
+//                String summary = sharedPreference.getString("table" + i + "menu", null);
+//                Log.d(TAG, "summary: " + summary);
+//
+//                int price = sharedPreference.getInt("table" + i + "price", 0);
+//                Log.d(TAG, "price: " + price);
+//
+//                String gender = sharedPreference.getString("table" + i + "gender", null);
+//                Log.d(TAG, "gender: " + gender);
+//
+//                String guestNumber = sharedPreference.getString("table" + i + "guestNumber", null);
+//                Log.d(TAG, "guestNumber: " + guestNumber);
+//
+//                int viewType = sharedPreference.getInt("table" + i + "viewType", 0);
+//                Log.d(TAG, "viewType: " + viewType);
+//
+//                int identifier = sharedPreference.getInt("table" + i + "tableIdentifier", 0);
+//                Log.d(TAG, "identifier: " + identifier);
+//
+//
+//                if (summary != null) {
+//                    adminTableList.add(new AdminTableList("table" + i,
+//                            summary, String.valueOf(price), gender, guestNumber, viewType, identifier));
+//
+//                } else {
+//                    adminTableList.add(new AdminTableList("table" + i,
+//                            null,
+//                            null,
+//                            null,
+//                            null,0, 0));
+//                }
+//
+//            }// for문 끝
 
 
         } else {
@@ -156,9 +156,9 @@ public class Admin extends AppCompatActivity {
         /**
          * 로그인을 성공하면 id, token을 firebase realtime db에 저장
          */
-        Intent fcm = new Intent(Admin.this, FCM.class);
-        fcm.putExtra("get_id", get_id);
-        startService(fcm);
+//        Intent fcm = new Intent(Admin.this, FCM.class);
+//        fcm.putExtra("get_id", get_id);
+//        startService(fcm);
 
         TextView appbar_admin_id = findViewById(R.id.appbar_admin_id);
         appbar_admin_id.setText(get_id);
@@ -305,7 +305,7 @@ public class Admin extends AppCompatActivity {
         });
 
 
-        DialogCustom dialogCustom = new DialogCustom();
+        DialogManager dialogManager = new DialogManager();
 
 
         adapter.setOnItemClickListener(new AdminTableAdapter.onItemClickListener() {
@@ -321,7 +321,8 @@ public class Admin extends AppCompatActivity {
                         adminTableList.get(position).getAdminTableStatement() != null){
                             showReceiptDialog(position);
                         }else{
-                            dialogCustom.HandlerAlertDialog(Admin.this, "빈 좌석이거나 아직 주문하지 않은 좌석입니다.");
+                            dialogManager.noButtonDialog(Admin.this, "빈 좌석이거나 아직 주문하지 않은 좌석입니다.");
+
                         }
 
 
@@ -395,7 +396,7 @@ public class Admin extends AppCompatActivity {
                             intent.putExtra("get_id", get_id);
                             startActivity(intent);
                         } else {
-                            dialogCustom.HandlerAlertDialog(Admin.this, "빈 좌석이거나 아직 주문하지 않은 좌석입니다.");
+                            dialogManager.noButtonDialog(Admin.this, "빈 좌석이거나 아직 주문하지 않은 좌석입니다.");
                         }
 
 

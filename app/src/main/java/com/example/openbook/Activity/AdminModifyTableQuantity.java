@@ -58,7 +58,7 @@ public class AdminModifyTableQuantity extends Activity {
 
         if(adminTableList == null){
 
-            table = tableQuantity.getTableQuantity();
+//            table = tableQuantity.getTableQuantity();
 
         }else{
             table = adminTableList.size();

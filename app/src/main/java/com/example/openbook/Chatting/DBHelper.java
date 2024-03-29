@@ -96,14 +96,14 @@ public class DBHelper extends SQLiteOpenHelper {
         return true;
     }
 
-    public boolean insertMenuData(String menuName, int menuPrice, String menuImage, int menuType, int identifier) {
+    public boolean insertMenuData(String menuName, int menuPrice, String menuImage, int menuType) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put("menuName", menuName);
         contentValues.put("menuPrice", menuPrice);
         contentValues.put("menuImage", menuImage);
         contentValues.put("menuType", menuType);
-        contentValues.put("identifier", identifier);
+//        contentValues.put("identifier", identifier);
 
         long result = db.insert("menuListTable", null, contentValues);
         if (result == -1) {

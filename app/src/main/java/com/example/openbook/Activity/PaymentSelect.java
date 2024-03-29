@@ -17,8 +17,7 @@ public class PaymentSelect extends AppCompatActivity {
 
     MyData myData;
 
-    Button payment_select_after;
-    Button payment_select_before;
+    Button paymentSelectAfter, paymentSelectBefore;
 
     String TAG = "paymentSelectTAG";
 
@@ -44,8 +43,8 @@ public class PaymentSelect extends AppCompatActivity {
             Log.d(TAG, "tableFromDB: " + myData.getTableFromDB());
         }
 
-        payment_select_after = findViewById(R.id.payment_select_after);
-        payment_select_before = findViewById(R.id.payment_select_before);
+        paymentSelectAfter = findViewById(R.id.payment_select_after);
+        paymentSelectBefore = findViewById(R.id.payment_select_before);
 
 
     }
@@ -54,11 +53,11 @@ public class PaymentSelect extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        payment_select_after.setOnClickListener(view ->{
+        paymentSelectAfter.setOnClickListener(view ->{
             startActivityString("after", 0);
         });
 
-        payment_select_before.setOnClickListener(view ->{
+        paymentSelectBefore.setOnClickListener(view ->{
             int identifier = hashCode();
             Log.d(TAG, "identifier: " + identifier);
 

@@ -48,7 +48,6 @@ public class FCM extends FirebaseMessagingService {
     String TAG = "FcmTAG";
     String get_id;
     int requestCode;
-    Handler mHandler = new Handler(Looper.getMainLooper());
 
     OkHttpClient okHttpClient;
 
@@ -59,13 +58,10 @@ public class FCM extends FirebaseMessagingService {
         get_id = originalIntent.getStringExtra("get_id");
 
         Task<String> token = FirebaseMessaging.getInstance().getToken();
-        token.addOnCompleteListener(new OnCompleteListener<String>() {
-            @Override
-            public void onComplete(@NonNull Task<String> task) {
-                if (task.isSuccessful()) {
-                    Log.d(TAG, "onComplete: " + get_id);
-                    saveToken(get_id, task.getResult());
-                }
+        token.addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                Log.d(TAG, "onComplete: " + get_id);
+                saveToken(get_id, task.getResult());
             }
         });
 

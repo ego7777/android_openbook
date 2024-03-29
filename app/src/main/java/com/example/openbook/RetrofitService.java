@@ -26,5 +26,12 @@ public interface RetrofitService {
                                @Field("email") String email);
     @GET("GetMenuList.php")
     Call<MenuListDTO> getMenuList();
+    @POST("GetTableList.php")
+    @FormUrlEncoded
+    Call<TableListDTO> getTableList(@Field("admin") String admin);
+
+    @POST("SetTableList.php")
+    @FormUrlEncoded
+    Call<TableListDTO> setTableList(@Field("table_count") int tableCount);
 
 }

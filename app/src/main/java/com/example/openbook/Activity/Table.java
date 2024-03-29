@@ -33,7 +33,7 @@ import com.example.openbook.Data.ChattingData;
 import com.example.openbook.Data.MenuList;
 import com.example.openbook.Data.MyData;
 import com.example.openbook.Deco.menu_recyclerview_deco;
-import com.example.openbook.DialogCustom;
+import com.example.openbook.DialogManager;
 import com.example.openbook.FCM.SendNotification;
 import com.example.openbook.ImageLoadTask;
 import com.example.openbook.QRcode.MakeQR;
@@ -196,17 +196,17 @@ public class Table extends AppCompatActivity {
 
         } else {
             TableQuantity tableQuantity = new TableQuantity();
-            int tableFromDB = tableQuantity.getTableQuantity();
+//            int tableFromDB = tableQuantity.getTableQuantity();
 
             tableList = new ArrayList<>();
 
-            for (int i = 1; i < tableFromDB + 1; i++) {
-                if (i == myTable) {
-                    tableList.add(new TableList(myData.getId(), (Drawable) null, 0));
-                } else {
-                    tableList.add(new TableList(i, (Drawable) null, 1));
-                }
-            }
+//            for (int i = 1; i < tableFromDB + 1; i++) {
+//                if (i == myTable) {
+//                    tableList.add(new TableList(myData.getId(), (Drawable) null, 0));
+//                } else {
+//                    tableList.add(new TableList(i, (Drawable) null, 1));
+//                }
+//            }
 
             tableUpdate(activeTable);
         }
@@ -240,7 +240,7 @@ public class Table extends AppCompatActivity {
         });
 
 
-        DialogCustom alertDialog = new DialogCustom();
+        DialogManager dialogManager = new DialogManager();
 
 
         /**
@@ -254,11 +254,11 @@ public class Table extends AppCompatActivity {
             public void onClick(View view) {
 
                 if (!myData.isOrder()) {
-                    alertDialog.showAlertDialog(Table.this, "주문 후 채팅이 가능합니다.");
+                    dialogManager.positiveBtnDialog(Table.this, "주문 후 채팅이 가능합니다.");
 
                 } else if (clickTable == myTable) {
 
-                    alertDialog.showAlertDialog(Table.this,
+                    dialogManager.positiveBtnDialog(Table.this,
                             "나의 채팅방 입니다. 다른 테이블과 채팅해보세요!");
 
                 } else if (tableList.get(clickTable - 1).getViewType() == 2) {
@@ -266,9 +266,8 @@ public class Table extends AppCompatActivity {
                     if (chattingDataHashMap == null ||
                             !chattingDataHashMap.get("table" + clickTable).isChattingAgree()) {
 
-                        alertDialog.chattingRequest(Table.this,
-                                clickTable + "번 테이블과 채팅을 하시겠습니까?" +
-                                        "\n<추신> 채팅 전 테이블 정보를 입력하는 것을 추천드립니다!",
+                        dialogManager.chattingRequest(Table.this,
+                                String.valueOf(clickTable) + R.string.chattingAlarm,
                                 "table" + clickTable, myData.getId());
 
                         Log.d(TAG, "채팅 신청");
@@ -297,8 +296,8 @@ public class Table extends AppCompatActivity {
 
                 } else if (tableList.get(clickTable - 1).getViewType() != 2) {
                     Log.d(TAG, "비어있는 테이블");
-                    alertDialog.showAlertDialog(Table.this,
-                            "비어있는 테이블이거나 아직 주문하지 않은 테이블 입니다.");
+                    dialogManager.positiveBtnDialog(Table.this,
+                            String.valueOf(R.string.unusableTable));
                 } // if-else  list.length>0 끝
             } // onClick
         }); //setOnClickListener
@@ -375,129 +374,106 @@ public class Table extends AppCompatActivity {
                 });
 
 
-                tableInfoClose.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        dlg.dismiss();
-                    }
-                });
+                tableInfoClose.setOnClickListener(v -> dlg.dismiss());
 
 
             }
         }); //info-click
 
-        sendGift.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        sendGift.setOnClickListener(v -> {
 
-            if (tableList.get(clickTable - 1).getViewType() != 2) {
-                Log.d(TAG, "비어있는 테이블");
-                alertDialog.showAlertDialog(Table.this,
-                        "비어있는 테이블이거나 아직 주문하지 않은 테이블 입니다.");
-            }else{
+        if (tableList.get(clickTable - 1).getViewType() != 2) {
+            Log.d(TAG, "비어있는 테이블");
+            dialogManager.positiveBtnDialog(Table.this,
+                    String.valueOf(R.string.unusableTable));
+        }else{
 
-                Dialog dlg = new Dialog(Table.this);
-                dlg.setContentView(R.layout.send_gift_select_dialog);
-                dlg.show();
-                Log.d(TAG, ": ");
+            Dialog dlg = new Dialog(Table.this);
+            dlg.setContentView(R.layout.send_gift_select_dialog);
+            dlg.show();
 
-                RecyclerView sendGiftRecyclerview = dlg.findViewById(R.id.send_gift_select_recyclerview);
-                TextView sendGiftCancel = dlg.findViewById(R.id.send_gift_select_cancel);
+            RecyclerView sendGiftRecyclerview = dlg.findViewById(R.id.send_gift_select_recyclerview);
+            TextView sendGiftCancel = dlg.findViewById(R.id.send_gift_select_cancel);
 
-                sendGiftCancel.setOnClickListener(view ->{
+            sendGiftCancel.setOnClickListener(view ->{
+                dlg.dismiss();
+            });
+
+            sendGiftRecyclerview.setLayoutManager(new LinearLayoutManager
+                    (Table.this, RecyclerView.HORIZONTAL, false));
+
+            MenuAdapter menuAdapter = new MenuAdapter();
+            ArrayList<MenuList> menuLists = new ArrayList<>();
+
+            sendGiftRecyclerview.setAdapter(menuAdapter);
+            sendGiftRecyclerview.addItemDecoration(new menu_recyclerview_deco(Table.this));
+            menuAdapter.setAdapterItem(menuLists);
+
+            int version = 1;
+            version ++;
+
+            DBHelper dbHelper = new DBHelper(Table.this, version);
+            menuLists = dbHelper.getTableData(menuLists);
+            Log.d(TAG, "menuLists size: " + menuLists.size());
+
+            menuAdapter.setAdapterItem(menuLists);
+
+            menuAdapter.setOnItemClickListener(new MenuAdapter.OnItemClickListener() {
+                @Override
+                public void onItemClick(View view, String name, int price, int position) {
                     dlg.dismiss();
-                });
 
-                sendGiftRecyclerview.setLayoutManager(new LinearLayoutManager
-                        (Table.this, RecyclerView.HORIZONTAL, false));
+                    Dialog dialog = new Dialog(Table.this);
+                    dialog.setContentView(R.layout.send_gift_quantity_dialog);
+                    dialog.show();
 
-                MenuAdapter menuAdapter = new MenuAdapter();
-                ArrayList<MenuList> menuLists = new ArrayList<>();
+                    TextView menuName = dialog.findViewById(R.id.send_gift_quantity_menuName);
+                    TextView menuQuantity = dialog.findViewById(R.id.send_gift_quantity_menuQuantity);
+                    TextView menuPrice = dialog.findViewById(R.id.send_gift_quantity_price);
+                    Button sendGiftButton = dialog.findViewById(R.id.send_gift_button);
+                    Button plus = dialog.findViewById(R.id.send_gift_quantity_plus);
+                    Button minus = dialog.findViewById(R.id.send_gift_quantity_minus);
+                    Button cancel = dialog.findViewById(R.id.send_gift_quantity_cancel);
 
-                sendGiftRecyclerview.setAdapter(menuAdapter);
-                sendGiftRecyclerview.addItemDecoration(new menu_recyclerview_deco(Table.this));
-                menuAdapter.setAdapterItem(menuLists);
-
-                int version = 1;
-                version ++;
-
-                DBHelper dbHelper = new DBHelper(Table.this, version);
-                menuLists = dbHelper.getTableData(menuLists);
-                Log.d(TAG, "menuLists size: " + menuLists.size());
-
-                menuAdapter.setAdapterItem(menuLists);
-
-                menuAdapter.setOnItemClickListener(new MenuAdapter.OnItemClickListener() {
-                    @Override
-                    public void onItemClick(View view, String name, int price, int position) {
-                        dlg.dismiss();
-
-                        Dialog dialog = new Dialog(Table.this);
-                        dialog.setContentView(R.layout.send_gift_quantity_dialog);
-                        dialog.show();
-
-                        TextView menuName = dialog.findViewById(R.id.send_gift_quantity_menuName);
-                        TextView menuQuantity = dialog.findViewById(R.id.send_gift_quantity_menuQuantity);
-                        TextView menuPrice = dialog.findViewById(R.id.send_gift_quantity_price);
-                        Button sendGiftButton = dialog.findViewById(R.id.send_gift_button);
-                        Button plus = dialog.findViewById(R.id.send_gift_quantity_plus);
-                        Button minus = dialog.findViewById(R.id.send_gift_quantity_minus);
-                        Button cancel = dialog.findViewById(R.id.send_gift_quantity_cancel);
-
-                        cancel.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                dialog.dismiss();
-                            }
-                        });
+                    cancel.setOnClickListener(v1 -> dialog.dismiss());
 
 
-                        sendGiftQuantity =1;
-                        menuName.setText(name);
-                        menuPrice.setText(String.valueOf(price));
+                    sendGiftQuantity =1;
+                    menuName.setText(name);
+                    menuPrice.setText(String.valueOf(price));
+                    menuQuantity.setText(String.valueOf(sendGiftQuantity));
+
+
+                    plus.setOnClickListener(v12 -> {
+                        sendGiftQuantity = sendGiftQuantity + 1;
                         menuQuantity.setText(String.valueOf(sendGiftQuantity));
 
+                        int totalPrice = sendGiftQuantity * price;
+                        menuPrice.setText(String.valueOf(totalPrice));
 
-                        plus.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                sendGiftQuantity = sendGiftQuantity + 1;
-                                menuQuantity.setText(String.valueOf(sendGiftQuantity));
+                    });
 
-                                int totalPrice = sendGiftQuantity * price;
-                                menuPrice.setText(String.valueOf(totalPrice));
+                    minus.setOnClickListener(v13 -> {
+                        if(sendGiftQuantity > 0){
+                            sendGiftQuantity = sendGiftQuantity - 1;
+                            menuQuantity.setText(String.valueOf(sendGiftQuantity));
 
-                            }
-                        });
+                            int totalPrice = sendGiftQuantity * price;
+                            menuPrice.setText(String.valueOf(totalPrice));
+                        }
 
-                        minus.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                if(sendGiftQuantity > 0){
-                                    sendGiftQuantity = sendGiftQuantity - 1;
-                                    menuQuantity.setText(String.valueOf(sendGiftQuantity));
+                    });
 
-                                    int totalPrice = sendGiftQuantity * price;
-                                    menuPrice.setText(String.valueOf(totalPrice));
-                                }
+                    sendGiftButton.setOnClickListener(v14 -> {
+                        Log.d(TAG, "onClick sendGift: ");
+                        int menuPrice1 = sendGiftQuantity * price;
+                        sendGiftOtherTable(name, sendGiftQuantity, menuPrice1);
+                        dialog.dismiss();
+                    });
+                }
+            });
+        }
 
-                            }
-                        });
-
-                        sendGiftButton.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                Log.d(TAG, "onClick sendGift: ");
-                                int menuPrice = sendGiftQuantity * price;
-                                sendGiftOtherTable(name, sendGiftQuantity, menuPrice);
-                                dialog.dismiss();
-                            }
-                        });
-                    }
-                });
-            }
-
-            }
         });
 
 

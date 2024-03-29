@@ -1,5 +1,6 @@
 package com.example.openbook;
 
+
 import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
@@ -9,15 +10,10 @@ public class MenuListDTO {
     @SerializedName("items")
     private Items items;
 
-//    List<MenuItem> items;
-
     public String getResult() {
         return result;
     }
-//    @SerializedName("items")
-//    public List<MenuItem> getItems() {
-//        return items;
-//    }
+
 
     public Items getItems() {
         return items;
@@ -33,13 +29,17 @@ public class MenuListDTO {
 
     }
 
+
     public class MenuItem {
         @SerializedName("menuName")
         String menuName;
+
         @SerializedName("menuPrice")
         int menuPrice;
+
         @SerializedName("menuCategory")
         int menuCategory;
+
         @SerializedName("imageURL")
         String imageURL;
 

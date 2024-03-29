@@ -8,7 +8,7 @@ Properties properties = new Properties()
 properties.load(project.rootProject.file('local.properties').newDataInputStream())
 
 android {
-    compileSdk 32
+    compileSdk 34
 
     defaultConfig {
         applicationId "com.example.openbook"
@@ -21,6 +21,7 @@ android {
 
         buildConfigField("String", "GOOGLE_API_KEY", properties.getProperty("GOOGLE_API_KEY"))
         buildConfigField("String", "SERVER_IP", properties.getProperty("SERVER_IP"))
+        buildConfigField("String", "ADMIN_KEY", properties.getProperty("ADMIN_KEY"))
 
         renderscriptTargetApi 18
         renderscriptSupportModeEnabled true
@@ -75,7 +76,11 @@ dependencies {
     //graph
     implementation 'com.github.PhilJay:MpAndroidChart:v3.0.2'
 
+    //room
+    def room_version = "2.6.1"
 
+    implementation "androidx.room:room-runtime:$room_version"
+    annotationProcessor "androidx.room:room-compiler:$room_version"
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.4'

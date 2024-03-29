@@ -253,37 +253,37 @@ public class AdminPaymentAfterPopup extends Activity {
 
             TableQuantity tableQuantity = new TableQuantity();
 
-            int table = tableQuantity.getTableQuantity();
+//            int table = tableQuantity.getTableQuantity();
 //            Log.d(TAG, "onResume tableQuantity : " + table);
 
-
-            for (int i = 1; i < table + 1; i++) {
-
-                String summary = sharedPreference.getString("table" +i + "menu", null);
-                Log.d(TAG, "summary: " + summary);
-
-                int price = sharedPreference.getInt("table" + i + "price", 0);
-                Log.d(TAG, "price: " + price);
-
-                int viewType = sharedPreference.getInt("table" + i + "viewType", 0);
-                Log.d(TAG, "viewType: " + viewType);
-
-                int identifier = sharedPreference.getInt("table" + i + "tableIdentifier", 0);
-                Log.d(TAG, "identifier: " + identifier);
-
-                if (summary != null) {
-                    adminTableList.add(new AdminTableList("table" + i,
-                            summary, String.valueOf(price), null, null, viewType,identifier));
-
-                } else {
-                    adminTableList.add(new AdminTableList("table" + i,
-                            null,
-                            null,
-                            null,
-                            null, 0, 0));
-                }
-
-            }// for문 끝
+//
+//            for (int i = 1; i < table + 1; i++) {
+//
+//                String summary = sharedPreference.getString("table" +i + "menu", null);
+//                Log.d(TAG, "summary: " + summary);
+//
+//                int price = sharedPreference.getInt("table" + i + "price", 0);
+//                Log.d(TAG, "price: " + price);
+//
+//                int viewType = sharedPreference.getInt("table" + i + "viewType", 0);
+//                Log.d(TAG, "viewType: " + viewType);
+//
+//                int identifier = sharedPreference.getInt("table" + i + "tableIdentifier", 0);
+//                Log.d(TAG, "identifier: " + identifier);
+//
+//                if (summary != null) {
+//                    adminTableList.add(new AdminTableList("table" + i,
+//                            summary, String.valueOf(price), null, null, viewType,identifier));
+//
+//                } else {
+//                    adminTableList.add(new AdminTableList("table" + i,
+//                            null,
+//                            null,
+//                            null,
+//                            null, 0, 0));
+//                }
+//
+//            }// for문 끝
 
         }
 

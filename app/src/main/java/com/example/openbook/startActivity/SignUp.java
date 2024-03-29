@@ -1,13 +1,13 @@
 package com.example.openbook.startActivity;
 
 
+import android.app.Dialog;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -17,7 +17,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.openbook.BuildConfig;
-import com.example.openbook.DialogCustom;
+import com.example.openbook.DialogManager;
 import com.example.openbook.R;
 import com.example.openbook.RetrofitManager;
 import com.example.openbook.RetrofitService;
@@ -60,7 +60,7 @@ public class SignUp extends AppCompatActivity {
         TextView duplicateWarning = findViewById(R.id.signup_duplicate_warning);
         TextView passwordWarning = findViewById(R.id.signup_textview_password_warning);
 
-        DialogCustom dlg = new DialogCustom();
+        DialogManager dialogManager = new DialogManager();
 
         RetrofitManager retrofitManager = new RetrofitManager();
         Retrofit retrofit = retrofitManager.getRetrofit(BuildConfig.SERVER_IP);
@@ -71,61 +71,57 @@ public class SignUp extends AppCompatActivity {
         /**
          * 아이디 중복 확인
          */
-        checkDuplicateButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+        checkDuplicateButton.setOnClickListener(view -> {
 
-                if (checkDuplicateButton.getText().toString().equals("수정")) {
-                    Log.d(TAG, "수정: ");
-                    idEditText.setEnabled(true);
-                    // 아이디 입력 값 초기화
-                    id = null;
-                    idEditText.setText(null);
-                    checkDuplicateButton.setText("중복확인");
-                    duplicateWarning.setVisibility(View.GONE);
-                    isIdDuplicate = false;
+            if (checkDuplicateButton.getText().toString().equals("수정")) {
+                idEditText.setEnabled(true);
+                // 아이디 입력 값 초기화
+                id = null;
+                idEditText.setText(null);
+                checkDuplicateButton.setText("중복확인");
+                duplicateWarning.setVisibility(View.GONE);
+                isIdDuplicate = false;
 
+            } else {
+                id = idEditText.getText().toString();
+                Log.d(TAG, "onClick id hashcode: " + id.hashCode());
+
+                if (id.isEmpty()) {
+                    Toast.makeText(SignUp.this, "아이디를 입력해주세요.", Toast.LENGTH_SHORT).show();
                 } else {
-                    id = idEditText.getText().toString();
-                    Log.d(TAG, "onClick id hashcode: " + id.hashCode());
+                    service.requestIdDuplication(id.hashCode())
+                            .enqueue(new Callback<SuccessOrNot>() {
+                                @Override
+                                public void onResponse(Call<SuccessOrNot> call, Response<SuccessOrNot> response) {
+                                    Log.d(TAG, "onResponse SignUp: " + response.body());
+                                    if (response.isSuccessful()) {
+                                        switch (response.body().getResult()) {
+                                            case "success":
+                                                dialogManager.positiveBtnDialog(SignUp.this, "사용 할 수 있는 아이디 입니다.");
+                                                duplicateWarning.setVisibility(View.GONE);
+                                                idEditText.setEnabled(false);
+                                                checkDuplicateButton.setText("수정");
+                                                isIdDuplicate = true;
+                                                break;
 
-                    if (id.isEmpty()) {
-                        Toast.makeText(SignUp.this, "아이디를 입력해주세요.", Toast.LENGTH_SHORT).show();
-                    } else {
-                        service.requestIdDuplication(id.hashCode())
-                                .enqueue(new Callback<SuccessOrNot>() {
-                                    @Override
-                                    public void onResponse(Call<SuccessOrNot> call, Response<SuccessOrNot> response) {
-                                        Log.d(TAG, "onResponse SignUp: " + response.body());
-                                        if (response.isSuccessful()) {
-                                            switch (response.body().getResult()) {
-                                                case "success":
-                                                    dlg.showAlertDialog(SignUp.this, "사용 할 수 있는 아이디 입니다.");
-                                                    duplicateWarning.setVisibility(View.GONE);
-                                                    idEditText.setEnabled(false);
-                                                    checkDuplicateButton.setText("수정");
-                                                    isIdDuplicate = true;
-                                                    break;
-
-                                                case "failed":
-                                                    duplicateWarning.setVisibility(View.VISIBLE);
-                                                    isIdDuplicate = false;
-                                                    break;
-                                            }
-
-                                        } else {
-                                            Toast.makeText(SignUp.this, getResources().getString(R.string.networkError), Toast.LENGTH_SHORT).show();
+                                            case "failed":
+                                                duplicateWarning.setVisibility(View.VISIBLE);
+                                                isIdDuplicate = false;
+                                                break;
                                         }
-                                    }
 
-                                    @Override
-                                    public void onFailure(Call<SuccessOrNot> call, Throwable t) {
-                                        Log.d(TAG, "onFailure SignUp: " + t.getMessage());
+                                    } else {
+                                        Toast.makeText(SignUp.this, getResources().getString(R.string.networkError), Toast.LENGTH_SHORT).show();
                                     }
-                                });
-                    }
+                                }
 
+                                @Override
+                                public void onFailure(Call<SuccessOrNot> call, Throwable t) {
+                                    Log.d(TAG, "onFailure SignUp: " + t.getMessage());
+                                }
+                            });
                 }
+
             }
         });
 
@@ -175,38 +171,37 @@ public class SignUp extends AppCompatActivity {
                 String phoneCk = phoneEditText.getText().toString().trim();
                 Pattern pattern_phone = Pattern.compile("^01(?:0|1|[6-9])-(?:\\d{3}|\\d{4})-\\d{4}$");
                 isPhoneMatch = pattern_phone.matcher(phoneCk).matches();
-                Log.d(TAG, "isPhoneMatch: " + isPhoneMatch);
 
 
                 if (id.isEmpty() || id == null) {
 
-                    dlg.showAlertDialog(SignUp.this, "아이디를 입력해주세요.");
+                    dialogManager.positiveBtnDialog(SignUp.this, "아이디를 입력해주세요.");
 
                 } else if (pwEditText.getText().toString().isEmpty()) {
 
-                    dlg.showAlertDialog(SignUp.this, "비밀번호를 입력해주세요.");
+                    dialogManager.positiveBtnDialog(SignUp.this, "비밀번호를 입력해주세요.");
 
                 } else if (phoneEditText.getText().toString().isEmpty()) {
 
-                    dlg.showAlertDialog(SignUp.this, "핸드폰 번호를 입력해주세요.");
+                    dialogManager.positiveBtnDialog(SignUp.this, "핸드폰 번호를 입력해주세요.");
 
                 } else if (emailEditText.getText().toString().isEmpty()) {
-                    dlg.showAlertDialog(SignUp.this, "이메일을 입력해주세요.");
+                    dialogManager.positiveBtnDialog(SignUp.this, "이메일을 입력해주세요.");
 
                 } else if (!isPasswordMatch) {
-                    dlg.showAlertDialog(SignUp.this, "비밀번호가 일치하지 않습니다.");
+                    dialogManager.positiveBtnDialog(SignUp.this, "비밀번호가 일치하지 않습니다.");
 
                 } else if (!isIdDuplicate) {
-                    dlg.showAlertDialog(SignUp.this, "아이디를 중복 확인을 해주세요.");
+                    dialogManager.positiveBtnDialog(SignUp.this, "아이디를 중복 확인을 해주세요.");
 
                 } else if (!isPhoneMatch) {
-                    dlg.showAlertDialog(SignUp.this, "핸드폰 번호를 형식에 맞게 입력해주세요.");
-                    Log.d(TAG, "phoneMatch : " + phoneCk);
+                    dialogManager.positiveBtnDialog(SignUp.this, "핸드폰 번호를 형식에 맞게 입력해주세요.");
 
                 } else if (!isEmailMatch) {
-                    dlg.showAlertDialog(SignUp.this, "이메일을 형식에 맞게 입력해주세요.");
-                    Log.d(TAG, "email.getText : " + emailCk);
+                    dialogManager.positiveBtnDialog(SignUp.this, "이메일을 형식에 맞게 입력해주세요.");
                 } else {
+                    Dialog progressbar = dialogManager.progressDialog(SignUp.this);
+                    progressbar.show();
 
                     Call<SuccessOrNot> call = service.requestSignUp(idEditText.getText().toString().trim(),
                             idEditText.getText().toString().trim().hashCode(),
@@ -218,6 +213,8 @@ public class SignUp extends AppCompatActivity {
                         @Override
                         public void onResponse(Call<SuccessOrNot> call, Response<SuccessOrNot> response) {
                             Log.d(TAG, "onResponse Signup: " + response.body());
+                            progressbar.dismiss();
+
                             if (response.isSuccessful()) {
                                 switch (response.body().getResult()) {
                                     case "success":

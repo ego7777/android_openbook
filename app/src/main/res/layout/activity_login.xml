@@ -8,25 +8,6 @@
     android:background="@color/black"
     android:paddingTop="50dp">
 
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-
-    <ProgressBar
-        android:id="@+id/login_progressbar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:visibility="gone"
-
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    </FrameLayout>
-
 
     <TextView
         android:id="@+id/login_text_id"
@@ -34,11 +15,11 @@
         android:layout_height="0dp"
 
         android:layout_marginStart="200dp"
-        android:layout_marginTop="100dp"
+        android:layout_marginTop="50dp"
         android:layout_marginBottom="50dp"
         android:autoSizeMaxTextSize="40sp"
 
-        android:autoSizeMinTextSize="30sp"
+        android:autoSizeMinTextSize="25sp"
         android:autoSizeTextType="uniform"
         android:gravity="center"
 
@@ -59,7 +40,7 @@
         android:id="@+id/login_editText_id"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="100dp"
+        android:layout_marginTop="50dp"
         android:layout_marginEnd="300dp"
         android:layout_marginBottom="50dp"
 
@@ -71,7 +52,9 @@
         android:padding="10dp"
         android:textColor="@color/black"
 
-        android:textSize="25sp"
+        android:autoSizeMaxTextSize="40sp"
+        android:autoSizeMinTextSize="25sp"
+        android:autoSizeTextType="uniform"
 
         app:layout_constraintBottom_toTopOf="@id/login_editText_pw"
         app:layout_constraintEnd_toEndOf="parent"
@@ -89,7 +72,7 @@
         android:layout_marginStart="200dp"
         android:layout_marginBottom="50dp"
         android:autoSizeMaxTextSize="40sp"
-        android:autoSizeMinTextSize="20sp"
+        android:autoSizeMinTextSize="25sp"
 
         android:autoSizeTextType="uniform"
         android:gravity="center"
@@ -121,7 +104,10 @@
         android:maxLines="1"
         android:padding="10dp"
         android:textColor="@color/black"
-        android:textSize="25sp"
+
+        android:autoSizeMaxTextSize="40sp"
+        android:autoSizeMinTextSize="25sp"
+        android:autoSizeTextType="uniform"
 
         app:layout_constraintBottom_toTopOf="@id/signup_button"
         app:layout_constraintEnd_toEndOf="parent"
@@ -137,7 +123,7 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginStart="300dp"
-        android:layout_marginTop="50dp"
+        android:layout_marginTop="30dp"
         android:layout_marginBottom="50dp"
         android:autoSizeMaxTextSize="30sp"
 
@@ -154,7 +140,7 @@
         app:layout_constraintHorizontal_weight="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/login_text_password"
-        app:layout_constraintVertical_weight="0.6" />
+        app:layout_constraintVertical_weight="0.5" />
 
 
     <androidx.appcompat.widget.AppCompatButton
@@ -164,7 +150,7 @@
 
 
         android:layout_marginStart="100dp"
-        android:layout_marginTop="50dp"
+        android:layout_marginTop="30dp"
         android:layout_marginEnd="300dp"
         android:layout_marginBottom="50dp"
         android:autoSizeMaxTextSize="30sp"
@@ -182,7 +168,7 @@
         app:layout_constraintHorizontal_weight="0.5"
         app:layout_constraintStart_toEndOf="@id/login_button"
         app:layout_constraintTop_toBottomOf="@id/login_editText_pw"
-        app:layout_constraintVertical_weight="0.6" />
+        app:layout_constraintVertical_weight="0.5" />
 
     <com.google.android.gms.common.SignInButton
         android:id="@+id/google_login"
