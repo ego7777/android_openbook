@@ -20,6 +20,7 @@ import com.example.openbook.R;
 import com.example.openbook.RetrofitManager;
 import com.example.openbook.RetrofitService;
 import com.example.openbook.SuccessOrNot;
+import com.example.openbook.TableListDTO;
 import com.example.openbook.TableQuantity;
 import com.example.openbook.startActivity.LoginResponseModel;
 import com.example.openbook.startActivity.SignUp;
@@ -276,14 +277,34 @@ public class Login extends AppCompatActivity {
             adminTableList = new ArrayList<>();
 
             TableQuantity tableQuantity = new TableQuantity();
+            tableQuantity.getTableQuantity(new Callback<TableListDTO>() {
+                @Override
+                public void onResponse(Call<TableListDTO> call, Response<TableListDTO> response) {
+                    Log.d(TAG, "onResponse table: " + response.body().getTableCount());
+                    if(response.isSuccessful()){
+                        switch (response.body().getResult()){
+                            case "success" :
+                                tableFromDB = response.body().getTableCount();
+                                break;
+                            case "failed" :
+                                Log.d(TAG, "onResponse table failed: ");
+                        }
+                    }else{
+                        Log.d(TAG, "onResponse table isNotSuccessful");
+                    }
+                }
 
-            tableFromDB = tableQuantity.getTableQuantity();
-            Log.d(TAG, "onStart table : " + tableFromDB);
+                @Override
+                public void onFailure(Call<TableListDTO> call, Throwable t) {
+                    Log.d(TAG, "onFailure table: " + t.getMessage());
+                }
+            });
+
+
 
             for(int i=1; i<tableFromDB+1; i++){
                 adminTableList.add(new AdminTableList("table"+i,
                         null, null, null, null, 0, 0));
-
 
             }
             Log.d(TAG, "onStart Table Size: " + adminTableList.size());

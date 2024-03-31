@@ -27,6 +27,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.openbook.Adapter.MenuAdapter;
 import com.example.openbook.Adapter.TableAdapter;
+import com.example.openbook.BuildConfig;
 import com.example.openbook.Chatting.ChattingUI;
 import com.example.openbook.Chatting.DBHelper;
 import com.example.openbook.Data.ChattingData;
@@ -40,6 +41,11 @@ import com.example.openbook.QRcode.MakeQR;
 import com.example.openbook.R;
 import com.example.openbook.Data.TicketData;
 import com.example.openbook.Data.TableList;
+import com.example.openbook.RetrofitManager;
+import com.example.openbook.RetrofitService;
+import com.example.openbook.SuccessOrNot;
+import com.example.openbook.TableInformationDTO;
+import com.example.openbook.TableListDTO;
 import com.example.openbook.TableQuantity;
 
 import org.json.JSONArray;
@@ -52,14 +58,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
 
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.FormBody;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 
 public class Table extends AppCompatActivity {
 
@@ -74,17 +77,16 @@ public class Table extends AppCompatActivity {
     TextView tableInfoStatement, tableInfoText, tableInfoGender, tableInfoMember;
     Button tableInfoClose;
 
-
     int clickTable, myTable, sendGiftQuantity;
     TableAdapter adapter;
-
-    OkHttpClient okHttpClient = new OkHttpClient();
 
     TextView appbarMenu, appbarOrderList, requestChatting, checkInformation, sendGift;
     LinearLayout table_sidebar;
 
     ImageLoadTask task;
     String url;
+
+    RetrofitService service;
 
     SendToPopUp sendToPopUp = new SendToPopUp();
 
@@ -97,12 +99,12 @@ public class Table extends AppCompatActivity {
                 String message = intent.getStringExtra("tableInformation");
                 tableUpdate(message);
 
-            }else if (intent.getAction().equals("chattingRequestArrived")) {
+            } else if (intent.getAction().equals("chattingRequestArrived")) {
                 String fcmData = intent.getStringExtra("fcmData");
 
                 sendToPopUp.sendToPopUpChatting(Table.this, myData,
-                                chattingDataHashMap, ticketDataHashMap, tableList, fcmData);
-            }else if(intent.getAction().equals("giftArrived")){
+                        chattingDataHashMap, ticketDataHashMap, tableList, fcmData);
+            } else if (intent.getAction().equals("giftArrived")) {
 
                 String from = intent.getStringExtra("tableName");
                 String menuName = intent.getStringExtra("menuName");
@@ -115,7 +117,6 @@ public class Table extends AppCompatActivity {
 
 
     int tablePosition;
-    String responseBody;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -135,7 +136,7 @@ public class Table extends AppCompatActivity {
         Log.d(TAG, "tableList size: " + tableList.size());
 
 
-        if(!myData.getId().equals("구글로그인")){
+        if (!myData.getId().equals("구글로그인")) {
             myTable = Integer.parseInt(myData.getId().replace("table", ""));
             TextView table_num = findViewById(R.id.appbar_menu_table_number);
             table_num.setText(myData.getId());
@@ -168,6 +169,10 @@ public class Table extends AppCompatActivity {
         checkInformation = findViewById(R.id.take_info);
         sendGift = findViewById(R.id.send_gift);
 
+        RetrofitManager retrofitManager = new RetrofitManager();
+        Retrofit retrofit = retrofitManager.getRetrofit(BuildConfig.SERVER_IP);
+        service = retrofit.create(RetrofitService.class);
+
     } //onCreate
 
 
@@ -190,53 +195,56 @@ public class Table extends AppCompatActivity {
         String activeTable = sharedPreferences.getString("ActiveTable", null);
         Log.d(TAG, "activeTable: " + activeTable);
 
-        if (tableList != null ) {
+        if (tableList != null) {
 
             tableUpdate(activeTable);
 
         } else {
             TableQuantity tableQuantity = new TableQuantity();
-//            int tableFromDB = tableQuantity.getTableQuantity();
+            tableQuantity.getTableQuantity(new Callback<TableListDTO>() {
+                @Override
+                public void onResponse(Call<TableListDTO> call, Response<TableListDTO> response) {
+                    if(response.isSuccessful()){
+                        tableList = new ArrayList<>();
 
-            tableList = new ArrayList<>();
+                        for (int i = 1; i < response.body().getTableCount() + 1; i++) {
+                            if (i == myTable) {
+                                tableList.add(new TableList(myData.getId(), (Drawable) null, 0));
+                            } else {
+                                tableList.add(new TableList(i, (Drawable) null, 1));
+                            }
+                        }
+                    }
+                }
 
-//            for (int i = 1; i < tableFromDB + 1; i++) {
-//                if (i == myTable) {
-//                    tableList.add(new TableList(myData.getId(), (Drawable) null, 0));
-//                } else {
-//                    tableList.add(new TableList(i, (Drawable) null, 1));
-//                }
-//            }
+                @Override
+                public void onFailure(Call<TableListDTO> call, Throwable t) {
+
+                }
+            });
 
             tableUpdate(activeTable);
         }
 
 
-
         appbarMenu.setOnClickListener(this::moveToMenu);
 
-        appbarOrderList.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        appbarOrderList.setOnClickListener(v -> {
 //                showReceiptDialog();
-            }
         });
 
 
         /**
          * table 누르면 옆에 사이드 메뉴 popup
          */
-        adapter.setOnItemClickListener(new TableAdapter.OnItemClickListener() {
-            @Override
-            public void onItemClick(View view, int position) {
-                table_sidebar.setVisibility(View.VISIBLE);
-                clickTable = position + 1;
+        adapter.setOnItemClickListener((view, position) -> {
+            table_sidebar.setVisibility(View.VISIBLE);
+            clickTable = position + 1;
 
-                if(myData.getPaymentStyle().equals("before")){
-                    requestChatting.setVisibility(View.GONE);
-                }
-
+            if (myData.getPaymentStyle().equals("before")) {
+                requestChatting.setVisibility(View.GONE);
             }
+
         });
 
 
@@ -248,270 +256,248 @@ public class Table extends AppCompatActivity {
          * 1. 내가 주문을 안했으면 주문하라고 팝업이 뜨고
          * 2. 상대방이 주문을 안했으면 알려주기
          */
-        requestChatting.setOnClickListener(new View.OnClickListener() {
-            @RequiresApi(api = Build.VERSION_CODES.O)
-            @Override
-            public void onClick(View view) {
+        // onClick
+        requestChatting.setOnClickListener(view -> {
 
-                if (!myData.isOrder()) {
-                    dialogManager.positiveBtnDialog(Table.this, "주문 후 채팅이 가능합니다.");
+            if (!myData.isOrder()) {
+                dialogManager.positiveBtnDialog(Table.this, "주문 후 채팅이 가능합니다.");
 
-                } else if (clickTable == myTable) {
+            } else if (clickTable == myTable) {
 
-                    dialogManager.positiveBtnDialog(Table.this,
-                            "나의 채팅방 입니다. 다른 테이블과 채팅해보세요!");
+                dialogManager.positiveBtnDialog(Table.this,
+                        "나의 채팅방 입니다. 다른 테이블과 채팅해보세요!");
 
-                } else if (tableList.get(clickTable - 1).getViewType() == 2) {
+            } else if (tableList.get(clickTable - 1).getViewType() == 2) {
 
-                    if (chattingDataHashMap == null ||
-                            !chattingDataHashMap.get("table" + clickTable).isChattingAgree()) {
+                if (chattingDataHashMap == null ||
+                        !chattingDataHashMap.get("table" + clickTable).isChattingAgree()) {
 
-                        dialogManager.chattingRequest(Table.this,
-                                String.valueOf(clickTable) + R.string.chattingAlarm,
-                                "table" + clickTable, myData.getId());
+                    dialogManager.chattingRequest(Table.this,
+                            String.valueOf(clickTable) + R.string.chattingAlarm,
+                            "table" + clickTable, myData.getId());
 
-                        Log.d(TAG, "채팅 신청");
+                    Log.d(TAG, "채팅 신청");
 
-                    } else if (chattingDataHashMap.get("table" + clickTable).isChattingAgree()) {
+                } else if (chattingDataHashMap.get("table" + clickTable).isChattingAgree()) {
 
-                        Intent intent = new Intent(Table.this, ChattingUI.class);
-                        intent.putExtra("tableNumber", clickTable);
-                        intent.putExtra("myData", myData);
-                        intent.putExtra("chattingData", chattingDataHashMap);
-                        intent.putExtra("ticketData", ticketDataHashMap);
-                        intent.putExtra("tableList", tableList);
-                        //여기서 이미 채팅 agree면 isRead를 보내는거야
+                    Intent intent = new Intent(Table.this, ChattingUI.class);
+                    intent.putExtra("tableNumber", clickTable);
+                    intent.putExtra("myData", myData);
+                    intent.putExtra("chattingData", chattingDataHashMap);
+                    intent.putExtra("ticketData", ticketDataHashMap);
+                    intent.putExtra("tableList", tableList);
+                    //여기서 이미 채팅 agree면 isRead를 보내는거야
 
-                        //상대방한테 알려줘야지
-                        Intent isRead = new Intent("SendChattingData");
-                        /**
-                         * 읽음_from_to
-                         */
-                        isRead.putExtra("sendToServer", "isRead_"+myData.getId()+"_table" + clickTable);
-                        LocalBroadcastManager.getInstance(Table.this).sendBroadcast(isRead);
+                    //상대방한테 알려줘야지
+                    Intent isRead = new Intent("SendChattingData");
+                    /**
+                     * 읽음_from_to
+                     */
+                    isRead.putExtra("sendToServer", "isRead_" + myData.getId() + "_table" + clickTable);
+                    LocalBroadcastManager.getInstance(Table.this).sendBroadcast(isRead);
 
-                        startActivity(intent);
+                    startActivity(intent);
 
-                    }
+                }
 
-                } else if (tableList.get(clickTable - 1).getViewType() != 2) {
-                    Log.d(TAG, "비어있는 테이블");
-                    dialogManager.positiveBtnDialog(Table.this,
-                            String.valueOf(R.string.unusableTable));
-                } // if-else  list.length>0 끝
-            } // onClick
+            } else if (tableList.get(clickTable - 1).getViewType() != 2) {
+                Log.d(TAG, "비어있는 테이블");
+                dialogManager.positiveBtnDialog(Table.this,
+                        String.valueOf(R.string.unusableTable));
+            } // if-else  list.length>0 끝
         }); //setOnClickListener
 
 
         /**
          * info 누르면 해당 테이블 정보 볼 수 있게
          */
-        checkInformation.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+        checkInformation.setOnClickListener(view -> {
 
-                Dialog dlg = new Dialog(Table.this, R.style.RadiusDialogStyle);
-                dlg.setContentView(R.layout.table_information_dialog);
-                dlg.show();
+            Dialog dlg = new Dialog(Table.this, R.style.RadiusDialogStyle);
+            dlg.setContentView(R.layout.table_information_dialog);
+            dlg.show();
 
 
-                table_info_img = dlg.findViewById(R.id.table_info_img);
-                tableInfoText = dlg.findViewById(R.id.table_info_text);
-                tableInfoStatement = dlg.findViewById(R.id.table_info_statement);
-                tableInfoGender = dlg.findViewById(R.id.table_info_gender);
-                tableInfoMember = dlg.findViewById(R.id.table_info_member);
-                tableInfoClose = dlg.findViewById(R.id.table_info_close);
+            table_info_img = dlg.findViewById(R.id.table_info_img);
+            tableInfoText = dlg.findViewById(R.id.table_info_text);
+            tableInfoStatement = dlg.findViewById(R.id.table_info_statement);
+            tableInfoGender = dlg.findViewById(R.id.table_info_gender);
+            tableInfoMember = dlg.findViewById(R.id.table_info_member);
+            tableInfoClose = dlg.findViewById(R.id.table_info_close);
 
 
-                try {
-                    String result = requestTableInfo();
-                    Log.d(TAG, "url result: " + result);
-                    /**
-                     *  등록을 했으면 등록된 정보를 보여주고 등록 안했으면 하단 set
-                     */
-                    if (clickTable == myTable) {
-
-                        handleMyTableInfo(result);
-
-                    } else {
-                        handleOtherTableInfo(result);
-
+            requestTableInfo(new Callback<TableInformationDTO>() {
+                @Override
+                public void onResponse(Call<TableInformationDTO> call, Response<TableInformationDTO> response) {
+                    if (response.isSuccessful()) {
+                        /**
+                         *  등록을 했으면 등록된 정보를 보여주고 등록 안했으면 하단 set
+                         */
+                        if (clickTable == myTable) {
+                            handleMyTableInfo(response.body());
+                        } else {
+                            handleOtherTableInfo(response.body());
+                        }
+                    }else{
+                        Log.d(TAG, "onResponse tableInformation isNotSuccessful");
                     }
-                } catch (InterruptedException | JSONException e) {
-                    e.printStackTrace();
                 }
 
-
-                /**
-                 * 사진을 누르면 돈내고 사진 깔거냐고 물어보기
-                 */
-
-                table_info_img.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-
-                        if (clickTable == myTable) {
-                            MakeQR makeQR = new MakeQR();
-                            table_info_img.setImageBitmap(makeQR.clientQR(myData.getId()));
-                            tableInfoText.setVisibility(View.INVISIBLE);
-
-                        } else {
-
-                            Intent intent = new Intent(Table.this, PopUpProfile.class);
-                            intent.putExtra("title", "프로필 조회권 구매");
-                            intent.putExtra("body", "프로필 조회권을 구매하시겠습니까?\n** 프로필 조회권 2000원");
-
-                            intent.putExtra("myData", myData);
-                            intent.putExtra("clickTable", clickTable);
-                            intent.putExtra("chattingData", chattingDataHashMap);
-                            intent.putExtra("ticketData", ticketDataHashMap);
-                            intent.putExtra("tableList", tableList);
-
-                            startActivity(intent);
-                            dlg.dismiss();
-                        }
-                    }
-                });
+                @Override
+                public void onFailure(Call<TableInformationDTO> call, Throwable t) {
+                    Log.d(TAG, "onFailure tableInformation: " + t.getMessage());
+                }
+            });
 
 
-                tableInfoClose.setOnClickListener(v -> dlg.dismiss());
+
+            /**
+             * 사진을 누르면 돈내고 사진 깔거냐고 물어보기
+             */
+
+            table_info_img.setOnClickListener(v -> {
+
+                if (clickTable == myTable) {
+                    MakeQR makeQR = new MakeQR();
+                    table_info_img.setImageBitmap(makeQR.clientQR(myData.getId()));
+                    tableInfoText.setVisibility(View.INVISIBLE);
+
+                } else {
+
+                    Intent intent = new Intent(Table.this, PopUpProfile.class);
+                    intent.putExtra("title", "프로필 조회권 구매");
+                    intent.putExtra("body", "프로필 조회권을 구매하시겠습니까?\n** 프로필 조회권 2000원");
+
+                    intent.putExtra("myData", myData);
+                    intent.putExtra("clickTable", clickTable);
+                    intent.putExtra("chattingData", chattingDataHashMap);
+                    intent.putExtra("ticketData", ticketDataHashMap);
+                    intent.putExtra("tableList", tableList);
+
+                    startActivity(intent);
+                    dlg.dismiss();
+                }
+            });
 
 
-            }
+            tableInfoClose.setOnClickListener(v -> dlg.dismiss());
+
+
         }); //info-click
 
         sendGift.setOnClickListener(v -> {
 
-        if (tableList.get(clickTable - 1).getViewType() != 2) {
-            Log.d(TAG, "비어있는 테이블");
-            dialogManager.positiveBtnDialog(Table.this,
-                    String.valueOf(R.string.unusableTable));
-        }else{
+            if (tableList.get(clickTable - 1).getViewType() != 2) {
+                Log.d(TAG, "비어있는 테이블");
+                dialogManager.positiveBtnDialog(Table.this,
+                        String.valueOf(R.string.unusableTable));
+            } else {
 
-            Dialog dlg = new Dialog(Table.this);
-            dlg.setContentView(R.layout.send_gift_select_dialog);
-            dlg.show();
+                Dialog dlg = new Dialog(Table.this);
+                dlg.setContentView(R.layout.send_gift_select_dialog);
+                dlg.show();
 
-            RecyclerView sendGiftRecyclerview = dlg.findViewById(R.id.send_gift_select_recyclerview);
-            TextView sendGiftCancel = dlg.findViewById(R.id.send_gift_select_cancel);
+                RecyclerView sendGiftRecyclerview = dlg.findViewById(R.id.send_gift_select_recyclerview);
+                TextView sendGiftCancel = dlg.findViewById(R.id.send_gift_select_cancel);
 
-            sendGiftCancel.setOnClickListener(view ->{
-                dlg.dismiss();
-            });
-
-            sendGiftRecyclerview.setLayoutManager(new LinearLayoutManager
-                    (Table.this, RecyclerView.HORIZONTAL, false));
-
-            MenuAdapter menuAdapter = new MenuAdapter();
-            ArrayList<MenuList> menuLists = new ArrayList<>();
-
-            sendGiftRecyclerview.setAdapter(menuAdapter);
-            sendGiftRecyclerview.addItemDecoration(new menu_recyclerview_deco(Table.this));
-            menuAdapter.setAdapterItem(menuLists);
-
-            int version = 1;
-            version ++;
-
-            DBHelper dbHelper = new DBHelper(Table.this, version);
-            menuLists = dbHelper.getTableData(menuLists);
-            Log.d(TAG, "menuLists size: " + menuLists.size());
-
-            menuAdapter.setAdapterItem(menuLists);
-
-            menuAdapter.setOnItemClickListener(new MenuAdapter.OnItemClickListener() {
-                @Override
-                public void onItemClick(View view, String name, int price, int position) {
+                sendGiftCancel.setOnClickListener(view -> {
                     dlg.dismiss();
+                });
 
-                    Dialog dialog = new Dialog(Table.this);
-                    dialog.setContentView(R.layout.send_gift_quantity_dialog);
-                    dialog.show();
+                sendGiftRecyclerview.setLayoutManager(new LinearLayoutManager
+                        (Table.this, RecyclerView.HORIZONTAL, false));
 
-                    TextView menuName = dialog.findViewById(R.id.send_gift_quantity_menuName);
-                    TextView menuQuantity = dialog.findViewById(R.id.send_gift_quantity_menuQuantity);
-                    TextView menuPrice = dialog.findViewById(R.id.send_gift_quantity_price);
-                    Button sendGiftButton = dialog.findViewById(R.id.send_gift_button);
-                    Button plus = dialog.findViewById(R.id.send_gift_quantity_plus);
-                    Button minus = dialog.findViewById(R.id.send_gift_quantity_minus);
-                    Button cancel = dialog.findViewById(R.id.send_gift_quantity_cancel);
+                MenuAdapter menuAdapter = new MenuAdapter();
+                ArrayList<MenuList> menuLists = new ArrayList<>();
 
-                    cancel.setOnClickListener(v1 -> dialog.dismiss());
+                sendGiftRecyclerview.setAdapter(menuAdapter);
+                sendGiftRecyclerview.addItemDecoration(new menu_recyclerview_deco(Table.this));
+                menuAdapter.setAdapterItem(menuLists);
+
+                int version = 1;
+                version++;
+
+                DBHelper dbHelper = new DBHelper(Table.this, version);
+                menuLists = dbHelper.getTableData(menuLists);
+                Log.d(TAG, "menuLists size: " + menuLists.size());
+
+                menuAdapter.setAdapterItem(menuLists);
+
+                menuAdapter.setOnItemClickListener(new MenuAdapter.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(View view, String name, int price, int position) {
+                        dlg.dismiss();
+
+                        Dialog dialog = new Dialog(Table.this);
+                        dialog.setContentView(R.layout.send_gift_quantity_dialog);
+                        dialog.show();
+
+                        TextView menuName = dialog.findViewById(R.id.send_gift_quantity_menuName);
+                        TextView menuQuantity = dialog.findViewById(R.id.send_gift_quantity_menuQuantity);
+                        TextView menuPrice = dialog.findViewById(R.id.send_gift_quantity_price);
+                        Button sendGiftButton = dialog.findViewById(R.id.send_gift_button);
+                        Button plus = dialog.findViewById(R.id.send_gift_quantity_plus);
+                        Button minus = dialog.findViewById(R.id.send_gift_quantity_minus);
+                        Button cancel = dialog.findViewById(R.id.send_gift_quantity_cancel);
+
+                        cancel.setOnClickListener(v1 -> dialog.dismiss());
 
 
-                    sendGiftQuantity =1;
-                    menuName.setText(name);
-                    menuPrice.setText(String.valueOf(price));
-                    menuQuantity.setText(String.valueOf(sendGiftQuantity));
-
-
-                    plus.setOnClickListener(v12 -> {
-                        sendGiftQuantity = sendGiftQuantity + 1;
+                        sendGiftQuantity = 1;
+                        menuName.setText(name);
+                        menuPrice.setText(String.valueOf(price));
                         menuQuantity.setText(String.valueOf(sendGiftQuantity));
 
-                        int totalPrice = sendGiftQuantity * price;
-                        menuPrice.setText(String.valueOf(totalPrice));
 
-                    });
-
-                    minus.setOnClickListener(v13 -> {
-                        if(sendGiftQuantity > 0){
-                            sendGiftQuantity = sendGiftQuantity - 1;
+                        plus.setOnClickListener(v12 -> {
+                            sendGiftQuantity = sendGiftQuantity + 1;
                             menuQuantity.setText(String.valueOf(sendGiftQuantity));
 
                             int totalPrice = sendGiftQuantity * price;
                             menuPrice.setText(String.valueOf(totalPrice));
-                        }
 
-                    });
+                        });
 
-                    sendGiftButton.setOnClickListener(v14 -> {
-                        Log.d(TAG, "onClick sendGift: ");
-                        int menuPrice1 = sendGiftQuantity * price;
-                        sendGiftOtherTable(name, sendGiftQuantity, menuPrice1);
-                        dialog.dismiss();
-                    });
-                }
-            });
-        }
+                        minus.setOnClickListener(v13 -> {
+                            if (sendGiftQuantity > 0) {
+                                sendGiftQuantity = sendGiftQuantity - 1;
+                                menuQuantity.setText(String.valueOf(sendGiftQuantity));
+
+                                int totalPrice = sendGiftQuantity * price;
+                                menuPrice.setText(String.valueOf(totalPrice));
+                            }
+
+                        });
+
+                        sendGiftButton.setOnClickListener(v14 -> {
+                            Log.d(TAG, "onClick sendGift: ");
+                            int menuPrice1 = sendGiftQuantity * price;
+                            sendGiftOtherTable(name, sendGiftQuantity, menuPrice1);
+                            dialog.dismiss();
+                        });
+                    }
+                });
+            }
 
         });
-
 
 
     } //onResume
 
-    private String requestTableInfo() throws InterruptedException {
-        Request.Builder builder = new Request.Builder()
-                .url("http://3.36.255.141/tableInfoCk.php")
-                .get();
-
-        builder.addHeader("table", "table" + clickTable);
-        Request request = builder.build();
-        Log.d(TAG, "request :" + request);
-
-        okHttpClient.newCall(request).enqueue(new Callback() {
+    private void requestTableInfo(Callback<TableInformationDTO> callback) {
+        Call<TableInformationDTO> call = service.getTableImage("table" + clickTable);
+        call.enqueue(new Callback<TableInformationDTO>() {
             @Override
-            public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                Log.d(TAG, "onFailure: " + e);
+            public void onResponse(Call<TableInformationDTO> call, Response<TableInformationDTO> response) {
+                Log.d(TAG, "onResponse: " + response.body().getResult());
+                callback.onResponse(call, response);
             }
 
             @Override
-            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                if (response.isSuccessful()) {
-                    String body = response.body().string();
-                    Log.d(TAG, "requestTableInfo onResponse: " + body);
-                    responseBody = body;
-                } else {
-                    Log.d(TAG, "requestTableInfo onResponse: fail");
-                }
+            public void onFailure(Call<TableInformationDTO> call, Throwable t) {
+                Log.d(TAG, "onFailure: " + t.getMessage());
             }
         });
-
-
-        Thread.sleep(250);
-
-
-        return responseBody;
     }
 
 
@@ -537,7 +523,7 @@ public class Table extends AppCompatActivity {
         Log.d(TAG, "tableUpdate: ");
         int table[];
 
-        if(line == null){
+        if (line == null) {
             Log.d(TAG, "tableUpdate line null: " + line);
             return;
         }
@@ -579,9 +565,10 @@ public class Table extends AppCompatActivity {
         }
     }
 
-    private void handleMyTableInfo(String result) throws JSONException {
+    private void handleMyTableInfo(TableInformationDTO tableInformationDTO) {
 
-        if (result.equals("없음")) {
+
+        if (tableInformationDTO.getResult().equals("notExist")) {
             MakeQR makeQR = new MakeQR();
             table_info_img.setImageBitmap(makeQR.clientQR(myData.getId()));
             table_info_img.setClickable(false);
@@ -592,11 +579,8 @@ public class Table extends AppCompatActivity {
             tableInfoGender.setVisibility(View.GONE);
             tableInfoMember.setVisibility(View.GONE);
 
-        } else if (result.startsWith("{")) {
-            JSONObject jsonObject = new JSONObject(result);
-
-            String url = "http://3.36.255.141/image/"
-                    + jsonObject.getString("img");
+        } else  {
+            String url = BuildConfig.SERVER_IP + "/Profile/" + tableInformationDTO.getImageUrl();
             Log.d(TAG, "url :" + url);
 
             task = new ImageLoadTask(Table.this, true, url, table_info_img);
@@ -604,15 +588,15 @@ public class Table extends AppCompatActivity {
 
             tableInfoText.setText("다시 등록하시려면 \n프로필 사진을 터치해주세요!");
 
-            tableInfoStatement.setText(jsonObject.getString("statement"));
-            tableInfoGender.setText(jsonObject.getString("gender"));
-            tableInfoMember.setText(jsonObject.getString("guestNum"));
+            tableInfoStatement.setText(tableInformationDTO.getStatement());
+            tableInfoGender.setText(tableInformationDTO.getGender());
+            tableInfoMember.setText(tableInformationDTO.getUserCount());
         }
     }
 
-    private void handleOtherTableInfo(String result) throws JSONException {
+    private void handleOtherTableInfo(TableInformationDTO tableInformation) {
 
-        if (result.equals("없음")) {
+        if (tableInformation.getResult().equals("notExist")) {
             tableInfoText.setVisibility(View.INVISIBLE);
             tableInfoStatement.setText("정보를 입력하지 않은 테이블입니다.");
             tableInfoGender.setVisibility(View.INVISIBLE);
@@ -621,14 +605,13 @@ public class Table extends AppCompatActivity {
             /**
              * table 정보 있을 때
              */
-        } else if (result.startsWith("{")) {
-            JSONObject jsonObject = new JSONObject(result);
+        } else {
 
-            url = "http://3.36.255.141/image/" + jsonObject.getString("img");
+            url = BuildConfig.SERVER_IP + "image/" + tableInformation.getImageUrl();
 
 
-            if(ticketDataHashMap != null){
-                Log.d(TAG, "ticket: " + ticketDataHashMap.get("table"+clickTable).getUseTable());
+            if (ticketDataHashMap != null) {
+                Log.d(TAG, "ticket: " + ticketDataHashMap.get("table" + clickTable).getUseTable());
             }
             //전체를 조회해서...?
 
@@ -637,7 +620,7 @@ public class Table extends AppCompatActivity {
              * 티켓 유무
              */
             if (ticketDataHashMap == null ||
-                    ticketDataHashMap.get("table"+clickTable) == null) {
+                    ticketDataHashMap.get("table" + clickTable) == null) {
 
                 Log.d(TAG, "티켓 없어서 블러 처리");
                 task = new ImageLoadTask(Table.this, false, url, table_info_img);
@@ -664,9 +647,9 @@ public class Table extends AppCompatActivity {
 
             }
 
-            tableInfoStatement.setText(jsonObject.getString("statement"));
-            tableInfoGender.setText(jsonObject.getString("gender"));
-            tableInfoMember.setText(jsonObject.getString("guestNum"));
+            tableInfoStatement.setText(tableInformation.getStatement());
+            tableInfoGender.setText(tableInformation.getGender());
+            tableInfoMember.setText(tableInformation.getUserCount());
 
         }
     }
@@ -710,35 +693,24 @@ public class Table extends AppCompatActivity {
         return jsonObject.toString();
     }
 
-    public void sendGiftOtherTable(String menuName, int menuQuantity, int menuPrice){
+    public void sendGiftOtherTable(String menuName, int menuQuantity, int menuPrice) {
 
-        RequestBody formBody = new FormBody.Builder().
-                add("to", "table"+clickTable).
-                add("from", myData.getId()).
-                add("menuName", menuName).
-                add("menuQuantity",String.valueOf(menuQuantity)).
-                add("menuPrice", String.valueOf(menuPrice)).
-                build();
+        Call<SuccessOrNot> call = service.sendGiftOtherTable("table" + clickTable,
+                myData.getId(), menuName, menuQuantity, menuPrice);
 
-
-
-        Request httpRequest = new Request.Builder()
-                .url("http://3.36.255.141/SendGiftOtherTable.php")
-                .post(formBody)
-                .build();
-
-        okHttpClient.newCall(httpRequest).enqueue(new Callback() {
+        call.enqueue(new Callback<SuccessOrNot>() {
             @Override
-            public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                Log.d(TAG, "fcm onFailure: " + e);
+            public void onResponse(Call<SuccessOrNot> call, Response<SuccessOrNot> response) {
+
             }
 
             @Override
-            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                String responseBody = response.body().string();
-                Log.d(TAG, "onResponse: " + responseBody);
+            public void onFailure(Call<SuccessOrNot> call, Throwable t) {
+
             }
         });
+
+
     }
 
     @Override
@@ -746,9 +718,6 @@ public class Table extends AppCompatActivity {
         //안드로이드 백버튼 막기
         return;
     }
-
-
-
 
 }
 

@@ -19,34 +19,13 @@ public class TableQuantity {
 
     int tableQuantity;
 
-    public int getTableQuantity()  {
+    public void getTableQuantity(Callback<TableListDTO> callback)  {
         RetrofitManager retrofitManager = new RetrofitManager();
         Retrofit retrofit = retrofitManager.getRetrofit(BuildConfig.SERVER_IP);
         RetrofitService service = retrofit.create(RetrofitService.class);
 
         Call<TableListDTO> call = service.getTableList(BuildConfig.ADMIN_KEY);
-        call.enqueue(new Callback<TableListDTO>() {
-            @Override
-            public void onResponse(Call<TableListDTO> call, Response<TableListDTO> response) {
-                Log.d(TAG, "onResponse table: " + response.body());
-                if(response.isSuccessful()){
-                    switch (response.body().getResult()){
-                        case "success" :
-                            tableQuantity = response.body().getTableCount();
-                            break;
-                        case "failed" :
-                            break;
-                    }
-                }
-            }
-
-            @Override
-            public void onFailure(Call<TableListDTO> call, Throwable t) {
-
-            }
-        });
-
-        return tableQuantity;
+        call.enqueue(callback);
     }
 
 

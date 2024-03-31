@@ -270,6 +270,7 @@ public class Menu extends AppCompatActivity {
                                 break;
                             case "failed":
                                 Toast.makeText(Menu.this, "가져올 데이터가 없습니다.", Toast.LENGTH_SHORT).show();
+                                break;
                         }
 
                     } else {
@@ -816,11 +817,11 @@ public class Menu extends AppCompatActivity {
             int category = menuItem.getMenuCategory();
 
             menuLists.add(new MenuList(url, menuName, price, category, 1));
-//            dbHelper.insertMenuData(menuName, price, url, category);
+            dbHelper.insertMenuData(menuName, price, url, category);
 
         }
 
-        menuAdapter.notifyDataSetChanged();
+        menuAdapter.setAdapterItem(menuLists);
         progressbar.dismiss();
     }
 

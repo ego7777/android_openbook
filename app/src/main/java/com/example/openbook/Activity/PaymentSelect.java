@@ -11,7 +11,12 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.openbook.Data.MyData;
 import com.example.openbook.R;
+import com.example.openbook.TableListDTO;
 import com.example.openbook.TableQuantity;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class PaymentSelect extends AppCompatActivity {
 
@@ -28,6 +33,7 @@ public class PaymentSelect extends AppCompatActivity {
 
         myData = (MyData) getIntent().getSerializableExtra("myData");
         Log.d(TAG, "myData id: " + myData.getId());
+        Log.d(TAG, "myData table: " + myData.getTableFromDB());
 
         SharedPreferences pref = getSharedPreferences("cart_list", MODE_PRIVATE);
 
@@ -37,16 +43,39 @@ public class PaymentSelect extends AppCompatActivity {
 
         if(myData.getTableFromDB() == 0){
             Log.d(TAG, "tableFromDB ZERO: ");
-            TableQuantity tableQuantity = new TableQuantity();
-            int tableFromDB = tableQuantity.getTableQuantity();
-            myData.setTableFromDB(tableFromDB);
+            getTableFromDB();
             Log.d(TAG, "tableFromDB: " + myData.getTableFromDB());
         }
 
         paymentSelectAfter = findViewById(R.id.payment_select_after);
         paymentSelectBefore = findViewById(R.id.payment_select_before);
 
+    }
 
+    public void getTableFromDB(){
+        TableQuantity tableQuantity = new TableQuantity();
+        tableQuantity.getTableQuantity(new Callback<TableListDTO>() {
+            @Override
+            public void onResponse(Call<TableListDTO> call, Response<TableListDTO> response) {
+                if(response.isSuccessful()){
+                    switch (response.body().getResult()){
+                        case "success" :
+                            int tableFromDB = response.body().getTableCount();
+                            myData.setTableFromDB(tableFromDB);
+                            break;
+                        case "failed" :
+                            Log.d(TAG, "onResponse table failed: ");
+                    }
+                }else{
+                    Log.d(TAG, "onResponse table isNotSuccessful");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<TableListDTO> call, Throwable t) {
+                Log.d(TAG, "onFailure table: " + t.getMessage());
+            }
+        });
     }
 
     @Override
