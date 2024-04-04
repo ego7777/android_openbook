@@ -22,6 +22,7 @@ android {
         buildConfigField("String", "GOOGLE_API_KEY", properties.getProperty("GOOGLE_API_KEY"))
         buildConfigField("String", "SERVER_IP", properties.getProperty("SERVER_IP"))
         buildConfigField("String", "ADMIN_KEY", properties.getProperty("ADMIN_KEY"))
+        buildConfigField("String", "KAKAOPAY_ADMIN_KEY", properties.getProperty("KAKAOPAY_ADMIN_KEY"))
 
         renderscriptTargetApi 18
         renderscriptSupportModeEnabled true

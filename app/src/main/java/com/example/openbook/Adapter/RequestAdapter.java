@@ -43,7 +43,7 @@ public class RequestAdapter extends RecyclerView.Adapter<RequestAdapter.ViewHold
      * 실체화를 해주는 아이가 Inflater
      * **/
     public RequestAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.call_gridview_item, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_call_service, parent, false);
         return new RequestAdapter.ViewHolder(view);
     }
 

@@ -1,55 +1,62 @@
 package com.example.openbook.Data;
 
 
+import com.example.openbook.CartCategory;
+
 public class CartList {
 
-    String menu_name;
-    int menu_price;
-    int menu_quantity;
-    int viewType;
+    String menuName;
+    int menuPrice;
+    int menuQuantity;
+    CartCategory cartCategory;
 
-    public CartList (String name, int price, int quantity, int viewType){
-        this.menu_name = name;
-        this.menu_price = price;
-        this.menu_quantity = quantity;
-        this.viewType = viewType;
+    int originalPrice;
+
+    public CartList(String name, int price, int quantity, int originalPrice,CartCategory cartCategory) {
+        this.menuName = name;
+        this.menuPrice = price;
+        this.menuQuantity = quantity;
+        this.originalPrice = originalPrice;
+        this.cartCategory = cartCategory;
     }
 
-    public CartList(String name, int quantity, int viewType){
-        this.menu_name = name;
-        this.menu_quantity =quantity;
-        this.viewType = viewType;
+    public CartList(String name, int quantity, CartCategory cartCategory) {
+        this.menuName = name;
+        this.menuQuantity = quantity;
+        this.cartCategory = cartCategory;
     }
 
-    public int getViewType() {
-        return viewType;
+    public CartCategory getCartCategory() {
+        return cartCategory;
     }
 
-    public int getMenu_price() {
-        return menu_price;
+    public int getOriginalPrice() {
+        return originalPrice;
     }
 
-    public void setMenu_price(int menu_price) {
-        this.menu_price = menu_price;
+    public int getMenuPrice() {
+        return menuPrice;
+    }
+
+    public void setMenuPrice(int menuPrice) {
+        this.menuPrice = menuPrice;
     }
 
 
-
-
-    public String getMenu_name() {
-        return menu_name;
+    public String getMenuName() {
+        return menuName;
     }
 
-    public void setMenu_name(String menu_name) {
-        this.menu_name = menu_name;
+    public void setMenuName(String menuName) {
+        this.menuName = menuName;
     }
 
-    public int getMenu_quantity(){
-        return  menu_quantity;
-    }
-    public void setMenu_quantity(int menu_quantity) {
-        this.menu_quantity = menu_quantity;
+    public int getMenuQuantity() {
+        return menuQuantity;
     }
 
+    public void setMenuQuantity(int menuQuantity) {
+        this.menuQuantity = menuQuantity;
+    }
 
 }

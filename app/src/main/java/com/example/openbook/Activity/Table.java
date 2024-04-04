@@ -423,59 +423,56 @@ public class Table extends AppCompatActivity {
 
                 menuAdapter.setAdapterItem(menuLists);
 
-                menuAdapter.setOnItemClickListener(new MenuAdapter.OnItemClickListener() {
-                    @Override
-                    public void onItemClick(View view, String name, int price, int position) {
-                        dlg.dismiss();
+                menuAdapter.setOnItemClickListener((view, name, price, position) -> {
+                    dlg.dismiss();
 
-                        Dialog dialog = new Dialog(Table.this);
-                        dialog.setContentView(R.layout.send_gift_quantity_dialog);
-                        dialog.show();
+                    Dialog dialog = new Dialog(Table.this);
+                    dialog.setContentView(R.layout.send_gift_quantity_dialog);
+                    dialog.show();
 
-                        TextView menuName = dialog.findViewById(R.id.send_gift_quantity_menuName);
-                        TextView menuQuantity = dialog.findViewById(R.id.send_gift_quantity_menuQuantity);
-                        TextView menuPrice = dialog.findViewById(R.id.send_gift_quantity_price);
-                        Button sendGiftButton = dialog.findViewById(R.id.send_gift_button);
-                        Button plus = dialog.findViewById(R.id.send_gift_quantity_plus);
-                        Button minus = dialog.findViewById(R.id.send_gift_quantity_minus);
-                        Button cancel = dialog.findViewById(R.id.send_gift_quantity_cancel);
+                    TextView menuName = dialog.findViewById(R.id.send_gift_quantity_menuName);
+                    TextView menuQuantity = dialog.findViewById(R.id.send_gift_quantity_menuQuantity);
+                    TextView menuPrice = dialog.findViewById(R.id.send_gift_quantity_price);
+                    Button sendGiftButton = dialog.findViewById(R.id.send_gift_button);
+                    Button plus = dialog.findViewById(R.id.send_gift_quantity_plus);
+                    Button minus = dialog.findViewById(R.id.send_gift_quantity_minus);
+                    Button cancel = dialog.findViewById(R.id.send_gift_quantity_cancel);
 
-                        cancel.setOnClickListener(v1 -> dialog.dismiss());
+                    cancel.setOnClickListener(v1 -> dialog.dismiss());
 
 
-                        sendGiftQuantity = 1;
-                        menuName.setText(name);
-                        menuPrice.setText(String.valueOf(price));
+                    sendGiftQuantity = 1;
+                    menuName.setText(name);
+                    menuPrice.setText(String.valueOf(price));
+                    menuQuantity.setText(String.valueOf(sendGiftQuantity));
+
+
+                    plus.setOnClickListener(v12 -> {
+                        sendGiftQuantity = sendGiftQuantity + 1;
                         menuQuantity.setText(String.valueOf(sendGiftQuantity));
 
+                        int totalPrice = sendGiftQuantity * price;
+                        menuPrice.setText(String.valueOf(totalPrice));
 
-                        plus.setOnClickListener(v12 -> {
-                            sendGiftQuantity = sendGiftQuantity + 1;
+                    });
+
+                    minus.setOnClickListener(v13 -> {
+                        if (sendGiftQuantity > 0) {
+                            sendGiftQuantity = sendGiftQuantity - 1;
                             menuQuantity.setText(String.valueOf(sendGiftQuantity));
 
                             int totalPrice = sendGiftQuantity * price;
                             menuPrice.setText(String.valueOf(totalPrice));
+                        }
 
-                        });
+                    });
 
-                        minus.setOnClickListener(v13 -> {
-                            if (sendGiftQuantity > 0) {
-                                sendGiftQuantity = sendGiftQuantity - 1;
-                                menuQuantity.setText(String.valueOf(sendGiftQuantity));
-
-                                int totalPrice = sendGiftQuantity * price;
-                                menuPrice.setText(String.valueOf(totalPrice));
-                            }
-
-                        });
-
-                        sendGiftButton.setOnClickListener(v14 -> {
-                            Log.d(TAG, "onClick sendGift: ");
-                            int menuPrice1 = sendGiftQuantity * price;
-                            sendGiftOtherTable(name, sendGiftQuantity, menuPrice1);
-                            dialog.dismiss();
-                        });
-                    }
+                    sendGiftButton.setOnClickListener(v14 -> {
+                        Log.d(TAG, "onClick sendGift: ");
+                        int menuPrice1 = sendGiftQuantity * price;
+                        sendGiftOtherTable(name, sendGiftQuantity, menuPrice1);
+                        dialog.dismiss();
+                    });
                 });
             }
 

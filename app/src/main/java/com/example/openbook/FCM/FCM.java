@@ -46,7 +46,7 @@ import okhttp3.Response;
 public class FCM extends FirebaseMessagingService {
 
     String TAG = "FcmTAG";
-    String get_id;
+    String id;
     int requestCode;
 
     OkHttpClient okHttpClient;
@@ -55,13 +55,13 @@ public class FCM extends FirebaseMessagingService {
     @Override
     protected Intent getStartCommandIntent(Intent originalIntent) {
 
-        get_id = originalIntent.getStringExtra("get_id");
+        id = originalIntent.getStringExtra("id");
 
         Task<String> token = FirebaseMessaging.getInstance().getToken();
         token.addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
-                Log.d(TAG, "onComplete: " + get_id);
-                saveToken(get_id, task.getResult());
+                Log.d(TAG, "onComplete: " + id);
+                saveToken(id, task.getResult());
             }
         });
 

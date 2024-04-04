@@ -5,6 +5,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
 
+import android.app.Dialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -54,6 +55,7 @@ public class Login extends AppCompatActivity {
     int tableFromDB;
 
     RetrofitService service;
+    Dialog progress;
 
 
     @Override
@@ -87,14 +89,15 @@ public class Login extends AppCompatActivity {
 
             if (!id.isEmpty() && !password.isEmpty()) {
 
-                dialogManager.progressDialog(Login.this).show();
+                progress = dialogManager.progressDialog(Login.this);
+                progress.show();
 
                 Call<LoginResponseModel> call = service.requestLogin(id.hashCode(), password.hashCode());
                 call.enqueue(new Callback<LoginResponseModel>() {
                     @Override
                     public void onResponse(Call<LoginResponseModel> call, Response<LoginResponseModel> response) {
                         if (response.isSuccessful()) {
-                            dialogManager.progressDialog(Login.this).dismiss();
+                            progress.dismiss();
 
                             switch (response.body().getResult()) {
                                 case "success":

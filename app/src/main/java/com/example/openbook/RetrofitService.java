@@ -2,17 +2,22 @@ package com.example.openbook;
 
 import com.example.openbook.startActivity.LoginResponseModel;
 
+import java.util.HashMap;
+
 import retrofit2.Call;
 import retrofit2.http.Field;
+import retrofit2.http.FieldMap;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
+import retrofit2.http.Header;
 import retrofit2.http.POST;
 
 public interface RetrofitService {
     @POST("Login.php")
     @FormUrlEncoded
     Call<LoginResponseModel> requestLogin(@Field("identifier") int identifier,
-                      @Field("password") int password);
+                                          @Field("password") int password);
+
     @POST("CheckIdDuplication.php")
     @FormUrlEncoded
     Call<SuccessOrNot> requestIdDuplication(@Field("identifier") int identifier);
@@ -20,12 +25,14 @@ public interface RetrofitService {
     @POST("SignUp.php")
     @FormUrlEncoded
     Call<SuccessOrNot> requestSignUp(@Field("id") String id,
-                               @Field("identifier") int identifier,
-                               @Field("password") int password,
-                               @Field("phone") String phone,
-                               @Field("email") String email);
+                                     @Field("identifier") int identifier,
+                                     @Field("password") int password,
+                                     @Field("phone") String phone,
+                                     @Field("email") String email);
+
     @GET("GetMenuList.php")
     Call<MenuListDTO> getMenuList();
+
     @POST("GetTableList.php")
     @FormUrlEncoded
     Call<TableListDTO> getTableList(@Field("admin") String admin);
@@ -43,5 +50,19 @@ public interface RetrofitService {
                                           @Field("menuName") String menuName,
                                           @Field("menuQuantity") int menuQuantity,
                                           @Field("menuPrice") int menuPrice);
+
+    @POST("v1/payment/ready")
+    @FormUrlEncoded
+    Call<KakaoPayReadyResponseDTO> createPaymentRequest(@Header("Authorization") String apiKey,
+                                                        @FieldMap HashMap<String, String> request);
+
+    @POST("v1/payment/approve")
+    @FormUrlEncoded
+    Call<KakaoPayApproveResponseDTO> requestApprovedPayment(@Header("Authorization") String apiKey,
+                                        @FieldMap HashMap<String, String> request);
+    @POST("SavePayment.php")
+    @FormUrlEncoded
+    Call<SuccessOrNot> savePayment(@Field("orderList") String orderList);
+
 
 }

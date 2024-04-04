@@ -34,6 +34,7 @@ public class SignUp extends AppCompatActivity {
     String TAG = "SignupTAG";
     boolean isIdDuplicate, isPasswordMatch, isPhoneMatch, isEmailMatch = false;
     String id, password;
+    Dialog dialog;
 
 
     @Override
@@ -153,90 +154,88 @@ public class SignUp extends AppCompatActivity {
 
 
 
-        registerButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+        registerButton.setOnClickListener(view -> {
 
-                /**
-                 * 이메일 형식
-                 */
-                String emailCk = emailEditText.getText().toString().trim();
-                Pattern pattern = android.util.Patterns.EMAIL_ADDRESS;
-                isEmailMatch = pattern.matcher(emailCk).matches();
+            /**
+             * 이메일 형식
+             */
+            String emailCk = emailEditText.getText().toString().trim();
+            Pattern pattern = android.util.Patterns.EMAIL_ADDRESS;
+            isEmailMatch = pattern.matcher(emailCk).matches();
 
 
-                /**
-                 * 핸드폰 형식
-                 */
-                String phoneCk = phoneEditText.getText().toString().trim();
-                Pattern pattern_phone = Pattern.compile("^01(?:0|1|[6-9])-(?:\\d{3}|\\d{4})-\\d{4}$");
-                isPhoneMatch = pattern_phone.matcher(phoneCk).matches();
+            /**
+             * 핸드폰 형식
+             */
+            String phoneCk = phoneEditText.getText().toString().trim();
+            Pattern pattern_phone = Pattern.compile("^01(?:0|1|[6-9])-(?:\\d{3}|\\d{4})-\\d{4}$");
+            isPhoneMatch = pattern_phone.matcher(phoneCk).matches();
 
 
-                if (id.isEmpty() || id == null) {
+            if (id == null || id.isEmpty()) {
+                Log.d(TAG, "id null or isEmpty: " + id);
 
-                    dialogManager.positiveBtnDialog(SignUp.this, "아이디를 입력해주세요.");
+                dialogManager.positiveBtnDialog(SignUp.this, "아이디를 입력해주세요.").show();
 
-                } else if (pwEditText.getText().toString().isEmpty()) {
+            } else if (pwEditText.getText().toString().isEmpty()) {
 
-                    dialogManager.positiveBtnDialog(SignUp.this, "비밀번호를 입력해주세요.");
+                dialogManager.positiveBtnDialog(SignUp.this, "비밀번호를 입력해주세요.").show();
 
-                } else if (phoneEditText.getText().toString().isEmpty()) {
+            } else if (!isPasswordMatch) {
+                dialogManager.positiveBtnDialog(SignUp.this, "비밀번호가 일치하지 않습니다.").show();
 
-                    dialogManager.positiveBtnDialog(SignUp.this, "핸드폰 번호를 입력해주세요.");
+            } else if (phoneEditText.getText().toString().isEmpty()) {
 
-                } else if (emailEditText.getText().toString().isEmpty()) {
-                    dialogManager.positiveBtnDialog(SignUp.this, "이메일을 입력해주세요.");
+                dialogManager.positiveBtnDialog(SignUp.this, "핸드폰 번호를 입력해주세요.").show();
 
-                } else if (!isPasswordMatch) {
-                    dialogManager.positiveBtnDialog(SignUp.this, "비밀번호가 일치하지 않습니다.");
+            } else if (emailEditText.getText().toString().isEmpty()) {
+                dialogManager.positiveBtnDialog(SignUp.this, "이메일을 입력해주세요.").show();
 
-                } else if (!isIdDuplicate) {
-                    dialogManager.positiveBtnDialog(SignUp.this, "아이디를 중복 확인을 해주세요.");
+            } else if (!isIdDuplicate) {
+                dialogManager.positiveBtnDialog(SignUp.this, "아이디를 중복 확인을 해주세요.").show();
 
-                } else if (!isPhoneMatch) {
-                    dialogManager.positiveBtnDialog(SignUp.this, "핸드폰 번호를 형식에 맞게 입력해주세요.");
+            } else if (!isPhoneMatch) {
+                dialogManager.positiveBtnDialog(SignUp.this, "핸드폰 번호를 형식에 맞게 입력해주세요.").show();
 
-                } else if (!isEmailMatch) {
-                    dialogManager.positiveBtnDialog(SignUp.this, "이메일을 형식에 맞게 입력해주세요.");
-                } else {
-                    Dialog progressbar = dialogManager.progressDialog(SignUp.this);
-                    progressbar.show();
+            } else if (!isEmailMatch) {
+                dialogManager.positiveBtnDialog(SignUp.this, "이메일을 형식에 맞게 입력해주세요.").show();
+            } else {
+                Dialog progressbar = dialogManager.progressDialog(SignUp.this);
+                progressbar.show();
 
-                    Call<SuccessOrNot> call = service.requestSignUp(idEditText.getText().toString().trim(),
-                            idEditText.getText().toString().trim().hashCode(),
-                            pwEditText.getText().toString().trim().hashCode(),
-                            phoneEditText.getText().toString().trim(),
-                            emailEditText.getText().toString().trim());
+                Call<SuccessOrNot> call = service.requestSignUp(idEditText.getText().toString().trim(),
+                        idEditText.getText().toString().trim().hashCode(),
+                        pwEditText.getText().toString().trim().hashCode(),
+                        phoneEditText.getText().toString().trim(),
+                        emailEditText.getText().toString().trim());
 
-                    call.enqueue(new Callback<SuccessOrNot>() {
-                        @Override
-                        public void onResponse(Call<SuccessOrNot> call, Response<SuccessOrNot> response) {
-                            Log.d(TAG, "onResponse Signup: " + response.body());
-                            progressbar.dismiss();
+                call.enqueue(new Callback<SuccessOrNot>() {
+                    @Override
+                    public void onResponse(Call<SuccessOrNot> call, Response<SuccessOrNot> response) {
+                        Log.d(TAG, "onResponse Signup: " + response.body());
+                        progressbar.dismiss();
 
-                            if (response.isSuccessful()) {
-                                switch (response.body().getResult()) {
-                                    case "success":
-                                        Toast.makeText(SignUp.this, "회원가입에 성공했습니다.", Toast.LENGTH_LONG).show();
-                                        finish();
-                                        break;
-                                    case "failed":
-                                        Toast.makeText(SignUp.this, "회원가입에 실패했습니다.", Toast.LENGTH_LONG).show();
-                                        break;
+                        if (response.isSuccessful()) {
+                            switch (response.body().getResult()) {
+                                case "success":
+                                    Toast.makeText(SignUp.this, "회원가입에 성공했습니다.", Toast.LENGTH_LONG).show();
+                                    finish();
+                                    break;
+                                case "failed":
+                                    Toast.makeText(SignUp.this, "회원가입에 실패했습니다.", Toast.LENGTH_LONG).show();
+                                    break;
 
-                                }
-                            } else {
-                                Toast.makeText(SignUp.this, getResources().getString(R.string.networkError), Toast.LENGTH_SHORT).show();
                             }
+                        } else {
+                            Toast.makeText(SignUp.this, getResources().getString(R.string.networkError), Toast.LENGTH_SHORT).show();
                         }
+                    }
 
-                        @Override
-                        public void onFailure(Call<SuccessOrNot> call, Throwable t) {
-                            Log.d(TAG, "onFailure Signup: " + t.getMessage());
-                        }
-                    });
-                }
+                    @Override
+                    public void onFailure(Call<SuccessOrNot> call, Throwable t) {
+                        Log.d(TAG, "onFailure Signup: " + t.getMessage());
+                    }
+                });
             }
         });
     }

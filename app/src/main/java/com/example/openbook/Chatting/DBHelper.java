@@ -24,7 +24,6 @@ public class DBHelper extends SQLiteOpenHelper {
     String TAG = "dbHelperTAG";
 
 
-
     public DBHelper(@Nullable Context context, int version) {
         super(context, DBName, null, version);
     }
@@ -49,7 +48,7 @@ public class DBHelper extends SQLiteOpenHelper {
                 "(id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "menuName VARCHAR(20) not null," +
                 "menuPrice INT not null," +
-                "menuImage INT not null, " +
+                "menuImage String not null, " +
                 "menuType INT not null)";
 
         db.execSQL(queryMenu);
@@ -59,7 +58,7 @@ public class DBHelper extends SQLiteOpenHelper {
                 "tableName VARCHAR(20) not null," +
                 "menuName VARCHAR(20) not null," +
                 "menuQuantity INT not null, " +
-                "menuPrice INT not null, "+
+                "menuPrice INT not null, " +
                 "identifier INT not null)";
 
         db.execSQL(queryAdmin);
@@ -137,26 +136,26 @@ public class DBHelper extends SQLiteOpenHelper {
 
         Cursor cursor = db.rawQuery(checkMenu, null);
 
-        if(cursor.moveToFirst()){
+        if (cursor.moveToFirst()) {
             // 메뉴 이름이 존재하는 경우
             int existingMenuCount = cursor.getInt(3);
             int newMenuCount = existingMenuCount + quantity;
 
             String query = "UPDATE adminTableList " +
                     "SET menuQuantity = '" + newMenuCount +
-                    "' WHERE tableName = '" + tableNumber +"' AND menuName = '" + menu + "'";
+                    "' WHERE tableName = '" + tableNumber + "' AND menuName = '" + menu + "'";
 
             db.execSQL(query);
 
 
-        }else{
+        } else {
             // 메뉴 이름이 존재하지 않는 경우
             insertAdminData(tableNumber, menu, quantity, price, identifier);
         }
 
     }
 
-    public ArrayList fetchMenuDetails(String tableNumber, ArrayList list){
+    public ArrayList fetchMenuDetails(String tableNumber, ArrayList list) {
         SQLiteDatabase db = this.getWritableDatabase();
 
         String query = "SELECT * FROM adminTableList " +
@@ -164,7 +163,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
         Cursor cursor = db.rawQuery(query, null);
 
-        while(cursor.moveToNext()){
+        while (cursor.moveToNext()) {
             String menuName = cursor.getString(2);
             int menuQuantity = cursor.getInt(3);
             int menuPrice = cursor.getInt(4);
@@ -178,7 +177,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     }
 
-    public ArrayList getTableData(ArrayList list){
+    public ArrayList getTableData(ArrayList list) {
         SQLiteDatabase db = this.getWritableDatabase();
 
         // SQL 쿼리 실행하여 원하는 데이터 가져오기
@@ -204,14 +203,14 @@ public class DBHelper extends SQLiteOpenHelper {
             cursor.close();
         }
 
-            return list;
+        return list;
     }
 
-    public String chattingJson(String tableValue){
+    public String chattingJson(String tableValue) {
         // SQLite 데이터베이스에서 데이터 가져오기
         SQLiteDatabase db = this.getWritableDatabase();
         String selectQuery = "SELECT * FROM chattingTable WHERE sender = ?";
-        Cursor cursor = db.rawQuery(selectQuery, new String[] { tableValue });
+        Cursor cursor = db.rawQuery(selectQuery, new String[]{tableValue});
 
         JSONArray jsonArray = new JSONArray();
         if (cursor.moveToFirst()) {
@@ -234,7 +233,7 @@ public class DBHelper extends SQLiteOpenHelper {
         }
         cursor.close();
 
-    // JSON 형식으로 변환된 데이터 출력 또는 전송 등의 작업 수행
+        // JSON 형식으로 변환된 데이터 출력 또는 전송 등의 작업 수행
         String jsonData = jsonArray.toString();
         Log.d("ChatData", jsonData);
 
@@ -251,25 +250,12 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
 
-
-
-
-
-
-
     public void deleteTableData(String tableValue, String tableListName, String column) {
         SQLiteDatabase db = getWritableDatabase();
-        String deleteQuery = "DELETE FROM " + tableListName  + " WHERE " + column + " = '" + tableValue + "'";
+        String deleteQuery = "DELETE FROM " + tableListName + " WHERE " + column + " = '" + tableValue + "'";
         db.execSQL(deleteQuery);
         db.close();
     }
-
-
-
-
-
-
-
 
 
     public Cursor getTableData(String tableName) {

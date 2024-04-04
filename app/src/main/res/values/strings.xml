@@ -13,4 +13,24 @@
         <item>"사이드"</item>
         <item>"직원호출"</item>
     </string-array>
+
+
+    <string-array name="service">
+        <item>숟가락</item>
+        <item>젓가락</item>
+        <item>소주잔</item>
+        <item>맥주잔</item>
+        <item>냅킨</item>
+        <item>물티슈</item>
+        <item>물</item>
+        <item>얼음</item>
+        <item>국자</item>
+        <item>병따개</item>
+        <item>앞치마</item>
+        <item>가위</item>
+        <item>앞접시</item>
+        <item>부탄가스</item>
+        <item>육수추가</item>
+        <item>담요</item>
+    </string-array>
 </resources>
