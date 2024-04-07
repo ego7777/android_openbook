@@ -102,7 +102,6 @@ public class DBHelper extends SQLiteOpenHelper {
         contentValues.put("menuPrice", menuPrice);
         contentValues.put("menuImage", menuImage);
         contentValues.put("menuType", menuType);
-//        contentValues.put("identifier", identifier);
 
         long result = db.insert("menuListTable", null, contentValues);
         if (result == -1) {

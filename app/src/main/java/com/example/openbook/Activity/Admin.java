@@ -26,9 +26,8 @@ import com.example.openbook.Chatting.DBHelper;
 import com.example.openbook.Data.AdminTableList;
 import com.example.openbook.Data.OrderList;
 import com.example.openbook.DialogManager;
-import com.example.openbook.FCM.FCM;
 import com.example.openbook.ImageLoadTask;
-import com.example.openbook.KakaoPay;
+import com.example.openbook.kakaopay.KakaoPay;
 import com.example.openbook.SaveOrderDeleteData;
 import com.example.openbook.R;
 import com.example.openbook.TableQuantity;
@@ -83,7 +82,6 @@ public class Admin extends AppCompatActivity {
 
         overridePendingTransition(0, 0);
 
-
         adminTableList = (ArrayList<AdminTableList>) getIntent().getSerializableExtra("adminTableList");
         afterPaymentList = getIntent().getStringExtra("orderList");
         Log.d(TAG, "orderList: " + afterPaymentList);
@@ -111,7 +109,6 @@ public class Admin extends AppCompatActivity {
 
 //            int table = tableQuantity.getTableQuantity();
 //            Log.d(TAG, "tableQuantity : " + table);
-
 
 //            for (int i = 1; i < table + 1; i++) {
 //

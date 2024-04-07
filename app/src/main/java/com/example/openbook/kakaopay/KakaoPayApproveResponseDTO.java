@@ -1,4 +1,4 @@
-package com.example.openbook;
+package com.example.openbook.kakaopay;
 
 import com.google.gson.annotations.SerializedName;
 

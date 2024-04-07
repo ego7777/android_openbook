@@ -253,7 +253,13 @@ public class Login extends AppCompatActivity {
     // 문자열 인텐트 전달 함수
     public void startActivityString(Class c, String name, String sendString) {
         Intent intent = new Intent(getApplicationContext(), c);
-        MyData myData = new MyData(sendString, tableFromDB, null, false, false, 0);
+        MyData myData = new MyData(sendString,
+                tableFromDB,
+                null,
+                false,
+                false,
+                0,
+                false);
         intent.putExtra(name, myData);
         startActivity(intent);
         overridePendingTransition(0, 0);
@@ -288,6 +294,14 @@ public class Login extends AppCompatActivity {
                         switch (response.body().getResult()){
                             case "success" :
                                 tableFromDB = response.body().getTableCount();
+
+                                for(int i=1; i<tableFromDB+1; i++){
+                                    adminTableList.add(new AdminTableList("table"+i,
+                                            null, null, null, null, 0, 0));
+
+                                }
+                                Log.d(TAG, "onStart Table Size: " + adminTableList.size());
+
                                 break;
                             case "failed" :
                                 Log.d(TAG, "onResponse table failed: ");
@@ -296,7 +310,6 @@ public class Login extends AppCompatActivity {
                         Log.d(TAG, "onResponse table isNotSuccessful");
                     }
                 }
-
                 @Override
                 public void onFailure(Call<TableListDTO> call, Throwable t) {
                     Log.d(TAG, "onFailure table: " + t.getMessage());
@@ -304,13 +317,6 @@ public class Login extends AppCompatActivity {
             });
 
 
-
-            for(int i=1; i<tableFromDB+1; i++){
-                adminTableList.add(new AdminTableList("table"+i,
-                        null, null, null, null, 0, 0));
-
-            }
-            Log.d(TAG, "onStart Table Size: " + adminTableList.size());
         }
     }
 

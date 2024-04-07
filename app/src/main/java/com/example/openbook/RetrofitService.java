@@ -1,5 +1,8 @@
 package com.example.openbook;
 
+import com.example.openbook.kakaopay.KakaoPayApproveResponseDTO;
+import com.example.openbook.kakaopay.KakaoPayReadyResponseDTO;
+import com.example.openbook.Data.MenuListDTO;
 import com.example.openbook.startActivity.LoginResponseModel;
 
 import java.util.HashMap;
@@ -59,10 +62,15 @@ public interface RetrofitService {
     @POST("v1/payment/approve")
     @FormUrlEncoded
     Call<KakaoPayApproveResponseDTO> requestApprovedPayment(@Header("Authorization") String apiKey,
-                                        @FieldMap HashMap<String, String> request);
+                                                            @FieldMap HashMap<String, String> request);
     @POST("SavePayment.php")
     @FormUrlEncoded
     Call<SuccessOrNot> savePayment(@Field("orderList") String orderList);
+
+    @POST("RegisterFcmToken.php")
+    @FormUrlEncoded
+    Call<SuccessOrNot> saveFcmToken(@Field("identifier") int identifier,
+                                    @Field("token") String token);
 
 
 }

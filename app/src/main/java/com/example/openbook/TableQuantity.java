@@ -31,7 +31,5 @@ public class TableQuantity {
 
     public void setTableQuantity(int tableQuantity) {
 
-
-
     }
 }

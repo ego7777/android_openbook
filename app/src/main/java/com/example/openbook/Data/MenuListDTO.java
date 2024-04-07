@@ -1,9 +1,10 @@
-package com.example.openbook;
+package com.example.openbook.Data;
 
 
 import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
+
 
 public class MenuListDTO {
     String result;
@@ -13,7 +14,6 @@ public class MenuListDTO {
     public String getResult() {
         return result;
     }
-
 
     public Items getItems() {
         return items;

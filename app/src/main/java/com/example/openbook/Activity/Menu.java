@@ -16,6 +16,7 @@ import android.icu.text.DecimalFormat;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
@@ -50,12 +51,12 @@ import com.example.openbook.Data.OrderList;
 import com.example.openbook.Data.SideList;
 import com.example.openbook.Deco.menu_recyclerview_deco;
 import com.example.openbook.DialogManager;
+import com.example.openbook.FCM.FCM;
 import com.example.openbook.FCM.SendNotification;
-import com.example.openbook.KakaoPay;
-import com.example.openbook.MenuListDTO;
+import com.example.openbook.kakaopay.KakaoPay;
+import com.example.openbook.Data.MenuListDTO;
 import com.example.openbook.RetrofitManager;
 import com.example.openbook.RetrofitService;
-import com.example.openbook.SaveOrderDeleteData;
 import com.example.openbook.R;
 import com.example.openbook.Data.TicketData;
 import com.example.openbook.Data.CartList;
@@ -150,6 +151,7 @@ public class Menu extends AppCompatActivity {
         dialogManager = new DialogManager();
         progressbar = dialogManager.progressDialog(Menu.this);
         progressbar.show();
+        Log.d(TAG, "progressbar start");
 
 
         // 로컬 브로드캐스트 리시버 등록
@@ -172,14 +174,15 @@ public class Menu extends AppCompatActivity {
         tableList = (ArrayList<TableList>) getIntent().getSerializableExtra("tableList");
 
 
-
-
         /**
          * 로그인을 성공하면 id, token을 firebase realtime db에 저장
          */
-//        Intent fcm = new Intent(getApplicationContext(), FCM.class);
-//        fcm.putExtra("userId", myData.getId());
-//        startService(fcm);
+
+        if (!myData.isFcmExist()) {
+            Intent fcm = new Intent(getApplicationContext(), FCM.class);
+            fcm.putExtra("identifier", myData.getIdentifier());
+            startService(fcm);
+        }
 
         sendNotification = new SendNotification();
 
@@ -188,8 +191,6 @@ public class Menu extends AppCompatActivity {
             Log.d(TAG, "usingTable identifier: " + myData.getIdentifier());
             myData.setUsedTable(true);
         }
-
-
 
 
         /**
@@ -240,19 +241,31 @@ public class Menu extends AppCompatActivity {
         menuLists = new ArrayList<>();
         menuRecyclerview.setAdapter(menuAdapter);
 
+        menuAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+            @Override
+            public void onChanged() {
+                super.onChanged();
+                new Handler(Looper.getMainLooper()).postDelayed(() ->{
+                    runOnUiThread(() ->{
+                        progressbar.dismiss();
+                        Log.d(TAG, "progress bar dismiss: ");
+                    });
+                }, 1000);
+
+            }
+        });
 
         int version = 1;
         version++;
 
         dbHelper = new DBHelper(Menu.this, version);
         sqLiteDatabase = dbHelper.getWritableDatabase();
-
         Cursor res = dbHelper.getTableData("menuListTable");
+
 
         RetrofitManager retrofitManager = new RetrofitManager();
         Retrofit retrofit = retrofitManager.getRetrofit(BuildConfig.SERVER_IP);
         service = retrofit.create(RetrofitService.class);
-
 
         if (res.getCount() == 0) {
             Log.d(TAG, "메뉴 db 새로 받아오기");
@@ -286,15 +299,25 @@ public class Menu extends AppCompatActivity {
 
         } else {
             Log.d(TAG, "메뉴db 있는거 사용");
-            while (res.moveToNext()) {
-                menuLists.add(new MenuList(res.getString(3),//img
-                        res.getString(1), //name
-                        res.getInt(2), //price
-                        res.getInt(4), //menuType
-                        1));
-            }
-            menuAdapter.setAdapterItem(menuLists);
-            progressbar.dismiss();
+
+            new Thread(() -> {
+                while (res.moveToNext()) {
+                    menuLists.add(new MenuList(res.getString(3),//img
+                            res.getString(1), //name
+                            res.getInt(2), //price
+                            res.getInt(4), //menuType
+                            1));
+                }
+
+                runOnUiThread(() -> {
+                    menuAdapter.setAdapterItem(menuLists);
+//                    progressbar.dismiss();
+
+                });
+
+
+            }).start();
+
         }
 
 
@@ -314,11 +337,10 @@ public class Menu extends AppCompatActivity {
         String succeedOrderList = getIntent().getStringExtra("succeedOrderList");
         Log.d(TAG, "succeedOrderList : " + succeedOrderList);
         Log.d(TAG, "onStart_PaymentStyle :" + myData.getPaymentStyle());
-        if(succeedOrderList != null){
+        if (succeedOrderList != null) {
             successOrder();
             Log.d(TAG, "successOrder 성공: ");
         }
-
 
 
     } // onCreate()
@@ -625,7 +647,7 @@ public class Menu extends AppCompatActivity {
     public String getOrderMenuName(ArrayList<CartList> cartLists) {
 
         int menuQuantity = 0;
-        for(CartList item : cartLists){
+        for (CartList item : cartLists) {
             menuQuantity += item.getMenuQuantity();
         }
 
@@ -776,20 +798,27 @@ public class Menu extends AppCompatActivity {
 
     public void setMenuList(List<MenuListDTO.MenuItem> menuList) {
 
-        for (MenuListDTO.MenuItem menuItem : menuList) {
+        new Thread(() -> {
+            for (MenuListDTO.MenuItem menuItem : menuList) {
 
-            String url = BuildConfig.SERVER_IP + "MenuImages/" + menuItem.getImageURL();
-            String menuName = menuItem.getMenuName();
-            int price = menuItem.getMenuPrice();
-            int category = menuItem.getMenuCategory();
+                String url = BuildConfig.SERVER_IP + "MenuImages/" + menuItem.getImageURL();
+                String menuName = menuItem.getMenuName();
+                int price = menuItem.getMenuPrice();
+                int category = menuItem.getMenuCategory();
 
-            menuLists.add(new MenuList(url, menuName, price, category, 1));
-            dbHelper.insertMenuData(menuName, price, url, category);
+                menuLists.add(new MenuList(url, menuName, price, category, 1));
+                dbHelper.insertMenuData(menuName, price, url, category);
+//            myModel.insertMenuData(menuName, price, url, category);
 
-        }
+            }
+//            runOnUiThread(() -> {
+            menuAdapter.setAdapterItem(menuLists);
+            Log.d(TAG, "setMenuList setAdapter: ");
+//                progressbar.dismiss();
+//            });
+        }).start();
 
-        menuAdapter.setAdapterItem(menuLists);
-        progressbar.dismiss();
+
     }
 
 
@@ -900,5 +929,6 @@ public class Menu extends AppCompatActivity {
         }
         return totalPrice;
     }
+
 
 }

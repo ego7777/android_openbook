@@ -11,13 +11,30 @@ public class MyData implements Serializable {
     boolean usedTable;
     int identifier;
 
-    public MyData(String id, int tableFromDB, String paymentStyle, boolean isOrder, boolean usedTable, int identifier){
+    boolean isFcmExist;
+
+    public MyData(String id,
+                  int tableFromDB,
+                  String paymentStyle,
+                  boolean isOrder,
+                  boolean usedTable,
+                  int identifier,
+                  boolean isFcmExist){
         this.id = id;
         this.tableFromDB = tableFromDB;
         this.paymentStyle = paymentStyle;
         this.isOrder = isOrder;
         this.usedTable = usedTable;
         this.identifier = identifier;
+        this.isFcmExist = isFcmExist;
+    }
+
+    public boolean isFcmExist() {
+        return isFcmExist;
+    }
+
+    public void setFcmExist(boolean fcmExist) {
+        isFcmExist = fcmExist;
     }
 
     public int getIdentifier() {

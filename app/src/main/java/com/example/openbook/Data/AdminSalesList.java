@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 
 public class AdminSalesList {
 
-
     String localDate;
     LocalDateTime localDateTime;
     int totalPrice;

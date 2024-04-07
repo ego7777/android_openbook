@@ -1,4 +1,4 @@
-package com.example.openbook;
+package com.example.openbook.kakaopay;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -12,7 +12,11 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.openbook.Activity.Admin;
 import com.example.openbook.Activity.Menu;
+import com.example.openbook.BuildConfig;
 import com.example.openbook.Data.MyData;
+import com.example.openbook.R;
+import com.example.openbook.RetrofitManager;
+import com.example.openbook.RetrofitService;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -98,7 +102,7 @@ public class KakaoPay extends AppCompatActivity {
             } else if (url != null && url.contains("pg_token=")) {
                 String pg_token = url.substring(url.indexOf("pg_token=") + 9);
                 pgToken = pg_token;
-                Log.d(TAG, "should Token\n" + pgToken);
+                Log.d(TAG, "pgtoken" + pgToken);
 
                 url = url.replace("?pg_token=" + pg_token, "");
                 Log.d(TAG, "pg_token 뺀 url: " + url);

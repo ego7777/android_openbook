@@ -2,7 +2,6 @@ package com.example.openbook;
 
 public class TableInformationDTO {
     String result;
-
     String gender;
     int userCount;
     String imageUrl;
