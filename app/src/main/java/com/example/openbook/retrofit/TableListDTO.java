@@ -1,4 +1,4 @@
-package com.example.openbook;
+package com.example.openbook.retrofit;
 
 public class TableListDTO {
     String result;

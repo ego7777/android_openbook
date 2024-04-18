@@ -15,8 +15,8 @@ import com.example.openbook.Activity.Menu;
 import com.example.openbook.BuildConfig;
 import com.example.openbook.Data.MyData;
 import com.example.openbook.R;
-import com.example.openbook.RetrofitManager;
-import com.example.openbook.RetrofitService;
+import com.example.openbook.retrofit.RetrofitManager;
+import com.example.openbook.retrofit.RetrofitService;
 
 import org.json.JSONException;
 import org.json.JSONObject;

@@ -12,29 +12,29 @@ public class AdminTableList implements Serializable {
 
     String adminTableStatement;
     int adminTableIdentifier;
-    int viewType; //0 -> 후불, 1-> 선불
+    int paymentType; //0 -> 후불, 1-> 선불
 
 
 
     public AdminTableList(String adminTableNumber, String adminTableMenu, String adminTablePrice,
-                          String adminTableGender, String adminTableGuestNumber, int viewType, int adminTableIdentifier){
+                          String adminTableGender, String adminTableGuestNumber, int paymentType, int adminTableIdentifier){
         this.adminTableNumber = adminTableNumber;
         this.adminTableMenu = adminTableMenu;
         this.adminTablePrice = adminTablePrice;
         this.adminTableGender = adminTableGender;
         this.adminTableGuestNumber = adminTableGuestNumber;
         this.adminTableIdentifier = adminTableIdentifier;
-        this.viewType = viewType;
+        this.paymentType = paymentType;
 
     }
 
 
-    public int getViewType() {
-        return viewType;
+    public int getPaymentType() {
+        return paymentType;
     }
 
-    public void setViewType(int viewType) {
-        this.viewType = viewType;
+    public void setPaymentType(int paymentType) {
+        this.paymentType = paymentType;
     }
 
     public int getAdminTableIdentifier() {

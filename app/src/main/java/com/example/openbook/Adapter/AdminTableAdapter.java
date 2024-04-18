@@ -153,7 +153,7 @@ public class AdminTableAdapter extends RecyclerView.Adapter<AdminTableAdapter.Vi
 
     @Override
     public int getItemViewType(int position) {
-        if(table.get(position).getViewType() == 0){
+        if(table.get(position).getPaymentType() == 0){
             return TYPE_AFTER;
         }else{
             return TYPE_BEFORE;

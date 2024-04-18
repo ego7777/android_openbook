@@ -13,7 +13,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.openbook.R;
 
-public class IntroFragment extends AppCompatActivity {
+public class Intro extends AppCompatActivity {
 
     Handler handler = new Handler();
 
@@ -30,11 +30,11 @@ public class IntroFragment extends AppCompatActivity {
 
 
 
-        Animation anim1 = AnimationUtils.loadAnimation(IntroFragment.this, R.anim.beat1);
-        Animation anim2 = AnimationUtils.loadAnimation(IntroFragment.this, R.anim.beat2);
-        Animation anim3 = AnimationUtils.loadAnimation(IntroFragment.this, R.anim.heart);
-        Animation anim4 = AnimationUtils.loadAnimation(IntroFragment.this, R.anim.beat3);
-        Animation text_anim = AnimationUtils.loadAnimation(IntroFragment.this, R.anim.textshow);
+        Animation anim1 = AnimationUtils.loadAnimation(Intro.this, R.anim.beat1);
+        Animation anim2 = AnimationUtils.loadAnimation(Intro.this, R.anim.beat2);
+        Animation anim3 = AnimationUtils.loadAnimation(Intro.this, R.anim.heart);
+        Animation anim4 = AnimationUtils.loadAnimation(Intro.this, R.anim.beat3);
+        Animation text_anim = AnimationUtils.loadAnimation(Intro.this, R.anim.textshow);
 
         rate1.startAnimation(anim1);
         rate2.startAnimation(anim2);
@@ -47,7 +47,7 @@ public class IntroFragment extends AppCompatActivity {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                Intent intent = new Intent(IntroFragment.this, Login.class);
+                Intent intent = new Intent(Intro.this, Login.class);
                 startActivity(intent);
                 finish();
             }

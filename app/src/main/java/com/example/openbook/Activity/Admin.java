@@ -12,22 +12,25 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.openbook.Adapter.AdminPopUpAdapter;
 import com.example.openbook.Adapter.AdminTableAdapter;
+import com.example.openbook.Data.AdminData;
+import com.example.openbook.BuildConfig;
 import com.example.openbook.Chatting.DBHelper;
+import com.example.openbook.retrofit.AdminTableDTO;
 import com.example.openbook.Data.AdminTableList;
 import com.example.openbook.Data.OrderList;
 import com.example.openbook.DialogManager;
+import com.example.openbook.FCM.FCM;
 import com.example.openbook.ImageLoadTask;
-import com.example.openbook.kakaopay.KakaoPay;
+import com.example.openbook.retrofit.RetrofitManager;
+import com.example.openbook.retrofit.RetrofitService;
+import com.example.openbook.retrofit.TableListDTO;
 import com.example.openbook.SaveOrderDeleteData;
 import com.example.openbook.R;
 import com.example.openbook.TableQuantity;
@@ -36,27 +39,21 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.util.ArrayList;
 
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+
 
 public class Admin extends AppCompatActivity {
 
     String TAG = "AdminTAG";
-
-    ArrayList<AdminTableList> adminTableList;
-
     AdminTableAdapter adapter;
 
-    TextView appbar_admin_sales, appbar_admin_addMenu, appbar_admin_modifyTable;
-    TextView admin_sidebar_menu, admin_sidebar_info, admin_sidebar_pay;
-
-    String get_id;
+    TextView appbarAdminSales, appbarAdminAddMenu, appbarAdminModifyTable;
+    TextView adminSidebarMenu, adminSidebarInfo, adminSidebarPay;
 
     String gender, guestNumber, tableName, tableStatement, menuName;
     int totalPrice, tableIdentifier;
@@ -70,10 +67,12 @@ public class Admin extends AppCompatActivity {
     String afterPaymentList;
 
     //다이얼로그
-    ImageView table_info_img;
-    TextView table_info_statement, table_info_text, table_info_gender, table_info_member;
-    Button table_info_close;
-    String responseBody;
+    ImageView tableInfoImg;
+    TextView tableInfoStatement, tableInfoText, tableInfoGender, tableInfoMember;
+    Button tableInfoClose;
+    AdminData adminData;
+    RetrofitService service;
+    ArrayList<AdminTableList> adminTableLists;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -82,30 +81,83 @@ public class Admin extends AppCompatActivity {
 
         overridePendingTransition(0, 0);
 
-        adminTableList = (ArrayList<AdminTableList>) getIntent().getSerializableExtra("adminTableList");
+        adminData = getIntent().getParcelableExtra("adminData");
+        Log.d(TAG, "adminData id: " + adminData.getId());
+
+        adminTableLists = (ArrayList<AdminTableList>) getIntent().getSerializableExtra("adminTableList");
+        Log.d(TAG, "adminTableList: " + adminTableLists.size());
+
+        if (adminData.getId() == null) {
+            adminData.setId("admin");
+            Log.d(TAG, "id null admin: " + adminData.getId());
+        }
+
+        RecyclerView tableGrid = findViewById(R.id.admin_grid);
+        adapter = new AdminTableAdapter();
+
+        //그리드 레이아웃 설정
+        tableGrid.setLayoutManager(new GridLayoutManager(this, 3));
+
+        //어댑터 연결
+        tableGrid.setAdapter(adapter);
+
+
+        if (adminData.getAdminTableLists() != null) {
+            Log.d(TAG, "adminTableList size : " + adminData.getAdminTableLists().size());
+            adapter.setAdapterItem(adminData.getAdminTableLists());
+            Log.d(TAG, "setAdapterItem");
+        } else {
+            adminTableLists = new ArrayList<>();
+            TableQuantity tableQuantity = new TableQuantity();
+            tableQuantity.getTableQuantity(new Callback<TableListDTO>() {
+                @Override
+                public void onResponse(Call<TableListDTO> call, Response<TableListDTO> response) {
+                    if (response.isSuccessful()) {
+                        switch (response.body().getResult()) {
+                            case "success":
+                                int tableCount = response.body().getTableCount();
+                                for (int i = 1; i < tableCount + 1; i++) {
+                                    adminTableLists.add(new AdminTableList("table" + i,
+                                            null,
+                                            null,
+                                            null,
+                                            null,
+                                            0,
+                                            0));
+                                }
+                                Log.d(TAG, "onResponse table size: " + adminTableLists.size());
+                                adminData.setAdminTableLists(adminTableLists);
+                                adapter.setAdapterItem(adminData.getAdminTableLists());
+                                Log.d(TAG, "onResponse setAdapterItem");
+                                break;
+
+                            case "failed":
+                                Log.d(TAG, "onResponse adminTableList is failed");
+                                break;
+                        }
+                    } else {
+                        Log.d(TAG, "onResponse adminTableList is not successful");
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<TableListDTO> call, Throwable t) {
+                    Log.d(TAG, "onFailure adminTableList: " + t.getMessage());
+                }
+            });
+        }
+
         afterPaymentList = getIntent().getStringExtra("orderList");
         Log.d(TAG, "orderList: " + afterPaymentList);
-
-        get_id = getIntent().getStringExtra("get_id");
-        Log.d(TAG, "get_id intent: " + get_id);
-
-        if (get_id == null) {
-            get_id = "admin";
-            Log.d(TAG, "get_id: " + get_id);
-        }
 
 
         sharedPreference = getSharedPreferences("oldMenuSummary", MODE_PRIVATE);
         editor = sharedPreference.edit();
 
-        if (adminTableList != null) {
-            Log.d(TAG, "onCreate adminTableList size : " + adminTableList.size());
+        RetrofitManager retrofitManager = new RetrofitManager();
+        Retrofit retrofit = retrofitManager.getRetrofit(BuildConfig.SERVER_IP);
+        service = retrofit.create(RetrofitService.class);
 
-        } else if (adminTableList == null) {
-
-            Log.d(TAG, "onCreate adminTableList null: ");
-            adminTableList = new ArrayList<>();
-            TableQuantity tableQuantity = new TableQuantity();
 
 //            int table = tableQuantity.getTableQuantity();
 //            Log.d(TAG, "tableQuantity : " + table);
@@ -146,38 +198,27 @@ public class Admin extends AppCompatActivity {
 //            }// for문 끝
 
 
-        } else {
-            Log.d(TAG, "onCreate adminTableList not null: ");
-        }
-
         /**
          * 로그인을 성공하면 id, token을 firebase realtime db에 저장
          */
-//        Intent fcm = new Intent(Admin.this, FCM.class);
-//        fcm.putExtra("get_id", get_id);
-//        startService(fcm);
+        if (!adminData.isFcmExist()) {
+            Intent fcm = new Intent(Admin.this, FCM.class);
+            fcm.putExtra("identifier", adminData.getId().hashCode());
+            startService(fcm);
+        }
 
-        TextView appbar_admin_id = findViewById(R.id.appbar_admin_id);
-        appbar_admin_id.setText(get_id);
 
-        appbar_admin_sales = findViewById(R.id.appbar_admin_sales);
-        appbar_admin_addMenu = findViewById(R.id.appbar_admin_addMenu);
-        appbar_admin_modifyTable = findViewById(R.id.appbar_admin_modifyTable);
+        TextView appbarAdminId = findViewById(R.id.appbar_admin_id);
+        appbarAdminId.setText(adminData.getId());
 
-        admin_sidebar_menu = findViewById(R.id.admin_sidebar_menu);
-        admin_sidebar_info = findViewById(R.id.admin_sidebar_info);
-        admin_sidebar_pay = findViewById(R.id.admin_sidebar_pay);
+        appbarAdminSales = findViewById(R.id.appbar_admin_sales);
+        appbarAdminAddMenu = findViewById(R.id.appbar_admin_addMenu);
+        appbarAdminModifyTable = findViewById(R.id.appbar_admin_modifyTable);
 
-        RecyclerView tableGrid = findViewById(R.id.admin_grid);
-        adapter = new AdminTableAdapter();
+        adminSidebarMenu = findViewById(R.id.admin_sidebar_menu);
+        adminSidebarInfo = findViewById(R.id.admin_sidebar_info);
+        adminSidebarPay = findViewById(R.id.admin_sidebar_pay);
 
-        //그리드 레이아웃 설정
-        tableGrid.setLayoutManager(new GridLayoutManager(this, 3));
-
-        //어댑터 연결
-        tableGrid.setAdapter(adapter);
-
-        adapter.setAdapterItem(adminTableList);
 
 
         dbHelper = new DBHelper(Admin.this, version);
@@ -212,7 +253,6 @@ public class Admin extends AppCompatActivity {
         editor.commit();
 
 
-
         if (menuName != null) {
             int pastCount = Integer.parseInt(String.valueOf(menuName.indexOf(menuName.length())));
             Log.d(TAG, "pastCount: " + pastCount);
@@ -230,7 +270,7 @@ public class Admin extends AppCompatActivity {
                 Log.d(TAG, "success: " + success);
 
                 if (success == true) {
-                    deleteLocalData(); //
+//                    deleteLocalData();
                     Log.d(TAG, "deleteData: ");
 
                     orderSaveDeleteData.deleteServerData(tableName); // 서버 데이터
@@ -250,77 +290,68 @@ public class Admin extends AppCompatActivity {
         super.onResume();
 
 
-        if (gender != null) {
-            Log.d(TAG, "gender not null: " + gender);
-            int tableNameInt = Integer.parseInt(tableName.replace("table", "")) - 1;
-            adminTableList.get(tableNameInt).setAdminTableGender(gender);
-            adminTableList.get(tableNameInt).setAdminTableGuestNumber(guestNumber);
-            // 이것도 쉐어드에 저장을 하고, 삭제하는 것으로..!
+//        if (gender != null) {
+//            Log.d(TAG, "gender not null: " + gender);
+//            int tableNameInt = Integer.parseInt(tableName.replace("table", "")) - 1;
+//            adminTableList.get(tableNameInt).setAdminTableGender(gender);
+//            adminTableList.get(tableNameInt).setAdminTableGuestNumber(guestNumber);
+//            // 이것도 쉐어드에 저장을 하고, 삭제하는 것으로..!
+//
+//        } else if (tableStatement != null) {
+//            Log.d(TAG, "tableStatement not null: " + tableStatement);
+//
+//            int tableNameInt = Integer.parseInt(tableName.replace("table", "")) - 1;
+//            Log.d(TAG, "tableNameInt: " + tableNameInt);
+//            adminTableList.get(tableNameInt).setAdminTableStatement(tableStatement);
+//            adminTableList.get(tableNameInt).setViewType(1);
+//
+//            editor.putInt(tableName + "viewType", 1);
+//            editor.commit();
+//
+//            adminTableList.get(tableNameInt).setAdminTableIdentifier(tableIdentifier);
+//
+//
+//        } else if (menuName != null) {
+//            int tableNameInt = Integer.parseInt(tableName.replace("table", "")) - 1;
+//            adminTableList.get(tableNameInt).setAdminTableMenu(menuName);
+//            Log.d(TAG, "setAdminTableMenu: " + menuName);
+//            adminTableList.get(tableNameInt).setAdminTablePrice(String.valueOf(totalPrice));
+//            Log.d(TAG, "setAdminTablePrice: " + totalPrice);
+//
+//        }
 
-        } else if (tableStatement != null) {
-            Log.d(TAG, "tableStatement not null: " + tableStatement);
 
-            int tableNameInt = Integer.parseInt(tableName.replace("table", "")) - 1;
-            Log.d(TAG, "tableNameInt: " + tableNameInt);
-            adminTableList.get(tableNameInt).setAdminTableStatement(tableStatement);
-            adminTableList.get(tableNameInt).setViewType(1);
-
-            editor.putInt(tableName +"viewType", 1);
-            editor.commit();
-
-            adminTableList.get(tableNameInt).setAdminTableIdentifier(tableIdentifier);
-
-
-        } else if (menuName != null) {
-            int tableNameInt = Integer.parseInt(tableName.replace("table", "")) - 1;
-            adminTableList.get(tableNameInt).setAdminTableMenu(menuName);
-            Log.d(TAG, "setAdminTableMenu: " + menuName);
-            adminTableList.get(tableNameInt).setAdminTablePrice(String.valueOf(totalPrice));
-            Log.d(TAG, "setAdminTablePrice: " + totalPrice);
-
-        }
-
-
-        appbar_admin_sales.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //매출 액티비티가 나온다
-                startActivityClass(AdminSales.class);
-            }
+        appbarAdminSales.setOnClickListener(v -> {
+            //매출 액티비티가 나온다
+            startActivityClass(AdminSales.class);
         });
 
 
-        appbar_admin_addMenu.setOnClickListener(view -> {
+        appbarAdminAddMenu.setOnClickListener(view -> {
             // 메뉴 이름, 가격, 이미지를 등록하면 서버로 들어가서 menuList Db에 등록된다
             startActivityClass(AdminModifyMenu.class);
         });
 
-        appbar_admin_modifyTable.setOnClickListener(view -> {
+        appbarAdminModifyTable.setOnClickListener(view -> {
             startActivityClass(AdminModifyTableQuantity.class);
-
-
         });
 
 
         DialogManager dialogManager = new DialogManager();
 
 
-        adapter.setOnItemClickListener(new AdminTableAdapter.onItemClickListener() {
-            @Override
-            public void onItemClick(View view, int position) {
+        adapter.setOnItemClickListener((view, position) -> {
 
-                Log.d(TAG, "onItemClick: " + position);
+            Log.d(TAG, "onItemClick: " + position);
 
-                admin_sidebar_menu.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if(adminTableList.get(position).getAdminTableMenu() != null ||
-                        adminTableList.get(position).getAdminTableStatement() != null){
-                            showReceiptDialog(position);
-                        }else{
-                            dialogManager.noButtonDialog(Admin.this, "빈 좌석이거나 아직 주문하지 않은 좌석입니다.");
-
-                        }
+//            adminSidebarMenu.setOnClickListener(v -> {
+//                if (adminTableList.get(position).getAdminTableMenu() != null ||
+//                        adminTableList.get(position).getAdminTableStatement() != null) {
+//                    showReceiptDialog(position);
+//                } else {
+//                    dialogManager.noButtonDialog(Admin.this, "빈 좌석이거나 아직 주문하지 않은 좌석입니다.");
+//
+//                }
 
 
 //                        if (adminTableList.get(position).getAdminTableMenu() == null ) {
@@ -335,125 +366,104 @@ public class Admin extends AppCompatActivity {
 //                            showReceiptDialog(position);
 //
 //                        }
-                    }
-                });
+//            });
 
-                admin_sidebar_info.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Dialog dlg = new Dialog(Admin.this, R.style.RadiusDialogStyle);
-                        dlg.setContentView(R.layout.table_information_dialog);
+            adminSidebarInfo.setOnClickListener(v -> {
+                Dialog dlg = new Dialog(Admin.this, R.style.RadiusDialogStyle);
+                dlg.setContentView(R.layout.table_information_dialog);
 
-                        dlg.show();
+                dlg.show();
 
 
-                        table_info_img = dlg.findViewById(R.id.table_info_img);
-                        table_info_text = dlg.findViewById(R.id.table_info_text);
-                        table_info_statement = dlg.findViewById(R.id.table_info_statement);
-                        table_info_gender = dlg.findViewById(R.id.table_info_gender);
-                        table_info_member = dlg.findViewById(R.id.table_info_member);
-                        table_info_close = dlg.findViewById(R.id.table_info_close);
-
-                        try {
-                            String result = requestTableInfo(position + 1);
-
-                            handleOtherTableInfo(result);
-
-                        } catch (InterruptedException | JSONException e) {
-                            e.printStackTrace();
-                        }
-
-                        table_info_close.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                dlg.dismiss();
-                            }
-                        });
-                    }
-                });
-
-                admin_sidebar_pay.setOnClickListener(new View.OnClickListener() {
-                    @RequiresApi(api = Build.VERSION_CODES.O)
-                    @Override
-                    public void onClick(View v) {
-
-                        // sqlite에서 정보 날리고, 서버로 데이터 보낼겨
-                        ArrayList<OrderList> orderLists = new ArrayList<>();
-                        orderLists = dbHelper.fetchMenuDetails(tableName, orderLists);
-
-                        if (adminTableList.get(position).getAdminTablePrice() != null) {
-                            totalPrice = Integer.parseInt(adminTableList.get(position).getAdminTablePrice());
-                            // 여기에 카카오 페이를 붙이겠읍니다.....
-                            Intent intent = new Intent(Admin.this, KakaoPay.class);
-                            intent.putExtra("menuName", getOrderMenuName(orderLists));
-                            intent.putExtra("menuPrice", totalPrice);
-                            intent.putExtra("tableName", tableName);
-                            intent.putExtra("jsonOrderList", getJson(orderLists));
-                            intent.putExtra("paymentStyle", "after");
-                            intent.putExtra("get_id", get_id);
-                            startActivity(intent);
-                        } else {
-                            dialogManager.noButtonDialog(Admin.this, "빈 좌석이거나 아직 주문하지 않은 좌석입니다.");
-                        }
+                tableInfoImg = dlg.findViewById(R.id.table_info_img);
+                tableInfoText = dlg.findViewById(R.id.table_info_text);
+                tableInfoStatement = dlg.findViewById(R.id.table_info_statement);
+                tableInfoGender = dlg.findViewById(R.id.table_info_gender);
+                tableInfoMember = dlg.findViewById(R.id.table_info_member);
+                tableInfoClose = dlg.findViewById(R.id.table_info_close);
 
 
-                    }
-                });
+                requestTableInfo(position + 1);
 
-            }
+
+                tableInfoClose.setOnClickListener(v1 -> dlg.dismiss());
+            });
+
+            adminSidebarPay.setOnClickListener(v -> {
+
+                // sqlite에서 정보 날리고, 서버로 데이터 보낼겨
+                ArrayList<OrderList> orderLists = new ArrayList<>();
+                orderLists = dbHelper.fetchMenuDetails(tableName, orderLists);
+
+//                if (adminTableList.get(position).getAdminTablePrice() != null) {
+//                    totalPrice = Integer.parseInt(adminTableList.get(position).getAdminTablePrice());
+//                    // 여기에 카카오 페이를 붙이겠읍니다.....
+//                    Intent intent = new Intent(Admin.this, KakaoPay.class);
+//                    intent.putExtra("menuName", getOrderMenuName(orderLists));
+//                    intent.putExtra("menuPrice", totalPrice);
+//                    intent.putExtra("tableName", tableName);
+//                    intent.putExtra("jsonOrderList", getJson(orderLists));
+//                    intent.putExtra("paymentStyle", "after");
+//                    intent.putExtra("get_id", id);
+//                    startActivity(intent);
+//                } else {
+//                    dialogManager.noButtonDialog(Admin.this, "빈 좌석이거나 아직 주문하지 않은 좌석입니다.");
+//                }
+
+
+            });
+
         });
 
     }
 
-    public void showReceiptDialog(int position) {
-        Dialog dialog = new Dialog(Admin.this);
-        dialog.setContentView(R.layout.admin_receipt_dialog);
-
-        AdminPopUpAdapter adminReceiptAdapter = new AdminPopUpAdapter();
-
-        ArrayList<OrderList> adminOrderList = new ArrayList<>();
-
-        if(adminTableList.get(position).getViewType() == 0){
-
-            adminOrderList = dbHelper.fetchMenuDetails(tableName, adminOrderList);
-
-        }else{
-            OrderData orderData = new OrderData();
-
-            String data = orderData.getOrderData(tableName, tableIdentifier);
-            Log.d(TAG, "showReceiptDialog data: " + data);
-
-            adminOrderList = orderData.setArrayList(tableName, data, adminOrderList);
-        }
-
- 
-
-        TextView adminReceiptCancel = dialog.findViewById(R.id.admin_receipt_cancel);
-        TextView adminReceiptTotalPrice = dialog.findViewById(R.id.admin_receipt_totalPrice);
-        RecyclerView adminReceiptRecyclerView = dialog.findViewById(R.id.admin_receipt_recyclerView);
-
-        adminReceiptRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        adminReceiptRecyclerView.setAdapter(adminReceiptAdapter);
-        adminReceiptAdapter.setAdapterItem(adminOrderList);
-
-        int getPrice = Integer.parseInt(adminTableList.get(position).getAdminTablePrice());
-
-        String totalPrice = addCommasToNumber(getPrice);
-
-        adminReceiptTotalPrice.setText(totalPrice);
-
-        dialog.show();
-
-        adminReceiptCancel.setOnClickListener(view -> {
-            dialog.dismiss();
-        });
-    }
+//    public void showReceiptDialog(int position) {
+//        Dialog dialog = new Dialog(Admin.this);
+//        dialog.setContentView(R.layout.admin_receipt_dialog);
+//
+//        AdminPopUpAdapter adminReceiptAdapter = new AdminPopUpAdapter();
+//
+//        ArrayList<OrderList> adminOrderList = new ArrayList<>();
+//
+//        if (adminTableList.get(position).getViewType() == 0) {
+//
+//            adminOrderList = dbHelper.fetchMenuDetails(tableName, adminOrderList);
+//
+//        } else {
+//            OrderData orderData = new OrderData();
+//
+//            String data = orderData.getOrderData(tableName, tableIdentifier);
+//            Log.d(TAG, "showReceiptDialog data: " + data);
+//
+//            adminOrderList = orderData.setArrayList(tableName, data, adminOrderList);
+//        }
+//
+//
+//        TextView adminReceiptCancel = dialog.findViewById(R.id.admin_receipt_cancel);
+//        TextView adminReceiptTotalPrice = dialog.findViewById(R.id.admin_receipt_totalPrice);
+//        RecyclerView adminReceiptRecyclerView = dialog.findViewById(R.id.admin_receipt_recyclerView);
+//
+//        adminReceiptRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+//        adminReceiptRecyclerView.setAdapter(adminReceiptAdapter);
+//        adminReceiptAdapter.setAdapterItem(adminOrderList);
+//
+//        int getPrice = Integer.parseInt(adminTableList.get(position).getAdminTablePrice());
+//
+//        String totalPrice = addCommasToNumber(getPrice);
+//
+//        adminReceiptTotalPrice.setText(totalPrice);
+//
+//        dialog.show();
+//
+//        adminReceiptCancel.setOnClickListener(view -> {
+//            dialog.dismiss();
+//        });
+//    }
 
 
     public void startActivityClass(Class activity) {
         Intent intent = new Intent(Admin.this, activity);
-        intent.putExtra("get_id", get_id);
-        intent.putExtra("adminTableList", adminTableList);
+        intent.putExtra("adminData", adminData);
         startActivity(intent);
     }
 
@@ -506,102 +516,74 @@ public class Admin extends AppCompatActivity {
     }
 
 
-    public void deleteLocalData() {
+//    public void deleteLocalData() {
+//
+//        runOnUiThread(() -> {
+//
+//            //서버에서도 데이터를 이동하는 것이 좋겠다...! 채팅 데이터를 서버로 보내야함 여기서 + 얘기만(gender)
+//
+//            Log.d(TAG, "run: " + tableName);
+//            dbHelper.deleteTableData(tableName, "adminTableList", "tableName"); //sqlite에서 지우고
+//            editor.remove(tableName + "price"); //s.p에서도 지움
+//            editor.remove(tableName + "menu");
+//            editor.remove(tableName + "gender");
+//            editor.remove(tableName + "guestName");
+//            editor.commit();
+//
+//            int tableNameInt = Integer.parseInt(tableName.replace("table", "")) - 1;
+//            Log.d(TAG, "tableNameInt: " + tableNameInt);
+//            adminTableList.get(tableNameInt).setAdminTableMenu(null);
+//            adminTableList.get(tableNameInt).setAdminTablePrice(null);
+//            adminTableList.get(tableNameInt).setAdminTableGender(null);
+//            adminTableList.get(tableNameInt).setAdminTableGuestNumber(null);
+//            adapter.notifyItemChanged(tableNameInt);
+//
+//        });
+//    }
 
-        runOnUiThread(new Runnable() {
-            @RequiresApi(api = Build.VERSION_CODES.O)
+    private void requestTableInfo(int clickTable) {
+
+        Call<AdminTableDTO> call = service.requestTableInfo("table" + clickTable);
+        call.enqueue(new Callback<AdminTableDTO>() {
             @Override
-            public void run() {
-
-                //서버에서도 데이터를 이동하는 것이 좋겠다...! 채팅 데이터를 서버로 보내야함 여기서 + 얘기만(gender)
-
-                Log.d(TAG, "run: " + tableName);
-                dbHelper.deleteTableData(tableName, "adminTableList", "tableName"); //sqlite에서 지우고
-                editor.remove(tableName + "price"); //s.p에서도 지움
-                editor.remove(tableName + "menu");
-                editor.remove(tableName + "gender");
-                editor.remove(tableName + "guestName");
-                editor.commit();
-
-                int tableNameInt = Integer.parseInt(tableName.replace("table", "")) - 1;
-                Log.d(TAG, "tableNameInt: " + tableNameInt);
-                adminTableList.get(tableNameInt).setAdminTableMenu(null);
-                adminTableList.get(tableNameInt).setAdminTablePrice(null);
-                adminTableList.get(tableNameInt).setAdminTableGender(null);
-                adminTableList.get(tableNameInt).setAdminTableGuestNumber(null);
-                adapter.notifyItemChanged(tableNameInt);
-
-            }
-        });
-    }
-
-    private String requestTableInfo(int clickTable) throws InterruptedException {
-
-        //                 GET 요청 객체 생성
-        Request.Builder builder = new Request.Builder()
-                .url("http://3.36.255.141/tableInfoCk.php")
-                .get();
-
-        builder.addHeader("table", "table" + clickTable);
-        Request request = builder.build();
-        Log.d(TAG, "request :" + request);
-
-        OkHttpClient okHttpClient = new OkHttpClient();
-
-        okHttpClient.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                Log.d(TAG, "onFailure: " + e);
-            }
-
-            @Override
-            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+            public void onResponse(Call<AdminTableDTO> call, Response<AdminTableDTO> response) {
+                Log.d(TAG, "onResponse tableInfoCheck: " + response.body().getResult());
                 if (response.isSuccessful()) {
-                    String body = response.body().string();
-                    Log.d(TAG, "requestTableInfo onResponse: " + body);
-                    responseBody = body;
+                    switch (response.body().getResult()) {
+                        case "success":
+                            tableInfoText.setVisibility(View.INVISIBLE);
+
+                            String imageUrl = BuildConfig.SERVER_IP + "Profile/" + response.body().getImageUrl();
+                            ImageLoadTask task = new ImageLoadTask(Admin.this, true, imageUrl, tableInfoImg);
+                            task.execute();
+
+                            tableInfoImg.setClickable(false);
+                            tableInfoStatement.setText(response.body().getStatement());
+                            tableInfoGender.setText(response.body().getGender());
+                            tableInfoMember.setText(response.body().getGuestNumber() + "명");
+                            break;
+
+                        case "failed":
+                            tableInfoText.setVisibility(View.INVISIBLE);
+                            tableInfoStatement.setText("정보를 입력하지 않은 테이블입니다.");
+                            tableInfoGender.setVisibility(View.GONE);
+                            tableInfoMember.setVisibility(View.GONE);
+                            break;
+
+                        default:
+                            Log.d(TAG, "onResponse tableInfoCheck default");
+                    }
                 } else {
-                    Log.d(TAG, "requestTableInfo onResponse: fail");
+                    Log.d(TAG, "onResponse tableInfoCheck is not successful");
                 }
             }
+
+            @Override
+            public void onFailure(Call<AdminTableDTO> call, Throwable t) {
+                Log.d(TAG, "onFailure tableInfoCheck :" + t.getMessage());
+            }
         });
 
-
-        Thread.sleep(250);
-
-
-        return responseBody;
     }
-
-    private void handleOtherTableInfo(String result) throws JSONException {
-
-        if (result.equals("없음")) {
-            table_info_text.setVisibility(View.INVISIBLE);
-            table_info_statement.setText("정보를 입력하지 않은 테이블입니다.");
-            table_info_gender.setVisibility(View.GONE);
-            table_info_member.setVisibility(View.GONE);
-
-            /**
-             * table 정보 있을 때
-             */
-        } else if (result.startsWith("{")) {
-            JSONObject jsonObject = new JSONObject(result);
-
-            String url = "http://3.36.255.141/image/" + jsonObject.getString("img");
-
-
-            ImageLoadTask task = new ImageLoadTask(Admin.this, true, url, table_info_img);
-            task.execute();
-            table_info_text.setVisibility(View.INVISIBLE);
-            table_info_img.setClickable(false);
-
-
-            table_info_statement.setText(jsonObject.getString("statement"));
-            table_info_gender.setText(jsonObject.getString("gender"));
-            table_info_member.setText(jsonObject.getString("guestNum"));
-
-        }
-    }
-
 
 }

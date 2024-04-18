@@ -19,9 +19,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.openbook.BuildConfig;
 import com.example.openbook.DialogManager;
 import com.example.openbook.R;
-import com.example.openbook.RetrofitManager;
-import com.example.openbook.RetrofitService;
-import com.example.openbook.SuccessOrNot;
+import com.example.openbook.retrofit.RetrofitManager;
+import com.example.openbook.retrofit.RetrofitService;
+import com.example.openbook.retrofit.SuccessOrNot;
 
 import java.util.regex.Pattern;
 
@@ -98,7 +98,7 @@ public class SignUp extends AppCompatActivity {
                                     if (response.isSuccessful()) {
                                         switch (response.body().getResult()) {
                                             case "success":
-                                                dialogManager.positiveBtnDialog(SignUp.this, "사용 할 수 있는 아이디 입니다.");
+                                                dialogManager.positiveBtnDialog(SignUp.this, "사용 할 수 있는 아이디 입니다.").show();
                                                 duplicateWarning.setVisibility(View.GONE);
                                                 idEditText.setEnabled(false);
                                                 checkDuplicateButton.setText("수정");
@@ -173,29 +173,28 @@ public class SignUp extends AppCompatActivity {
 
 
             if (id == null || id.isEmpty()) {
-                Log.d(TAG, "id null or isEmpty: " + id);
-
                 dialogManager.positiveBtnDialog(SignUp.this, "아이디를 입력해주세요.").show();
 
-            } else if (pwEditText.getText().toString().isEmpty()) {
+            }else if (!isIdDuplicate) {
+                dialogManager.positiveBtnDialog(SignUp.this, "아이디를 중복 확인을 해주세요.").show();
 
+            } else if (pwEditText.getText().toString().isEmpty()) {
                 dialogManager.positiveBtnDialog(SignUp.this, "비밀번호를 입력해주세요.").show();
+
+            } else if(pwConfirmEditText.getText().toString().isEmpty()){
+                dialogManager.positiveBtnDialog(SignUp.this, "비밀번호 확인을 입력해주세요.").show();
 
             } else if (!isPasswordMatch) {
                 dialogManager.positiveBtnDialog(SignUp.this, "비밀번호가 일치하지 않습니다.").show();
 
             } else if (phoneEditText.getText().toString().isEmpty()) {
-
                 dialogManager.positiveBtnDialog(SignUp.this, "핸드폰 번호를 입력해주세요.").show();
-
-            } else if (emailEditText.getText().toString().isEmpty()) {
-                dialogManager.positiveBtnDialog(SignUp.this, "이메일을 입력해주세요.").show();
-
-            } else if (!isIdDuplicate) {
-                dialogManager.positiveBtnDialog(SignUp.this, "아이디를 중복 확인을 해주세요.").show();
 
             } else if (!isPhoneMatch) {
                 dialogManager.positiveBtnDialog(SignUp.this, "핸드폰 번호를 형식에 맞게 입력해주세요.").show();
+
+            } else if (emailEditText.getText().toString().isEmpty()) {
+                dialogManager.positiveBtnDialog(SignUp.this, "이메일을 입력해주세요.").show();
 
             } else if (!isEmailMatch) {
                 dialogManager.positiveBtnDialog(SignUp.this, "이메일을 형식에 맞게 입력해주세요.").show();

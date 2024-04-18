@@ -255,7 +255,7 @@
         android:layout_marginEnd="200dp"
         android:background="@color/white"
 
-        android:hint="010-1234-5678"
+        android:hint="01012345678"
         android:padding="10dp"
         android:textColor="@color/black"
         android:textSize="25sp"

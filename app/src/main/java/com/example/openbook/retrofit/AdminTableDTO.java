@@ -1,11 +1,11 @@
-package com.example.openbook;
+package com.example.openbook.retrofit;
 
-public class TableInformationDTO {
+public class AdminTableDTO {
     String result;
-    String gender;
-    int userCount;
     String imageUrl;
     String statement;
+    String gender;
+    int guestNumber;
 
     public String getResult() {
         return result;
@@ -15,15 +15,17 @@ public class TableInformationDTO {
         return imageUrl;
     }
 
-    public int getUserCount() {
-        return userCount;
+    public String getStatement() {
+        return statement;
     }
 
     public String getGender() {
         return gender;
     }
 
-    public String getStatement() {
-        return statement;
+    public int getGuestNumber() {
+        return guestNumber;
     }
+
+
 }

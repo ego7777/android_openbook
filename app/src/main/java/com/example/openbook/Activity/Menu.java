@@ -54,9 +54,9 @@ import com.example.openbook.DialogManager;
 import com.example.openbook.FCM.FCM;
 import com.example.openbook.FCM.SendNotification;
 import com.example.openbook.kakaopay.KakaoPay;
-import com.example.openbook.Data.MenuListDTO;
-import com.example.openbook.RetrofitManager;
-import com.example.openbook.RetrofitService;
+import com.example.openbook.retrofit.MenuListDTO;
+import com.example.openbook.retrofit.RetrofitManager;
+import com.example.openbook.retrofit.RetrofitService;
 import com.example.openbook.R;
 import com.example.openbook.Data.TicketData;
 import com.example.openbook.Data.CartList;
@@ -185,10 +185,12 @@ public class Menu extends AppCompatActivity {
         }
 
         sendNotification = new SendNotification();
-
+        Log.d(TAG, "paymentStyle: " + myData.getPaymentStyle());
         if (myData.getPaymentStyle().equals("before") && !myData.isUsedTable()) {
-            sendNotification.usingTable(myData.getId(), "사용", myData.getIdentifier());
-            Log.d(TAG, "usingTable identifier: " + myData.getIdentifier());
+
+            sendNotification.usingTableUpdate(myData.getId(),
+                    "사용",
+                    myData.getPaymentStyle());
             myData.setUsedTable(true);
         }
 
@@ -245,8 +247,8 @@ public class Menu extends AppCompatActivity {
             @Override
             public void onChanged() {
                 super.onChanged();
-                new Handler(Looper.getMainLooper()).postDelayed(() ->{
-                    runOnUiThread(() ->{
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    runOnUiThread(() -> {
                         progressbar.dismiss();
                         Log.d(TAG, "progress bar dismiss: ");
                     });
@@ -407,7 +409,7 @@ public class Menu extends AppCompatActivity {
         menuClose.setOnClickListener(view -> {
             //admin에게 fcm 날리기
             Log.d(TAG, "menuClose Click: ");
-            sendNotification.usingTable(myData.getId(), "종료", 0);
+            sendNotification.usingTableUpdate(myData.getId(), "종료", null);
             Log.d(TAG, "종료: ");
 
             editor.remove("cart_list");
@@ -586,15 +588,15 @@ public class Menu extends AppCompatActivity {
                 switch (myData.getPaymentStyle()) {
                     case "after":
                         // fcm으로 날리고
-//                        sendNotification.sendMenu(adminOrderMenuList(cartLists));
+                        sendNotification.sendMenu(adminOrderMenuList(cartLists));
 //                        orderSharedPreference();
 //                        successOrder();
-//
+
 //                        if (clientSocket == null) {
 //                            clientSocket = new ClientSocket(myData.getId(), Menu.this);
 //                            clientSocket.start();
 //                        }
-//                        break;
+                        break;
 
                     case "before":
                         Intent intent = new Intent(Menu.this, KakaoPay.class);
@@ -661,33 +663,33 @@ public class Menu extends AppCompatActivity {
         return menuName;
     }
 
-//    public String adminOrderMenuList(ArrayList<CartList> cartLists) {
-//        JSONObject jsonObject = new JSONObject();
-//        try {
-//
-//            menujArray = new JSONArray();//배열이 필요할때
-//
-//            for (int i = 0; i < cartLists.size(); i++)//배열
-//            {
-//                //배열 내에 들어갈 json
-//                JSONObject sObject = new JSONObject();
-//                sObject.put("menu", cartLists.get(i).getMenu_name());
-//                sObject.put("price", cartLists.get(i).getMenu_price());
-//                sObject.put("quantity", cartLists.get(i).getMenu_quantity());
-//                menujArray.put(sObject);
-//            }
-//
-//            jsonObject.put("item", menujArray);
-//            jsonObject.put("menuName", getOrderMenuName(cartLists));
-//            jsonObject.put("tableName", myData.getId());
-//            jsonObject.put("identifier", 0);
-//
-//        } catch (JSONException e) {
-//            e.printStackTrace();
-//        }
-//
-//        return jsonObject.toString();
-//    }
+    public String adminOrderMenuList(ArrayList<CartList> cartLists) {
+        JSONObject jsonObject = new JSONObject();
+        try {
+
+            JSONArray menujArray = new JSONArray();//배열이 필요할때
+
+            for (int i = 0; i < cartLists.size(); i++)//배열
+            {
+                //배열 내에 들어갈 json
+                JSONObject sObject = new JSONObject();
+                sObject.put("menu", cartLists.get(i).getMenuName());
+                sObject.put("price", cartLists.get(i).getMenuPrice());
+                sObject.put("quantity", cartLists.get(i).getMenuQuantity());
+                menujArray.put(sObject);
+            }
+
+            jsonObject.put("item", menujArray);
+            jsonObject.put("menuName", getOrderMenuName(cartLists));
+            jsonObject.put("tableName", myData.getId());
+            jsonObject.put("identifier", 0);
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return jsonObject.toString();
+    }
 
     public void cartSharedPreference(String keyName) {
 

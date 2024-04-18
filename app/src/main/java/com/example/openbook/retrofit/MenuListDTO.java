@@ -1,4 +1,4 @@
-package com.example.openbook.Data;
+package com.example.openbook.retrofit;
 
 
 import com.google.gson.annotations.SerializedName;

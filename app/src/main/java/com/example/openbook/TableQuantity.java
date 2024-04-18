@@ -1,16 +1,12 @@
 package com.example.openbook;
 
-import android.util.Log;
-import android.util.Patterns;
-
-import androidx.annotation.NonNull;
-
-import java.io.IOException;
+import com.example.openbook.retrofit.RetrofitManager;
+import com.example.openbook.retrofit.RetrofitService;
+import com.example.openbook.retrofit.TableListDTO;
 
 
 import retrofit2.Call;
 import retrofit2.Callback;
-import retrofit2.Response;
 import retrofit2.Retrofit;
 
 public class TableQuantity {

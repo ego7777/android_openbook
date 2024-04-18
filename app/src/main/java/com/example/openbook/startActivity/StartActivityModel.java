@@ -2,7 +2,7 @@ package com.example.openbook.startActivity;
 
 import android.util.Log;
 
-import com.example.openbook.RetrofitService;
+import com.example.openbook.retrofit.RetrofitService;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 

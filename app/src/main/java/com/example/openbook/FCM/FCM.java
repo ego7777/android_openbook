@@ -1,42 +1,21 @@
 package com.example.openbook.FCM;
 
-import android.app.PendingIntent;
 import android.content.Intent;
 import android.os.Build;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-
-import com.example.openbook.Activity.Admin;
-import com.example.openbook.Activity.AdminPaymentBeforePopup;
-import com.example.openbook.Activity.AdminPaymentAfterPopup;
-import com.example.openbook.Activity.PaymentSelect;
 
 import com.example.openbook.BuildConfig;
-import com.example.openbook.Chatting.DBHelper;
-import com.example.openbook.Data.MyData;
-import com.example.openbook.RetrofitManager;
-import com.example.openbook.RetrofitService;
-import com.example.openbook.SuccessOrNot;
-import com.google.android.gms.tasks.OnCompleteListener;
+import com.example.openbook.retrofit.RetrofitManager;
+import com.example.openbook.retrofit.RetrofitService;
+import com.example.openbook.retrofit.SuccessOrNot;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.IOException;
-import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -100,7 +79,7 @@ public class FCM extends FirebaseMessagingService {
         super.onMessageReceived(message);
 
         // 푸시메시지 수신시 할 작업을 작성
-        Log.d(TAG, "From: " + message.getData());
+        Log.d(TAG, "fcm message: " + message.getData());
 
         // Check if message contains a notification payload.
 //        if (message.getData().size() > 0) {

@@ -23,6 +23,7 @@ android {
         buildConfigField("String", "SERVER_IP", properties.getProperty("SERVER_IP"))
         buildConfigField("String", "ADMIN_KEY", properties.getProperty("ADMIN_KEY"))
         buildConfigField("String", "KAKAOPAY_ADMIN_KEY", properties.getProperty("KAKAOPAY_ADMIN_KEY"))
+        buildConfigField("String", "FCM_SERVER_KEY", properties.getProperty("FCM_SERVER_KEY"))
 
         renderscriptTargetApi 18
         renderscriptSupportModeEnabled true

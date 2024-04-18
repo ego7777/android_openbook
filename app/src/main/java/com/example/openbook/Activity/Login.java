@@ -13,15 +13,16 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.example.openbook.Data.AdminData;
 import com.example.openbook.BuildConfig;
 import com.example.openbook.Data.AdminTableList;
 import com.example.openbook.Data.MyData;
 import com.example.openbook.DialogManager;
 import com.example.openbook.R;
-import com.example.openbook.RetrofitManager;
-import com.example.openbook.RetrofitService;
-import com.example.openbook.SuccessOrNot;
-import com.example.openbook.TableListDTO;
+import com.example.openbook.retrofit.RetrofitManager;
+import com.example.openbook.retrofit.RetrofitService;
+import com.example.openbook.retrofit.SuccessOrNot;
+import com.example.openbook.retrofit.TableListDTO;
 import com.example.openbook.TableQuantity;
 import com.example.openbook.startActivity.LoginResponseModel;
 import com.example.openbook.startActivity.SignUp;
@@ -103,17 +104,17 @@ public class Login extends AppCompatActivity {
                                 case "success":
                                     switch (response.body().getId()) {
                                         case "admin":
-                                            startActivityTableList(Admin.class, adminTableList, "adminTableList", id);
+                                            startActivityAdmin(Admin.class, id);
                                             break;
 
                                         default:
-                                            startActivityString(PaymentSelect.class, "myData", id);
+                                            startActivityCustomer(PaymentSelect.class, "myData", id);
                                             break;
                                     }
                                     break;
 
                                 case "failed":
-                                    Toast.makeText(Login.this, "아이디나 비밀번호가 일치하지 않습니다.", Toast.LENGTH_SHORT).show();
+                                    dialogManager.positiveBtnDialog(Login.this, "아이디나 비밀번호가 일치하지 않습니다.").show();
                                     break;
 
                             }
@@ -182,18 +183,18 @@ public class Login extends AppCompatActivity {
                 googleEmail = googleSignInAccount.getEmail();
                 googleIdentifier = googleSignInAccount.getId();
 
-
                 Call<SuccessOrNot> checkIdCall = service.requestIdDuplication(googleIdentifier.hashCode());
                 checkIdCall.enqueue(new Callback<SuccessOrNot>() {
                     @Override
                     public void onResponse(Call<SuccessOrNot> call, Response<SuccessOrNot> response) {
                         if (response.isSuccessful()) {
+                            Log.d(TAG, "onResponse google login: "  + response.body().getResult());
                             switch (response.body().getResult()) {
                                 case "success":
                                     googleSignIn();
                                     break;
                                 case "failed":
-                                    startActivityString(PaymentSelect.class, "myData", googleId);
+                                    startActivityCustomer(PaymentSelect.class, "myData", googleId);
                                     break;
                             }
                         } else {
@@ -227,7 +228,7 @@ public class Login extends AppCompatActivity {
                 if (response.isSuccessful()) {
                     switch (response.body().getResult()) {
                         case "success":
-                            startActivityString(PaymentSelect.class, "myData", googleId);
+                            startActivityCustomer(PaymentSelect.class, "myData", googleId);
                             break;
 
                         case "failed":
@@ -251,7 +252,7 @@ public class Login extends AppCompatActivity {
 
 
     // 문자열 인텐트 전달 함수
-    public void startActivityString(Class c, String name, String sendString) {
+    public void startActivityCustomer(Class c, String name, String sendString) {
         Intent intent = new Intent(getApplicationContext(), c);
         MyData myData = new MyData(sendString,
                 tableFromDB,
@@ -265,15 +266,14 @@ public class Login extends AppCompatActivity {
         overridePendingTransition(0, 0);
     }
 
-    // 인텐트 화면전환 하는 함수
-    // FLAG_ACTIVITY_CLEAR_TOP = 불러올 액티비티 위에 쌓인 액티비티 지운다.
-    public void startActivityTableList(Class c, ArrayList tableList, String tableListName, String id) {
+    public void startActivityAdmin(Class c, String id) {
         Intent intent = new Intent(getApplicationContext(), c);
-        intent.putExtra(tableListName, tableList);
-        intent.putExtra("userID", id);
+        AdminData adminData = new AdminData(id, adminTableList, false);
+        Log.d(TAG, "startActivityAdmin id: " + id);
+        Log.d(TAG, "startActivityAdmin adminTableList: " + adminTableList);
+        intent.putExtra("adminTableList", adminTableList);
+        intent.putExtra("adminData", adminData);
         startActivity(intent);
-        Log.d(TAG, "startActivityTableList: " + tableList.size());
-        // 화면전환 애니메이션 없애기
         overridePendingTransition(0, 0);
     }
 

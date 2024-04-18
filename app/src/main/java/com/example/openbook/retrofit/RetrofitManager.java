@@ -1,4 +1,4 @@
-package com.example.openbook;
+package com.example.openbook.retrofit;
 
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;

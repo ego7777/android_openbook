@@ -16,7 +16,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
@@ -41,18 +40,16 @@ import com.example.openbook.QRcode.MakeQR;
 import com.example.openbook.R;
 import com.example.openbook.Data.TicketData;
 import com.example.openbook.Data.TableList;
-import com.example.openbook.RetrofitManager;
-import com.example.openbook.RetrofitService;
-import com.example.openbook.SuccessOrNot;
-import com.example.openbook.TableInformationDTO;
-import com.example.openbook.TableListDTO;
+import com.example.openbook.retrofit.RetrofitManager;
+import com.example.openbook.retrofit.RetrofitService;
+import com.example.openbook.retrofit.SuccessOrNot;
+import com.example.openbook.retrofit.TableInformationDTO;
+import com.example.openbook.retrofit.TableListDTO;
 import com.example.openbook.TableQuantity;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.Arrays;

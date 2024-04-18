@@ -1,11 +1,11 @@
-package com.example.openbook;
+package com.example.openbook.retrofit;
 
 import com.example.openbook.kakaopay.KakaoPayApproveResponseDTO;
 import com.example.openbook.kakaopay.KakaoPayReadyResponseDTO;
-import com.example.openbook.Data.MenuListDTO;
 import com.example.openbook.startActivity.LoginResponseModel;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.http.Field;
@@ -71,6 +71,17 @@ public interface RetrofitService {
     @FormUrlEncoded
     Call<SuccessOrNot> saveFcmToken(@Field("identifier") int identifier,
                                     @Field("token") String token);
+    @POST("TableInfoCheck.php")
+    @FormUrlEncoded
+    Call<AdminTableDTO> requestTableInfo(@Field("tableName") String tableName);
+    @POST("GetFcmToken.php")
+    @FormUrlEncoded
+    Call<TokenDTO> requestFcmToken(@Field("userId") String userId);
 
+    @POST("sendRequestFcm.php")
+    @FormUrlEncoded
+    Call<SuccessOrNot> sendRequestFcm(@Field("key") String key,
+                                      @Field("token") String token,
+                                      @Field("data") String data);
 
 }

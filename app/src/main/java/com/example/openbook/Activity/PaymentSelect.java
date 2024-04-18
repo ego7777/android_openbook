@@ -11,7 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.openbook.Data.MyData;
 import com.example.openbook.R;
-import com.example.openbook.TableListDTO;
+import com.example.openbook.retrofit.TableListDTO;
 import com.example.openbook.TableQuantity;
 
 import retrofit2.Call;
