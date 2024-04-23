@@ -30,7 +30,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 
 
-public class AdminPaymentAfterPopup extends Activity {
+public class AdminPaymentLaterPopup extends Activity {
 
     String TAG = "AdminPopUp_TAG";
 
@@ -83,7 +83,7 @@ public class AdminPaymentAfterPopup extends Activity {
         adminPopUpAdapter.setAdapterItem(orderLists);
 
 
-        dbHelper = new DBHelper(AdminPaymentAfterPopup.this, version);
+        dbHelper = new DBHelper(AdminPaymentLaterPopup.this, version);
         version++;
 
         sharedPreference = getSharedPreferences("oldMenuSummary", MODE_PRIVATE);
@@ -234,7 +234,7 @@ public class AdminPaymentAfterPopup extends Activity {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                Intent intent = new Intent(AdminPaymentAfterPopup.this, Admin.class);
+                Intent intent = new Intent(AdminPaymentLaterPopup.this, Admin.class);
 
                 intent.putExtra("tableName", tableName);
                 intent.putExtra("adminTableList", adminTableList);

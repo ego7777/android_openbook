@@ -1,8 +1,13 @@
 package com.example.openbook.Data;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
+import androidx.annotation.NonNull;
+
 import java.io.Serializable;
 
-public class AdminTableList implements Serializable {
+public class AdminTableList implements Parcelable {
 
     String adminTableNumber;
     String adminTableMenu;
@@ -12,7 +17,7 @@ public class AdminTableList implements Serializable {
 
     String adminTableStatement;
     int adminTableIdentifier;
-    int paymentType; //0 -> 후불, 1-> 선불
+    int paymentType; //0 -> now, 1-> later
 
 
 
@@ -28,6 +33,29 @@ public class AdminTableList implements Serializable {
 
     }
 
+
+    protected AdminTableList(Parcel in) {
+        adminTableNumber = in.readString();
+        adminTableMenu = in.readString();
+        adminTablePrice = in.readString();
+        adminTableGender = in.readString();
+        adminTableGuestNumber = in.readString();
+        adminTableStatement = in.readString();
+        adminTableIdentifier = in.readInt();
+        paymentType = in.readInt();
+    }
+
+    public static final Creator<AdminTableList> CREATOR = new Creator<AdminTableList>() {
+        @Override
+        public AdminTableList createFromParcel(Parcel in) {
+            return new AdminTableList(in);
+        }
+
+        @Override
+        public AdminTableList[] newArray(int size) {
+            return new AdminTableList[size];
+        }
+    };
 
     public int getPaymentType() {
         return paymentType;
@@ -94,4 +122,20 @@ public class AdminTableList implements Serializable {
     }
 
 
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(@NonNull Parcel parcel, int i) {
+        parcel.writeString(adminTableNumber);
+        parcel.writeString(adminTableMenu);
+        parcel.writeString(adminTablePrice);
+        parcel.writeString(adminTableGender);
+        parcel.writeString(adminTableGuestNumber);
+        parcel.writeString(adminTableStatement);
+        parcel.writeInt(adminTableIdentifier);
+        parcel.writeInt(paymentType);
+    }
 }

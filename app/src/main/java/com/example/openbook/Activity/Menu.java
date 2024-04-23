@@ -53,6 +53,7 @@ import com.example.openbook.Deco.menu_recyclerview_deco;
 import com.example.openbook.DialogManager;
 import com.example.openbook.FCM.FCM;
 import com.example.openbook.FCM.SendNotification;
+import com.example.openbook.PaymentCategory;
 import com.example.openbook.kakaopay.KakaoPay;
 import com.example.openbook.retrofit.MenuListDTO;
 import com.example.openbook.retrofit.RetrofitManager;
@@ -186,11 +187,11 @@ public class Menu extends AppCompatActivity {
 
         sendNotification = new SendNotification();
         Log.d(TAG, "paymentStyle: " + myData.getPaymentStyle());
-        if (myData.getPaymentStyle().equals("before") && !myData.isUsedTable()) {
+        if (myData.getPaymentStyle() == PaymentCategory.NOW.getValue() && !myData.isUsedTable()) {
 
-            sendNotification.usingTableUpdate(myData.getId(),
-                    "사용",
-                    myData.getPaymentStyle());
+            sendNotification.usingTableUpdate("admin",
+                    myData.getId(),
+                    "PayNow");
             myData.setUsedTable(true);
         }
 
@@ -203,7 +204,7 @@ public class Menu extends AppCompatActivity {
 
         menuClose = findViewById(R.id.menu_close);
 
-        if (myData.getPaymentStyle().equals("after")) {
+        if (myData.getPaymentStyle() == PaymentCategory.LATER.getValue()) {
             menuClose.setVisibility(View.GONE);
         }
         appbarMenuTable = findViewById(R.id.appbar_menu_table);
@@ -408,16 +409,14 @@ public class Menu extends AppCompatActivity {
 
         menuClose.setOnClickListener(view -> {
             //admin에게 fcm 날리기
-            Log.d(TAG, "menuClose Click: ");
-            sendNotification.usingTableUpdate(myData.getId(), "종료", null);
-            Log.d(TAG, "종료: ");
+            sendNotification.usingTableUpdate("admin", myData.getId(), "End");
 
             editor.remove("cart_list");
             editor.remove("order_list");
             editor.commit();
 
             Intent intent = new Intent(Menu.this, PaymentSelect.class);
-            myData.setPaymentStyle(null);
+            myData.setPaymentStyle(PaymentCategory.UNSELECTED.getValue());
             myData.setOrder(false);
             myData.setUsedTable(false);
             myData.setIdentifier(0);
@@ -585,8 +584,9 @@ public class Menu extends AppCompatActivity {
                 dialogManager.noButtonDialog(Menu.this, "장바구니가 비어있습니다.");
 
             } else {
+
                 switch (myData.getPaymentStyle()) {
-                    case "after":
+                    case 1:
                         // fcm으로 날리고
                         sendNotification.sendMenu(adminOrderMenuList(cartLists));
 //                        orderSharedPreference();
@@ -598,7 +598,7 @@ public class Menu extends AppCompatActivity {
 //                        }
                         break;
 
-                    case "before":
+                    case 0:
                         Intent intent = new Intent(Menu.this, KakaoPay.class);
                         intent.putExtra("menuName", getOrderMenuName(cartLists));
                         intent.putExtra("totalPrice", totalPrice);

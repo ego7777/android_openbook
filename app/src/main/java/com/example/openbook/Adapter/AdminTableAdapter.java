@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.openbook.Data.AdminTableList;
+import com.example.openbook.PaymentCategory;
 import com.example.openbook.R;
 
 import java.util.ArrayList;
@@ -83,7 +84,7 @@ public class AdminTableAdapter extends RecyclerView.Adapter<AdminTableAdapter.Vi
             super(itemView);
             this.viewType = viewType;
 
-            if(viewType == TYPE_AFTER){
+            if(viewType == TYPE_LATER){
                 admin_grid_number = itemView.findViewById(R.id.admin_grid_number);
                 admin_grid_menu = itemView.findViewById(R.id.admin_grid_menu);
                 admin_grid_price = itemView.findViewById(R.id.admin_grid_price);
@@ -95,36 +96,33 @@ public class AdminTableAdapter extends RecyclerView.Adapter<AdminTableAdapter.Vi
             }
 
 
-            itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    position = getAdapterPosition();
-                    Log.d(TAG, "position: " + position);
+            itemView.setOnClickListener(v -> {
+                position = getAdapterPosition();
+                Log.d(TAG, "position: " + position);
 
-                    if (position != RecyclerView.NO_POSITION) {
-                        if (myListener != null ) {
-                            myListener.onItemClick(v, position);
-                            notifyDataSetChanged();
-                            notifyItemChanged(lastClickedPosition);
-                            lastClickedPosition = position;
-                            notifyItemChanged(position);
-                        }
+                if (position != RecyclerView.NO_POSITION) {
+                    if (myListener != null ) {
+                        myListener.onItemClick(v, position);
+                        notifyDataSetChanged();
+                        notifyItemChanged(lastClickedPosition);
+                        lastClickedPosition = position;
+                        notifyItemChanged(position);
                     }
-
                 }
+
             });
         }
 
         void onBind(AdminTableList items){
 
-            if(viewType == TYPE_AFTER){
-                onBindAfter(items);
+            if(viewType == TYPE_LATER){
+                onBindLater(items);
             }else{
-                onBindBefore(items);
+                onBindNow(items);
             }
         }
 
-        void onBindAfter(AdminTableList items){
+        void onBindLater(AdminTableList items){
             admin_grid_number.setText(items.getAdminTableNumber());
             admin_grid_menu.setText(items.getAdminTableMenu());
             admin_grid_price.setText(items.getAdminTablePrice());
@@ -132,19 +130,20 @@ public class AdminTableAdapter extends RecyclerView.Adapter<AdminTableAdapter.Vi
             admin_grid_guestNum.setText(items.getAdminTableGuestNumber());
         }
 
-        void onBindBefore(AdminTableList items){
+        void onBindNow(AdminTableList items){
             admin_grid_number.setText(items.getAdminTableNumber());
             admin_grid_statement.setText(items.getAdminTableStatement());
+            Log.d(TAG, "onBindNow: " + items.getAdminTableStatement());
             admin_grid_statement.setTextColor(Color.RED);
         }
 
     }
 
-    private int TYPE_AFTER = 101;
-    private int TYPE_BEFORE = 102;
+    private int TYPE_LATER = 101;
+    private int TYPE_NOW = 102;
 
     private int getViewSrc(int viewType){
-        if(viewType == TYPE_AFTER){
+        if(viewType == TYPE_LATER){
             return R.layout.admin_table_gridview_item_after;
         }else{
             return R.layout.admin_table_gridview_itme_before;
@@ -153,10 +152,11 @@ public class AdminTableAdapter extends RecyclerView.Adapter<AdminTableAdapter.Vi
 
     @Override
     public int getItemViewType(int position) {
-        if(table.get(position).getPaymentType() == 0){
-            return TYPE_AFTER;
+        if(table.get(position).getPaymentType()
+                == PaymentCategory.LATER.getValue()){
+            return TYPE_LATER;
         }else{
-            return TYPE_BEFORE;
+            return TYPE_NOW;
         }
     }
 }

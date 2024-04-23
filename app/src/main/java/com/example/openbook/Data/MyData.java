@@ -1,21 +1,22 @@
 package com.example.openbook.Data;
 
 
+import com.example.openbook.PaymentCategory;
+
 import java.io.Serializable;
 
 public class MyData implements Serializable {
     String id;
     int tableFromDB;
-    String paymentStyle;
+    int paymentStyle;
     boolean isOrder;
     boolean usedTable;
     int identifier;
-
     boolean isFcmExist;
 
     public MyData(String id,
                   int tableFromDB,
-                  String paymentStyle,
+                  int paymentStyle,
                   boolean isOrder,
                   boolean usedTable,
                   int identifier,
@@ -69,11 +70,11 @@ public class MyData implements Serializable {
         this.tableFromDB = tableFromDB;
     }
 
-    public String getPaymentStyle() {
+    public int getPaymentStyle() {
         return paymentStyle;
     }
 
-    public void setPaymentStyle(String paymentStyle) {
+    public void setPaymentStyle(int paymentStyle) {
         this.paymentStyle = paymentStyle;
     }
 

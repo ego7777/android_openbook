@@ -21,6 +21,7 @@ public class AdminData implements Parcelable {
 
     protected AdminData(Parcel in) {
         id = in.readString();
+        adminTableLists = in.createTypedArrayList(AdminTableList.CREATOR);
         isFcmExist = in.readByte() != 0;
     }
 
@@ -69,6 +70,7 @@ public class AdminData implements Parcelable {
     @Override
     public void writeToParcel(@NonNull Parcel parcel, int i) {
         parcel.writeString(id);
+        parcel.writeTypedList(adminTableLists);
         parcel.writeByte((byte) (isFcmExist ? 1 : 0));
     }
 }

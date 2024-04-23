@@ -1,5 +1,6 @@
 package com.example.openbook.FCM;
 
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.os.Build;
 import android.util.Log;
@@ -7,15 +8,19 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
+import com.example.openbook.Activity.AdminPaymentNowPopup;
 import com.example.openbook.BuildConfig;
 import com.example.openbook.retrofit.RetrofitManager;
 import com.example.openbook.retrofit.RetrofitService;
 import com.example.openbook.retrofit.SuccessOrNot;
-import com.google.android.gms.tasks.Task;
+
 
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
+
+
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -31,22 +36,37 @@ public class FCM extends FirebaseMessagingService {
 
     RetrofitService service;
 
+    public void getToken(int identifier) {
 
-    @Override
-    protected Intent getStartCommandIntent(Intent originalIntent) {
-
-        identifier = originalIntent.getIntExtra("identifier", 0);
-
-        Task<String> token = FirebaseMessaging.getInstance().getToken();
-        token.addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                Log.d(TAG, "onComplete fcm: " + identifier);
-                saveToken(identifier, task.getResult());
+        FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
+            if (!task.isSuccessful()) {
+                Log.d(TAG, "Fetching FCM Register token failed: " + task.getException());
+                return;
             }
+            String token = task.getResult();
+            Log.d(TAG, "onComplete token: " + token);
+            saveToken(identifier, token);
+
         });
 
-        return super.getStartCommandIntent(originalIntent);
     }
+
+
+//    @Override
+//    protected Intent getStartCommandIntent(Intent originalIntent) {
+//
+//        identifier = originalIntent.getIntExtra("identifier", 0);
+//
+//        Task<String> token = FirebaseMessaging.getInstance().getToken();
+//        token.addOnCompleteListener(task -> {
+//            if (task.isSuccessful()) {
+//                Log.d(TAG, "onComplete fcm: " + identifier);
+//                saveToken(identifier, task.getResult());
+//            }
+//        });
+//
+//        return super.getStartCommandIntent(originalIntent);
+//    }
 
 
 
@@ -82,15 +102,25 @@ public class FCM extends FirebaseMessagingService {
         Log.d(TAG, "fcm message: " + message.getData());
 
         // Check if message contains a notification payload.
-//        if (message.getData().size() > 0) {
-//            handleDataMessage(message.getData());
-//        }
+        if (message.getData().size() > 0) {
+            handleDataMessage(message.getData());
+        }
 
     }
 
 
+    private void handleDataMessage(Map<String, String> data) {
 
-//    private void handleDataMessage(Map<String, String> data) {
+        switch (data.get("request")){
+            case "PayNow" :
+                handleAdminPaymentNow(data.get("request"), data.get("tableName"));
+                break;
+            case "End" :
+                handleAdminPaymentNow(data.get("request"), data.get("tableName"));
+                break;
+
+        }
+
 //        if (data.containsKey("title")) {
 //            Log.d(TAG, "handleDataMessage: " + data);
 //
@@ -146,7 +176,7 @@ public class FCM extends FirebaseMessagingService {
 //            //admin에게도 보내야함
 //
 //        }
-//    }
+    }
 
 //    public void handleGiftOtherTable(String tableName, String menuName){
 //        Intent intent = new Intent("giftArrived");
@@ -155,7 +185,6 @@ public class FCM extends FirebaseMessagingService {
 //        LocalBroadcastManager.getInstance(FCM.this).sendBroadcast(intent);
 //
 //    }
-
 
 
 //    public void handleAdminTableMenu(String tableName, String menuSummary, String item, int identifier) {
@@ -215,25 +244,25 @@ public class FCM extends FirebaseMessagingService {
 //    }
 
 
-//    public void handleAdminPaymentBefore(String statement, String tableName, int identifier) {
-//        Intent intent = new Intent(this, AdminPaymentBeforePopup.class);
-//        intent.putExtra("tableStatement", statement);
-//        intent.putExtra("tableName", tableName);
+    public void handleAdminPaymentNow(String request, String tableName) {
+        Intent intent = new Intent(this, AdminPaymentNowPopup.class);
+        intent.putExtra("request", request);
+        intent.putExtra("tableName", tableName);
 //        intent.putExtra("tableIdentifier", identifier);
-//        Log.d(TAG, "tableStatement: " + statement);
-//
-//        requestCode = (int) System.currentTimeMillis();
-//
-//        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-//        PendingIntent pendingIntent = PendingIntent.getActivity(this, requestCode, intent, PendingIntent.FLAG_IMMUTABLE);
-//
-//        try {
-//            pendingIntent.send();
-//        } catch (PendingIntent.CanceledException e) {
-//            e.printStackTrace();
-//        }
-//
-//    }
+        Log.d(TAG, "request: " + request);
+
+        requestCode = (int) System.currentTimeMillis();
+
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, requestCode, intent, PendingIntent.FLAG_IMMUTABLE);
+
+        try {
+            pendingIntent.send();
+        } catch (PendingIntent.CanceledException e) {
+            e.printStackTrace();
+        }
+
+    }
 
 
     @RequiresApi(api = Build.VERSION_CODES.Q)

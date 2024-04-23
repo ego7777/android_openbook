@@ -10,6 +10,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.openbook.Data.MyData;
+import com.example.openbook.PaymentCategory;
 import com.example.openbook.R;
 import com.example.openbook.retrofit.TableListDTO;
 import com.example.openbook.TableQuantity;
@@ -22,7 +23,7 @@ public class PaymentSelect extends AppCompatActivity {
 
     MyData myData;
 
-    Button paymentSelectAfter, paymentSelectBefore;
+    Button paymentSelectLater, paymentSelectNow;
 
     String TAG = "paymentSelectTAG";
 
@@ -47,8 +48,8 @@ public class PaymentSelect extends AppCompatActivity {
             Log.d(TAG, "tableFromDB: " + myData.getTableFromDB());
         }
 
-        paymentSelectAfter = findViewById(R.id.payment_select_after);
-        paymentSelectBefore = findViewById(R.id.payment_select_before);
+        paymentSelectLater = findViewById(R.id.payment_select_later);
+        paymentSelectNow = findViewById(R.id.payment_select_now);
 
     }
 
@@ -82,19 +83,19 @@ public class PaymentSelect extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        paymentSelectAfter.setOnClickListener(view ->{
-            startActivityString("after", 0);
+        paymentSelectLater.setOnClickListener(view ->{
+            startActivityString(PaymentCategory.LATER.getValue(), 0);
         });
 
-        paymentSelectBefore.setOnClickListener(view ->{
+        paymentSelectNow.setOnClickListener(view ->{
             int identifier = hashCode();
             Log.d(TAG, "identifier: " + identifier);
 
-            startActivityString("before", identifier);
+            startActivityString(PaymentCategory.NOW.getValue(), identifier);
         });
     }
 
-    public void startActivityString(String paymentStyle, int identifier){
+    public void startActivityString(int paymentStyle, int identifier){
         Intent intent = new Intent(PaymentSelect.this, Menu.class);
         myData.setPaymentStyle(paymentStyle);
         myData.setIdentifier(identifier);

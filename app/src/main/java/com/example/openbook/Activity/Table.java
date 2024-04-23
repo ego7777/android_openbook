@@ -36,6 +36,7 @@ import com.example.openbook.Deco.menu_recyclerview_deco;
 import com.example.openbook.DialogManager;
 import com.example.openbook.FCM.SendNotification;
 import com.example.openbook.ImageLoadTask;
+import com.example.openbook.PaymentCategory;
 import com.example.openbook.QRcode.MakeQR;
 import com.example.openbook.R;
 import com.example.openbook.Data.TicketData;
@@ -238,7 +239,7 @@ public class Table extends AppCompatActivity {
             table_sidebar.setVisibility(View.VISIBLE);
             clickTable = position + 1;
 
-            if (myData.getPaymentStyle().equals("before")) {
+            if (myData.getPaymentStyle() == PaymentCategory.NOW.getValue()) {
                 requestChatting.setVisibility(View.GONE);
             }
 

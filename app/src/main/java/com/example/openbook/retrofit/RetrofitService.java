@@ -74,14 +74,10 @@ public interface RetrofitService {
     @POST("TableInfoCheck.php")
     @FormUrlEncoded
     Call<AdminTableDTO> requestTableInfo(@Field("tableName") String tableName);
-    @POST("GetFcmToken.php")
-    @FormUrlEncoded
-    Call<TokenDTO> requestFcmToken(@Field("userId") String userId);
 
-    @POST("sendRequestFcm.php")
+    @POST("SendFcmRequest.php")
     @FormUrlEncoded
-    Call<SuccessOrNot> sendRequestFcm(@Field("key") String key,
-                                      @Field("token") String token,
+    Call<SuccessOrNot> sendRequestFcm(@Field("userId") String String,
                                       @Field("data") String data);
 
 }

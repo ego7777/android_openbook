@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Dialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
@@ -18,6 +19,7 @@ import com.example.openbook.BuildConfig;
 import com.example.openbook.Data.AdminTableList;
 import com.example.openbook.Data.MyData;
 import com.example.openbook.DialogManager;
+import com.example.openbook.PaymentCategory;
 import com.example.openbook.R;
 import com.example.openbook.retrofit.RetrofitManager;
 import com.example.openbook.retrofit.RetrofitService;
@@ -34,6 +36,7 @@ import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.ApiException;
 
 import com.google.android.gms.tasks.Task;
+import com.google.gson.Gson;
 
 
 import java.util.ArrayList;
@@ -256,7 +259,7 @@ public class Login extends AppCompatActivity {
         Intent intent = new Intent(getApplicationContext(), c);
         MyData myData = new MyData(sendString,
                 tableFromDB,
-                null,
+                PaymentCategory.UNSELECTED.getValue(),
                 false,
                 false,
                 0,
@@ -269,8 +272,16 @@ public class Login extends AppCompatActivity {
     public void startActivityAdmin(Class c, String id) {
         Intent intent = new Intent(getApplicationContext(), c);
         AdminData adminData = new AdminData(id, adminTableList, false);
-        Log.d(TAG, "startActivityAdmin id: " + id);
-        Log.d(TAG, "startActivityAdmin adminTableList: " + adminTableList);
+
+        SharedPreferences sharedPreferences = getSharedPreferences("AdminInfo", MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        Gson gson =new Gson();
+
+        editor.putString("id", id);
+        editor.putBoolean("isFcmExist", false);
+        editor.putString("adminTableList", gson.toJson(adminTableList));
+        editor.commit();
+
         intent.putExtra("adminTableList", adminTableList);
         intent.putExtra("adminData", adminData);
         startActivity(intent);
@@ -282,6 +293,8 @@ public class Login extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
 
+
+
         if(adminTableList == null || adminTableList.isEmpty()){
             adminTableList = new ArrayList<>();
 
@@ -289,7 +302,7 @@ public class Login extends AppCompatActivity {
             tableQuantity.getTableQuantity(new Callback<TableListDTO>() {
                 @Override
                 public void onResponse(Call<TableListDTO> call, Response<TableListDTO> response) {
-                    Log.d(TAG, "onResponse table: " + response.body().getTableCount());
+
                     if(response.isSuccessful()){
                         switch (response.body().getResult()){
                             case "success" :
@@ -297,9 +310,9 @@ public class Login extends AppCompatActivity {
 
                                 for(int i=1; i<tableFromDB+1; i++){
                                     adminTableList.add(new AdminTableList("table"+i,
-                                            null, null, null, null, 0, 0));
-
+                                            null, null, null, null, 2, 0));
                                 }
+
                                 Log.d(TAG, "onStart Table Size: " + adminTableList.size());
 
                                 break;

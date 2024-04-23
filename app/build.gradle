@@ -43,6 +43,10 @@ android {
     dataBinding{
         enabled true
     }
+
+    packagingOptions {
+        exclude 'META-INF/DEPENDENCIES'
+    }
 }
 
 
@@ -68,13 +72,15 @@ dependencies {
 
 
     //FCM
-    implementation(platform("com.google.firebase:firebase-bom:32.3.1"))
-    implementation 'com.google.firebase:firebase-messaging:23.1.0'
-    implementation 'androidx.work:work-runtime:2.7.1'
-    implementation 'com.google.firebase:firebase-database:20.1.0'
+    implementation(platform("com.google.firebase:firebase-bom:32.8.1"))
+    implementation 'com.google.firebase:firebase-database'
     implementation 'com.google.firebase:firebase-analytics'
+    implementation 'com.google.firebase:firebase-messaging'
     implementation 'com.google.firebase:firebase-perf'
-    
+
+
+    implementation 'androidx.work:work-runtime:2.7.1'
+
     //graph
     implementation 'com.github.PhilJay:MpAndroidChart:v3.0.2'
 

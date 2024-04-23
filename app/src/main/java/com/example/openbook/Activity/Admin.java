@@ -22,6 +22,7 @@ import com.example.openbook.Adapter.AdminTableAdapter;
 import com.example.openbook.Data.AdminData;
 import com.example.openbook.BuildConfig;
 import com.example.openbook.Chatting.DBHelper;
+import com.example.openbook.PaymentCategory;
 import com.example.openbook.retrofit.AdminTableDTO;
 import com.example.openbook.Data.AdminTableList;
 import com.example.openbook.Data.OrderList;
@@ -34,11 +35,15 @@ import com.example.openbook.retrofit.TableListDTO;
 import com.example.openbook.SaveOrderDeleteData;
 import com.example.openbook.R;
 import com.example.openbook.TableQuantity;
+import com.google.common.reflect.TypeToken;
+import com.google.gson.Gson;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 
 import retrofit2.Call;
@@ -73,86 +78,48 @@ public class Admin extends AppCompatActivity {
     AdminData adminData;
     RetrofitService service;
     ArrayList<AdminTableList> adminTableLists;
+    Gson gson;
+    String tableRequest;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.admin_activity);
 
-        overridePendingTransition(0, 0);
-
         adminData = getIntent().getParcelableExtra("adminData");
-        Log.d(TAG, "adminData id: " + adminData.getId());
+        Log.d(TAG, "adminData: " + adminData);
 
-        adminTableLists = (ArrayList<AdminTableList>) getIntent().getSerializableExtra("adminTableList");
-        Log.d(TAG, "adminTableList: " + adminTableLists.size());
+        sharedPreference = getSharedPreferences("AdminInfo", MODE_PRIVATE);
+        editor = sharedPreference.edit();
+        gson = new Gson();
 
-        if (adminData.getId() == null) {
-            adminData.setId("admin");
+        if (adminData == null || adminData.getId() == null) {
+            String id = sharedPreference.getString("id", null);
+            adminData = new AdminData(id, null, false);
             Log.d(TAG, "id null admin: " + adminData.getId());
         }
 
         RecyclerView tableGrid = findViewById(R.id.admin_grid);
         adapter = new AdminTableAdapter();
-
-        //그리드 레이아웃 설정
         tableGrid.setLayoutManager(new GridLayoutManager(this, 3));
-
-        //어댑터 연결
         tableGrid.setAdapter(adapter);
 
 
         if (adminData.getAdminTableLists() != null) {
             Log.d(TAG, "adminTableList size : " + adminData.getAdminTableLists().size());
             adapter.setAdapterItem(adminData.getAdminTableLists());
-            Log.d(TAG, "setAdapterItem");
+
         } else {
-            adminTableLists = new ArrayList<>();
-            TableQuantity tableQuantity = new TableQuantity();
-            tableQuantity.getTableQuantity(new Callback<TableListDTO>() {
-                @Override
-                public void onResponse(Call<TableListDTO> call, Response<TableListDTO> response) {
-                    if (response.isSuccessful()) {
-                        switch (response.body().getResult()) {
-                            case "success":
-                                int tableCount = response.body().getTableCount();
-                                for (int i = 1; i < tableCount + 1; i++) {
-                                    adminTableLists.add(new AdminTableList("table" + i,
-                                            null,
-                                            null,
-                                            null,
-                                            null,
-                                            0,
-                                            0));
-                                }
-                                Log.d(TAG, "onResponse table size: " + adminTableLists.size());
-                                adminData.setAdminTableLists(adminTableLists);
-                                adapter.setAdapterItem(adminData.getAdminTableLists());
-                                Log.d(TAG, "onResponse setAdapterItem");
-                                break;
-
-                            case "failed":
-                                Log.d(TAG, "onResponse adminTableList is failed");
-                                break;
-                        }
-                    } else {
-                        Log.d(TAG, "onResponse adminTableList is not successful");
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<TableListDTO> call, Throwable t) {
-                    Log.d(TAG, "onFailure adminTableList: " + t.getMessage());
-                }
-            });
+            adminData.setAdminTableLists(loadAdminTableList());
+            adapter.setAdapterItem(adminData.getAdminTableLists());
         }
 
         afterPaymentList = getIntent().getStringExtra("orderList");
         Log.d(TAG, "orderList: " + afterPaymentList);
 
 
-        sharedPreference = getSharedPreferences("oldMenuSummary", MODE_PRIVATE);
-        editor = sharedPreference.edit();
+//        sharedPreference = getSharedPreferences("oldMenuSummary", MODE_PRIVATE);
+//        editor = sharedPreference.edit();
 
         RetrofitManager retrofitManager = new RetrofitManager();
         Retrofit retrofit = retrofitManager.getRetrofit(BuildConfig.SERVER_IP);
@@ -202,9 +169,16 @@ public class Admin extends AppCompatActivity {
          * 로그인을 성공하면 id, token을 firebase realtime db에 저장
          */
         if (!adminData.isFcmExist()) {
-            Intent fcm = new Intent(Admin.this, FCM.class);
-            fcm.putExtra("identifier", adminData.getId().hashCode());
-            startService(fcm);
+            boolean fcmExist = sharedPreference.getBoolean("isFcmExist", false);
+
+            if(!fcmExist){
+                FCM fcm = new FCM();
+                fcm.getToken(adminData.getId().hashCode());
+                adminData.setFcmExist(true);
+
+                editor.putBoolean("isFcmExist", true);
+                editor.commit();
+            }
         }
 
 
@@ -220,7 +194,6 @@ public class Admin extends AppCompatActivity {
         adminSidebarPay = findViewById(R.id.admin_sidebar_pay);
 
 
-
         dbHelper = new DBHelper(Admin.this, version);
         version++;
 
@@ -231,6 +204,27 @@ public class Admin extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
+
+        tableRequest= getIntent().getStringExtra("tableRequest");
+        Log.d(TAG, "onStart tableRequest: " + tableRequest);
+
+        if(tableRequest != null){
+            try {
+                JSONObject requestJson = new JSONObject(tableRequest);
+                String request = (String) requestJson.get("request");
+                String tempTableName = requestJson.getString("tableName").replace("table", "");
+                int tableNumber = Integer.parseInt(tempTableName) - 1;
+
+                updateTable(request, tableNumber);
+
+            } catch (JSONException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+
+
+
 
         gender = null;
         gender = getIntent().getStringExtra("gender");
@@ -373,7 +367,6 @@ public class Admin extends AppCompatActivity {
                 dlg.setContentView(R.layout.table_information_dialog);
 
                 dlg.show();
-
 
                 tableInfoImg = dlg.findViewById(R.id.table_info_img);
                 tableInfoText = dlg.findViewById(R.id.table_info_text);
@@ -584,6 +577,39 @@ public class Admin extends AppCompatActivity {
             }
         });
 
+    }
+
+    public ArrayList<AdminTableList> loadAdminTableList(){
+        String table = sharedPreference.getString("adminTableList", null);
+        Type type = new TypeToken<ArrayList<AdminTableList>>(){}.getType();
+        return gson.fromJson(table, type);
+
+    }
+
+    public void updateTable(String request, int tableNumber){
+        switch (request) {
+            case "PayNow" :
+                adminData.getAdminTableLists().get(tableNumber).setPaymentType(PaymentCategory.NOW.getValue());
+                adminData.getAdminTableLists().get(tableNumber).setAdminTableStatement("선불 좌석 이용");
+                adapter.setAdapterItem(adminData.getAdminTableLists());
+
+                editor.putString("adminTableList", gson.toJson(adminData.getAdminTableLists()));
+                editor.commit();
+
+            case "End" :
+                adminData.getAdminTableLists().get(tableNumber).setPaymentType(PaymentCategory.UNSELECTED.getValue());
+                adminData.getAdminTableLists().get(tableNumber).setAdminTableStatement(null);
+                adminData.getAdminTableLists().get(tableNumber).setAdminTableGender(null);
+                adminData.getAdminTableLists().get(tableNumber).setAdminTableMenu(null);
+                adminData.getAdminTableLists().get(tableNumber).setAdminTablePrice(null);
+                adminData.getAdminTableLists().get(tableNumber).setAdminTableGuestNumber(null);
+                adminData.getAdminTableLists().get(tableNumber).setAdminTableIdentifier(0);
+                adapter.notifyItemChanged(tableNumber);
+
+                editor.putString("adminTableList", gson.toJson(adminData.getAdminTableLists()));
+                editor.commit();
+                break;
+        }
     }
 
 }

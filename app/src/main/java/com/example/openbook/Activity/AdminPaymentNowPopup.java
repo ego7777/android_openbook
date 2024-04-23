@@ -16,14 +16,17 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.openbook.Adapter.AdminPopUpAdapter;
 import com.example.openbook.Data.OrderList;
 import com.example.openbook.R;
+import com.google.gson.Gson;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
-public class AdminPaymentBeforePopup extends Activity {
+public class AdminPaymentNowPopup extends Activity {
 
     String TAG = "AdminPaymentBeforePopupTAG";
 
-    String tableStatement, tableName;
+    String request, tableName;
     int tableIdentifier;
 
     ArrayList<OrderList> orderLists;
@@ -34,6 +37,8 @@ public class AdminPaymentBeforePopup extends Activity {
     Button popup_button;
 
     Handler handler = new Handler();
+    Gson gson;
+    Map<String, String> tableInfo;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -46,7 +51,6 @@ public class AdminPaymentBeforePopup extends Activity {
         popup_body_recyclerView = findViewById(R.id.admin_popup_body_recyclerView);
         popup_button = findViewById(R.id.admin_popup_button);
 
-
         orderLists = new ArrayList<>();
         adminPopUpAdapter = new AdminPopUpAdapter();
 
@@ -54,9 +58,8 @@ public class AdminPaymentBeforePopup extends Activity {
         popup_body_recyclerView.setAdapter(adminPopUpAdapter);
 
         adminPopUpAdapter.setAdapterItem(orderLists);
-
-
-
+        gson = new Gson();
+        tableInfo = new HashMap<>();
     }
 
     @Override
@@ -64,60 +67,53 @@ public class AdminPaymentBeforePopup extends Activity {
         super.onStart();
 
         tableName = getIntent().getStringExtra("tableName");
-//        Log.d(TAG, "tableName: " + tableName);
+        Log.d(TAG, "tableName: " + tableName);
 
-        tableStatement = getIntent().getStringExtra("tableStatement");
-//        Log.d(TAG, "tableStatement: " + tableStatement);
+        request = getIntent().getStringExtra("request");
+        Log.d(TAG, "request: " + request);
 
-        tableIdentifier = getIntent().getIntExtra("tableIdentifier", 0);
-        Log.d(TAG, "tableIdentifier: " + tableIdentifier);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
 
-        if (tableStatement != null) {
-            if (tableStatement.contains("선불")) {
-                orderLists.add(new OrderList(0, tableName, tableName + " 선불 좌석 이용 시작하였습니다."));
+        if (request != null) {
+            tableInfo.put("request", request);
+            tableInfo.put("tableName", tableName);
 
-
-            } else if (tableStatement.contains("")) {
-                orderLists.add(new OrderList(0, tableName, tableName + " 선불 좌석 이용 종료하였습니다."));
-
+            switch (request){
+                case "PayNow" :
+                    orderLists.add(new OrderList(0, tableName, tableName + " 선불 좌석 이용 시작하였습니다."));
+                    break;
+                case "End" :
+                    orderLists.add(new OrderList(0, tableName, tableName + " 선불 좌석 이용 종료하였습니다."));
+                    break;
 
             }
 
         }
 
 
-
-        popup_button.setOnClickListener(view ->{
-            Intent intent = new Intent(AdminPaymentBeforePopup.this, Admin.class);
-            intent.putExtra("tableStatement", tableStatement);
-            intent.putExtra("tableName", tableName);
-            intent.putExtra("tableIdentifier", tableIdentifier);
+        popup_button.setOnClickListener(view -> {
+            Intent intent = new Intent(AdminPaymentNowPopup.this, Admin.class);
+            intent.putExtra("tableRequest", gson.toJson(tableInfo));
+//            intent.putExtra("request", request);
+//            intent.putExtra("tableName", tableName);
+//            intent.putExtra("tableIdentifier", tableIdentifier);
 
             startActivity(intent);
             overridePendingTransition(0, 0);
             handler.removeCallbacksAndMessages(null);
         });
 
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                Intent intent = new Intent(AdminPaymentBeforePopup.this, Admin.class);
-                intent.putExtra("tableStatement", tableStatement);
-                intent.putExtra("tableName", tableName);
-                intent.putExtra("tableIdentifier", tableIdentifier);
+        handler.postDelayed(() -> {
+            Intent intent = new Intent(AdminPaymentNowPopup.this, Admin.class);
+            intent.putExtra("tableRequest", gson.toJson(tableInfo));
+//            intent.putExtra("tableIdentifier", tableIdentifier);
 
-                startActivity(intent);
-            }
+            startActivity(intent);
         }, 5000);
-
-
-
-
 
     }
 }

@@ -31,7 +31,7 @@
         android:layout_marginTop="100dp">
 
         <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/payment_select_after"
+            android:id="@+id/payment_select_later"
             android:layout_width="300dp"
             android:layout_height="300dp"
             android:text="후 불"
@@ -40,7 +40,7 @@
             android:background="@drawable/radius_10dp_lime"/>
 
         <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/payment_select_before"
+            android:id="@+id/payment_select_now"
             android:layout_width="300dp"
             android:layout_height="300dp"
             android:layout_marginStart="100dp"
