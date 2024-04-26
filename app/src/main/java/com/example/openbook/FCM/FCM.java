@@ -8,7 +8,8 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
-import com.example.openbook.Activity.AdminPaymentNowPopup;
+import com.example.openbook.Activity.Admin;
+
 import com.example.openbook.BuildConfig;
 import com.example.openbook.retrofit.RetrofitManager;
 import com.example.openbook.retrofit.RetrofitService;
@@ -18,8 +19,10 @@ import com.example.openbook.retrofit.SuccessOrNot;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
+import com.google.gson.Gson;
 
 
+import java.util.HashMap;
 import java.util.Map;
 
 import retrofit2.Call;
@@ -50,23 +53,6 @@ public class FCM extends FirebaseMessagingService {
         });
 
     }
-
-
-//    @Override
-//    protected Intent getStartCommandIntent(Intent originalIntent) {
-//
-//        identifier = originalIntent.getIntExtra("identifier", 0);
-//
-//        Task<String> token = FirebaseMessaging.getInstance().getToken();
-//        token.addOnCompleteListener(task -> {
-//            if (task.isSuccessful()) {
-//                Log.d(TAG, "onComplete fcm: " + identifier);
-//                saveToken(identifier, task.getResult());
-//            }
-//        });
-//
-//        return super.getStartCommandIntent(originalIntent);
-//    }
 
 
 
@@ -113,8 +99,6 @@ public class FCM extends FirebaseMessagingService {
 
         switch (data.get("request")){
             case "PayNow" :
-                handleAdminPaymentNow(data.get("request"), data.get("tableName"));
-                break;
             case "End" :
                 handleAdminPaymentNow(data.get("request"), data.get("tableName"));
                 break;
@@ -245,11 +229,13 @@ public class FCM extends FirebaseMessagingService {
 
 
     public void handleAdminPaymentNow(String request, String tableName) {
-        Intent intent = new Intent(this, AdminPaymentNowPopup.class);
-        intent.putExtra("request", request);
-        intent.putExtra("tableName", tableName);
-//        intent.putExtra("tableIdentifier", identifier);
-        Log.d(TAG, "request: " + request);
+        Intent intent = new Intent(this, Admin.class);
+        Map<String, String> tableRequest = new HashMap<>();
+        tableRequest.put("request", request);
+        tableRequest.put("tableName", tableName);
+        Gson gson = new Gson();
+
+        intent.putExtra("tableRequest", gson.toJson(tableRequest));
 
         requestCode = (int) System.currentTimeMillis();
 

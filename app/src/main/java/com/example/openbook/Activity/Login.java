@@ -280,6 +280,7 @@ public class Login extends AppCompatActivity {
         editor.putString("id", id);
         editor.putBoolean("isFcmExist", false);
         editor.putString("adminTableList", gson.toJson(adminTableList));
+        Log.d(TAG, "startActivityAdmin: " + gson.toJson(adminTableList));
         editor.commit();
 
         intent.putExtra("adminTableList", adminTableList);
@@ -292,7 +293,6 @@ public class Login extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-
 
 
         if(adminTableList == null || adminTableList.isEmpty()){
@@ -310,7 +310,12 @@ public class Login extends AppCompatActivity {
 
                                 for(int i=1; i<tableFromDB+1; i++){
                                     adminTableList.add(new AdminTableList("table"+i,
-                                            null, null, null, null, 2, 0));
+                                            null,
+                                            null,
+                                            null,
+                                            null,
+                                            PaymentCategory.UNSELECTED.getValue(),
+                                            0));
                                 }
 
                                 Log.d(TAG, "onStart Table Size: " + adminTableList.size());

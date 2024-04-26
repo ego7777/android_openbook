@@ -1,7 +1,6 @@
 package com.example.openbook.Adapter;
 
 import android.graphics.Color;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -66,6 +65,7 @@ public class AdminTableAdapter extends RecyclerView.Adapter<AdminTableAdapter.Vi
     public void setAdapterItem(ArrayList<AdminTableList> items) {
         this.table = items;
         notifyDataSetChanged();
+
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {
@@ -90,7 +90,8 @@ public class AdminTableAdapter extends RecyclerView.Adapter<AdminTableAdapter.Vi
                 admin_grid_price = itemView.findViewById(R.id.admin_grid_price);
                 admin_grid_gender = itemView.findViewById(R.id.admin_grid_gender);
                 admin_grid_guestNum = itemView.findViewById(R.id.admin_grid_guestNum);
-            }else{
+
+            }else if(viewType == TYPE_NOW){
                 admin_grid_number = itemView.findViewById(R.id.admin_grid_number_before);
                 admin_grid_statement = itemView.findViewById(R.id.admin_grid_statement);
             }
@@ -98,7 +99,6 @@ public class AdminTableAdapter extends RecyclerView.Adapter<AdminTableAdapter.Vi
 
             itemView.setOnClickListener(v -> {
                 position = getAdapterPosition();
-                Log.d(TAG, "position: " + position);
 
                 if (position != RecyclerView.NO_POSITION) {
                     if (myListener != null ) {
@@ -113,40 +113,40 @@ public class AdminTableAdapter extends RecyclerView.Adapter<AdminTableAdapter.Vi
             });
         }
 
-        void onBind(AdminTableList items){
-
+        void onBind(AdminTableList item){
             if(viewType == TYPE_LATER){
-                onBindLater(items);
-            }else{
-                onBindNow(items);
+                onBindLater(item);
+            }else if(viewType == TYPE_NOW){
+                onBindNow(item);
             }
         }
 
-        void onBindLater(AdminTableList items){
-            admin_grid_number.setText(items.getAdminTableNumber());
-            admin_grid_menu.setText(items.getAdminTableMenu());
-            admin_grid_price.setText(items.getAdminTablePrice());
-            admin_grid_gender.setText(items.getAdminTableGender());
-            admin_grid_guestNum.setText(items.getAdminTableGuestNumber());
+        void onBindLater(AdminTableList item){
+            admin_grid_number.setText(item.getAdminTableNumber());
+            admin_grid_menu.setText(item.getAdminTableMenu());
+            admin_grid_price.setText(item.getAdminTablePrice());
+            admin_grid_gender.setText(item.getAdminTableGender());
+            admin_grid_guestNum.setText(item.getAdminTableGuestNumber());
         }
 
-        void onBindNow(AdminTableList items){
-            admin_grid_number.setText(items.getAdminTableNumber());
-            admin_grid_statement.setText(items.getAdminTableStatement());
-            Log.d(TAG, "onBindNow: " + items.getAdminTableStatement());
+        void onBindNow(AdminTableList item){
+            admin_grid_number.setText(item.getAdminTableNumber());
+            admin_grid_statement.setText(item.getAdminTableStatement());
             admin_grid_statement.setTextColor(Color.RED);
         }
 
     }
 
-    private int TYPE_LATER = 101;
-    private int TYPE_NOW = 102;
+    private final int TYPE_LATER = 101;
+    private final int TYPE_NOW = 102;
 
     private int getViewSrc(int viewType){
         if(viewType == TYPE_LATER){
             return R.layout.admin_table_gridview_item_after;
-        }else{
+
+        }else {
             return R.layout.admin_table_gridview_itme_before;
+
         }
     }
 
@@ -155,6 +155,7 @@ public class AdminTableAdapter extends RecyclerView.Adapter<AdminTableAdapter.Vi
         if(table.get(position).getPaymentType()
                 == PaymentCategory.LATER.getValue()){
             return TYPE_LATER;
+
         }else{
             return TYPE_NOW;
         }

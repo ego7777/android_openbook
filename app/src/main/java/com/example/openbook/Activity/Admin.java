@@ -31,10 +31,8 @@ import com.example.openbook.FCM.FCM;
 import com.example.openbook.ImageLoadTask;
 import com.example.openbook.retrofit.RetrofitManager;
 import com.example.openbook.retrofit.RetrofitService;
-import com.example.openbook.retrofit.TableListDTO;
 import com.example.openbook.SaveOrderDeleteData;
 import com.example.openbook.R;
-import com.example.openbook.TableQuantity;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 
@@ -80,14 +78,19 @@ public class Admin extends AppCompatActivity {
     ArrayList<AdminTableList> adminTableLists;
     Gson gson;
     String tableRequest;
+    DialogManager dialogManager;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.admin_activity);
 
+        overridePendingTransition(0, 0);
+
         adminData = getIntent().getParcelableExtra("adminData");
         Log.d(TAG, "adminData: " + adminData);
+
+        adminTableLists = new ArrayList<>();
 
         sharedPreference = getSharedPreferences("AdminInfo", MODE_PRIVATE);
         editor = sharedPreference.edit();
@@ -107,11 +110,18 @@ public class Admin extends AppCompatActivity {
 
         if (adminData.getAdminTableLists() != null) {
             Log.d(TAG, "adminTableList size : " + adminData.getAdminTableLists().size());
-            adapter.setAdapterItem(adminData.getAdminTableLists());
+            adminTableLists = adminData.getAdminTableLists();
+            Log.i(TAG, "adminTableList not null: " + gson.toJson(adminTableLists));
+
+            adapter.setAdapterItem(adminTableLists);
 
         } else {
-            adminData.setAdminTableLists(loadAdminTableList());
-            adapter.setAdapterItem(adminData.getAdminTableLists());
+            adminTableLists = loadAdminTableList();
+            Log.i(TAG, "adminTableList  " + gson.toJson(adminTableLists));
+
+            adminData.setAdminTableLists(adminTableLists);
+            adapter.setAdapterItem(adminTableLists);
+            Log.d(TAG, "loadAdminTableList Adapter");
         }
 
         afterPaymentList = getIntent().getStringExtra("orderList");
@@ -124,6 +134,8 @@ public class Admin extends AppCompatActivity {
         RetrofitManager retrofitManager = new RetrofitManager();
         Retrofit retrofit = retrofitManager.getRetrofit(BuildConfig.SERVER_IP);
         service = retrofit.create(RetrofitService.class);
+
+        dialogManager = new DialogManager();
 
 
 //            int table = tableQuantity.getTableQuantity();
@@ -171,7 +183,7 @@ public class Admin extends AppCompatActivity {
         if (!adminData.isFcmExist()) {
             boolean fcmExist = sharedPreference.getBoolean("isFcmExist", false);
 
-            if(!fcmExist){
+            if (!fcmExist) {
                 FCM fcm = new FCM();
                 fcm.getToken(adminData.getId().hashCode());
                 adminData.setFcmExist(true);
@@ -205,17 +217,17 @@ public class Admin extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
 
-        tableRequest= getIntent().getStringExtra("tableRequest");
+        tableRequest = getIntent().getStringExtra("tableRequest");
         Log.d(TAG, "onStart tableRequest: " + tableRequest);
 
-        if(tableRequest != null){
+        if (tableRequest != null) {
             try {
                 JSONObject requestJson = new JSONObject(tableRequest);
                 String request = (String) requestJson.get("request");
-                String tempTableName = requestJson.getString("tableName").replace("table", "");
-                int tableNumber = Integer.parseInt(tempTableName) - 1;
+                String tableName = requestJson.getString("tableName");
+                int tableNumber = Integer.parseInt(tableName.replace("table", "")) - 1;
 
-                updateTable(request, tableNumber);
+                updateTable(request, tableName, tableNumber);
 
             } catch (JSONException e) {
                 throw new RuntimeException(e);
@@ -223,28 +235,25 @@ public class Admin extends AppCompatActivity {
         }
 
 
-
-
-
         gender = null;
         gender = getIntent().getStringExtra("gender");
-        editor.putString(tableName + "gender", gender);
+//        editor.putString(tableName + "gender", gender);
 
         guestNumber = null;
         guestNumber = getIntent().getStringExtra("guestNumber");
-        editor.putString(tableName + "guestNumber", guestNumber);
+//        editor.putString(tableName + "guestNumber", guestNumber);
 
 
         tableName = null;
         tableName = getIntent().getStringExtra("tableName");
 
         tableStatement = getIntent().getStringExtra("tableStatement");
-        editor.putString(tableName + "tableStatement", tableStatement);
+//        editor.putString(tableName + "tableStatement", tableStatement);
 
-        tableIdentifier = getIntent().getIntExtra("tableIdentifier", 0);
-        Log.d(TAG, "Intent tableIdentifier: " + tableIdentifier);
-        editor.putInt(tableName + "tableIdentifier", tableIdentifier);
-        editor.commit();
+//        tableIdentifier = getIntent().getIntExtra("tableIdentifier", 0);
+//        Log.d(TAG, "Intent tableIdentifier: " + tableIdentifier);
+//        editor.putInt(tableName + "tableIdentifier", tableIdentifier);
+//        editor.commit();
 
 
         if (menuName != null) {
@@ -263,7 +272,7 @@ public class Admin extends AppCompatActivity {
 
                 Log.d(TAG, "success: " + success);
 
-                if (success == true) {
+                if (success) {
 //                    deleteLocalData();
                     Log.d(TAG, "deleteData: ");
 
@@ -325,42 +334,36 @@ public class Admin extends AppCompatActivity {
             // 메뉴 이름, 가격, 이미지를 등록하면 서버로 들어가서 menuList Db에 등록된다
             startActivityClass(AdminModifyMenu.class);
         });
-
-        appbarAdminModifyTable.setOnClickListener(view -> {
-            startActivityClass(AdminModifyTableQuantity.class);
-        });
-
-
-        DialogManager dialogManager = new DialogManager();
+        appbarAdminModifyTable.setOnClickListener(view -> startActivityClass(AdminModifyTableQuantity.class));
 
 
         adapter.setOnItemClickListener((view, position) -> {
 
             Log.d(TAG, "onItemClick: " + position);
 
-//            adminSidebarMenu.setOnClickListener(v -> {
-//                if (adminTableList.get(position).getAdminTableMenu() != null ||
-//                        adminTableList.get(position).getAdminTableStatement() != null) {
+            adminSidebarMenu.setOnClickListener(v -> {
+
+                if (adminData.getAdminTableLists().get(position).getAdminTableMenu() != null ||
+                        adminData.getAdminTableLists().get(position).getAdminTableStatement() != null) {
 //                    showReceiptDialog(position);
+                } else {
+                    dialogManager.noButtonDialog(Admin.this, "빈 좌석이거나 아직 주문하지 않은 좌석입니다.");
+
+                }
+
+
+//                if (adminData.getAdminTableLists().get(position).getAdminTableMenu() == null) {
+//
+//                    dialogCustom.HandlerAlertDialog(Admin.this, "빈 좌석이거나 아직 주문하지 않은 좌석입니다.");
+//
+//                } else if (adminData.getAdminTableLists().get(position).getAdminTableStatement() == null) {
+//                    dialogCustom.HandlerAlertDialog(Admin.this, "빈 좌석이거나 아직 주문하지 않은 좌석입니다.");
+//                    Log.d(TAG, "선불: ");
 //                } else {
-//                    dialogManager.noButtonDialog(Admin.this, "빈 좌석이거나 아직 주문하지 않은 좌석입니다.");
+//                    showReceiptDialog(position);
 //
 //                }
-
-
-//                        if (adminTableList.get(position).getAdminTableMenu() == null ) {
-//
-//                            dialogCustom.HandlerAlertDialog(Admin.this, "빈 좌석이거나 아직 주문하지 않은 좌석입니다.");
-//
-//                        } else if (adminTableList.get(position).getAdminTableStatement() == null) {
-//                            dialogCustom.HandlerAlertDialog(Admin.this, "빈 좌석이거나 아직 주문하지 않은 좌석입니다.");
-//                            Log.d(TAG, "선불: ");
-//                        }
-//                        else {
-//                            showReceiptDialog(position);
-//
-//                        }
-//            });
+            });
 
             adminSidebarInfo.setOnClickListener(v -> {
                 Dialog dlg = new Dialog(Admin.this, R.style.RadiusDialogStyle);
@@ -474,7 +477,7 @@ public class Admin extends AppCompatActivity {
         if (menuQuantity == 1) {
             menuName = orderLists.get(0).getMenu();
         } else {
-            menuName = orderLists.get(0).getMenu() + " 외" + Integer.toString(menuQuantity - 1);
+            menuName = orderLists.get(0).getMenu() + " 외" + (menuQuantity - 1);
         }
         Log.d(TAG, "menuName :" + menuName);
 
@@ -500,7 +503,7 @@ public class Admin extends AppCompatActivity {
             jsonObject.put("table", tableName);
             jsonObject.put("item", menujArray);
 
-            Log.d(TAG, "getJson: " + jsonObject.toString());
+            Log.d(TAG, "getJson: " + jsonObject);
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -579,24 +582,38 @@ public class Admin extends AppCompatActivity {
 
     }
 
-    public ArrayList<AdminTableList> loadAdminTableList(){
+    public ArrayList<AdminTableList> loadAdminTableList() {
         String table = sharedPreference.getString("adminTableList", null);
-        Type type = new TypeToken<ArrayList<AdminTableList>>(){}.getType();
+        Type type = new TypeToken<ArrayList<AdminTableList>>() {
+        }.getType();
         return gson.fromJson(table, type);
 
     }
 
-    public void updateTable(String request, int tableNumber){
+    public void updateTable(String request, String tableName, int tableNumber) {
         switch (request) {
-            case "PayNow" :
+            case "PayNow":
+                ArrayList<OrderList> orderList = new ArrayList<>();
+                orderList.add(new OrderList(PaymentCategory.NOW.getValue(), tableName, tableName + "선불 좌석 이용 시작하였습니다."));
+                dialogManager.popUpAdmin(this, orderList).show();
+
                 adminData.getAdminTableLists().get(tableNumber).setPaymentType(PaymentCategory.NOW.getValue());
                 adminData.getAdminTableLists().get(tableNumber).setAdminTableStatement("선불 좌석 이용");
-                adapter.setAdapterItem(adminData.getAdminTableLists());
 
-                editor.putString("adminTableList", gson.toJson(adminData.getAdminTableLists()));
+                adminTableLists = new ArrayList<>();
+                adminTableLists = adminData.getAdminTableLists();
+
+                adapter.notifyItemChanged(tableNumber);
+
+                editor.putString("adminTableList", gson.toJson(adminTableLists));
                 editor.commit();
+                break;
 
-            case "End" :
+            case "End":
+                ArrayList<OrderList> orderLists = new ArrayList<>();
+                orderLists.add(new OrderList(PaymentCategory.NOW.getValue(), tableName, tableName + "선불 좌석 이용 종료하였습니다."));
+                dialogManager.popUpAdmin(this, orderLists).show();
+
                 adminData.getAdminTableLists().get(tableNumber).setPaymentType(PaymentCategory.UNSELECTED.getValue());
                 adminData.getAdminTableLists().get(tableNumber).setAdminTableStatement(null);
                 adminData.getAdminTableLists().get(tableNumber).setAdminTableGender(null);
@@ -609,6 +626,7 @@ public class Admin extends AppCompatActivity {
                 editor.putString("adminTableList", gson.toJson(adminData.getAdminTableLists()));
                 editor.commit();
                 break;
+
         }
     }
 

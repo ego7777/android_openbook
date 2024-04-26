@@ -199,8 +199,8 @@ public class Menu extends AppCompatActivity {
         /**
          * AppBar: 로그인하면 table number 바로 나오는거
          */
-        TextView tableNumber = findViewById(R.id.appbar_menu_table_number);
-        tableNumber.setText(myData.getId());
+        TextView tableName = findViewById(R.id.appbar_menu_table_number);
+        tableName.setText(myData.getId());
 
         menuClose = findViewById(R.id.menu_close);
 

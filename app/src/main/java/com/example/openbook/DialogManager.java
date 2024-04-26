@@ -3,19 +3,27 @@ package com.example.openbook;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Handler;
 import android.util.Log;
+import android.view.Window;
+import android.widget.Button;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
 
-import com.example.openbook.Activity.Login;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.example.openbook.Activity.Table;
+import com.example.openbook.Adapter.AdminPopUpAdapter;
 import com.example.openbook.Chatting.ClientSocket;
+import com.example.openbook.Data.OrderList;
 import com.example.openbook.FCM.SendNotification;
+
+import java.util.ArrayList;
 
 
 public class DialogManager {
@@ -58,12 +66,7 @@ public class DialogManager {
 
         Handler handler = new Handler();
 
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                alertDialog.dismiss();
-            }
-        }, 1000);
+        handler.postDelayed(() -> alertDialog.dismiss(), 1000);
     }
 
     //Menu Activity 에서 Table Activity 로 넘어가는 dialog
@@ -71,23 +74,15 @@ public class DialogManager {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setMessage(message)
                 .setTitle("알람")
-                .setPositiveButton("확인", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        Intent intent = new Intent(context, Table.class);
-                        intent.putExtra("get_id", id);
-                        intent.putExtra("orderCk", orderCk);
-                        intent.putExtra("clientSocket", clientSocket);
-                        Log.d(TAG, "clientSocket : " + clientSocket.isAlive());
-                        context.startActivity(intent);
-                    }
+                .setPositiveButton("확인", (dialog, which) -> {
+                    Intent intent = new Intent(context, Table.class);
+                    intent.putExtra("get_id", id);
+                    intent.putExtra("orderCk", orderCk);
+                    intent.putExtra("clientSocket", clientSocket);
+                    Log.d(TAG, "clientSocket : " + clientSocket.isAlive());
+                    context.startActivity(intent);
                 })
-                .setNegativeButton("취소", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                })
+                .setNegativeButton("취소", (dialog, which) -> dialog.dismiss())
                 .setIcon(R.drawable.warning);
 
 
@@ -129,18 +124,37 @@ public class DialogManager {
                     AlertDialog alertDialog2 = builder.create();
                     alertDialog2.show();
                 })
-                .setNegativeButton("취소", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                })
+                .setNegativeButton("취소", (dialog, which) -> dialog.dismiss())
                 .setIcon(R.drawable.heart);
 
 
         AlertDialog alertDialog = builder.create();
         alertDialog.show();
 
+    }
+
+    public Dialog popUpAdmin(Context context, ArrayList<OrderList> orderList){
+        Dialog dialog = new Dialog(context);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.admin_popup);
+
+        TextView popUpTitle = dialog.findViewById(R.id.admin_popup_title);
+        popUpTitle.setText(orderList.get(0).getTableName());
+
+        RecyclerView popUpRecyclerview = dialog.findViewById(R.id.admin_popup_body_recyclerView);
+        Button popUpButton = dialog.findViewById(R.id.admin_popup_button);
+
+        AdminPopUpAdapter adapter = new AdminPopUpAdapter();
+        popUpRecyclerview.setLayoutManager(new LinearLayoutManager(context));
+        popUpRecyclerview.setAdapter(adapter);
+        adapter.setAdapterItem(orderList);
+
+        popUpButton.setOnClickListener(view -> dialog.dismiss());
+
+        Handler handler = new Handler();
+        handler.postDelayed(() -> dialog.dismiss(), 5000);
+
+        return dialog;
     }
 
 }
