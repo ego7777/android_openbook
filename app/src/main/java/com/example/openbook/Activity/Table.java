@@ -213,6 +213,7 @@ public class Table extends AppCompatActivity {
                             }
                         }
                     }
+                    return null;
                 }
 
                 @Override
@@ -239,7 +240,7 @@ public class Table extends AppCompatActivity {
             table_sidebar.setVisibility(View.VISIBLE);
             clickTable = position + 1;
 
-            if (myData.getPaymentStyle() == PaymentCategory.NOW.getValue()) {
+            if (myData.getPaymentCategory() == PaymentCategory.NOW) {
                 requestChatting.setVisibility(View.GONE);
             }
 
@@ -339,6 +340,7 @@ public class Table extends AppCompatActivity {
                     }else{
                         Log.d(TAG, "onResponse tableInformation isNotSuccessful");
                     }
+                    return null;
                 }
 
                 @Override
@@ -486,6 +488,7 @@ public class Table extends AppCompatActivity {
             public void onResponse(Call<TableInformationDTO> call, Response<TableInformationDTO> response) {
                 Log.d(TAG, "onResponse: " + response.body().getResult());
                 callback.onResponse(call, response);
+                return null;
             }
 
             @Override
@@ -638,7 +641,7 @@ public class Table extends AppCompatActivity {
                 SendNotification sendNotification = new SendNotification();
 
                 String whoBuy = ticketDataHashMap.get("table" + clickTable).getWhoBuy();
-                sendNotification.sendMenu(sendTicketToAdmin(whoBuy));
+//                sendNotification.sendMenu(sendTicketToAdmin(whoBuy));
 
             }
 
@@ -697,6 +700,7 @@ public class Table extends AppCompatActivity {
             @Override
             public void onResponse(Call<SuccessOrNot> call, Response<SuccessOrNot> response) {
 
+                return null;
             }
 
             @Override

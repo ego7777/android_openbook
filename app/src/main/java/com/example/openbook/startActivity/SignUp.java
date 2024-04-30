@@ -114,6 +114,7 @@ public class SignUp extends AppCompatActivity {
                                     } else {
                                         Toast.makeText(SignUp.this, getResources().getString(R.string.networkError), Toast.LENGTH_SHORT).show();
                                     }
+                                    return null;
                                 }
 
                                 @Override
@@ -228,6 +229,7 @@ public class SignUp extends AppCompatActivity {
                         } else {
                             Toast.makeText(SignUp.this, getResources().getString(R.string.networkError), Toast.LENGTH_SHORT).show();
                         }
+                        return null;
                     }
 
                     @Override

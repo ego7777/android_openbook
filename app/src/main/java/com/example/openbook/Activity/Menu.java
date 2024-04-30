@@ -28,6 +28,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
@@ -54,6 +55,7 @@ import com.example.openbook.DialogManager;
 import com.example.openbook.FCM.FCM;
 import com.example.openbook.FCM.SendNotification;
 import com.example.openbook.PaymentCategory;
+import com.example.openbook.SendMenuCallback;
 import com.example.openbook.kakaopay.KakaoPay;
 import com.example.openbook.retrofit.MenuListDTO;
 import com.example.openbook.retrofit.RetrofitManager;
@@ -63,16 +65,18 @@ import com.example.openbook.Data.TicketData;
 import com.example.openbook.Data.CartList;
 import com.example.openbook.Data.MenuList;
 import com.example.openbook.Data.TableList;
+import com.google.common.reflect.TypeToken;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 
 import retrofit2.Call;
@@ -93,7 +97,7 @@ public class Menu extends AppCompatActivity {
     ListView menuNavigation;
 
 
-    SharedPreferences pref;
+    SharedPreferences sharedPreference;
     SharedPreferences.Editor editor;
 
     TextView appbarMenuTable, appbarOrderList, cartOrderTotalPrice;
@@ -102,7 +106,7 @@ public class Menu extends AppCompatActivity {
     MenuAdapter menuAdapter;
     SideListViewAdapter sideAdapter;
 
-    Button cartOrderButton, menuClose;
+    Button cartOrderButton, useStop;
 
     RecyclerView menuRecyclerview;
 
@@ -121,6 +125,7 @@ public class Menu extends AppCompatActivity {
     RetrofitService service;
     DialogManager dialogManager;
     Dialog progressbar;
+    Gson gson;
 
     //액티비티가 onCreate 되면 자동으로 받는거고
     BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
@@ -152,7 +157,7 @@ public class Menu extends AppCompatActivity {
         dialogManager = new DialogManager();
         progressbar = dialogManager.progressDialog(Menu.this);
         progressbar.show();
-        Log.d(TAG, "progressbar start");
+        gson = new Gson();
 
 
         // 로컬 브로드캐스트 리시버 등록
@@ -162,7 +167,7 @@ public class Menu extends AppCompatActivity {
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, intentFilter);
 
         myData = (MyData) getIntent().getSerializableExtra("myData");
-        Log.d(TAG, "myData paymentStyle: " + myData.getPaymentStyle());
+        Log.d(TAG, "myData paymentStyle: " + myData.getPaymentCategory());
         Log.d(TAG, "myData isOrder: " + myData.isOrder());
         Log.d(TAG, "myData identifier: " + myData.getIdentifier());
 
@@ -186,8 +191,8 @@ public class Menu extends AppCompatActivity {
         }
 
         sendNotification = new SendNotification();
-        Log.d(TAG, "paymentStyle: " + myData.getPaymentStyle());
-        if (myData.getPaymentStyle() == PaymentCategory.NOW.getValue() && !myData.isUsedTable()) {
+        Log.d(TAG, "paymentStyle: " + myData.getPaymentCategory());
+        if (myData.getPaymentCategory() == PaymentCategory.NOW && !myData.isUsedTable()) {
 
             sendNotification.usingTableUpdate("admin",
                     myData.getId(),
@@ -196,16 +201,13 @@ public class Menu extends AppCompatActivity {
         }
 
 
-        /**
-         * AppBar: 로그인하면 table number 바로 나오는거
-         */
         TextView tableName = findViewById(R.id.appbar_menu_table_number);
         tableName.setText(myData.getId());
 
-        menuClose = findViewById(R.id.menu_close);
+        useStop = findViewById(R.id.menu_close);
 
-        if (myData.getPaymentStyle() == PaymentCategory.LATER.getValue()) {
-            menuClose.setVisibility(View.GONE);
+        if (myData.getPaymentCategory() == PaymentCategory.LATER) {
+            useStop.setVisibility(View.GONE);
         }
         appbarMenuTable = findViewById(R.id.appbar_menu_table);
         appbarOrderList = findViewById(R.id.appbar_menu_orderList);
@@ -224,10 +226,11 @@ public class Menu extends AppCompatActivity {
 
         cartAdapter = new CartAdapter();
         cartLists = new ArrayList<>();
+        getCartItems();
         cartRecyclerview.setAdapter(cartAdapter);
 
-        pref = getSharedPreferences("menu_activity", MODE_PRIVATE);
-        editor = pref.edit();
+        sharedPreference = getSharedPreferences("CustomerData", MODE_PRIVATE);
+        editor = sharedPreference.edit();
 
         cartOrderTotalPrice = findViewById(R.id.cart_order_total_price);
         cartOrderButton = findViewById(R.id.cart_order_button);
@@ -248,12 +251,9 @@ public class Menu extends AppCompatActivity {
             @Override
             public void onChanged() {
                 super.onChanged();
-                new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                    runOnUiThread(() -> {
-                        progressbar.dismiss();
-                        Log.d(TAG, "progress bar dismiss: ");
-                    });
-                }, 1000);
+                new Handler(Looper.getMainLooper()).postDelayed(() -> runOnUiThread(() -> {
+                    progressbar.dismiss();
+                }), 1000);
 
             }
         });
@@ -265,7 +265,6 @@ public class Menu extends AppCompatActivity {
         sqLiteDatabase = dbHelper.getWritableDatabase();
         Cursor res = dbHelper.getTableData("menuListTable");
 
-
         RetrofitManager retrofitManager = new RetrofitManager();
         Retrofit retrofit = retrofitManager.getRetrofit(BuildConfig.SERVER_IP);
         service = retrofit.create(RetrofitService.class);
@@ -276,7 +275,7 @@ public class Menu extends AppCompatActivity {
             Call<MenuListDTO> call = service.getMenuList();
             call.enqueue(new Callback<MenuListDTO>() {
                 @Override
-                public void onResponse(Call<MenuListDTO> call, Response<MenuListDTO> response) {
+                public void onResponse(@NonNull Call<MenuListDTO> call, @NonNull Response<MenuListDTO> response) {
                     Log.d(TAG, "onResponse: " + response);
                     if (response.isSuccessful()) {
                         switch (response.body().getResult()) {
@@ -294,7 +293,7 @@ public class Menu extends AppCompatActivity {
                 }
 
                 @Override
-                public void onFailure(Call<MenuListDTO> call, Throwable t) {
+                public void onFailure(@NonNull Call<MenuListDTO> call, @NonNull Throwable t) {
                     Log.d(TAG, "onFailure menu: " + t.getMessage());
                 }
             });
@@ -312,13 +311,7 @@ public class Menu extends AppCompatActivity {
                             1));
                 }
 
-                runOnUiThread(() -> {
-                    menuAdapter.setAdapterItem(menuLists);
-//                    progressbar.dismiss();
-
-                });
-
-
+                runOnUiThread(() -> menuAdapter.setAdapterItem(menuLists));
             }).start();
 
         }
@@ -339,7 +332,8 @@ public class Menu extends AppCompatActivity {
 
         String succeedOrderList = getIntent().getStringExtra("succeedOrderList");
         Log.d(TAG, "succeedOrderList : " + succeedOrderList);
-        Log.d(TAG, "onStart_PaymentStyle :" + myData.getPaymentStyle());
+        Log.d(TAG, "onStart_PaymentStyle :" + myData.getPaymentCategory());
+
         if (succeedOrderList != null) {
             successOrder();
             Log.d(TAG, "successOrder 성공: ");
@@ -375,26 +369,6 @@ public class Menu extends AppCompatActivity {
 //            }
 //        }
 
-        /**
-         * 액티비티 전환 시 sp에 저장된 장바구니 데이터 가져와서 뿌려주기
-         */
-
-        String cartItems = pref.getString("cart_list", null);
-
-        if (cartItems != null) {
-            cartLists = getCartItems(cartItems);
-
-            for (CartList menu : cartLists) {
-                int price = menu.getMenuPrice() * menu.getMenuQuantity();
-                totalPrice += price;
-                Log.d(TAG, "shared price: " + totalPrice);
-                menu.setMenuPrice(price);
-            }
-            addCommasToNumber(totalPrice, 0);
-            cartAdapter.setAdapterItem(cartLists);
-        }
-
-
     } //onStart()
 
 
@@ -407,19 +381,11 @@ public class Menu extends AppCompatActivity {
         IntentFilter intentFilter = new IntentFilter("chattingRequestArrived");
         LocalBroadcastManager.getInstance(Menu.this).registerReceiver(broadcastReceiver, intentFilter);
 
-        menuClose.setOnClickListener(view -> {
-            //admin에게 fcm 날리기
+        useStop.setOnClickListener(view -> {
             sendNotification.usingTableUpdate("admin", myData.getId(), "End");
 
-            editor.remove("cart_list");
-            editor.remove("order_list");
-            editor.commit();
-
             Intent intent = new Intent(Menu.this, PaymentSelect.class);
-            myData.setPaymentStyle(PaymentCategory.UNSELECTED.getValue());
-            myData.setOrder(false);
-            myData.setUsedTable(false);
-            myData.setIdentifier(0);
+            myData.init();
             intent.putExtra("myData", myData);
             startActivity(intent);
 
@@ -460,7 +426,9 @@ public class Menu extends AppCompatActivity {
                 addCommasToNumber(totalPrice, 0);
 
                 cartAdapter.notifyItemChanged(position);
-                cartSharedPreference("cart_list");
+
+                editor.putString("cartItems", gson.toJson(cartLists));
+                editor.commit();
             }
 
             @Override
@@ -485,7 +453,8 @@ public class Menu extends AppCompatActivity {
                 totalPrice = totalPrice - originalPrice;
                 addCommasToNumber(totalPrice, 0);
 
-                cartSharedPreference("cart_list");
+                editor.putString("cartItems", gson.toJson(cartLists));
+                editor.commit();
             }
 
 
@@ -499,7 +468,9 @@ public class Menu extends AppCompatActivity {
 
                 cartLists.remove(position);
                 cartAdapter.notifyItemRemoved(position);
-                cartSharedPreference("cart_list");
+
+                editor.putString("cartItems", gson.toJson(cartLists));
+                editor.commit();
             }
         });
 
@@ -533,7 +504,9 @@ public class Menu extends AppCompatActivity {
 
                 totalPrice = totalPrice + price;
                 addCommasToNumber(totalPrice, 0);
-                cartSharedPreference("cart_list");
+
+                editor.putString("cartItems", gson.toJson(cartLists));
+                editor.commit();
 
             }
         });
@@ -584,13 +557,14 @@ public class Menu extends AppCompatActivity {
                 dialogManager.noButtonDialog(Menu.this, "장바구니가 비어있습니다.");
 
             } else {
-
-                switch (myData.getPaymentStyle()) {
-                    case 1:
-                        // fcm으로 날리고
-                        sendNotification.sendMenu(adminOrderMenuList(cartLists));
-//                        orderSharedPreference();
-//                        successOrder();
+                switch (myData.getPaymentCategory()) {
+                    case LATER:
+                        sendNotification.sendMenu(submitOrder(), result -> {
+                            if (result.equals("success")) {
+                                orderSharedPreference();
+                                successOrder();
+                            }
+                        });
 
 //                        if (clientSocket == null) {
 //                            clientSocket = new ClientSocket(myData.getId(), Menu.this);
@@ -598,15 +572,12 @@ public class Menu extends AppCompatActivity {
 //                        }
                         break;
 
-                    case 0:
+                    case NOW:
                         Intent intent = new Intent(Menu.this, KakaoPay.class);
-                        intent.putExtra("menuName", getOrderMenuName(cartLists));
+                        intent.putExtra("orderItemName", getOrderItemName());
                         intent.putExtra("totalPrice", totalPrice);
-                        intent.putExtra("orderList", getOrderList(myData.getId(),
-                                cartLists, myData.getIdentifier()));
                         intent.putExtra("myData", myData);
-                        startActivity(intent);
-//
+//                        startActivity(intent);
 //                        orderSharedPreference();
                         break;
 
@@ -614,11 +585,9 @@ public class Menu extends AppCompatActivity {
                         Log.d(TAG, "order click : paymentStyle이 없어..");
                         break;
                 }
-
                 myData.setOrder(true);
-
-            } // cartList에 데이터 if-else
-        }); //주문하기 click event
+            }
+        });
 
 
         if (!myData.getId().equals("구글로그인")) {
@@ -626,174 +595,134 @@ public class Menu extends AppCompatActivity {
         }
 
 
-        if (tableList == null) {
-            Log.d(TAG, "onResume tableList null: ");
-
-            tableList = new ArrayList<>();
-
-            for (int i = 1; i < myData.getTableFromDB() + 1; i++) {
-                if (i == myTable) {
-                    tableList.add(new TableList(myData.getId(), null, 0));
-                } else {
-                    tableList.add(new TableList(i, null, 1));
-                }
-            }
-            Log.d(TAG, "tableList :" + tableList.size());
-
-        } else {
-            Log.d(TAG, "onResume tableList not null: ");
-        }
+//        if (tableList == null) {
+//            Log.d(TAG, "onResume tableList null: ");
+//
+//            tableList = new ArrayList<>();
+//
+//            for (int i = 1; i < myData.getTableFromDB() + 1; i++) {
+//                if (i == myTable) {
+//                    tableList.add(new TableList(myData.getId(), null, 0));
+//                } else {
+//                    tableList.add(new TableList(i, null, 1));
+//                }
+//            }
+//            Log.d(TAG, "tableList :" + tableList.size());
+//
+//        } else {
+//            Log.d(TAG, "onResume tableList not null: ");
+//        }
 
     } // onResume
 
-    public String getOrderMenuName(ArrayList<CartList> cartLists) {
+    public String getOrderItemName() {
 
-        int menuQuantity = 0;
+        String orderItemName = cartLists.stream()
+                .map(cartItem -> cartItem.getMenuName() + " " + cartItem.getMenuQuantity() + "개")
+                .collect(Collectors.joining(", "));
+
+        Log.d(TAG, "getOrderItemName: " + orderItemName);
+
+        return orderItemName;
+    }
+
+    public Map<String, String> submitOrder() {
+
+        JsonArray menuItems = new JsonArray();
+
         for (CartList item : cartLists) {
-            menuQuantity += item.getMenuQuantity();
+            JsonObject menuItem = new JsonObject();
+
+            menuItem.addProperty("menuName", item.getMenuName());
+            menuItem.addProperty("menuPrice", String.valueOf(item.getMenuPrice()));
+            menuItem.addProperty("menuQuantity", String.valueOf(item.getMenuQuantity()));
+            menuItems.add(menuItem);
         }
 
-        String menuName;
+        Map<String, String> request = new HashMap<>();
+        request.put("request", "Order");
+        request.put("tableName", myData.getId());
+        request.put("orderItemName", getOrderItemName());
+        request.put("totalPrice", String.valueOf(totalPrice));
+        request.put("items", menuItems.toString());
 
-        if (menuQuantity == 1) {
-            menuName = cartLists.get(0).getMenuName();
+        return request;
+    }
+
+
+    private void orderSharedPreference() {
+        String orderItems = sharedPreference.getString("orderItems", null);
+        Log.d(TAG, "orderSharedPreference: " + orderItems);
+
+        //shared에 저장된 내용이 있으면 기존값에 추가해서 저장
+        if (orderItems != null && !orderItems.isEmpty()) {
+            Type type = new TypeToken<ArrayList<CartList>>() {
+            }.getType();
+            ArrayList<CartList> orderLists = gson.fromJson(orderItems, type);
+
+            for (int i = 0; i < cartLists.size(); i++) {
+                for (int j = 0; j < orderLists.size(); j++) {
+                    if (orderLists.get(j).getMenuName().equals(cartLists.get(i).getMenuName())) {
+                        int oldQuantity = orderLists.get(j).getMenuQuantity();
+                        int newQuantity = oldQuantity + cartLists.get(i).getMenuQuantity();
+                        orderLists.get(j).setMenuQuantity(newQuantity);
+
+                        int oldPrice = orderLists.get(j).getMenuPrice();
+                        int newPrice = oldPrice + cartLists.get(i).getMenuPrice();
+                        orderLists.get(j).setMenuPrice(newPrice);
+                        break;
+                    }
+                }
+            }
+
+            editor.putString("orderItems", gson.toJson(orderLists));
+            editor.commit();
         } else {
-            menuName = cartLists.get(0).getMenuName() + " 외" + (menuQuantity - cartLists.get(0).getMenuQuantity());
+            editor.putString("orderItems", gson.toJson(cartLists));
+            editor.commit();
         }
-        return menuName;
     }
 
-    public String adminOrderMenuList(ArrayList<CartList> cartLists) {
-        JSONObject jsonObject = new JSONObject();
-        try {
+    public void getCartItems() {
 
-            JSONArray menujArray = new JSONArray();//배열이 필요할때
+        String cartItems = sharedPreference.getString("cartItems", null);
 
-            for (int i = 0; i < cartLists.size(); i++)//배열
-            {
-                //배열 내에 들어갈 json
-                JSONObject sObject = new JSONObject();
-                sObject.put("menu", cartLists.get(i).getMenuName());
-                sObject.put("price", cartLists.get(i).getMenuPrice());
-                sObject.put("quantity", cartLists.get(i).getMenuQuantity());
-                menujArray.put(sObject);
+        if (cartItems != null) {
+            Type type = new TypeToken<ArrayList<CartList>>() {
+            }.getType();
+            cartLists = gson.fromJson(cartItems, type);
+
+            if (cartLists != null) {
+                for (CartList menu : cartLists) {
+                    int price = menu.getMenuPrice() * menu.getMenuQuantity();
+                    totalPrice += price;
+                    Log.d(TAG, "shared price: " + totalPrice);
+                    menu.setMenuPrice(price);
+                }
+                addCommasToNumber(totalPrice, 0);
+                cartAdapter.setAdapterItem(cartLists);
             }
-
-            jsonObject.put("item", menujArray);
-            jsonObject.put("menuName", getOrderMenuName(cartLists));
-            jsonObject.put("tableName", myData.getId());
-            jsonObject.put("identifier", 0);
-
-        } catch (JSONException e) {
-            e.printStackTrace();
         }
-
-        return jsonObject.toString();
-    }
-
-    public void cartSharedPreference(String keyName) {
-
-        JSONArray jsonArray = new JSONArray();
-
-        for (CartList menu : cartLists) {
-            JSONObject jsonObject = new JSONObject();
-            try {
-                jsonObject.put("menu", menu.getMenuName());
-                jsonObject.put("quantity", menu.getMenuQuantity());
-                jsonObject.put("price", menu.getOriginalPrice());
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-            jsonArray.put(jsonObject);
-        }
-
-        String json = jsonArray.toString();
-        Log.d(TAG, "cartSharedPreference: " + json);
-        editor.putString(keyName, json);
-        editor.commit();
-
-    }
-
-//    private void orderSharedPreference() {
-//        String orderListString = pref.getString("order_list", null);
-//        Log.d(TAG, "orderSharedPreference: " + orderListString);
-//
-//        //shared에 저장된 내용이 있으면 기존값에 추가해서 저장
-//        if (orderListString != null && !orderListString.isEmpty()) {
-//            try {
-//                JSONArray jsonArray = new JSONArray(orderListString);
-//
-//                //중복처리..!어카누..!!..!!!
-//
-//                for (CartList menu : cartLists) {
-//                    JSONObject jsonObject = new JSONObject();
-//
-//                    try {
-//                        jsonObject.put("menu", menu.getMenu_name());
-//                        jsonObject.put("quantity", menu.getMenu_quantity());
-//                        jsonObject.put("price", menu.getMenu_price());
-//                    } catch (JSONException e) {
-//                        e.printStackTrace();
-//                    }
-//                    jsonArray.put(jsonObject);
-//                }
-//
-//                String json = jsonArray.toString();
-//                Log.d(TAG, "orderSharedPreference json: " + json);
-//                editor.putString("order_list", json);
-//                editor.commit();
-//
-//
-//            } catch (JSONException e) {
-//                e.printStackTrace();
-//            }
-//            //아니면 새로 저장
-//        } else {
-//            cartSharedPreference("order_list");
-//        }
-//    }
-
-    public ArrayList getCartItems(String cartItem) {
-        try {
-            JSONArray jsonArray = new JSONArray(cartItem);
-
-            for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject jsonObject = jsonArray.getJSONObject(i);
-
-                String menuName = jsonObject.getString("menu");
-                int menuQuantity = jsonObject.getInt("quantity");
-                int menuPrice = jsonObject.getInt("price");
-
-                cartLists.add(new CartList(menuName, menuPrice, menuQuantity, menuPrice, CartCategory.MENU));
-            }
-        } catch (JSONException e) {
-            Log.d(TAG, "getCartItemsInShared e: " + e.getMessage());
-        }
-        return cartLists;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     public String getOrderList(String id, ArrayList<CartList> cart, int identifier) {
-        JSONObject orderList = new JSONObject();
+        JsonObject orderList = new JsonObject();
 
-        try {
-            JSONArray items = new JSONArray();
-            for (CartList item : cart) {
-                JSONObject orderMenu = new JSONObject();//배열 내에 들어갈 json
-                orderMenu.put("menu", item.getMenuName());
-                orderMenu.put("price", item.getMenuPrice());
-                orderMenu.put("quantity", item.getMenuQuantity());
-                items.put(orderMenu);
-            }
-            orderList.put("tableId", id);
-            orderList.put("items", items);//배열을 넣음
+
+        JsonArray items = new JsonArray();
+        for (CartList item : cart) {
+            JsonObject orderMenu = new JsonObject();//배열 내에 들어갈 json
+            orderMenu.addProperty("menu", item.getMenuName());
+            orderMenu.addProperty("price", item.getMenuPrice());
+            orderMenu.addProperty("quantity", item.getMenuQuantity());
+            items.add(orderMenu);
+        }
+        orderList.addProperty("tableId", id);
+        orderList.addProperty("items", String.valueOf(items));//배열을 넣음
 //            orderList.put("identifier", identifier);
 
-            Log.d(TAG, "orderList: " + orderList);
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        Log.d(TAG, "orderList: " + orderList);
         return orderList.toString();
     }
 
@@ -810,14 +739,10 @@ public class Menu extends AppCompatActivity {
 
                 menuLists.add(new MenuList(url, menuName, price, category, 1));
                 dbHelper.insertMenuData(menuName, price, url, category);
-//            myModel.insertMenuData(menuName, price, url, category);
 
             }
-//            runOnUiThread(() -> {
             menuAdapter.setAdapterItem(menuLists);
             Log.d(TAG, "setMenuList setAdapter: ");
-//                progressbar.dismiss();
-//            });
         }).start();
 
 
@@ -827,30 +752,14 @@ public class Menu extends AppCompatActivity {
     public void successOrder() {
 
         cartLists = new ArrayList<>();
-        cartAdapter.setAdapterItem(cartLists);
+        cartAdapter.notifyDataSetChanged();
         totalPrice = 0;
         cartOrderTotalPrice.setText("총 금액 : ");
 
-        editor.remove("cart_list");
+        editor.remove("cartItems");
         editor.commit();
 
-
-        Dialog dlg = new Dialog(Menu.this);
-        dlg.setContentView(R.layout.order_complete);
-        dlg.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        dlg.show();
-
-        ImageView img = dlg.findViewById(R.id.serve_img);
-        TextView text = dlg.findViewById(R.id.serve_text);
-
-
-        Animation animation = AnimationUtils.loadAnimation(Menu.this, R.anim.order_complete);
-        img.startAnimation(animation);
-        text.startAnimation(animation);
-
-        Handler handler = new Handler();
-
-        handler.postDelayed(() -> dlg.dismiss(), 1000);
+        dialogManager.successOrder(Menu.this).show();
     }
 
     @Override
@@ -864,30 +773,26 @@ public class Menu extends AppCompatActivity {
 
         ArrayList<OrderList> orderLists = new ArrayList<>();
 
-        String sharedOrderList = pref.getString("order_list", null);
+        String sharedOrderList = sharedPreference.getString("orderItems", null);
         Log.d(TAG, "showReceiptDialog orderList: " + sharedOrderList);
         int price = 0;
 
         if (sharedOrderList != null) {
-            try {
-                JSONArray jsonArray = new JSONArray(sharedOrderList);
 
-                for (int i = 0; i < jsonArray.length(); i++) {
-                    JSONObject jsonObject = jsonArray.getJSONObject(i);
+            JsonArray jsonArray = gson.fromJson(sharedOrderList, JsonArray.class);
 
-                    orderLists.add(new OrderList(1, myData.getId(),
-                            jsonObject.getString("menu"),
-                            jsonObject.getInt("quantity"),
-                            jsonObject.getInt("price")));
+            for (int i = 0; i < jsonArray.size(); i++) {
+                JsonObject jsonObject = jsonArray.get(i).getAsJsonObject();
 
-                    price = price + jsonObject.getInt("price");
+                orderLists.add(new OrderList(1, myData.getId(),
+                        jsonObject.get("menu").getAsString(),
+                        jsonObject.get("quantity").getAsInt(),
+                        jsonObject.get("price").getAsInt()));
 
-                }
+                price = price + jsonObject.get("price").getAsInt();
 
-
-            } catch (JSONException e) {
-                e.printStackTrace();
             }
+
         } else {
             orderLists.add(new OrderList(0, myData.getId(),
                     "주문 내역이 없습니다."));
@@ -914,13 +819,12 @@ public class Menu extends AppCompatActivity {
 
     }
 
-    private int CART = 0;
-    private int RECEIPT = 1;
 
     public String addCommasToNumber(int price, int type) {
         DecimalFormat decimalFormat = new DecimalFormat("#,###");
         String totalPrice = decimalFormat.format(price) + "원";
 
+        int CART = 0;
         if (type == CART) {
             if (price == 0) {
                 cartOrderTotalPrice.setText("총 금액 : ");

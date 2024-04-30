@@ -9,7 +9,10 @@ import android.graphics.drawable.ColorDrawable;
 import android.os.Handler;
 import android.util.Log;
 import android.view.Window;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -17,6 +20,7 @@ import android.widget.TextView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.openbook.Activity.Menu;
 import com.example.openbook.Activity.Table;
 import com.example.openbook.Adapter.AdminPopUpAdapter;
 import com.example.openbook.Chatting.ClientSocket;
@@ -154,6 +158,24 @@ public class DialogManager {
         Handler handler = new Handler();
         handler.postDelayed(() -> dialog.dismiss(), 5000);
 
+        return dialog;
+    }
+
+    public Dialog successOrder(Context context){
+        Dialog dialog = new Dialog(context);
+        dialog.setContentView(R.layout.order_complete);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+
+        ImageView img = dialog.findViewById(R.id.serve_img);
+        TextView text = dialog.findViewById(R.id.serve_text);
+
+        Animation animation = AnimationUtils.loadAnimation(context, R.anim.order_complete);
+        img.startAnimation(animation);
+        text.startAnimation(animation);
+
+        Handler handler = new Handler();
+
+        handler.postDelayed(dialog::dismiss, 1000);
         return dialog;
     }
 

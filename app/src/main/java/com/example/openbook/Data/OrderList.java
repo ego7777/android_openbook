@@ -19,7 +19,7 @@ public class OrderList {
         this.price = price;
     }
 
-    public OrderList(int viewType,String tableName, String statement){
+    public OrderList(int paymentType,String tableName, String statement){
         this.paymentType = paymentType;
         this.tableName = tableName;
         this.statement = statement;

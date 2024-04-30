@@ -151,7 +151,7 @@ public class ChattingUI extends AppCompatActivity {
         table_num = getIntent().getIntExtra("tableNumber", 0);
         myData = (MyData) getIntent().getSerializableExtra("myData");
         Log.d(TAG, "myData ID: " + myData.getId());
-        Log.d(TAG, "myData paymentStyle: " + myData.getPaymentStyle());
+        Log.d(TAG, "myData paymentStyle: " + myData.getPaymentCategory());
 
 
         ticketDataHashMap = (HashMap<String, TicketData>) getIntent().getSerializableExtra("ticketData");

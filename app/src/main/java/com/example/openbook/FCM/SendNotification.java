@@ -5,6 +5,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.example.openbook.BuildConfig;
+import com.example.openbook.SendMenuCallback;
 import com.example.openbook.retrofit.RetrofitManager;
 import com.example.openbook.retrofit.RetrofitService;
 import com.example.openbook.retrofit.SuccessOrNot;
@@ -30,9 +31,11 @@ import retrofit2.Retrofit;
 public class SendNotification {
     String TAG = "SendNotificationTAG";
 
-    RetrofitService service;
     RetrofitManager retrofitManager = new RetrofitManager();
     Retrofit retrofit = retrofitManager.getRetrofit(BuildConfig.SERVER_IP);
+    RetrofitService service = retrofit.create(RetrofitService.class);
+
+    Gson gson = new Gson();
 
     DatabaseReference mRootRef = FirebaseDatabase.getInstance().getReference();
 
@@ -146,39 +149,30 @@ public class SendNotification {
 
 
 
-    public void sendMenu(String menujArray) {
+    public void sendMenu(Map<String, String> orderItems, SendMenuCallback callback) {
 
-        service = retrofit.create(RetrofitService.class);
+        Call<SuccessOrNot> call = service.sendRequestFcm("admin", gson.toJson(orderItems));
+        call.enqueue(new Callback<SuccessOrNot>() {
+            @Override
+            public void onResponse(Call<SuccessOrNot> call, Response<SuccessOrNot> response) {
+                Log.d(TAG, "onResponse sendMenu: " + response.body());
+                if(response.isSuccessful()){
+                    Log.d(TAG, "onResponse sendMenu :" + response.body().getResult());
+                    callback.onResultReceived(response.body().getResult());
 
-//        Call<TokenDTO> call = service.requestFcmToken("admin");
-//        call.enqueue(new Callback<TokenDTO>() {
-//            @Override
-//            public void onResponse(Call<TokenDTO> call, Response<TokenDTO> response) {
-//                if(response.isSuccessful()){
-//                    switch (response.body().getResult()){
-//                        case "success" :
-//                            String token = response.body().getToken();
-//                            Log.d(TAG, "onResponse token: " + token);
-//                            Log.d(TAG, "onResponse menuArray: " + menujArray);
-//                            sendRequestFcm(token, menujArray);
-//                            break;
-//
-//                        case "failed" :
-//                            Log.d(TAG, "onResponse get token failed");
-//                            break;
-//
-//                    }
-//                }else{
-//                    Log.d(TAG, "onResponse get token is not successful");
-//                }
-//            }
-//
-//            @Override
-//            public void onFailure(Call<TokenDTO> call, Throwable t) {
-//
-//            }
-//        });
+                }else{
+                    Log.d(TAG, "onResponse sendMenu is not successful");
+                    callback.onResultReceived("isNotSuccessful");
+                }
 
+            }
+
+            @Override
+            public void onFailure(Call<SuccessOrNot> call, Throwable t) {
+                Log.d(TAG, "onFailure sendMenu: " + t.getMessage());
+                callback.onResultReceived(t.getMessage());
+            }
+        });
     }
 
     public void usingTableUpdate(String to, String tableName, String request) {
@@ -186,11 +180,8 @@ public class SendNotification {
         Map<String, String> data = new HashMap<>();
         data.put("request", request);
         data.put("tableName", tableName);
-
-        Gson gson = new Gson();
         Log.d(TAG, "usingTableUpdate data: " + gson.toJson(data));
 
-        service = retrofit.create(RetrofitService.class);
 
         Call<SuccessOrNot> call = service.sendRequestFcm(to, gson.toJson(data));
         call.enqueue(new Callback<SuccessOrNot>() {
@@ -204,87 +195,6 @@ public class SendNotification {
                 Log.d(TAG, "onFailure usingTableUpdate: " + t.getMessage());
             }
         });
-
-
-
-
-
-//        mRootRef.child("admin").child("fcmToken").addListenerForSingleValueEvent(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(@NonNull DataSnapshot snapshot) {
-//                String pushToken = (String) snapshot.getValue();
-//
-//                JSONObject jsonObject = new JSONObject();
-//
-//                try {
-//                    jsonObject.put("tableNumber", tableID);
-//
-//                    if (statement.equals("사용")) {
-//                        Log.d(TAG, "사용 identifier: " + identifier);
-//                        jsonObject.put("tableStatement", "선불 이용 좌석");
-//                        jsonObject.put("tableIdentifier", identifier);
-//
-//
-//                    } else if (statement.equals("종료")) {
-//                        Log.d(TAG, "종료 identifier: " + identifier);
-//                        jsonObject.put("tableStatement", "");
-//                        jsonObject.put("tableIdentifier", identifier);
-//                    }
-//
-//                } catch (JSONException e) {
-//                    e.printStackTrace();
-//                }
-//
-//
-//                RequestBody formBody = new FormBody.Builder().
-//                        add("to", pushToken).
-//                        add("notification", jsonObject.toString()).
-//                        build();
-//
-//                Request httpRequest = new Request.Builder()
-//                        .url("http://3.36.255.141/fcmPush.php")
-//                        .addHeader("Authorization", "key=" + SERVER_KEY)
-//                        .post(formBody)
-//                        .build();
-//
-//                okHttpClient.newCall(httpRequest).enqueue(new Callback() {
-//                    @Override
-//                    public void onFailure(@NonNull Call call, @NonNull IOException e) {
-//                        Log.d(TAG, "onFailure: " + e);
-//                    }
-//
-//                    @Override
-//                    public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-//                        Log.d(TAG, "body: " + response.body().string());
-//                    }
-//                });
-//
-//
-//            }
-//
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError error) {
-//                Log.d(TAG, "onCancelled: " + error);
-//            }
-//        });
     }
-
-    public void sendRequestFcm(String token, String data){
-
-        Call<SuccessOrNot> call = service.sendRequestFcm(token, data.toString());
-
-        call.enqueue(new Callback<SuccessOrNot>() {
-            @Override
-            public void onResponse(Call<SuccessOrNot> call, Response<SuccessOrNot> response) {
-                Log.d(TAG, "onResponse sendRequestFcm: " + response.body().getResult());
-            }
-
-            @Override
-            public void onFailure(Call<SuccessOrNot> call, Throwable t) {
-                Log.d(TAG, "onFailure sendRequestFcm: " + t.getMessage());
-            }
-        });
-    }
-
 
 }

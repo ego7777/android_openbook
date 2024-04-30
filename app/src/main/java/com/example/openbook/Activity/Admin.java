@@ -31,14 +31,13 @@ import com.example.openbook.FCM.FCM;
 import com.example.openbook.ImageLoadTask;
 import com.example.openbook.retrofit.RetrofitManager;
 import com.example.openbook.retrofit.RetrofitService;
-import com.example.openbook.SaveOrderDeleteData;
+
 import com.example.openbook.R;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 
 import java.lang.reflect.Type;
@@ -67,8 +66,6 @@ public class Admin extends AppCompatActivity {
     SharedPreferences sharedPreference;
     SharedPreferences.Editor editor;
 
-    String afterPaymentList;
-
     //다이얼로그
     ImageView tableInfoImg;
     TextView tableInfoStatement, tableInfoText, tableInfoGender, tableInfoMember;
@@ -76,6 +73,7 @@ public class Admin extends AppCompatActivity {
     AdminData adminData;
     RetrofitService service;
     ArrayList<AdminTableList> adminTableLists;
+    ArrayList<OrderList> orderLists;
     Gson gson;
     String tableRequest;
     DialogManager dialogManager;
@@ -91,6 +89,7 @@ public class Admin extends AppCompatActivity {
         Log.d(TAG, "adminData: " + adminData);
 
         adminTableLists = new ArrayList<>();
+        orderLists = new ArrayList<>();
 
         sharedPreference = getSharedPreferences("AdminInfo", MODE_PRIVATE);
         editor = sharedPreference.edit();
@@ -124,12 +123,7 @@ public class Admin extends AppCompatActivity {
             Log.d(TAG, "loadAdminTableList Adapter");
         }
 
-        afterPaymentList = getIntent().getStringExtra("orderList");
-        Log.d(TAG, "orderList: " + afterPaymentList);
-
-
-//        sharedPreference = getSharedPreferences("oldMenuSummary", MODE_PRIVATE);
-//        editor = sharedPreference.edit();
+        orderLists = loadOrderList();
 
         RetrofitManager retrofitManager = new RetrofitManager();
         Retrofit retrofit = retrofitManager.getRetrofit(BuildConfig.SERVER_IP);
@@ -221,16 +215,26 @@ public class Admin extends AppCompatActivity {
         Log.d(TAG, "onStart tableRequest: " + tableRequest);
 
         if (tableRequest != null) {
-            try {
-                JSONObject requestJson = new JSONObject(tableRequest);
-                String request = (String) requestJson.get("request");
-                String tableName = requestJson.getString("tableName");
-                int tableNumber = Integer.parseInt(tableName.replace("table", "")) - 1;
 
-                updateTable(request, tableName, tableNumber);
+            JsonObject requestJson = gson.fromJson(tableRequest, JsonObject.class);
+            Log.d(TAG, "requestJson: " + requestJson);
+            String request = requestJson.get("request").getAsString();
+            String tableName = requestJson.get("tableName").getAsString();
+            int tableNumber = Integer.parseInt(tableName.replace("table", "")) - 1;
 
-            } catch (JSONException e) {
-                throw new RuntimeException(e);
+            switch (request) {
+                case "PayNow":
+                case "End":
+                    updateTable(request, tableName, tableNumber);
+                    break;
+                case "Order":
+
+                    String items = requestJson.get("items").getAsString();
+                    JsonArray jsonArray = gson.fromJson(items, JsonArray.class);
+                    String orderItemName = requestJson.get("orderItemName").getAsString();
+                    int totalPrice = requestJson.get("totalPrice").getAsInt();
+                    orderMenu(tableName, tableNumber, orderItemName, jsonArray, totalPrice);
+                    break;
             }
         }
 
@@ -263,28 +267,28 @@ public class Admin extends AppCompatActivity {
         }
         menuName = getIntent().getStringExtra("menuName");
 
-        if (afterPaymentList != null) {
-            SaveOrderDeleteData orderSaveDeleteData = new SaveOrderDeleteData();
-            //저장하고,
-
-            try {
-                boolean success = orderSaveDeleteData.orderSave(afterPaymentList);
-
-                Log.d(TAG, "success: " + success);
-
-                if (success) {
-//                    deleteLocalData();
-                    Log.d(TAG, "deleteData: ");
-
-                    orderSaveDeleteData.deleteServerData(tableName); // 서버 데이터
-                    Log.d(TAG, "deleteServerData: ");
-                }
-
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-        }
+//        if (afterPaymentList != null) {
+//            SaveOrderDeleteData orderSaveDeleteData = new SaveOrderDeleteData();
+//            //저장하고,
+//
+//            try {
+//                boolean success = orderSaveDeleteData.orderSave(afterPaymentList);
+//
+//                Log.d(TAG, "success: " + success);
+//
+//                if (success) {
+////                    deleteLocalData();
+//                    Log.d(TAG, "deleteData: ");
+//
+//                    orderSaveDeleteData.deleteServerData(tableName); // 서버 데이터
+//                    Log.d(TAG, "deleteServerData: ");
+//                }
+//
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+//
+//        }
 
     }
 
@@ -379,7 +383,9 @@ public class Admin extends AppCompatActivity {
                 tableInfoClose = dlg.findViewById(R.id.table_info_close);
 
 
-                requestTableInfo(position + 1);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    requestTableInfo(position + 1);
+                }
 
 
                 tableInfoClose.setOnClickListener(v1 -> dlg.dismiss());
@@ -486,30 +492,30 @@ public class Admin extends AppCompatActivity {
 
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    public String getJson(ArrayList<OrderList> list) {
-        JSONObject jsonObject = new JSONObject();
-        JSONArray menujArray = new JSONArray();//배열이 필요할때
-
-        try {
-            for (int i = 0; i < list.size(); i++)//배열
-            {
-                JSONObject sObject = new JSONObject();//배열 내에 들어갈 json
-                sObject.put("menu", list.get(i).getMenu());
-                sObject.put("quantity", list.get(i).getQuantity());
-                sObject.put("price", list.get(i).getPrice());
-                menujArray.put(sObject);
-            }
-
-            jsonObject.put("table", tableName);
-            jsonObject.put("item", menujArray);
-
-            Log.d(TAG, "getJson: " + jsonObject);
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        return jsonObject.toString();
-    }
+//    public String getJson(ArrayList<OrderList> list) {
+//        JSONObject jsonObject = new JSONObject();
+//        JSONArray menujArray = new JSONArray();//배열이 필요할때
+//
+//        try {
+//            for (int i = 0; i < list.size(); i++)//배열
+//            {
+//                JSONObject sObject = new JSONObject();//배열 내에 들어갈 json
+//                sObject.put("menu", list.get(i).getMenu());
+//                sObject.put("quantity", list.get(i).getQuantity());
+//                sObject.put("price", list.get(i).getPrice());
+//                menujArray.put(sObject);
+//            }
+//
+//            jsonObject.put("table", tableName);
+//            jsonObject.put("item", menujArray);
+//
+//            Log.d(TAG, "getJson: " + jsonObject);
+//
+//        } catch (JSONException e) {
+//            e.printStackTrace();
+//        }
+//        return jsonObject.toString();
+//    }
 
 
 //    public void deleteLocalData() {
@@ -590,12 +596,19 @@ public class Admin extends AppCompatActivity {
 
     }
 
+    public ArrayList<OrderList> loadOrderList() {
+        String order = sharedPreference.getString("orderList", null);
+        Type type = new TypeToken<ArrayList<OrderList>>() {
+        }.getType();
+        return gson.fromJson(order, type);
+    }
+
     public void updateTable(String request, String tableName, int tableNumber) {
+        ArrayList<OrderList> orderLists = new ArrayList<>();
         switch (request) {
             case "PayNow":
-                ArrayList<OrderList> orderList = new ArrayList<>();
-                orderList.add(new OrderList(PaymentCategory.NOW.getValue(), tableName, tableName + "선불 좌석 이용 시작하였습니다."));
-                dialogManager.popUpAdmin(this, orderList).show();
+                orderLists.add(new OrderList(PaymentCategory.NOW.getValue(), tableName, tableName + "선불 좌석 이용 시작하였습니다."));
+                dialogManager.popUpAdmin(this, orderLists).show();
 
                 adminData.getAdminTableLists().get(tableNumber).setPaymentType(PaymentCategory.NOW.getValue());
                 adminData.getAdminTableLists().get(tableNumber).setAdminTableStatement("선불 좌석 이용");
@@ -610,7 +623,6 @@ public class Admin extends AppCompatActivity {
                 break;
 
             case "End":
-                ArrayList<OrderList> orderLists = new ArrayList<>();
                 orderLists.add(new OrderList(PaymentCategory.NOW.getValue(), tableName, tableName + "선불 좌석 이용 종료하였습니다."));
                 dialogManager.popUpAdmin(this, orderLists).show();
 
@@ -628,6 +640,45 @@ public class Admin extends AppCompatActivity {
                 break;
 
         }
+    }
+
+    public void orderMenu(String tableName,
+                          int tableNumber,
+                          String orderItemName,
+                          JsonArray items,
+                          int totalPrice) {
+
+        ArrayList<OrderList> orderLists = new ArrayList<>();
+        Log.d(TAG, "orderMenu: ");
+
+        for (int i = 0; i < items.size(); i++) {
+
+            JsonObject item = items.get(i).getAsJsonObject();
+
+            String menuName = item.get("menuName").getAsString();
+            int menuPrice = item.get("menuPrice").getAsInt();
+            int menuQuantity = item.get("menuQuantity").getAsInt();
+
+            orderLists.add(new OrderList(PaymentCategory.LATER.getValue(),
+                    tableName, menuName, menuPrice, menuQuantity));
+
+        }
+
+        Log.d(TAG, "orderMenu orderList: " + gson.toJson(orderLists));
+
+        dialogManager.popUpAdmin(this, orderLists).show();
+        Log.d(TAG, "orderMenu dialog show");
+
+        adminData.getAdminTableLists().get(tableNumber).setAdminTableMenu(orderItemName);
+        adminData.getAdminTableLists().get(tableNumber).setAdminTablePrice(String.valueOf(totalPrice));
+
+        adminTableLists = new ArrayList<>();
+        adminTableLists = adminData.getAdminTableLists();
+
+        adapter.notifyItemChanged(tableNumber);
+
+        editor.putString("adminTableList", gson.toJson(adminTableLists));
+        editor.commit();
     }
 
 }

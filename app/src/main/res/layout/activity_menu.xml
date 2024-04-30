@@ -57,7 +57,7 @@
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/menu_cart_recyclerview"
                 android:layout_width="match_parent"
-                android:layout_height="250dp"
+                android:layout_height="400dp"
                 android:layout_gravity="end"
                 android:scrollbars="vertical"
                 android:scrollbarFadeDuration="0"
@@ -73,7 +73,7 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="20dp"
+                android:layout_marginBottom="100dp"
                 android:background="@color/white"
                 android:orientation="horizontal"
                 android:paddingTop="5dp"
@@ -114,7 +114,7 @@
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/menu_close"
                 android:layout_width="300dp"
-                android:layout_height="wrap_content"
+                android:layout_height="80dp"
                 android:layout_gravity="center"
                 android:background="@drawable/radius_10dp_white"
                 android:backgroundTint="@color/purple_700"

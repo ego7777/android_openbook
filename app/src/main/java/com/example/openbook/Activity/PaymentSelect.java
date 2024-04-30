@@ -22,9 +22,7 @@ import retrofit2.Response;
 public class PaymentSelect extends AppCompatActivity {
 
     MyData myData;
-
     Button paymentSelectLater, paymentSelectNow;
-
     String TAG = "paymentSelectTAG";
 
     @Override
@@ -36,11 +34,14 @@ public class PaymentSelect extends AppCompatActivity {
         Log.d(TAG, "myData id: " + myData.getId());
         Log.d(TAG, "myData table: " + myData.getTableFromDB());
 
-        SharedPreferences pref = getSharedPreferences("cart_list", MODE_PRIVATE);
+        SharedPreferences pref = getSharedPreferences("CustomerData", MODE_PRIVATE);
 
         SharedPreferences.Editor editor = pref.edit();
 
-        editor.remove("orderList");
+        editor.remove("orderItems");
+        editor.remove("cartItems");
+        editor.commit();
+
 
         if(myData.getTableFromDB() == 0){
             Log.d(TAG, "tableFromDB ZERO: ");
@@ -70,6 +71,7 @@ public class PaymentSelect extends AppCompatActivity {
                 }else{
                     Log.d(TAG, "onResponse table isNotSuccessful");
                 }
+                return null;
             }
 
             @Override
@@ -84,20 +86,20 @@ public class PaymentSelect extends AppCompatActivity {
         super.onResume();
 
         paymentSelectLater.setOnClickListener(view ->{
-            startActivityString(PaymentCategory.LATER.getValue(), 0);
+            startActivityString(PaymentCategory.LATER, 0);
         });
 
         paymentSelectNow.setOnClickListener(view ->{
             int identifier = hashCode();
             Log.d(TAG, "identifier: " + identifier);
 
-            startActivityString(PaymentCategory.NOW.getValue(), identifier);
+            startActivityString(PaymentCategory.NOW, identifier);
         });
     }
 
-    public void startActivityString(int paymentStyle, int identifier){
+    public void startActivityString(PaymentCategory paymentStyle, int identifier){
         Intent intent = new Intent(PaymentSelect.this, Menu.class);
-        myData.setPaymentStyle(paymentStyle);
+        myData.setPaymentCategory(paymentStyle);
         myData.setIdentifier(identifier);
         intent.putExtra("myData", myData);
         startActivity(intent);

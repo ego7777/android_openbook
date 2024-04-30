@@ -8,7 +8,8 @@ import java.io.Serializable;
 public class MyData implements Serializable {
     String id;
     int tableFromDB;
-    int paymentStyle;
+
+    PaymentCategory paymentCategory;
     boolean isOrder;
     boolean usedTable;
     int identifier;
@@ -16,14 +17,14 @@ public class MyData implements Serializable {
 
     public MyData(String id,
                   int tableFromDB,
-                  int paymentStyle,
+                  PaymentCategory paymentCategory,
                   boolean isOrder,
                   boolean usedTable,
                   int identifier,
                   boolean isFcmExist){
         this.id = id;
         this.tableFromDB = tableFromDB;
-        this.paymentStyle = paymentStyle;
+        this.paymentCategory = paymentCategory;
         this.isOrder = isOrder;
         this.usedTable = usedTable;
         this.identifier = identifier;
@@ -70,12 +71,12 @@ public class MyData implements Serializable {
         this.tableFromDB = tableFromDB;
     }
 
-    public int getPaymentStyle() {
-        return paymentStyle;
+    public PaymentCategory getPaymentCategory() {
+        return paymentCategory;
     }
 
-    public void setPaymentStyle(int paymentStyle) {
-        this.paymentStyle = paymentStyle;
+    public void setPaymentCategory(PaymentCategory paymentCategory) {
+        this.paymentCategory = paymentCategory;
     }
 
     public boolean isOrder() {
@@ -84,6 +85,13 @@ public class MyData implements Serializable {
 
     public void setOrder(boolean order) {
         isOrder = order;
+    }
+
+    public void init(){
+        paymentCategory = PaymentCategory.UNSELECTED;
+        isOrder = false;
+        usedTable = false;
+        identifier = 0;
     }
 
 }

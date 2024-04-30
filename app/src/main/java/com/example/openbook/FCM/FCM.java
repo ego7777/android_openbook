@@ -38,6 +38,7 @@ public class FCM extends FirebaseMessagingService {
     int requestCode;
 
     RetrofitService service;
+    Gson gson = new Gson();
 
     public void getToken(int identifier) {
 
@@ -68,6 +69,7 @@ public class FCM extends FirebaseMessagingService {
             @Override
             public void onResponse(Call<SuccessOrNot> call, Response<SuccessOrNot> response) {
                 Log.d(TAG, "onResponse save fcm token: " + response.body().getResult());
+                return null;
             }
 
             @Override
@@ -101,6 +103,10 @@ public class FCM extends FirebaseMessagingService {
             case "PayNow" :
             case "End" :
                 handleAdminPaymentNow(data.get("request"), data.get("tableName"));
+                break;
+
+            case "Order" :
+                handleAdminTableMenu(data);
                 break;
 
         }
@@ -171,41 +177,22 @@ public class FCM extends FirebaseMessagingService {
 //    }
 
 
-//    public void handleAdminTableMenu(String tableName, String menuSummary, String item, int identifier) {
-//        int totalPrice = 0;
-//
-//        try {
-//            JSONArray jsonArray = new JSONArray(item);
+    public void handleAdminTableMenu(Map<String, String> data) {
 
-//            for (int i = 0; i < jsonArray.length(); i++) {
-//                JSONObject jsonObject = jsonArray.getJSONObject(i);
-//                totalPrice = totalPrice + jsonObject.getInt("price");
-//
-//            }
-//            Log.d(TAG, "adminTableMenu totalPrice: " + totalPrice);
-//
-//        } catch (JSONException e) {
-//            e.printStackTrace();
-//        }
-//
-//        Intent intent = new Intent(this, AdminPaymentAfterPopup.class);
-//        intent.putExtra("menuSummary", menuSummary);
-//        intent.putExtra("totalPrice", totalPrice);
-//        intent.putExtra("totalMenuList", item);
-//        intent.putExtra("tableName", tableName);
-//        intent.putExtra("identifier", identifier);
-//
-//        requestCode = (int) System.currentTimeMillis();
-//
-//        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-//        PendingIntent pendingIntent = PendingIntent.getActivity(this, requestCode, intent, PendingIntent.FLAG_IMMUTABLE);
-//
-//        try {
-//            pendingIntent.send();
-//        } catch (PendingIntent.CanceledException e) {
-//            e.printStackTrace();
-//        }
-//    }
+        Intent intent = new Intent(this, Admin.class);
+        intent.putExtra("tableRequest", gson.toJson(data));
+
+        requestCode = (int) System.currentTimeMillis();
+
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, requestCode, intent, PendingIntent.FLAG_IMMUTABLE);
+
+        try {
+            pendingIntent.send();
+        } catch (PendingIntent.CanceledException e) {
+            e.printStackTrace();
+        }
+    }
 
 //    public void handleAdminTableInformation(String gender, String guestNumber, String tableName) {
 //        Intent intent = new Intent(this, Admin.class);
@@ -233,7 +220,6 @@ public class FCM extends FirebaseMessagingService {
         Map<String, String> tableRequest = new HashMap<>();
         tableRequest.put("request", request);
         tableRequest.put("tableName", tableName);
-        Gson gson = new Gson();
 
         intent.putExtra("tableRequest", gson.toJson(tableRequest));
 

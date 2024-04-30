@@ -124,6 +124,7 @@ public class Login extends AppCompatActivity {
                         } else {
                             Toast.makeText(Login.this, R.string.networkError, Toast.LENGTH_SHORT).show();
                         }
+                        return null;
                     }
 
                     @Override
@@ -203,6 +204,7 @@ public class Login extends AppCompatActivity {
                         } else {
                             Toast.makeText(Login.this, R.string.networkError, Toast.LENGTH_SHORT).show();
                         }
+                        return null;
                     }
 
                     @Override
@@ -244,6 +246,7 @@ public class Login extends AppCompatActivity {
                 } else {
                     Toast.makeText(Login.this, "네트워크 오류가 발생하였습니다. 다시 시도해주세요.", Toast.LENGTH_SHORT).show();
                 }
+                return null;
             }
 
             @Override
@@ -259,7 +262,7 @@ public class Login extends AppCompatActivity {
         Intent intent = new Intent(getApplicationContext(), c);
         MyData myData = new MyData(sendString,
                 tableFromDB,
-                PaymentCategory.UNSELECTED.getValue(),
+                PaymentCategory.UNSELECTED,
                 false,
                 false,
                 0,
@@ -275,7 +278,7 @@ public class Login extends AppCompatActivity {
 
         SharedPreferences sharedPreferences = getSharedPreferences("AdminInfo", MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        Gson gson =new Gson();
+        Gson gson = new Gson();
 
         editor.putString("id", id);
         editor.putBoolean("isFcmExist", false);
@@ -327,6 +330,7 @@ public class Login extends AppCompatActivity {
                     }else{
                         Log.d(TAG, "onResponse table isNotSuccessful");
                     }
+                    return null;
                 }
                 @Override
                 public void onFailure(Call<TableListDTO> call, Throwable t) {

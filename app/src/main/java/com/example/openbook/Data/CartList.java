@@ -2,6 +2,7 @@ package com.example.openbook.Data;
 
 
 import com.example.openbook.CartCategory;
+import com.google.gson.annotations.Expose;
 
 public class CartList {
 
@@ -12,7 +13,7 @@ public class CartList {
 
     int originalPrice;
 
-    public CartList(String name, int price, int quantity, int originalPrice,CartCategory cartCategory) {
+    public CartList(String name, int price, int quantity, int originalPrice, CartCategory cartCategory) {
         this.menuName = name;
         this.menuPrice = price;
         this.menuQuantity = quantity;
@@ -25,6 +26,7 @@ public class CartList {
         this.menuQuantity = quantity;
         this.cartCategory = cartCategory;
     }
+
 
     public CartCategory getCartCategory() {
         return cartCategory;
