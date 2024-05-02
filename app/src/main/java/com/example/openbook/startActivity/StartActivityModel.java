@@ -34,7 +34,6 @@ public class StartActivityModel {
                if(response.isSuccessful()){
                     callback.apply(response.body());
                }
-               return null;
            }
 
            @Override

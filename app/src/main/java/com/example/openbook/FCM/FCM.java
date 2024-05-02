@@ -69,7 +69,6 @@ public class FCM extends FirebaseMessagingService {
             @Override
             public void onResponse(Call<SuccessOrNot> call, Response<SuccessOrNot> response) {
                 Log.d(TAG, "onResponse save fcm token: " + response.body().getResult());
-                return null;
             }
 
             @Override
@@ -102,6 +101,7 @@ public class FCM extends FirebaseMessagingService {
         switch (data.get("request")){
             case "PayNow" :
             case "End" :
+            case "PayLater":
                 handleAdminPaymentNow(data.get("request"), data.get("tableName"));
                 break;
 

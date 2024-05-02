@@ -13,16 +13,19 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.openbook.Adapter.AdminPopUpAdapter;
 import com.example.openbook.Adapter.AdminTableAdapter;
+import com.example.openbook.CartCategory;
 import com.example.openbook.Data.AdminData;
 import com.example.openbook.BuildConfig;
-import com.example.openbook.Chatting.DBHelper;
+import com.example.openbook.Data.CartList;
 import com.example.openbook.PaymentCategory;
+import com.example.openbook.kakaopay.KakaoPay;
 import com.example.openbook.retrofit.AdminTableDTO;
 import com.example.openbook.Data.AdminTableList;
 import com.example.openbook.Data.OrderList;
@@ -37,11 +40,10 @@ import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -60,8 +62,6 @@ public class Admin extends AppCompatActivity {
     String gender, guestNumber, tableName, tableStatement, menuName;
     int totalPrice, tableIdentifier;
 
-    DBHelper dbHelper;
-    int version = 2;
 
     SharedPreferences sharedPreference;
     SharedPreferences.Editor editor;
@@ -110,14 +110,10 @@ public class Admin extends AppCompatActivity {
         if (adminData.getAdminTableLists() != null) {
             Log.d(TAG, "adminTableList size : " + adminData.getAdminTableLists().size());
             adminTableLists = adminData.getAdminTableLists();
-            Log.i(TAG, "adminTableList not null: " + gson.toJson(adminTableLists));
-
             adapter.setAdapterItem(adminTableLists);
 
         } else {
             adminTableLists = loadAdminTableList();
-            Log.i(TAG, "adminTableList  " + gson.toJson(adminTableLists));
-
             adminData.setAdminTableLists(adminTableLists);
             adapter.setAdapterItem(adminTableLists);
             Log.d(TAG, "loadAdminTableList Adapter");
@@ -199,11 +195,6 @@ public class Admin extends AppCompatActivity {
         adminSidebarInfo = findViewById(R.id.admin_sidebar_info);
         adminSidebarPay = findViewById(R.id.admin_sidebar_pay);
 
-
-        dbHelper = new DBHelper(Admin.this, version);
-        version++;
-
-
     }
 
 
@@ -225,10 +216,10 @@ public class Admin extends AppCompatActivity {
             switch (request) {
                 case "PayNow":
                 case "End":
+                case "PayLater":
                     updateTable(request, tableName, tableNumber);
                     break;
                 case "Order":
-
                     String items = requestJson.get("items").getAsString();
                     JsonArray jsonArray = gson.fromJson(items, JsonArray.class);
                     String orderItemName = requestJson.get("orderItemName").getAsString();
@@ -237,27 +228,6 @@ public class Admin extends AppCompatActivity {
                     break;
             }
         }
-
-
-        gender = null;
-        gender = getIntent().getStringExtra("gender");
-//        editor.putString(tableName + "gender", gender);
-
-        guestNumber = null;
-        guestNumber = getIntent().getStringExtra("guestNumber");
-//        editor.putString(tableName + "guestNumber", guestNumber);
-
-
-        tableName = null;
-        tableName = getIntent().getStringExtra("tableName");
-
-        tableStatement = getIntent().getStringExtra("tableStatement");
-//        editor.putString(tableName + "tableStatement", tableStatement);
-
-//        tableIdentifier = getIntent().getIntExtra("tableIdentifier", 0);
-//        Log.d(TAG, "Intent tableIdentifier: " + tableIdentifier);
-//        editor.putInt(tableName + "tableIdentifier", tableIdentifier);
-//        editor.commit();
 
 
         if (menuName != null) {
@@ -296,38 +266,6 @@ public class Admin extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-
-//        if (gender != null) {
-//            Log.d(TAG, "gender not null: " + gender);
-//            int tableNameInt = Integer.parseInt(tableName.replace("table", "")) - 1;
-//            adminTableList.get(tableNameInt).setAdminTableGender(gender);
-//            adminTableList.get(tableNameInt).setAdminTableGuestNumber(guestNumber);
-//            // 이것도 쉐어드에 저장을 하고, 삭제하는 것으로..!
-//
-//        } else if (tableStatement != null) {
-//            Log.d(TAG, "tableStatement not null: " + tableStatement);
-//
-//            int tableNameInt = Integer.parseInt(tableName.replace("table", "")) - 1;
-//            Log.d(TAG, "tableNameInt: " + tableNameInt);
-//            adminTableList.get(tableNameInt).setAdminTableStatement(tableStatement);
-//            adminTableList.get(tableNameInt).setViewType(1);
-//
-//            editor.putInt(tableName + "viewType", 1);
-//            editor.commit();
-//
-//            adminTableList.get(tableNameInt).setAdminTableIdentifier(tableIdentifier);
-//
-//
-//        } else if (menuName != null) {
-//            int tableNameInt = Integer.parseInt(tableName.replace("table", "")) - 1;
-//            adminTableList.get(tableNameInt).setAdminTableMenu(menuName);
-//            Log.d(TAG, "setAdminTableMenu: " + menuName);
-//            adminTableList.get(tableNameInt).setAdminTablePrice(String.valueOf(totalPrice));
-//            Log.d(TAG, "setAdminTablePrice: " + totalPrice);
-//
-//        }
-
-
         appbarAdminSales.setOnClickListener(v -> {
             //매출 액티비티가 나온다
             startActivityClass(AdminSales.class);
@@ -343,13 +281,11 @@ public class Admin extends AppCompatActivity {
 
         adapter.setOnItemClickListener((view, position) -> {
 
-            Log.d(TAG, "onItemClick: " + position);
-
             adminSidebarMenu.setOnClickListener(v -> {
 
-                if (adminData.getAdminTableLists().get(position).getAdminTableMenu() != null ||
+                if (adminData.getAdminTableLists().get(position).getAdminTablePrice() != null ||
                         adminData.getAdminTableLists().get(position).getAdminTableStatement() != null) {
-//                    showReceiptDialog(position);
+                    showReceiptDialog(position);
                 } else {
                     dialogManager.noButtonDialog(Admin.this, "빈 좌석이거나 아직 주문하지 않은 좌석입니다.");
 
@@ -387,80 +323,84 @@ public class Admin extends AppCompatActivity {
                     requestTableInfo(position + 1);
                 }
 
-
                 tableInfoClose.setOnClickListener(v1 -> dlg.dismiss());
             });
 
             adminSidebarPay.setOnClickListener(v -> {
 
-                // sqlite에서 정보 날리고, 서버로 데이터 보낼겨
-                ArrayList<OrderList> orderLists = new ArrayList<>();
-                orderLists = dbHelper.fetchMenuDetails(tableName, orderLists);
-
-//                if (adminTableList.get(position).getAdminTablePrice() != null) {
-//                    totalPrice = Integer.parseInt(adminTableList.get(position).getAdminTablePrice());
-//                    // 여기에 카카오 페이를 붙이겠읍니다.....
-//                    Intent intent = new Intent(Admin.this, KakaoPay.class);
-//                    intent.putExtra("menuName", getOrderMenuName(orderLists));
-//                    intent.putExtra("menuPrice", totalPrice);
-//                    intent.putExtra("tableName", tableName);
-//                    intent.putExtra("jsonOrderList", getJson(orderLists));
-//                    intent.putExtra("paymentStyle", "after");
-//                    intent.putExtra("get_id", id);
-//                    startActivity(intent);
-//                } else {
-//                    dialogManager.noButtonDialog(Admin.this, "빈 좌석이거나 아직 주문하지 않은 좌석입니다.");
-//                }
-
-
+                if (adminData.getAdminTableLists().get(position).getAdminTablePrice() != null) {
+                    String tableName = adminData.getAdminTableLists().get(position).getAdminTableNumber();
+                    String tablePrice = adminData.getAdminTableLists().get(position).getAdminTablePrice();
+                    totalPrice = removeCommas(tablePrice);
+                    // 여기에 카카오 페이를 붙이겠읍니다.....
+                    Intent intent = new Intent(Admin.this, KakaoPay.class);
+                    intent.putExtra("menuName", getOrderItemName(tableName));
+                    intent.putExtra("menuPrice", totalPrice);
+                    intent.putExtra("tableName", tableName);
+                    intent.putExtra("jsonOrderList", getJson(orderLists));
+                    intent.putExtra("paymentStyle", PaymentCategory.LATER);
+                    startActivity(intent);
+                } else {
+                    dialogManager.noButtonDialog(Admin.this, "빈 좌석이거나 아직 주문하지 않은 좌석입니다.");
+                }
             });
-
         });
 
     }
 
-//    public void showReceiptDialog(int position) {
-//        Dialog dialog = new Dialog(Admin.this);
-//        dialog.setContentView(R.layout.admin_receipt_dialog);
-//
-//        AdminPopUpAdapter adminReceiptAdapter = new AdminPopUpAdapter();
-//
-//        ArrayList<OrderList> adminOrderList = new ArrayList<>();
-//
-//        if (adminTableList.get(position).getViewType() == 0) {
-//
-//            adminOrderList = dbHelper.fetchMenuDetails(tableName, adminOrderList);
-//
-//        } else {
-//            OrderData orderData = new OrderData();
-//
-//            String data = orderData.getOrderData(tableName, tableIdentifier);
-//            Log.d(TAG, "showReceiptDialog data: " + data);
-//
-//            adminOrderList = orderData.setArrayList(tableName, data, adminOrderList);
-//        }
-//
-//
-//        TextView adminReceiptCancel = dialog.findViewById(R.id.admin_receipt_cancel);
-//        TextView adminReceiptTotalPrice = dialog.findViewById(R.id.admin_receipt_totalPrice);
-//        RecyclerView adminReceiptRecyclerView = dialog.findViewById(R.id.admin_receipt_recyclerView);
-//
-//        adminReceiptRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-//        adminReceiptRecyclerView.setAdapter(adminReceiptAdapter);
-//        adminReceiptAdapter.setAdapterItem(adminOrderList);
-//
-//        int getPrice = Integer.parseInt(adminTableList.get(position).getAdminTablePrice());
-//
-//        String totalPrice = addCommasToNumber(getPrice);
-//
-//        adminReceiptTotalPrice.setText(totalPrice);
-//
-//        dialog.show();
-//
-//        adminReceiptCancel.setOnClickListener(view -> {
-//            dialog.dismiss();
-//        });
-//    }
+
+    public void showReceiptDialog(int position) {
+
+        Dialog dialog = new Dialog(Admin.this);
+        dialog.setContentView(R.layout.admin_receipt_dialog);
+
+        ArrayList<OrderList> orderLists = new ArrayList<>();
+        String clickTable = adminTableLists.get(position).getAdminTableNumber();
+        String sharedOrderList = sharedPreference.getString(clickTable, null);
+        Log.d(TAG, "showReceiptDialog orderList: " + sharedOrderList);
+        int price = 0;
+
+        if (sharedOrderList != null) {
+
+            JsonArray jsonArray = gson.fromJson(sharedOrderList, JsonArray.class);
+
+            for (int i = 0; i < jsonArray.size(); i++) {
+                JsonObject jsonObject = jsonArray.get(i).getAsJsonObject();
+
+                orderLists.add(new OrderList(adminTableLists.get(position).getPaymentType(),
+                        clickTable,
+                        jsonObject.get("menuName").getAsString(),
+                        jsonObject.get("menuQuantity").getAsInt(),
+                        jsonObject.get("menuPrice").getAsInt()));
+
+                price = price + jsonObject.get("menuPrice").getAsInt();
+
+            }
+
+        } else {
+            orderLists.add(new OrderList(adminTableLists.get(position).getPaymentType(),
+                    clickTable,
+                    "주문 내역이 없습니다."));
+        }
+
+
+        TextView menuReceiptCancel = dialog.findViewById(R.id.admin_receipt_cancel);
+        TextView menuReceiptTotalPrice = dialog.findViewById(R.id.admin_receipt_totalPrice);
+        RecyclerView menuReceiptRecyclerView = dialog.findViewById(R.id.admin_receipt_recyclerView);
+
+
+        AdminPopUpAdapter menuReceiptAdapter = new AdminPopUpAdapter();
+        menuReceiptRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        menuReceiptRecyclerView.setAdapter(menuReceiptAdapter);
+        menuReceiptAdapter.setAdapterItem(orderLists);
+
+        String totalPrice = addCommasToNumber(price);
+
+        menuReceiptTotalPrice.setText(totalPrice);
+        dialog.show();
+
+        menuReceiptCancel.setOnClickListener(view -> dialog.dismiss());
+    }
 
 
     public void startActivityClass(Class activity) {
@@ -474,48 +414,25 @@ public class Admin extends AppCompatActivity {
         return decimalFormat.format(number) + "원";
     }
 
-    public String getOrderMenuName(ArrayList<OrderList> orderLists) {
-
-        int menuQuantity = orderLists.size();
-
-        String menuName;
-
-        if (menuQuantity == 1) {
-            menuName = orderLists.get(0).getMenu();
-        } else {
-            menuName = orderLists.get(0).getMenu() + " 외" + (menuQuantity - 1);
-        }
-        Log.d(TAG, "menuName :" + menuName);
-
-        return menuName;
+    public int removeCommas(String price) {
+        String remove = price.replace(",", "");
+        return Integer.parseInt(remove.replace("원", ""));
     }
 
+    public String getOrderItemName(String tableName) {
+        String orderItems = sharedPreference.getString(tableName, null);
+        Type type = new TypeToken<ArrayList<CartList>>() {
+        }.getType();
+        ArrayList<CartList> orderLists = gson.fromJson(orderItems,type);
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
-//    public String getJson(ArrayList<OrderList> list) {
-//        JSONObject jsonObject = new JSONObject();
-//        JSONArray menujArray = new JSONArray();//배열이 필요할때
-//
-//        try {
-//            for (int i = 0; i < list.size(); i++)//배열
-//            {
-//                JSONObject sObject = new JSONObject();//배열 내에 들어갈 json
-//                sObject.put("menu", list.get(i).getMenu());
-//                sObject.put("quantity", list.get(i).getQuantity());
-//                sObject.put("price", list.get(i).getPrice());
-//                menujArray.put(sObject);
-//            }
-//
-//            jsonObject.put("table", tableName);
-//            jsonObject.put("item", menujArray);
-//
-//            Log.d(TAG, "getJson: " + jsonObject);
-//
-//        } catch (JSONException e) {
-//            e.printStackTrace();
-//        }
-//        return jsonObject.toString();
-//    }
+        String orderItemName = orderLists.stream()
+                .map(cartItem -> cartItem.getMenuName() + " " + cartItem.getMenuQuantity() + "개")
+                .collect(Collectors.joining(", "));
+
+        Log.d(TAG, "getOrderItemName: " + orderItemName);
+
+        return orderItemName;
+    }
 
 
 //    public void deleteLocalData() {
@@ -607,7 +524,7 @@ public class Admin extends AppCompatActivity {
         ArrayList<OrderList> orderLists = new ArrayList<>();
         switch (request) {
             case "PayNow":
-                orderLists.add(new OrderList(PaymentCategory.NOW.getValue(), tableName, tableName + "선불 좌석 이용 시작하였습니다."));
+                orderLists.add(new OrderList(PaymentCategory.NOW.getValue(), tableName, tableName + " 선불 좌석 이용 시작하였습니다."));
                 dialogManager.popUpAdmin(this, orderLists).show();
 
                 adminData.getAdminTableLists().get(tableNumber).setPaymentType(PaymentCategory.NOW.getValue());
@@ -623,19 +540,28 @@ public class Admin extends AppCompatActivity {
                 break;
 
             case "End":
-                orderLists.add(new OrderList(PaymentCategory.NOW.getValue(), tableName, tableName + "선불 좌석 이용 종료하였습니다."));
+                orderLists.add(new OrderList(PaymentCategory.NOW.getValue(), tableName, tableName + " 선불 좌석 이용 종료하였습니다."));
                 dialogManager.popUpAdmin(this, orderLists).show();
 
-                adminData.getAdminTableLists().get(tableNumber).setPaymentType(PaymentCategory.UNSELECTED.getValue());
-                adminData.getAdminTableLists().get(tableNumber).setAdminTableStatement(null);
-                adminData.getAdminTableLists().get(tableNumber).setAdminTableGender(null);
-                adminData.getAdminTableLists().get(tableNumber).setAdminTableMenu(null);
-                adminData.getAdminTableLists().get(tableNumber).setAdminTablePrice(null);
-                adminData.getAdminTableLists().get(tableNumber).setAdminTableGuestNumber(null);
-                adminData.getAdminTableLists().get(tableNumber).setAdminTableIdentifier(0);
+                adminData.getAdminTableLists().get(tableNumber).getAdminTableNumber();
                 adapter.notifyItemChanged(tableNumber);
 
                 editor.putString("adminTableList", gson.toJson(adminData.getAdminTableLists()));
+                editor.commit();
+                break;
+
+            case "PayLater":
+                orderLists.add(new OrderList(PaymentCategory.NOW.getValue(), tableName, tableName + " 후불 좌석 이용 시작하였습니다."));
+                dialogManager.popUpAdmin(this, orderLists).show();
+
+                adminData.getAdminTableLists().get(tableNumber).setPaymentType(PaymentCategory.LATER.getValue());
+
+                adminTableLists = new ArrayList<>();
+                adminTableLists = adminData.getAdminTableLists();
+
+                adapter.notifyItemChanged(tableNumber);
+
+                editor.putString("adminTableList", gson.toJson(adminTableLists));
                 editor.commit();
                 break;
 
@@ -649,10 +575,9 @@ public class Admin extends AppCompatActivity {
                           int totalPrice) {
 
         ArrayList<OrderList> orderLists = new ArrayList<>();
-        Log.d(TAG, "orderMenu: ");
+        Log.d(TAG, "orderMenu orderItemName: " + orderItemName);
 
         for (int i = 0; i < items.size(); i++) {
-
             JsonObject item = items.get(i).getAsJsonObject();
 
             String menuName = item.get("menuName").getAsString();
@@ -661,23 +586,83 @@ public class Admin extends AppCompatActivity {
 
             orderLists.add(new OrderList(PaymentCategory.LATER.getValue(),
                     tableName, menuName, menuPrice, menuQuantity));
-
         }
 
-        Log.d(TAG, "orderMenu orderList: " + gson.toJson(orderLists));
-
         dialogManager.popUpAdmin(this, orderLists).show();
-        Log.d(TAG, "orderMenu dialog show");
 
-        adminData.getAdminTableLists().get(tableNumber).setAdminTableMenu(orderItemName);
-        adminData.getAdminTableLists().get(tableNumber).setAdminTablePrice(String.valueOf(totalPrice));
+        String oldPrice = adminData.getAdminTableLists().get(tableNumber).getAdminTablePrice();
+
+        if (oldPrice != null) {
+            int newPrice = removeCommas(oldPrice) + totalPrice;
+            adminData.getAdminTableLists().get(tableNumber).setAdminTablePrice(addCommasToNumber(newPrice));
+        } else {
+            adminData.getAdminTableLists().get(tableNumber).setAdminTablePrice(addCommasToNumber(totalPrice));
+        }
 
         adminTableLists = new ArrayList<>();
         adminTableLists = adminData.getAdminTableLists();
 
         adapter.notifyItemChanged(tableNumber);
-
         editor.putString("adminTableList", gson.toJson(adminTableLists));
+        editor.commit();
+
+        updateOrderList(tableName, items);
+
+    }
+
+    public void updateOrderList(String tableName, JsonArray newOrder) {
+        String orderItems = sharedPreference.getString(tableName, null);
+
+        ArrayList<CartList> previousOrderList = new ArrayList<>();
+
+        if (orderItems != null && !orderItems.isEmpty()) {
+            Type type = new TypeToken<ArrayList<CartList>>() {
+            }.getType();
+            previousOrderList = gson.fromJson(orderItems, type);
+
+            boolean found = false;
+            for (int i = 0; i < newOrder.size(); i++) {
+                JsonObject item = newOrder.get(i).getAsJsonObject();
+                String menuName = item.get("menuName").getAsString();
+                int menuQuantity = item.get("menuQuantity").getAsInt();
+                int menuPrice = item.get("menuPrice").getAsInt();
+
+                for (int j = 0; j < previousOrderList.size(); j++) {
+                    if (previousOrderList.get(j).getMenuName().equals(menuName)) {
+
+                        int oldQuantity = previousOrderList.get(i).getMenuQuantity();
+                        int newQuantity = oldQuantity + menuQuantity;
+                        previousOrderList.get(i).setMenuQuantity(newQuantity);
+
+                        int oldPrice = previousOrderList.get(i).getMenuPrice();
+                        int newPrice = oldPrice + menuPrice;
+                        previousOrderList.get(i).setMenuPrice(newPrice);
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found) {
+                    previousOrderList.add(new CartList(menuName,
+                            menuPrice, menuQuantity, 0, CartCategory.MENU));
+                }
+                found = false;
+            }
+
+        } else {
+
+            for (int i = 0; i < newOrder.size(); i++) {
+                JsonObject item = newOrder.get(i).getAsJsonObject();
+
+                String menuName = item.get("menuName").getAsString();
+                int menuPrice = item.get("menuPrice").getAsInt();
+                int menuQuantity = item.get("menuQuantity").getAsInt();
+
+                previousOrderList.add(new CartList(menuName, menuPrice, menuQuantity, 0, CartCategory.MENU));
+            }
+
+        }
+        editor.putString(tableName, gson.toJson(previousOrderList));
         editor.commit();
     }
 

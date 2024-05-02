@@ -213,7 +213,6 @@ public class Table extends AppCompatActivity {
                             }
                         }
                     }
-                    return null;
                 }
 
                 @Override
@@ -340,7 +339,6 @@ public class Table extends AppCompatActivity {
                     }else{
                         Log.d(TAG, "onResponse tableInformation isNotSuccessful");
                     }
-                    return null;
                 }
 
                 @Override
@@ -488,7 +486,6 @@ public class Table extends AppCompatActivity {
             public void onResponse(Call<TableInformationDTO> call, Response<TableInformationDTO> response) {
                 Log.d(TAG, "onResponse: " + response.body().getResult());
                 callback.onResponse(call, response);
-                return null;
             }
 
             @Override
@@ -700,7 +697,6 @@ public class Table extends AppCompatActivity {
             @Override
             public void onResponse(Call<SuccessOrNot> call, Response<SuccessOrNot> response) {
 
-                return null;
             }
 
             @Override

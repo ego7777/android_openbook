@@ -168,7 +168,6 @@ public class KakaoPay extends AppCompatActivity {
                 }else{
                     Log.d(TAG, "onResponse isNotSuccessful");
                 }
-                return null;
             }
 
             @Override
@@ -217,13 +216,11 @@ public class KakaoPay extends AppCompatActivity {
 
                             startActivity(intent);
                         }
-
                     } catch (JSONException e) {
 
                     }
 
                 }
-                return null;
             }
 
             @Override

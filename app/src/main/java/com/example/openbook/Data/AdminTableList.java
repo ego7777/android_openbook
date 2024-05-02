@@ -5,6 +5,8 @@ import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
 
+import com.example.openbook.PaymentCategory;
+
 import java.io.Serializable;
 
 public class AdminTableList implements Parcelable {
@@ -137,5 +139,15 @@ public class AdminTableList implements Parcelable {
         parcel.writeString(adminTableStatement);
         parcel.writeInt(adminTableIdentifier);
         parcel.writeInt(paymentType);
+    }
+
+    public void init(){
+        adminTableStatement = null;
+        adminTableMenu = null;
+        adminTablePrice = null;
+        adminTableGender = null;
+        adminTableGuestNumber = null;
+        adminTableIdentifier = 0;
+        paymentType = PaymentCategory.UNSELECTED.getValue();
     }
 }

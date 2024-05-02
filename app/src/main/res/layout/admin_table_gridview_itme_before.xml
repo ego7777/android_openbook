@@ -20,9 +20,19 @@
         android:id="@+id/admin_grid_statement"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="menu"
+        android:text="선불 좌석 이용"
         android:textColor="@color/black"
         android:textSize="20sp"
         android:padding="10dp"/>
+
+    <TextView
+        android:id="@+id/admin_grid_price"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="77,000원"
+        android:textColor="@color/black"
+        android:textSize="20sp"
+        android:padding="10dp"/>
+
 
 </LinearLayout>
