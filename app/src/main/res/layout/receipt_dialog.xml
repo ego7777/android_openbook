@@ -14,7 +14,7 @@
         android:background="@color/receipt_gray">
 
         <TextView
-            android:id="@+id/admin_receipt_cancel"
+            android:id="@+id/receipt_cancel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="X"
@@ -42,7 +42,7 @@
 
 
         <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/admin_receipt_recyclerView"
+            android:id="@+id/receipt_recyclerView"
             android:layout_width="match_parent"
             android:layout_height="250dp"
             android:layout_marginTop="20dp" />
@@ -73,7 +73,7 @@
 
 
             <TextView
-                android:id="@+id/admin_receipt_totalPrice"
+                android:id="@+id/receipt_total_price"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="right"

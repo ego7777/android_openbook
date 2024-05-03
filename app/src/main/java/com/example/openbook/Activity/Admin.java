@@ -7,6 +7,7 @@ import android.icu.text.DecimalFormat;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.Pair;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -285,7 +286,9 @@ public class Admin extends AppCompatActivity {
 
                 if (adminData.getAdminTableLists().get(position).getAdminTablePrice() != null ||
                         adminData.getAdminTableLists().get(position).getAdminTableStatement() != null) {
-                    showReceiptDialog(position);
+
+                    Pair<ArrayList<OrderList>, String> pair = getReceiptData(position);
+                    dialogManager.showReceiptDialog(this, pair.first, pair.second).show();
                 } else {
                     dialogManager.noButtonDialog(Admin.this, "빈 좌석이거나 아직 주문하지 않은 좌석입니다.");
 
@@ -328,17 +331,19 @@ public class Admin extends AppCompatActivity {
 
             adminSidebarPay.setOnClickListener(v -> {
 
-                if (adminData.getAdminTableLists().get(position).getAdminTablePrice() != null) {
-                    String tableName = adminData.getAdminTableLists().get(position).getAdminTableNumber();
-                    String tablePrice = adminData.getAdminTableLists().get(position).getAdminTablePrice();
+                AdminTableList table = adminData.getAdminTableLists().get(position);
+
+                if (table.getAdminTablePrice() != null) {
+                    String tableName = table.getAdminTableNumber();
+                    String tablePrice =table.getAdminTablePrice();
                     totalPrice = removeCommas(tablePrice);
-                    // 여기에 카카오 페이를 붙이겠읍니다.....
+
                     Intent intent = new Intent(Admin.this, KakaoPay.class);
-                    intent.putExtra("menuName", getOrderItemName(tableName));
-                    intent.putExtra("menuPrice", totalPrice);
+                    intent.putExtra("itemName", getOrderItemName(tableName));
+                    intent.putExtra("totalPrice", totalPrice);
                     intent.putExtra("tableName", tableName);
-                    intent.putExtra("jsonOrderList", getJson(orderLists));
-                    intent.putExtra("paymentStyle", PaymentCategory.LATER);
+//                    intent.putExtra("jsonOrderList", getJson(orderLists));
+//                    intent.putExtra("paymentStyle", PaymentCategory.LATER);
                     startActivity(intent);
                 } else {
                     dialogManager.noButtonDialog(Admin.this, "빈 좌석이거나 아직 주문하지 않은 좌석입니다.");
@@ -349,15 +354,12 @@ public class Admin extends AppCompatActivity {
     }
 
 
-    public void showReceiptDialog(int position) {
-
-        Dialog dialog = new Dialog(Admin.this);
-        dialog.setContentView(R.layout.admin_receipt_dialog);
+    public Pair<ArrayList<OrderList>, String> getReceiptData(int position) {
 
         ArrayList<OrderList> orderLists = new ArrayList<>();
         String clickTable = adminTableLists.get(position).getAdminTableNumber();
         String sharedOrderList = sharedPreference.getString(clickTable, null);
-        Log.d(TAG, "showReceiptDialog orderList: " + sharedOrderList);
+
         int price = 0;
 
         if (sharedOrderList != null) {
@@ -383,23 +385,9 @@ public class Admin extends AppCompatActivity {
                     "주문 내역이 없습니다."));
         }
 
-
-        TextView menuReceiptCancel = dialog.findViewById(R.id.admin_receipt_cancel);
-        TextView menuReceiptTotalPrice = dialog.findViewById(R.id.admin_receipt_totalPrice);
-        RecyclerView menuReceiptRecyclerView = dialog.findViewById(R.id.admin_receipt_recyclerView);
-
-
-        AdminPopUpAdapter menuReceiptAdapter = new AdminPopUpAdapter();
-        menuReceiptRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        menuReceiptRecyclerView.setAdapter(menuReceiptAdapter);
-        menuReceiptAdapter.setAdapterItem(orderLists);
-
         String totalPrice = addCommasToNumber(price);
 
-        menuReceiptTotalPrice.setText(totalPrice);
-        dialog.show();
-
-        menuReceiptCancel.setOnClickListener(view -> dialog.dismiss());
+        return Pair.create(orderLists, totalPrice);
     }
 
 
@@ -628,15 +616,17 @@ public class Admin extends AppCompatActivity {
                 int menuPrice = item.get("menuPrice").getAsInt();
 
                 for (int j = 0; j < previousOrderList.size(); j++) {
-                    if (previousOrderList.get(j).getMenuName().equals(menuName)) {
+                    CartList orderItem = previousOrderList.get(j);
 
-                        int oldQuantity = previousOrderList.get(i).getMenuQuantity();
+                    if (orderItem.getMenuName().equals(menuName)) {
+
+                        int oldQuantity = orderItem.getMenuQuantity();
                         int newQuantity = oldQuantity + menuQuantity;
-                        previousOrderList.get(i).setMenuQuantity(newQuantity);
+                        orderItem.setMenuQuantity(newQuantity);
 
-                        int oldPrice = previousOrderList.get(i).getMenuPrice();
+                        int oldPrice = orderItem.getMenuPrice();
                         int newPrice = oldPrice + menuPrice;
-                        previousOrderList.get(i).setMenuPrice(newPrice);
+                        orderItem.setMenuPrice(newPrice);
                         found = true;
                         break;
                     }

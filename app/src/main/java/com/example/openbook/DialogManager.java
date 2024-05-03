@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Handler;
@@ -20,12 +21,13 @@ import android.widget.TextView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.openbook.Activity.Menu;
 import com.example.openbook.Activity.Table;
 import com.example.openbook.Adapter.AdminPopUpAdapter;
 import com.example.openbook.Chatting.ClientSocket;
 import com.example.openbook.Data.OrderList;
 import com.example.openbook.FCM.SendNotification;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 
 import java.util.ArrayList;
 
@@ -33,6 +35,7 @@ import java.util.ArrayList;
 public class DialogManager {
 
     String TAG = "DialogManagerTAG";
+    Gson gson = new Gson();
 
     public Dialog progressDialog(Context context){
         Dialog dialog = new Dialog(context);
@@ -176,6 +179,26 @@ public class DialogManager {
         Handler handler = new Handler();
 
         handler.postDelayed(dialog::dismiss, 1000);
+        return dialog;
+    }
+
+    public Dialog showReceiptDialog(Context context, ArrayList<OrderList> orderLists, String totalPrice){
+        Dialog dialog = new Dialog(context);
+        dialog.setContentView(R.layout.receipt_dialog);
+
+        TextView receiptCancel = dialog.findViewById(R.id.receipt_cancel);
+        TextView receiptTotalPrice = dialog.findViewById(R.id.receipt_total_price);
+        RecyclerView receiptRecyclerView = dialog.findViewById(R.id.receipt_recyclerView);
+
+        AdminPopUpAdapter menuReceiptAdapter = new AdminPopUpAdapter();
+        receiptRecyclerView.setLayoutManager(new LinearLayoutManager(context));
+        receiptRecyclerView.setAdapter(menuReceiptAdapter);
+        menuReceiptAdapter.setAdapterItem(orderLists);
+
+        receiptTotalPrice.setText(totalPrice);
+
+        receiptCancel.setOnClickListener(view -> dialog.dismiss());
+
         return dialog;
     }
 

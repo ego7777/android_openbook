@@ -13,10 +13,14 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.openbook.Activity.Admin;
 import com.example.openbook.Activity.Menu;
 import com.example.openbook.BuildConfig;
+import com.example.openbook.Data.AdminData;
 import com.example.openbook.Data.MyData;
 import com.example.openbook.R;
 import com.example.openbook.retrofit.RetrofitManager;
 import com.example.openbook.retrofit.RetrofitService;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.zxing.common.StringUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -36,15 +40,12 @@ public class KakaoPay extends AppCompatActivity {
     MyWebViewClient myWebViewClient;
     String tid, pgToken;
 
-    String menuName, tableName;
+    String orderItemName;
     int totalPrice;
-    String orderList;
-
-    String tempUrl = null;
-
     MyData myData;
-    String id;
+    String tableName, partnerUserId;
     RetrofitService kakaoPayService;
+    Gson gson;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -52,22 +53,20 @@ public class KakaoPay extends AppCompatActivity {
         setContentView(R.layout.kakaopay_activity);
 
         myData = (MyData) getIntent().getSerializableExtra("myData");
-        if (myData != null) {
-            Log.d(TAG, "myData id: " + myData.getId());
+
+        tableName = getIntent().getStringExtra("tableName");
+
+        if(myData != null){
+            partnerUserId = myData.getId();
+        }else{
+            partnerUserId = tableName;
         }
 
-        id = getIntent().getStringExtra("get_id");
-        Log.d(TAG, "id: " + id);
 
-        if (id == null) {
-            id = myData.getId();
-            Log.d(TAG, "id null: " + id);
-        }
+        gson = new Gson();
 
-        menuName = getIntent().getStringExtra("menuName");
+        orderItemName = getIntent().getStringExtra("orderItemName");
         totalPrice = getIntent().getIntExtra("totalPrice", 0);
-        Log.d(TAG, "totalPrice: " + totalPrice);
-        orderList = getIntent().getStringExtra("orderList");
 
         // 웹 뷰 설정
         webView = findViewById(R.id.kakaopay_webview);
@@ -94,12 +93,8 @@ public class KakaoPay extends AppCompatActivity {
             String url = request.getUrl().toString();
 
             Log.d(TAG, "shouldOverrideUrlLoading: url\n" + url);
-            Log.d(TAG, "tempUrl :" + tempUrl);
+            if (url != null && url.contains("pg_token=")) {
 
-            if (url.equals(tempUrl)) {
-                Log.d(TAG, "같은 url 들어옴");
-
-            } else if (url != null && url.contains("pg_token=")) {
                 String pg_token = url.substring(url.indexOf("pg_token=") + 9);
                 pgToken = pg_token;
                 Log.d(TAG, "pgtoken" + pgToken);
@@ -107,12 +102,7 @@ public class KakaoPay extends AppCompatActivity {
                 url = url.replace("?pg_token=" + pg_token, "");
                 Log.d(TAG, "pg_token 뺀 url: " + url);
 
-//                if (tempUrl == null) {
-                    sendApprovalRequest();
-//                }
-
-                tempUrl = url;
-
+                sendApprovalRequest();
             }
 
             if (url.contains("cancel")) {
@@ -127,28 +117,17 @@ public class KakaoPay extends AppCompatActivity {
 
             return false;
 
-        } // shouldOverrideUrlLoading
+        }
 
-    } // MyWebView
-
+    }
 
     public void sendPaymentRequest() {
-
-        try {
-            JSONObject jsonObject = new JSONObject(orderList);
-            tableName = jsonObject.getString("table");
-            Log.d(TAG, "sendPaymentRequest tableName: " + tableName);
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
 
         HashMap<String, String> paymentRequest = new HashMap<>();
         paymentRequest.put("cid", "TC0ONETIME");
         paymentRequest.put("partner_order_id", "openbook");
-//        paymentRequest.put("partner_user_id", tableName);
-        paymentRequest.put("partner_user_id", id);
-        paymentRequest.put("item_name", menuName);
+        paymentRequest.put("partner_user_id", partnerUserId);
+        paymentRequest.put("item_name", orderItemName);
         paymentRequest.put("quantity", "1");
         paymentRequest.put("total_amount", String.valueOf(totalPrice));
         paymentRequest.put("tax_free_amount", "0");
@@ -165,7 +144,7 @@ public class KakaoPay extends AppCompatActivity {
                     tid = response.body().getTid();
                     String url = response.body().getNextRedirectPcUrl();
                     webView.loadUrl(url);
-                }else{
+                } else {
                     Log.d(TAG, "onResponse isNotSuccessful");
                 }
             }
@@ -185,7 +164,7 @@ public class KakaoPay extends AppCompatActivity {
         approvedRequest.put("cid", "TC0ONETIME");
         approvedRequest.put("tid", tid);
         approvedRequest.put("partner_order_id", "openbook");
-        approvedRequest.put("partner_user_id", id);
+        approvedRequest.put("partner_user_id", partnerUserId);
         approvedRequest.put("pg_token", pgToken);
 
         Call<KakaoPayApproveResponseDTO> call = kakaoPayService.requestApprovedPayment(BuildConfig.KAKAOPAY_ADMIN_KEY, approvedRequest);
@@ -195,30 +174,20 @@ public class KakaoPay extends AppCompatActivity {
                 Log.d(TAG, "onResponse kakao approved: " + response.body());
                 if (response.isSuccessful()) {
                     String approvedAt = response.body().getApprovedAt();
-                    try {
-                        JSONObject succeedOrderList = new JSONObject(orderList);
-                        succeedOrderList.put("approvedAt", approvedAt);
 
-                        if (id.equals("admin")) {
-                            Intent intent = new Intent(KakaoPay.this, Admin.class);
-                            intent.putExtra("get_id", "admin");
-                            intent.putExtra("tableName", tableName);
-                            intent.putExtra("orderList", orderList.toString());
-                            // 돌아가면 데이터 지우는 것으로.....?!
+                    if (partnerUserId.equals("admin")) {
+                        Intent intent = new Intent(KakaoPay.this, Admin.class);
+                        intent.putExtra("tableName", tableName);
+                        intent.putExtra("approvedAt", approvedAt);
+                        startActivity(intent);
 
-                            startActivity(intent);
-                            overridePendingTransition(0, 0);
-
-                        } else {
-                            Intent intent = new Intent(KakaoPay.this, Menu.class);
-                            intent.putExtra("succeedOrderList", orderList.toString());
-                            intent.putExtra("myData", myData);
-
-                            startActivity(intent);
-                        }
-                    } catch (JSONException e) {
-
+                    } else {
+                        Intent intent = new Intent(KakaoPay.this, Menu.class);
+                        intent.putExtra("myData", myData);
+                        intent.putExtra("approvedAt", approvedAt);
+                        startActivity(intent);
                     }
+
 
                 }
             }

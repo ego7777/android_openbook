@@ -16,6 +16,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.util.Pair;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ListView;
@@ -50,6 +51,7 @@ import com.example.openbook.DialogManager;
 import com.example.openbook.FCM.FCM;
 import com.example.openbook.FCM.SendNotification;
 import com.example.openbook.PaymentCategory;
+import com.example.openbook.SaveOrderDeleteData;
 import com.example.openbook.kakaopay.KakaoPay;
 import com.example.openbook.retrofit.MenuListDTO;
 import com.example.openbook.retrofit.RetrofitManager;
@@ -89,8 +91,7 @@ public class Menu extends AppCompatActivity {
     ArrayList<CartList> cartLists;
     ArrayList<TableList> tableList;
     ListView menuNavigation;
-
-
+    String approvedAt;
     SharedPreferences sharedPreference;
     SharedPreferences.Editor editor;
 
@@ -161,17 +162,15 @@ public class Menu extends AppCompatActivity {
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, intentFilter);
 
         myData = (MyData) getIntent().getSerializableExtra("myData");
-        Log.d(TAG, "myData paymentStyle: " + myData.getPaymentCategory());
-        Log.d(TAG, "myData isOrder: " + myData.isOrder());
-        Log.d(TAG, "myData identifier: " + myData.getIdentifier());
 
         chattingDataHashMap = (HashMap<String, ChattingData>) getIntent().getSerializableExtra("chattingData");
         Log.d(TAG, "chattingData size: " + chattingDataHashMap);
 
         ticketDataHashMap = (HashMap<String, TicketData>) getIntent().getSerializableExtra("ticketData");
 
-
         tableList = (ArrayList<TableList>) getIntent().getSerializableExtra("tableList");
+
+        approvedAt = getIntent().getStringExtra("approvedAt");
 
 
         /**
@@ -190,7 +189,7 @@ public class Menu extends AppCompatActivity {
 
             sendNotification.usingTableUpdate("admin", myData.getId(), "PayNow");
             myData.setUsedTable(true);
-        }else if(myData.getPaymentCategory() == PaymentCategory.LATER && !myData.isUsedTable()){
+        } else if (myData.getPaymentCategory() == PaymentCategory.LATER && !myData.isUsedTable()) {
             sendNotification.usingTableUpdate("admin", myData.getId(), "PayLater");
             myData.setUsedTable(true);
         }
@@ -222,13 +221,13 @@ public class Menu extends AppCompatActivity {
         sharedPreference = getSharedPreferences("CustomerData", MODE_PRIVATE);
         editor = sharedPreference.edit();
 
+        cartOrderTotalPrice = findViewById(R.id.cart_order_total_price);
+        cartOrderButton = findViewById(R.id.cart_order_button);
+
         cartAdapter = new CartAdapter();
         cartLists = new ArrayList<>();
         getCartItems();
         cartRecyclerview.setAdapter(cartAdapter);
-
-        cartOrderTotalPrice = findViewById(R.id.cart_order_total_price);
-        cartOrderButton = findViewById(R.id.cart_order_button);
 
         /**
          * 안주
@@ -325,15 +324,6 @@ public class Menu extends AppCompatActivity {
         }
         menuNavigation.setAdapter(sideAdapter);
 
-        String succeedOrderList = getIntent().getStringExtra("succeedOrderList");
-        Log.d(TAG, "succeedOrderList : " + succeedOrderList);
-        Log.d(TAG, "onStart_PaymentStyle :" + myData.getPaymentCategory());
-
-        if (succeedOrderList != null) {
-            successOrder();
-            Log.d(TAG, "successOrder 성공: ");
-        }
-
 
     } // onCreate()
 
@@ -344,25 +334,13 @@ public class Menu extends AppCompatActivity {
         super.onStart();
         //액티비티가 사용자에게 보여질 때, 사용자와 상호작용 X
 
-//        String succeedOrderList = getIntent().getStringExtra("succeedOrderList");
-//        Log.d(TAG, "succeedOrderList : " + succeedOrderList);
-//        Log.d(TAG, "onStart_PaymentStyle :" + myData.getPaymentStyle());
-
-//        if (succeedOrderList != null) {
+        if(approvedAt != null){
+            orderSharedPreference();
+            successOrder();
+            //서버에 저장
 //            SaveOrderDeleteData orderSave = new SaveOrderDeleteData();
-//            try {
-//                boolean success = orderSave.orderSave(succeedOrderList);
-//
-//                if (success == true) {
-//                    successOrder();
-//                    Log.d(TAG, "successOrder 성공: ");
-//                } else {
-//                    myData.setOrder(false);
-//                }
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
-//        }
+//            boolean success = orderSave.orderSave(succeedOrderList);
+        }
 
     } //onStart()
 
@@ -399,7 +377,11 @@ public class Menu extends AppCompatActivity {
             startActivity(intent);
         });
 
-        appbarOrderList.setOnClickListener(v -> showReceiptDialog());
+
+        appbarOrderList.setOnClickListener(view -> {
+            Pair<ArrayList<OrderList>, String> pair = getReceiptData();
+            dialogManager.showReceiptDialog(Menu.this, pair.first, pair.second).show();
+        });
 
 
         /**
@@ -572,7 +554,7 @@ public class Menu extends AppCompatActivity {
                         intent.putExtra("orderItemName", getOrderItemName());
                         intent.putExtra("totalPrice", totalPrice);
                         intent.putExtra("myData", myData);
-//                        startActivity(intent);
+                        startActivity(intent);
 //                        orderSharedPreference();
                         break;
 
@@ -631,31 +613,37 @@ public class Menu extends AppCompatActivity {
 
         //shared에 저장된 내용이 있으면 기존값에 추가해서 저장
         if (orderItems != null && !orderItems.isEmpty()) {
-            Type type = new TypeToken<ArrayList<CartList>>() {}.getType();
+            Type type = new TypeToken<ArrayList<CartList>>() {
+            }.getType();
             ArrayList<CartList> orderLists = gson.fromJson(orderItems, type);
 
+            boolean found = false;
             for (int i = 0; i < cartLists.size(); i++) {
+                CartList cartItem = cartLists.get(i);
+
                 for (int j = 0; j < orderLists.size(); j++) {
-                    if (orderLists.get(j).getMenuName().equals(cartLists.get(i).getMenuName())) {
+                    if (orderLists.get(j).getMenuName().equals(cartItem.getMenuName())) {
 
                         int oldQuantity = orderLists.get(j).getMenuQuantity();
-                        int newQuantity = oldQuantity + cartLists.get(i).getMenuQuantity();
+                        int newQuantity = oldQuantity + cartItem.getMenuQuantity();
                         orderLists.get(j).setMenuQuantity(newQuantity);
 
                         int oldPrice = orderLists.get(j).getMenuPrice();
-                        int newPrice = oldPrice + cartLists.get(i).getMenuPrice();
+                        int newPrice = oldPrice + cartItem.getMenuPrice();
                         orderLists.get(j).setMenuPrice(newPrice);
-                        break;
-                    }else{
-                        orderLists.add(new CartList(cartLists.get(i).getMenuName(),
-                                cartLists.get(i).getMenuPrice(),
-                                cartLists.get(i).getMenuQuantity(),
-                                cartLists.get(i).getOriginalPrice(),
-                                cartLists.get(i).getCartCategory()));
+                        found = true;
                         break;
                     }
-
                 }
+
+                if (!found) {
+                    orderLists.add(new CartList(cartItem.getMenuName(),
+                            cartItem.getMenuPrice(),
+                            cartItem.getMenuQuantity(),
+                            cartItem.getOriginalPrice(),
+                            cartItem.getCartCategory()));
+                }
+                found = false;
             }
 
             editor.putString("orderItems", gson.toJson(orderLists));
@@ -664,6 +652,7 @@ public class Menu extends AppCompatActivity {
             editor.putString("orderItems", gson.toJson(cartLists));
             editor.commit();
         }
+
     }
 
     public void getCartItems() {
@@ -671,7 +660,8 @@ public class Menu extends AppCompatActivity {
         String cartItems = sharedPreference.getString("cartItems", null);
 
         if (cartItems != null) {
-            Type type = new TypeToken<ArrayList<CartList>>() {}.getType();
+            Type type = new TypeToken<ArrayList<CartList>>() {
+            }.getType();
             cartLists = gson.fromJson(cartItems, type);
 
             if (cartLists != null) {
@@ -687,7 +677,7 @@ public class Menu extends AppCompatActivity {
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
+
     public String getOrderList(String id, ArrayList<CartList> cart, int identifier) {
         JsonObject orderList = new JsonObject();
 
@@ -746,9 +736,9 @@ public class Menu extends AppCompatActivity {
         //안드로이드 백버튼 막기
     }
 
-    private void showReceiptDialog() {
+    private Pair<ArrayList<OrderList>, String> getReceiptData() {
         Dialog dialog = new Dialog(Menu.this);
-        dialog.setContentView(R.layout.admin_receipt_dialog);
+        dialog.setContentView(R.layout.receipt_dialog);
 
         ArrayList<OrderList> orderLists = new ArrayList<>();
 
@@ -780,35 +770,23 @@ public class Menu extends AppCompatActivity {
         }
 
 
-        TextView menuReceiptCancel = dialog.findViewById(R.id.admin_receipt_cancel);
-        TextView menuReceiptTotalPrice = dialog.findViewById(R.id.admin_receipt_totalPrice);
-        RecyclerView menuReceiptRecyclerView = dialog.findViewById(R.id.admin_receipt_recyclerView);
-
-
-        AdminPopUpAdapter menuReceiptAdapter = new AdminPopUpAdapter();
-        menuReceiptRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        menuReceiptRecyclerView.setAdapter(menuReceiptAdapter);
-        menuReceiptAdapter.setAdapterItem(orderLists);
-
         String totalPrice = addCommasToNumber(price, 1);
 
-        menuReceiptTotalPrice.setText(totalPrice);
-        dialog.show();
-
-        menuReceiptCancel.setOnClickListener(view -> dialog.dismiss());
-
+        return Pair.create(orderLists, totalPrice);
 
     }
 
 
     public String addCommasToNumber(int price, int type) {
         DecimalFormat decimalFormat = new DecimalFormat("#,###");
+        Log.d(TAG, "addCommasToNumber price: " + price);
         String totalPrice = decimalFormat.format(price) + "원";
+        Log.d(TAG, "addCommasToNumber totalPrice: " + totalPrice);
 
         int CART = 0;
         if (type == CART) {
             if (price == 0) {
-                cartOrderTotalPrice.setText("총 금액 : ");
+                cartOrderTotalPrice.setText("");
             } else {
                 cartOrderTotalPrice.setText("총 금액 : " + totalPrice);
             }
