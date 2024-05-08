@@ -1,4 +1,4 @@
-package com.example.openbook.startActivity;
+package com.example.openbook.Activity;
 
 
 import android.app.Dialog;
@@ -33,9 +33,7 @@ import retrofit2.Retrofit;
 public class SignUp extends AppCompatActivity {
     String TAG = "SignupTAG";
     boolean isIdDuplicate, isPasswordMatch, isPhoneMatch, isEmailMatch = false;
-    String id, password;
-    Dialog dialog;
-
+    String id;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -238,6 +236,10 @@ public class SignUp extends AppCompatActivity {
             }
         });
     }
+
+//    public String secretPassword(){
+//
+//    }
 
 
 }

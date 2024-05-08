@@ -26,4 +26,12 @@ public class KakaoPayApproveResponseDTO {
     public class Amount{
         String total;
     }
+
+    public String getPaymentMethodType() {
+        return paymentMethodType;
+    }
+
+    public String getPartnerUserId() {
+        return partnerUserId;
+    }
 }

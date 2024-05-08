@@ -8,7 +8,6 @@ import java.io.Serializable;
 public class MyData implements Serializable {
     String id;
     int tableFromDB;
-
     PaymentCategory paymentCategory;
     boolean isOrder;
     boolean usedTable;

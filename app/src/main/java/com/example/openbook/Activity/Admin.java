@@ -13,13 +13,12 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.openbook.Adapter.AdminPopUpAdapter;
 import com.example.openbook.Adapter.AdminTableAdapter;
 import com.example.openbook.CartCategory;
 import com.example.openbook.Data.AdminData;
@@ -66,8 +65,6 @@ public class Admin extends AppCompatActivity {
 
     SharedPreferences sharedPreference;
     SharedPreferences.Editor editor;
-
-    //다이얼로그
     ImageView tableInfoImg;
     TextView tableInfoStatement, tableInfoText, tableInfoGender, tableInfoMember;
     Button tableInfoClose;
@@ -78,6 +75,7 @@ public class Admin extends AppCompatActivity {
     Gson gson;
     String tableRequest;
     DialogManager dialogManager;
+    Dialog popUpDialog;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -290,7 +288,7 @@ public class Admin extends AppCompatActivity {
                     Pair<ArrayList<OrderList>, String> pair = getReceiptData(position);
                     dialogManager.showReceiptDialog(this, pair.first, pair.second).show();
                 } else {
-                    dialogManager.noButtonDialog(Admin.this, "빈 좌석이거나 아직 주문하지 않은 좌석입니다.");
+                    dialogManager.noButtonDialog(Admin.this, getResources().getString(R.string.unusableTable));
 
                 }
 
@@ -346,7 +344,8 @@ public class Admin extends AppCompatActivity {
 //                    intent.putExtra("paymentStyle", PaymentCategory.LATER);
                     startActivity(intent);
                 } else {
-                    dialogManager.noButtonDialog(Admin.this, "빈 좌석이거나 아직 주문하지 않은 좌석입니다.");
+                    dialogManager.noButtonDialog(Admin.this, getResources().getString(R.string.unusableTable));
+
                 }
             });
         });
@@ -453,7 +452,7 @@ public class Admin extends AppCompatActivity {
         Call<AdminTableDTO> call = service.requestTableInfo("table" + clickTable);
         call.enqueue(new Callback<AdminTableDTO>() {
             @Override
-            public void onResponse(Call<AdminTableDTO> call, Response<AdminTableDTO> response) {
+            public void onResponse(@NonNull Call<AdminTableDTO> call, @NonNull Response<AdminTableDTO> response) {
                 Log.d(TAG, "onResponse tableInfoCheck: " + response.body().getResult());
                 if (response.isSuccessful()) {
                     switch (response.body().getResult()) {
@@ -486,7 +485,7 @@ public class Admin extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<AdminTableDTO> call, Throwable t) {
+            public void onFailure(@NonNull Call<AdminTableDTO> call, @NonNull Throwable t) {
                 Log.d(TAG, "onFailure tableInfoCheck :" + t.getMessage());
             }
         });
@@ -513,7 +512,8 @@ public class Admin extends AppCompatActivity {
         switch (request) {
             case "PayNow":
                 orderLists.add(new OrderList(PaymentCategory.NOW.getValue(), tableName, tableName + " 선불 좌석 이용 시작하였습니다."));
-                dialogManager.popUpAdmin(this, orderLists).show();
+                popUpDialog = dialogManager.popUpAdmin(this, orderLists);
+                popUpDialog.show();
 
                 adminData.getAdminTableLists().get(tableNumber).setPaymentType(PaymentCategory.NOW.getValue());
                 adminData.getAdminTableLists().get(tableNumber).setAdminTableStatement("선불 좌석 이용");
@@ -529,9 +529,10 @@ public class Admin extends AppCompatActivity {
 
             case "End":
                 orderLists.add(new OrderList(PaymentCategory.NOW.getValue(), tableName, tableName + " 선불 좌석 이용 종료하였습니다."));
-                dialogManager.popUpAdmin(this, orderLists).show();
+                popUpDialog = dialogManager.popUpAdmin(this, orderLists);
+                popUpDialog.show();
 
-                adminData.getAdminTableLists().get(tableNumber).getAdminTableNumber();
+                adminData.getAdminTableLists().get(tableNumber).init();
                 adapter.notifyItemChanged(tableNumber);
 
                 editor.putString("adminTableList", gson.toJson(adminData.getAdminTableLists()));
@@ -540,7 +541,8 @@ public class Admin extends AppCompatActivity {
 
             case "PayLater":
                 orderLists.add(new OrderList(PaymentCategory.NOW.getValue(), tableName, tableName + " 후불 좌석 이용 시작하였습니다."));
-                dialogManager.popUpAdmin(this, orderLists).show();
+                popUpDialog = dialogManager.popUpAdmin(this, orderLists);
+                popUpDialog.show();
 
                 adminData.getAdminTableLists().get(tableNumber).setPaymentType(PaymentCategory.LATER.getValue());
 
@@ -576,7 +578,8 @@ public class Admin extends AppCompatActivity {
                     tableName, menuName, menuPrice, menuQuantity));
         }
 
-        dialogManager.popUpAdmin(this, orderLists).show();
+        popUpDialog = dialogManager.popUpAdmin(this, orderLists);
+        popUpDialog.show();
 
         String oldPrice = adminData.getAdminTableLists().get(tableNumber).getAdminTablePrice();
 
@@ -656,4 +659,12 @@ public class Admin extends AppCompatActivity {
         editor.commit();
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        if(popUpDialog != null && popUpDialog.isShowing()){
+            popUpDialog.dismiss();
+        }
+    }
 }

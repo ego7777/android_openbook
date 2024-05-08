@@ -2,6 +2,7 @@ package com.example.openbook.Activity;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 
@@ -27,7 +28,6 @@ import com.example.openbook.retrofit.SuccessOrNot;
 import com.example.openbook.retrofit.TableListDTO;
 import com.example.openbook.TableQuantity;
 import com.example.openbook.startActivity.LoginResponseModel;
-import com.example.openbook.startActivity.SignUp;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -78,7 +78,6 @@ public class Login extends AppCompatActivity {
 
         DialogManager dialogManager = new DialogManager();
 
-
         RetrofitManager retrofitManager = new RetrofitManager();
         Retrofit retrofit = retrofitManager.getRetrofit(BuildConfig.SERVER_IP);
         service = retrofit.create(RetrofitService.class);
@@ -99,20 +98,16 @@ public class Login extends AppCompatActivity {
                 Call<LoginResponseModel> call = service.requestLogin(id.hashCode(), password.hashCode());
                 call.enqueue(new Callback<LoginResponseModel>() {
                     @Override
-                    public void onResponse(Call<LoginResponseModel> call, Response<LoginResponseModel> response) {
+                    public void onResponse(@NonNull Call<LoginResponseModel> call, @NonNull Response<LoginResponseModel> response) {
                         if (response.isSuccessful()) {
                             progress.dismiss();
 
                             switch (response.body().getResult()) {
                                 case "success":
-                                    switch (response.body().getId()) {
-                                        case "admin":
-                                            startActivityAdmin(Admin.class, id);
-                                            break;
-
-                                        default:
-                                            startActivityCustomer(PaymentSelect.class, "myData", id);
-                                            break;
+                                    if (response.body().getId().equals("admin")) {
+                                        startActivityAdmin(Admin.class, id);
+                                    } else {
+                                        startActivityCustomer(PaymentSelect.class, "myData", id);
                                     }
                                     break;
 
@@ -127,7 +122,9 @@ public class Login extends AppCompatActivity {
                     }
 
                     @Override
-                    public void onFailure(Call<LoginResponseModel> call, Throwable t) {
+                    public void onFailure(@NonNull Call<LoginResponseModel> call, @NonNull Throwable t) {
+                        progress.dismiss();
+                        Toast.makeText(Login.this, R.string.networkError, Toast.LENGTH_SHORT).show();
                         Log.d(TAG, "onFailure Login: " + t.getMessage());
                     }
                 });
@@ -166,14 +163,16 @@ public class Login extends AppCompatActivity {
             resultLauncher.launch(signInIntent);
         });
 
-        resultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
-            if (result.getResultCode() == RESULT_OK) {
-                Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(result.getData());
-                handleSignInResult(task);
-            } else {
-                Log.d(TAG, "google login intent's result not okay");
-            }
-        });
+        resultLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK) {
+                        Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(result.getData());
+                        handleSignInResult(task);
+                    } else {
+                        Log.d(TAG, "google login intent's result not okay");
+                    }
+                });
     }
 
 
@@ -189,9 +188,9 @@ public class Login extends AppCompatActivity {
                 Call<SuccessOrNot> checkIdCall = service.requestIdDuplication(googleIdentifier.hashCode());
                 checkIdCall.enqueue(new Callback<SuccessOrNot>() {
                     @Override
-                    public void onResponse(Call<SuccessOrNot> call, Response<SuccessOrNot> response) {
+                    public void onResponse(@NonNull Call<SuccessOrNot> call, @NonNull Response<SuccessOrNot> response) {
                         if (response.isSuccessful()) {
-                            Log.d(TAG, "onResponse google login: "  + response.body().getResult());
+                            Log.d(TAG, "onResponse google login: " + response.body().getResult());
                             switch (response.body().getResult()) {
                                 case "success":
                                     googleSignIn();
@@ -206,7 +205,7 @@ public class Login extends AppCompatActivity {
                     }
 
                     @Override
-                    public void onFailure(Call<SuccessOrNot> call, Throwable t) {
+                    public void onFailure(@NonNull Call<SuccessOrNot> call, @NonNull Throwable t) {
                         Log.d(TAG, "onFailure google checkID: " + t.getMessage());
                     }
                 });
@@ -226,7 +225,7 @@ public class Login extends AppCompatActivity {
                 0000, "000-0000-0000", googleEmail);
         call.enqueue(new Callback<SuccessOrNot>() {
             @Override
-            public void onResponse(Call<SuccessOrNot> call, Response<SuccessOrNot> response) {
+            public void onResponse(@NonNull Call<SuccessOrNot> call, @NonNull Response<SuccessOrNot> response) {
                 Log.d(TAG, "onResponse google: " + response.body());
                 if (response.isSuccessful()) {
                     switch (response.body().getResult()) {
@@ -247,7 +246,7 @@ public class Login extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<SuccessOrNot> call, Throwable t) {
+            public void onFailure(@NonNull Call<SuccessOrNot> call, @NonNull Throwable t) {
                 Log.d(TAG, "onFailure google: " + t.getMessage());
             }
         });
@@ -262,7 +261,7 @@ public class Login extends AppCompatActivity {
                 PaymentCategory.UNSELECTED,
                 false,
                 false,
-                0,
+                sendString.hashCode(),
                 false);
         intent.putExtra(name, myData);
         startActivity(intent);
@@ -281,7 +280,7 @@ public class Login extends AppCompatActivity {
         editor.putBoolean("isFcmExist", false);
         editor.putString("adminTableList", gson.toJson(adminTableList));
         Log.d(TAG, "startActivityAdmin: " + gson.toJson(adminTableList));
-        editor.commit();
+        editor.apply();
 
         intent.putExtra("adminTableList", adminTableList);
         intent.putExtra("adminData", adminData);
@@ -295,21 +294,21 @@ public class Login extends AppCompatActivity {
         super.onStart();
 
 
-        if(adminTableList == null || adminTableList.isEmpty()){
+        if (adminTableList == null || adminTableList.isEmpty()) {
             adminTableList = new ArrayList<>();
 
             TableQuantity tableQuantity = new TableQuantity();
             tableQuantity.getTableQuantity(new Callback<TableListDTO>() {
                 @Override
-                public void onResponse(Call<TableListDTO> call, Response<TableListDTO> response) {
+                public void onResponse(@NonNull Call<TableListDTO> call, @NonNull Response<TableListDTO> response) {
 
-                    if(response.isSuccessful()){
-                        switch (response.body().getResult()){
-                            case "success" :
+                    if (response.isSuccessful()) {
+                        switch (response.body().getResult()) {
+                            case "success":
                                 tableFromDB = response.body().getTableCount();
 
-                                for(int i=1; i<tableFromDB+1; i++){
-                                    adminTableList.add(new AdminTableList("table"+i,
+                                for (int i = 1; i < tableFromDB + 1; i++) {
+                                    adminTableList.add(new AdminTableList("table" + i,
                                             null,
                                             null,
                                             null,
@@ -321,15 +320,16 @@ public class Login extends AppCompatActivity {
                                 Log.d(TAG, "onStart Table Size: " + adminTableList.size());
 
                                 break;
-                            case "failed" :
+                            case "failed":
                                 Log.d(TAG, "onResponse table failed: ");
                         }
-                    }else{
+                    } else {
                         Log.d(TAG, "onResponse table isNotSuccessful");
                     }
                 }
+
                 @Override
-                public void onFailure(Call<TableListDTO> call, Throwable t) {
+                public void onFailure(@NonNull Call<TableListDTO> call, @NonNull Throwable t) {
                     Log.d(TAG, "onFailure table: " + t.getMessage());
                 }
             });

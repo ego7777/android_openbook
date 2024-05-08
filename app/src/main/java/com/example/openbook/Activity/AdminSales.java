@@ -13,9 +13,14 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.openbook.BuildConfig;
+import com.example.openbook.Data.AdminData;
 import com.example.openbook.Data.AdminSalesList;
 import com.example.openbook.Data.AdminTableList;
 import com.example.openbook.R;
+import com.example.openbook.retrofit.RetrofitManager;
+import com.example.openbook.retrofit.RetrofitService;
+import com.example.openbook.retrofit.SuccessOrNot;
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.components.AxisBase;
 import com.github.mikephil.charting.components.Legend;
@@ -41,19 +46,16 @@ import java.time.temporal.WeekFields;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.FormBody;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
 
 public class AdminSales extends AppCompatActivity {
 
     String TAG = "AdminSales_TAG";
 
-    String get_id;
+    AdminData adminData;
     ArrayList<AdminTableList> adminTableList;
 
     TextView home, today, day, week, month, year;
@@ -65,19 +67,15 @@ public class AdminSales extends AppCompatActivity {
     YAxis yAxisRight;
     YAxis yAxisLeft;
 
-    OkHttpClient okHttpClient;
-    RequestBody requestBody;
-
-    Request request;
-
+    RetrofitService service;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.admin_sales);
 
-        get_id = getIntent().getStringExtra("get_id");
-        adminTableList = (ArrayList<AdminTableList>) getIntent().getSerializableExtra("adminTableList");
+        adminData = getIntent().getParcelableExtra("adminData");
+//        adminTableList = (ArrayList<AdminTableList>) getIntent().getSerializableExtra("adminTableList");
 
         home = findViewById(R.id.appbar_admin_home);
 
@@ -122,8 +120,12 @@ public class AdminSales extends AppCompatActivity {
         yAxisLeft.setAxisMinimum(0f);
         yAxisLeft.setGranularity(1f);
 
+        RetrofitManager retrofitManager = new RetrofitManager();
+        Retrofit retrofit = retrofitManager.getRetrofit(BuildConfig.SERVER_IP);
+        service = retrofit.create(RetrofitService.class);
 
-        setOkHttpClient("day");
+
+        setRetrofitClient("day");
 
 
     }
@@ -134,89 +136,45 @@ public class AdminSales extends AppCompatActivity {
 
         home.setOnClickListener(view -> {
             Intent intent = new Intent(AdminSales.this, Admin.class);
-            intent.putExtra("get_id", get_id);
+            intent.putExtra("adminData", adminData);
             intent.putExtra("adminTableList", adminTableList);
             startActivity(intent);
         });
 
-        today.setOnClickListener(view -> {
-            setOkHttpClient("today");
-        });
+        today.setOnClickListener(view -> setRetrofitClient("today"));
 
+        day.setOnClickListener(view -> setRetrofitClient("day"));
 
-        day.setOnClickListener(view -> {
+        week.setOnClickListener(view -> setRetrofitClient("week"));
 
-            setOkHttpClient("day");
+        month.setOnClickListener(view -> setRetrofitClient("month"));
 
-        });
-
-        week.setOnClickListener(view -> {
-
-            setOkHttpClient("week");
-
-        });
-
-        month.setOnClickListener(view -> {
-            setOkHttpClient("month");
-        });
-
-
-        year.setOnClickListener(view -> {
-            setOkHttpClient("year");
-        });
+        year.setOnClickListener(view -> setRetrofitClient("year"));
     }
 
 
-    public void setOkHttpClient(String duration) {
+    public void setRetrofitClient(String duration) {
         //db에 접근해서 일단 오늘 매출을 보여준다
-        okHttpClient = new OkHttpClient();
 
-        requestBody = new FormBody.Builder()
-                .add("duration", duration)
-                .build();
+        Call<SuccessOrNot> call = service.requestSalesData(duration);
 
-        request = new Request.Builder()
-                .url("http://3.36.255.141/Sales.php")
-                .post(requestBody)
-                .build();
-
-        okHttpClient.newCall(request).enqueue(new Callback() {
+        call.enqueue(new Callback<SuccessOrNot>() {
             @Override
-            public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                Log.d(TAG, "onFailure: " + e);
+            public void onResponse(Call<SuccessOrNot> call, Response<SuccessOrNot> response) {
+                Log.d(TAG, "onResponse data: " + response);
+                if(response.isSuccessful()){
+                    //만약 데이터 없음이면
+                    chart.clear();
+                    chart.setNoDataText("매출데이터가 존재하지 않습니다.");
+                    chart.setNoDataTextColor(Color.RED);
+                    chart.invalidate();
+//                    getSalesInfo(duration, body);
+
+                }
             }
 
-            @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
-            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                String body = response.body().string();
-                Log.d(TAG, "onResponse: " + body);
-
-
-                try {
-                    if (body.equals("없음")) {
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                chart.clear();
-                                chart.setNoDataText("매출데이터가 존재하지 않습니다.");
-                                chart.setNoDataTextColor(Color.RED);
-                                chart.invalidate();
-                            }
-                        });
-
-
-                    } else if (body != null) {
-                        getSalesInfo(duration, body);
-
-                    }
-
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-
+            public void onFailure(Call<SuccessOrNot> call, Throwable t) {
 
             }
         });
@@ -224,28 +182,28 @@ public class AdminSales extends AppCompatActivity {
 
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    public void getSalesInfo(String duration, String data) throws JSONException, ParseException {
+    public void getSalesInfo(String duration, String data)  {
 
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 
         ArrayList<AdminSalesList> salesLists = new ArrayList();
 
 
-        JSONArray jsonArray = new JSONArray(data);
-
-        for (int i = 0; i < jsonArray.length(); i++) {
-
-            JSONObject jsonObject = jsonArray.getJSONObject(i);
-
-            LocalDateTime date = LocalDateTime.parse(jsonObject.getString("orderTime"),
-                    dateTimeFormatter);
-
-            int totalPrice = jsonObject.getInt("totalPrice");
-
-            salesLists.add(new AdminSalesList(date, totalPrice));
-            Log.d(TAG, "getSalesInfo: " + salesLists.get(i).getLocalDateTime());
-
-        }
+//        JSONArray jsonArray = new JSONArray(data);
+//
+//        for (int i = 0; i < jsonArray.length(); i++) {
+//
+//            JSONObject jsonObject = jsonArray.getJSONObject(i);
+//
+//            LocalDateTime date = LocalDateTime.parse(jsonObject.getString("orderTime"),
+//                    dateTimeFormatter);
+//
+//            int totalPrice = jsonObject.getInt("totalPrice");
+//
+//            salesLists.add(new AdminSalesList(date, totalPrice));
+//            Log.d(TAG, "getSalesInfo: " + salesLists.get(i).getLocalDateTime());
+//
+//        }
 
         sortData(salesLists, duration);
     }

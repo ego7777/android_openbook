@@ -1,6 +1,7 @@
 package com.example.openbook.Activity;
 
 
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -24,6 +25,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
@@ -34,7 +39,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.SimpleItemAnimator;
 
-import com.example.openbook.Adapter.AdminPopUpAdapter;
 import com.example.openbook.Adapter.CartAdapter;
 import com.example.openbook.Adapter.MenuAdapter;
 import com.example.openbook.Adapter.SideListViewAdapter;
@@ -51,7 +55,6 @@ import com.example.openbook.DialogManager;
 import com.example.openbook.FCM.FCM;
 import com.example.openbook.FCM.SendNotification;
 import com.example.openbook.PaymentCategory;
-import com.example.openbook.SaveOrderDeleteData;
 import com.example.openbook.kakaopay.KakaoPay;
 import com.example.openbook.retrofit.MenuListDTO;
 import com.example.openbook.retrofit.RetrofitManager;
@@ -91,7 +94,7 @@ public class Menu extends AppCompatActivity {
     ArrayList<CartList> cartLists;
     ArrayList<TableList> tableList;
     ListView menuNavigation;
-    String approvedAt;
+    boolean isPayment;
     SharedPreferences sharedPreference;
     SharedPreferences.Editor editor;
 
@@ -107,6 +110,7 @@ public class Menu extends AppCompatActivity {
 
     ClientSocket clientSocket;
 
+    ActivityResultLauncher<Intent> paymentLauncher;
 
     DBHelper dbHelper;
     SQLiteDatabase sqLiteDatabase;
@@ -170,7 +174,8 @@ public class Menu extends AppCompatActivity {
 
         tableList = (ArrayList<TableList>) getIntent().getSerializableExtra("tableList");
 
-        approvedAt = getIntent().getStringExtra("approvedAt");
+        isPayment = getIntent().getBooleanExtra("isPayment", false);
+
 
 
         /**
@@ -184,9 +189,8 @@ public class Menu extends AppCompatActivity {
         }
 
         sendNotification = new SendNotification();
-        Log.d(TAG, "paymentStyle: " + myData.getPaymentCategory());
-        if (myData.getPaymentCategory() == PaymentCategory.NOW && !myData.isUsedTable()) {
 
+        if (myData.getPaymentCategory() == PaymentCategory.NOW && !myData.isUsedTable()) {
             sendNotification.usingTableUpdate("admin", myData.getId(), "PayNow");
             myData.setUsedTable(true);
         } else if (myData.getPaymentCategory() == PaymentCategory.LATER && !myData.isUsedTable()) {
@@ -226,7 +230,7 @@ public class Menu extends AppCompatActivity {
 
         cartAdapter = new CartAdapter();
         cartLists = new ArrayList<>();
-        getCartItems();
+        setCartItems();
         cartRecyclerview.setAdapter(cartAdapter);
 
         /**
@@ -245,9 +249,7 @@ public class Menu extends AppCompatActivity {
             @Override
             public void onChanged() {
                 super.onChanged();
-                new Handler(Looper.getMainLooper()).postDelayed(() -> runOnUiThread(() -> {
-                    progressbar.dismiss();
-                }), 1000);
+                new Handler(Looper.getMainLooper()).postDelayed(() -> runOnUiThread(() -> progressbar.dismiss()), 1000);
 
             }
         });
@@ -328,24 +330,25 @@ public class Menu extends AppCompatActivity {
     } // onCreate()
 
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onStart() {
         super.onStart();
         //액티비티가 사용자에게 보여질 때, 사용자와 상호작용 X
-
-        if(approvedAt != null){
-            orderSharedPreference();
-            successOrder();
-            //서버에 저장
-//            SaveOrderDeleteData orderSave = new SaveOrderDeleteData();
-//            boolean success = orderSave.orderSave(succeedOrderList);
+        if (isPayment) {
+            Log.d(TAG, "isPayment: " + isPayment);
+            sendNotification.sendMenu(submitOrder(), result -> {
+                if(result.equals("success")){
+                    orderSharedPreference();
+                    successOrder();
+                }
+            });
+        } else {
+            Log.d(TAG, "isPayment: " + isPayment);
         }
 
-    } //onStart()
+    }
 
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onResume() {
         super.onResume();
@@ -356,12 +359,10 @@ public class Menu extends AppCompatActivity {
 
         useStop.setOnClickListener(view -> {
             sendNotification.usingTableUpdate("admin", myData.getId(), "End");
-
             Intent intent = new Intent(Menu.this, PaymentSelect.class);
             myData.init();
             intent.putExtra("myData", myData);
             startActivity(intent);
-
         });
 
 
@@ -540,6 +541,8 @@ public class Menu extends AppCompatActivity {
                             if (result.equals("success")) {
                                 orderSharedPreference();
                                 successOrder();
+                            } else {
+                                Toast.makeText(Menu.this, getResources().getString(R.string.menuOrderError), Toast.LENGTH_SHORT).show();
                             }
                         });
 
@@ -550,12 +553,16 @@ public class Menu extends AppCompatActivity {
                         break;
 
                     case NOW:
-                        Intent intent = new Intent(Menu.this, KakaoPay.class);
-                        intent.putExtra("orderItemName", getOrderItemName());
-                        intent.putExtra("totalPrice", totalPrice);
-                        intent.putExtra("myData", myData);
-                        startActivity(intent);
-//                        orderSharedPreference();
+
+                                Intent intent = new Intent(Menu.this, KakaoPay.class);
+                                intent.putExtra("orderItemName", getOrderItemName());
+                                intent.putExtra("totalPrice", totalPrice);
+                                intent.putExtra("myData", myData);
+                                intent.putExtra("orderItems", getOrderList());
+                                startActivity(intent);
+//                                paymentLauncher.launch(intent);
+
+
                         break;
 
                     default:
@@ -585,23 +592,12 @@ public class Menu extends AppCompatActivity {
 
     public Map<String, String> submitOrder() {
 
-        JsonArray menuItems = new JsonArray();
-
-        for (CartList item : cartLists) {
-            JsonObject menuItem = new JsonObject();
-
-            menuItem.addProperty("menuName", item.getMenuName());
-            menuItem.addProperty("menuPrice", String.valueOf(item.getMenuPrice()));
-            menuItem.addProperty("menuQuantity", String.valueOf(item.getMenuQuantity()));
-            menuItems.add(menuItem);
-        }
-
         Map<String, String> request = new HashMap<>();
         request.put("request", "Order");
         request.put("tableName", myData.getId());
         request.put("orderItemName", getOrderItemName());
         request.put("totalPrice", String.valueOf(totalPrice));
-        request.put("items", menuItems.toString());
+        request.put("items", getOrderList());
 
         return request;
     }
@@ -655,7 +651,7 @@ public class Menu extends AppCompatActivity {
 
     }
 
-    public void getCartItems() {
+    public void setCartItems() {
 
         String cartItems = sharedPreference.getString("cartItems", null);
 
@@ -678,23 +674,21 @@ public class Menu extends AppCompatActivity {
     }
 
 
-    public String getOrderList(String id, ArrayList<CartList> cart, int identifier) {
-        JsonObject orderList = new JsonObject();
+    public String getOrderList() {
 
-        JsonArray items = new JsonArray();
-        for (CartList item : cart) {
-            JsonObject orderMenu = new JsonObject();//배열 내에 들어갈 json
-            orderMenu.addProperty("menu", item.getMenuName());
-            orderMenu.addProperty("price", item.getMenuPrice());
-            orderMenu.addProperty("quantity", item.getMenuQuantity());
-            items.add(orderMenu);
+        JsonArray menuItems = new JsonArray();
+
+        for (CartList item : cartLists) {
+            JsonObject menuItem = new JsonObject();
+
+            menuItem.addProperty("menuName", item.getMenuName());
+            menuItem.addProperty("menuPrice", String.valueOf(item.getMenuPrice()));
+            menuItem.addProperty("menuQuantity", String.valueOf(item.getMenuQuantity()));
+            menuItems.add(menuItem);
         }
-        orderList.addProperty("tableId", id);
-        orderList.addProperty("items", String.valueOf(items));//배열을 넣음
-//            orderList.put("identifier", identifier);
 
-        Log.d(TAG, "orderList: " + orderList);
-        return orderList.toString();
+        Log.d(TAG, "orderList: " + menuItems);
+        return gson.toJson(menuItems);
     }
 
 

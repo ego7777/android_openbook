@@ -1,5 +1,6 @@
 package com.example.openbook.kakaopay;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -7,23 +8,19 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.openbook.Activity.Admin;
 import com.example.openbook.Activity.Menu;
 import com.example.openbook.BuildConfig;
-import com.example.openbook.Data.AdminData;
 import com.example.openbook.Data.MyData;
 import com.example.openbook.R;
 import com.example.openbook.retrofit.RetrofitManager;
 import com.example.openbook.retrofit.RetrofitService;
+import com.example.openbook.retrofit.SuccessOrNot;
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.zxing.common.StringUtils;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.HashMap;
 
@@ -38,14 +35,13 @@ public class KakaoPay extends AppCompatActivity {
 
     WebView webView;
     MyWebViewClient myWebViewClient;
-    String tid, pgToken;
-
-    String orderItemName;
-    int totalPrice;
+    String tid, pgToken, orderItemName, tableName;
+    int totalPrice, partnerUserId;
     MyData myData;
-    String tableName, partnerUserId;
-    RetrofitService kakaoPayService;
+    RetrofitService retrofitService;
+    RetrofitManager retrofitManager;
     Gson gson;
+    String orderItems;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -55,13 +51,13 @@ public class KakaoPay extends AppCompatActivity {
         myData = (MyData) getIntent().getSerializableExtra("myData");
 
         tableName = getIntent().getStringExtra("tableName");
+        orderItems = getIntent().getStringExtra("orderItems");
 
-        if(myData != null){
-            partnerUserId = myData.getId();
-        }else{
-            partnerUserId = tableName;
+        if (myData != null) {
+            partnerUserId = myData.getIdentifier();
+        } else {
+            partnerUserId = tableName.hashCode();
         }
-
 
         gson = new Gson();
 
@@ -72,16 +68,14 @@ public class KakaoPay extends AppCompatActivity {
         webView = findViewById(R.id.kakaopay_webview);
         myWebViewClient = new MyWebViewClient();
 
-
         webView.getSettings().setJavaScriptEnabled(true);
         webView.setWebViewClient(myWebViewClient);
 
-        RetrofitManager retrofitManager = new RetrofitManager();
+        retrofitManager = new RetrofitManager();
         Retrofit retrofit = retrofitManager.getRetrofit("https://kapi.kakao.com/");
-        kakaoPayService = retrofit.create(RetrofitService.class);
+        retrofitService = retrofit.create(RetrofitService.class);
 
         sendPaymentRequest();
-
     }
 
 
@@ -93,14 +87,13 @@ public class KakaoPay extends AppCompatActivity {
             String url = request.getUrl().toString();
 
             Log.d(TAG, "shouldOverrideUrlLoading: url\n" + url);
-            if (url != null && url.contains("pg_token=")) {
+            if (url.contains("pg_token=")) {
 
                 String pg_token = url.substring(url.indexOf("pg_token=") + 9);
                 pgToken = pg_token;
                 Log.d(TAG, "pgtoken" + pgToken);
 
                 url = url.replace("?pg_token=" + pg_token, "");
-                Log.d(TAG, "pg_token 뺀 url: " + url);
 
                 sendApprovalRequest();
             }
@@ -126,7 +119,7 @@ public class KakaoPay extends AppCompatActivity {
         HashMap<String, String> paymentRequest = new HashMap<>();
         paymentRequest.put("cid", "TC0ONETIME");
         paymentRequest.put("partner_order_id", "openbook");
-        paymentRequest.put("partner_user_id", partnerUserId);
+        paymentRequest.put("partner_user_id", String.valueOf(partnerUserId));
         paymentRequest.put("item_name", orderItemName);
         paymentRequest.put("quantity", "1");
         paymentRequest.put("total_amount", String.valueOf(totalPrice));
@@ -134,14 +127,16 @@ public class KakaoPay extends AppCompatActivity {
         paymentRequest.put("approval_url", BuildConfig.SERVER_IP + "kakaopay/success");
         paymentRequest.put("cancel_url", BuildConfig.SERVER_IP + "kakaopay/cancel");
         paymentRequest.put("fail_url", BuildConfig.SERVER_IP + "kakaopay/fail");
+//        Log.d(TAG, "sendPaymentRequest: " + paymentRequest);
 
-        Call<KakaoPayReadyResponseDTO> call = kakaoPayService.createPaymentRequest(BuildConfig.KAKAOPAY_ADMIN_KEY, paymentRequest);
+        Call<KakaoPayReadyResponseDTO> call = retrofitService.createPaymentRequest(BuildConfig.KAKAOPAY_ADMIN_KEY, paymentRequest);
         call.enqueue(new Callback<KakaoPayReadyResponseDTO>() {
             @Override
-            public void onResponse(Call<KakaoPayReadyResponseDTO> call, Response<KakaoPayReadyResponseDTO> response) {
+            public void onResponse(@NonNull Call<KakaoPayReadyResponseDTO> call, @NonNull Response<KakaoPayReadyResponseDTO> response) {
                 Log.d(TAG, "onResponse create kakaopay : " + response);
                 if (response.isSuccessful()) {
                     tid = response.body().getTid();
+                    Log.d(TAG, "onResponse tid: " + tid);
                     String url = response.body().getNextRedirectPcUrl();
                     webView.loadUrl(url);
                 } else {
@@ -150,7 +145,7 @@ public class KakaoPay extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<KakaoPayReadyResponseDTO> call, Throwable t) {
+            public void onFailure(@NonNull Call<KakaoPayReadyResponseDTO> call, @NonNull Throwable t) {
                 Log.d(TAG, "onFailure create kakaopay : " + t.getMessage());
             }
         });
@@ -164,41 +159,109 @@ public class KakaoPay extends AppCompatActivity {
         approvedRequest.put("cid", "TC0ONETIME");
         approvedRequest.put("tid", tid);
         approvedRequest.put("partner_order_id", "openbook");
-        approvedRequest.put("partner_user_id", partnerUserId);
+        approvedRequest.put("partner_user_id", String.valueOf(partnerUserId));
         approvedRequest.put("pg_token", pgToken);
 
-        Call<KakaoPayApproveResponseDTO> call = kakaoPayService.requestApprovedPayment(BuildConfig.KAKAOPAY_ADMIN_KEY, approvedRequest);
+        Call<KakaoPayApproveResponseDTO> call = retrofitService.requestApprovedPayment(BuildConfig.KAKAOPAY_ADMIN_KEY, approvedRequest);
         call.enqueue(new Callback<KakaoPayApproveResponseDTO>() {
             @Override
-            public void onResponse(Call<KakaoPayApproveResponseDTO> call, Response<KakaoPayApproveResponseDTO> response) {
+            public void onResponse(@NonNull Call<KakaoPayApproveResponseDTO> call, @NonNull Response<KakaoPayApproveResponseDTO> response) {
                 Log.d(TAG, "onResponse kakao approved: " + response.body());
                 if (response.isSuccessful()) {
+
                     String approvedAt = response.body().getApprovedAt();
+                    Log.d(TAG, "onResponse approved: " + approvedAt);
+                    String paymentMethodType = response.body().getPaymentMethodType();
+                    int identifier = Integer.parseInt(response.body().getPartnerUserId());
 
-                    if (partnerUserId.equals("admin")) {
-                        Intent intent = new Intent(KakaoPay.this, Admin.class);
-                        intent.putExtra("tableName", tableName);
-                        intent.putExtra("approvedAt", approvedAt);
-                        startActivity(intent);
+                    int payment = 101;
 
+                    if (paymentMethodType.equals("MONEY")) {
+                        payment = 0;
                     } else {
-                        Intent intent = new Intent(KakaoPay.this, Menu.class);
-                        intent.putExtra("myData", myData);
-                        intent.putExtra("approvedAt", approvedAt);
-                        startActivity(intent);
+                        payment = 1;
                     }
 
-
+                    if (payment != 101) {
+                        saveOrderDetailsOnServer(approvedAt, payment, identifier);
+                    }
                 }
             }
 
             @Override
-            public void onFailure(Call<KakaoPayApproveResponseDTO> call, Throwable t) {
+            public void onFailure(@NonNull Call<KakaoPayApproveResponseDTO> call, @NonNull Throwable t) {
                 Log.d(TAG, "onFailure kakao approved: " + t.getMessage());
             }
         });
-
-
     }
+
+    public void saveOrderDetailsOnServer(String approvedAt,
+                                         int paymentMethodType,
+                                         int identifier) {
+
+        Retrofit retrofit = retrofitManager.getRetrofit(BuildConfig.SERVER_IP);
+        retrofitService = retrofit.create(RetrofitService.class);
+
+        Call<SuccessOrNot> call = retrofitService.savePayment(tid,
+                approvedAt, totalPrice, identifier, paymentMethodType, orderItems);
+
+        call.enqueue(new Callback<SuccessOrNot>() {
+            @Override
+            public void onResponse(@NonNull Call<SuccessOrNot> call, @NonNull Response<SuccessOrNot> response) {
+                Log.d(TAG, "onResponse saveOrderDetailsOnServer: " + response.body().getResult());
+                if (response.isSuccessful()) {
+                    switch (response.body().getResult()) {
+                        case "success":
+                            if (myData == null) {
+                                Intent intent = new Intent(KakaoPay.this, Admin.class);
+                                //가서 해당 tableName sharedPreference 지우기, 테이블 초기화 하기
+                                intent.putExtra("tableName", tableName);
+                                setResult(RESULT_OK, intent);
+                                Log.d(TAG, "onResponse: ");
+                                finish();
+
+                            } else {
+                                Log.d(TAG, "onResponse 여기 맞아???");
+                                Intent intent = new Intent(KakaoPay.this, Menu.class);
+                                intent.putExtra("myData", myData);
+                                intent.putExtra("isPayment", true);
+                                startActivity(intent);
+//                                setResult(RESULT_OK, intent);
+//                                finish();
+                            }
+                            break;
+
+                        case "failed":
+                            Log.d(TAG, "onResponse saveOrderDetails is failed");
+                            if (myData == null) {
+                                Intent intent = new Intent(KakaoPay.this, Admin.class);
+                                //가서 해당 tableName sharedPreference 지우기, 테이블 초기화 하기
+                                intent.putExtra("tableName", tableName);
+                                setResult(RESULT_CANCELED, intent);
+                                finish();
+
+                            } else {
+                                Intent intent = new Intent(KakaoPay.this, Menu.class);
+                                intent.putExtra("myData", myData);
+                                setResult(RESULT_CANCELED, intent);
+                                finish();
+                            }
+                            break;
+
+                    }
+
+
+                } else {
+                    Log.d(TAG, "onResponse saveOrderDetailsOnServer is not successful");
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<SuccessOrNot> call, @NonNull Throwable t) {
+                Log.d(TAG, "onFailure saveOrderDetailsOnServer: " + t.getMessage());
+            }
+        });
+    }
+
 
 }

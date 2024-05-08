@@ -65,7 +65,12 @@ public interface RetrofitService {
                                                             @FieldMap HashMap<String, String> request);
     @POST("SavePayment.php")
     @FormUrlEncoded
-    Call<SuccessOrNot> savePayment(@Field("orderList") String orderList);
+    Call<SuccessOrNot> savePayment(@Field("tid") String tid,
+                                   @Field("transaction_date") String approvedAt,
+                                   @Field("total_amount") int totalAmount,
+                                   @Field("identifier") int identifier,
+                                   @Field("payment_method_type") int paymentMethodType,
+                                   @Field("order_items") String orderList);
 
     @POST("RegisterFcmToken.php")
     @FormUrlEncoded
@@ -77,7 +82,9 @@ public interface RetrofitService {
 
     @POST("SendFcmRequest.php")
     @FormUrlEncoded
-    Call<SuccessOrNot> sendRequestFcm(@Field("userId") String String,
+    Call<SuccessOrNot> sendRequestFcm(@Field("userId") String userId,
                                       @Field("data") String data);
-
+    @POST("Sales.php")
+    @FormUrlEncoded
+    Call<SuccessOrNot> requestSalesData(@Field("duration") String duration);
 }

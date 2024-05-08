@@ -51,7 +51,7 @@
         </activity>
 
         <activity android:name=".Activity.Login" />
-        <activity android:name="com.example.openbook.startActivity.SignUp"/>
+        <activity android:name="com.example.openbook.Activity.SignUp"/>
 
         <activity android:name="com.example.openbook.Activity.PaymentSelect"/>
         <activity android:name="com.example.openbook.Activity.Menu" />

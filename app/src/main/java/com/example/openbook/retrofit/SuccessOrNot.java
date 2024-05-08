@@ -1,5 +1,7 @@
 package com.example.openbook.retrofit;
 
+import retrofit2.Response;
+
 public class SuccessOrNot {
     String result;
 
