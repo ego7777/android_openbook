@@ -1,5 +1,6 @@
 package com.example.openbook.retrofit;
 
+import com.example.openbook.SalesDTO;
 import com.example.openbook.kakaopay.KakaoPayApproveResponseDTO;
 import com.example.openbook.kakaopay.KakaoPayReadyResponseDTO;
 import com.example.openbook.startActivity.LoginResponseModel;
@@ -86,5 +87,5 @@ public interface RetrofitService {
                                       @Field("data") String data);
     @POST("Sales.php")
     @FormUrlEncoded
-    Call<SuccessOrNot> requestSalesData(@Field("duration") String duration);
+    Call<SalesDTO> requestSalesData(@Field("duration") String duration);
 }

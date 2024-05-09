@@ -286,6 +286,7 @@ public class Admin extends AppCompatActivity {
                         adminData.getAdminTableLists().get(position).getAdminTableStatement() != null) {
 
                     Pair<ArrayList<OrderList>, String> pair = getReceiptData(position);
+                    Log.d(TAG, "receipt: " + gson.toJson(pair.first));
                     dialogManager.showReceiptDialog(this, pair.first, pair.second).show();
                 } else {
                     dialogManager.noButtonDialog(Admin.this, getResources().getString(R.string.unusableTable));
@@ -337,10 +338,10 @@ public class Admin extends AppCompatActivity {
                     totalPrice = removeCommas(tablePrice);
 
                     Intent intent = new Intent(Admin.this, KakaoPay.class);
-                    intent.putExtra("itemName", getOrderItemName(tableName));
+                    intent.putExtra("orderItemName", getOrderItemName(tableName));
                     intent.putExtra("totalPrice", totalPrice);
                     intent.putExtra("tableName", tableName);
-//                    intent.putExtra("jsonOrderList", getJson(orderLists));
+                    intent.putExtra("orderItems", getOrderList(position));
 //                    intent.putExtra("paymentStyle", PaymentCategory.LATER);
                     startActivity(intent);
                 } else {
@@ -349,6 +350,21 @@ public class Admin extends AppCompatActivity {
                 }
             });
         });
+
+    }
+
+    public String getOrderList(int position){
+        String clickTable = adminTableLists.get(position).getAdminTableNumber();
+        String sharedOrderList = sharedPreference.getString(clickTable, null);
+
+        if (sharedOrderList != null) {
+
+            JsonArray menuItems = gson.fromJson(sharedOrderList, JsonArray.class);
+            return gson.toJson(menuItems);
+
+        } else {
+            return null;
+        }
 
     }
 
@@ -385,6 +401,7 @@ public class Admin extends AppCompatActivity {
         }
 
         String totalPrice = addCommasToNumber(price);
+//        Log.d(TAG, "getReceiptData: " + gson.toJson(orderLists));
 
         return Pair.create(orderLists, totalPrice);
     }

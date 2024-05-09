@@ -553,7 +553,6 @@ public class Menu extends AppCompatActivity {
                         break;
 
                     case NOW:
-
                                 Intent intent = new Intent(Menu.this, KakaoPay.class);
                                 intent.putExtra("orderItemName", getOrderItemName());
                                 intent.putExtra("totalPrice", totalPrice);
