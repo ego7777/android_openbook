@@ -85,15 +85,16 @@ public class KakaoPay extends AppCompatActivity {
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
 
             String url = request.getUrl().toString();
+            Log.d(TAG, "처음에 들어오는 shouldOverrideUrlLoading url : " + url);
 
-            Log.d(TAG, "shouldOverrideUrlLoading: url\n" + url);
             if (url.contains("pg_token=")) {
 
                 String pg_token = url.substring(url.indexOf("pg_token=") + 9);
                 pgToken = pg_token;
-                Log.d(TAG, "pgtoken" + pgToken);
+                Log.d(TAG, "pgtoken : " + pgToken);
 
                 url = url.replace("?pg_token=" + pg_token, "");
+                Log.d(TAG, "pg_token이 포함되었던 url: " + url);
 
                 sendApprovalRequest();
             }
@@ -166,11 +167,10 @@ public class KakaoPay extends AppCompatActivity {
         call.enqueue(new Callback<KakaoPayApproveResponseDTO>() {
             @Override
             public void onResponse(@NonNull Call<KakaoPayApproveResponseDTO> call, @NonNull Response<KakaoPayApproveResponseDTO> response) {
-                Log.d(TAG, "onResponse kakao approved: " + response.body());
+                Log.d(TAG, "onResponse kakao approved: " + response);
                 if (response.isSuccessful()) {
 
                     String approvedAt = response.body().getApprovedAt();
-                    Log.d(TAG, "onResponse approved: " + approvedAt);
                     String paymentMethodType = response.body().getPaymentMethodType();
                     int identifier = Integer.parseInt(response.body().getPartnerUserId());
 
@@ -216,12 +216,10 @@ public class KakaoPay extends AppCompatActivity {
                                 Intent intent = new Intent(KakaoPay.this, Admin.class);
                                 //가서 해당 tableName sharedPreference 지우기, 테이블 초기화 하기
                                 intent.putExtra("tableName", tableName);
-                                setResult(RESULT_OK, intent);
-                                Log.d(TAG, "onResponse: ");
-                                finish();
+                                intent.putExtra("isPayment", true);
+                                startActivity(intent);
 
                             } else {
-                                Log.d(TAG, "onResponse 여기 맞아???");
                                 Intent intent = new Intent(KakaoPay.this, Menu.class);
                                 intent.putExtra("myData", myData);
                                 intent.putExtra("isPayment", true);

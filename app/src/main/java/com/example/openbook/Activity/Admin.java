@@ -61,7 +61,7 @@ public class Admin extends AppCompatActivity {
 
     String gender, guestNumber, tableName, tableStatement, menuName;
     int totalPrice, tableIdentifier;
-
+    boolean isPayment;
 
     SharedPreferences sharedPreference;
     SharedPreferences.Editor editor;
@@ -86,6 +86,7 @@ public class Admin extends AppCompatActivity {
 
         adminData = getIntent().getParcelableExtra("adminData");
         Log.d(TAG, "adminData: " + adminData);
+        isPayment = getIntent().getBooleanExtra("isPayment", false);
 
         adminTableLists = new ArrayList<>();
         orderLists = new ArrayList<>();

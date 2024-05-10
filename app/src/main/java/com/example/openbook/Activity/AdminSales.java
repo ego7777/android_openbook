@@ -26,6 +26,7 @@ import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
 import com.google.gson.Gson;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
@@ -45,7 +46,7 @@ public class AdminSales extends AppCompatActivity {
     AdminData adminData;
     ArrayList<AdminTableList> adminTableList;
 
-    TextView home, today, day, week, month, year;
+    TextView home, day, week, month, year;
     TextView appbar_admin_addMenu;
     TextView appbar_admin_modifyTable;
 
@@ -66,7 +67,6 @@ public class AdminSales extends AppCompatActivity {
         adminData = getIntent().getParcelableExtra("adminData");
         home = findViewById(R.id.appbar_admin_home);
 
-        today = findViewById(R.id.admin_sales_sidebar_today);
         day = findViewById(R.id.admin_sales_sidebar_day);
         week = findViewById(R.id.admin_sales_sidebar_week);
         month = findViewById(R.id.admin_sales_sidebar_month);
@@ -102,8 +102,6 @@ public class AdminSales extends AppCompatActivity {
             startActivity(intent);
         });
 
-        today.setOnClickListener(view -> setRetrofitClient("today"));
-
         day.setOnClickListener(view -> setRetrofitClient("day"));
 
         week.setOnClickListener(view -> setRetrofitClient("week"));
@@ -122,7 +120,7 @@ public class AdminSales extends AppCompatActivity {
                 if(response.isSuccessful()){
                     switch (response.body().getResult()){
                         case "success" :
-                            sortData(response.body().getSales(), duration);
+                            setChart(response.body().getSales(), duration);
                             break;
 
                         case "failed" :
@@ -147,92 +145,55 @@ public class AdminSales extends AppCompatActivity {
 
 
 
-
-
-    public void sortData(List<SalesDTO.SaleData> salesData, String duration) {
-
-        Map<String, Integer> salesMap = new HashMap<>();
-        String title = null;
-
-        switch (duration){
-            case "today" :
-                title = LocalDate.now() + " 매출 데이터";
-
-                for(SalesDTO.SaleData sale : salesData){
-                    String[] dateTimeParts = sale.getDate().split(" ");
-                    String timePart = dateTimeParts[1].substring(0, 2);
-                    int amount = Integer.parseInt(sale.getAmount());
-                    salesMap.merge(timePart, amount, Integer::sum);
-                }
-                break;
-
-            case "day" :
-                title = LocalDate.now().getMonth() + " 매출 데이터";
-                //일별 데이터 -> 한달을 일로
-                //day -> 시간별로 오늘 하루, 넘어가는 형식으로 좌우 넘어가게
-                //week -> 일주일 데이터를 보여준다, 근데 넘어가는 형식으로 좌우로 바꿀 수 있게, 일(5/5) 얼마~ 월(5/6) 얼마~
-                //month -> 월별 데이터를 1년치 보여준다. -> 1월 얼마~
-                //year -> 년도별 데이터를 보여준다.
-
-                for(SalesDTO.SaleData sale : salesData){
-                    String[] dateTimeParts = sale.getDate().split(" ");
-                    String dayPart = dateTimeParts[0].split("-")[2];
-                    int amount = Integer.parseInt(sale.getAmount());
-                    salesMap.merge(dayPart, amount, Integer::sum);
-                }
-                break;
-
-            case "week" :
-                title = LocalDate.now().getMonth() + " 매출 데이터";
-                //주별 데이터 -> 한달을 주로 (아니면 3개월치를 4주로 해서 12주?)
-
-
-                break;
-            case "month" :
-                //월별 데이터 ->
-                break;
-            case "year" :
-                break;
-        }
-
-        setChart(salesMap, duration, title);
-
-    }
-
-
-    public void setChart(Map<String, Integer> sales, String duration, String title) {
+    public void setChart(List<SalesDTO.SaleData> saleData, String duration) {
 
         ArrayList<BarEntry> entries = new ArrayList<>();
         BarData barData = new BarData();
         BarDataSet barDataSet;
+        String title = null;
 
         switch (duration){
-            case "today" :
+            case "day" :
+                title = LocalDate.now() + " 매출 데이터";
                 xAxis.setAxisMinimum(-1f);
                 xAxis.setAxisMaximum(23.9f);
                 xAxis.setValueFormatter((value, axis) -> (int) value + "시");
 
-                for(Map.Entry<String, Integer> entry : sales.entrySet()){
-                    entries.add(new BarEntry(Integer.parseInt(entry.getKey()), entry.getValue()));
+                for(SalesDTO.SaleData entity : saleData){
+                    int date = Integer.parseInt(entity.getDate());
+                    int amount = Integer.parseInt(entity.getAmount());
+                    entries.add(new BarEntry(date, amount));
                 }
                 break;
 
-            case "day":
+            case "week":
+                title = LocalDate.now().getDayOfWeek() + " 매출 데이터";
                 String lastDay = YearMonth.now().atEndOfMonth().toString().split("-")[2];
 
                 xAxis.setAxisMinimum((float) (0.1));
                 xAxis.setAxisMaximum((float) (Integer.parseInt(lastDay) + 0.9));
                 xAxis.setSpaceMin(0.1f);
                 xAxis.setSpaceMax(0.1f);
-                xAxis.setValueFormatter((value, axis) -> (int) value + "일");
 
-                for(Map.Entry<String, Integer> entry : sales.entrySet()){
-                    entries.add(new BarEntry(Integer.parseInt(entry.getKey()), entry.getValue()));
+                xAxis.setValueFormatter((value, axis) -> {
+
+                    int index = (int) value;
+
+//                    if () {
+//
+//                        return month;
+//                    }
+
+                    return ""; // 유효하지 않은 인덱스일 경우 빈 문자열 반환
+                });
+
+                for(SalesDTO.SaleData entity : saleData){
+                    int date = getDayOfWeekIndex(entity.getDate());
+                    int amount = Integer.parseInt(entity.getAmount());
+                    entries.add(new BarEntry(date, amount));
                 }
                 break;
 
-            case "week" :
-                break;
             case "month" :
                 break;
             case "year" :
@@ -353,6 +314,27 @@ public class AdminSales extends AppCompatActivity {
         yAxisLeft.setTextSize(15);
         yAxisLeft.setAxisMinimum(0f);
         yAxisLeft.setGranularity(1f);
+    }
+
+    private int getDayOfWeekIndex(String dayOfWeek) {
+        switch (dayOfWeek) {
+            case "Sunday":
+                return 0;
+            case "Monday":
+                return 1;
+            case "Tuesday":
+                return 2;
+            case "Wednesday":
+                return 3;
+            case "Thursday":
+                return 4;
+            case "Friday":
+                return 5;
+            case "Saturday":
+                return 6;
+            default:
+                return 0;
+        }
     }
 
 
