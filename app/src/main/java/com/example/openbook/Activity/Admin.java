@@ -184,8 +184,8 @@ public class Admin extends AppCompatActivity {
         }
 
 
-        TextView appbarAdminId = findViewById(R.id.appbar_admin_id);
-        appbarAdminId.setText(adminData.getId());
+        ImageView appbarAdminGear = findViewById(R.id.appbar_admin_gear);
+        appbarAdminGear.setVisibility(View.INVISIBLE);
 
         appbarAdminSales = findViewById(R.id.appbar_admin_sales);
         appbarAdminAddMenu = findViewById(R.id.appbar_admin_addMenu);

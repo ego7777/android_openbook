@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <group
+        android:id="@+id/menu_sales_data"
+        android:checkableBehavior="single">
+
+        <item
+            android:id="@+id/daily_sales"
+            android:title="시간별 매출"
+            android:actionLayout="@layout/drawer_item"
+            app:showAsAction="always"/>
+
+        <item
+            android:id="@+id/weekly_sales"
+            android:title="요일별 매출"
+            android:actionLayout="@layout/drawer_item"
+            app:showAsAction="always"/>
+
+        <item
+            android:id="@+id/monthly_sales"
+            android:title="주별 매출"
+            android:actionLayout="@layout/drawer_item"
+            app:showAsAction="always"/>
+
+        <item
+            android:id="@+id/yearly_sales"
+            android:title="월별 매출"
+            app:showAsAction="always"/>
+
+    </group>
+
+    <item
+        android:id="@+id/max_sales"
+        android:title="최다 판매"
+        android:actionLayout="@layout/drawer_item"
+        app:showAsAction="always"/>
+
+    <item
+        android:id="@+id/min_sales"
+        android:title="최저 판매"
+        android:actionLayout="@layout/drawer_item"
+        app:showAsAction="always"/>
+
+</menu>

@@ -683,6 +683,7 @@ public class Menu extends AppCompatActivity {
             menuItem.addProperty("menuName", item.getMenuName());
             menuItem.addProperty("menuPrice", String.valueOf(item.getMenuPrice()));
             menuItem.addProperty("menuQuantity", String.valueOf(item.getMenuQuantity()));
+            menuItem.addProperty("menuCategory", item.getCartCategory().getValue());
             menuItems.add(menuItem);
         }
 
@@ -772,9 +773,7 @@ public class Menu extends AppCompatActivity {
 
     public String addCommasToNumber(int price, int type) {
         DecimalFormat decimalFormat = new DecimalFormat("#,###");
-        Log.d(TAG, "addCommasToNumber price: " + price);
         String totalPrice = decimalFormat.format(price) + "원";
-        Log.d(TAG, "addCommasToNumber totalPrice: " + totalPrice);
 
         int CART = 0;
         if (type == CART) {

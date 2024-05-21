@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -17,54 +19,59 @@
                 android:id="@+id/appbar_admin_home"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
+                android:gravity="center"
                 android:text="홈"
+                android:textColor="@color/black"
                 android:textSize="25sp"
-                android:textStyle="bold"
-                android:textColor="@color/black" />
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/appbar_admin_sales"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:text="매출"
                 android:layout_marginStart="40dp"
+                android:gravity="center"
+                android:text="매출"
+                android:textColor="@color/black"
                 android:textSize="25sp"
-                android:textStyle="bold"
-                android:textColor="@color/black" />
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/appbar_admin_addMenu"
-                android:layout_marginStart="40dp"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
+                android:layout_marginStart="40dp"
+                android:gravity="center"
                 android:text="메뉴등록"
+                android:textColor="@color/black"
                 android:textSize="25sp"
-                android:textStyle="bold"
-                android:textColor="@color/black"/>
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/appbar_admin_modifyTable"
-                android:layout_marginStart="40dp"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
+                android:layout_marginStart="40dp"
+                android:gravity="center"
                 android:text="테이블 추가/삭제"
-                android:textSize="25sp"
-                android:textStyle="bold"
-                android:textColor="@color/black" />
-
-            <TextView
-                android:id="@+id/appbar_admin_id"
-                android:layout_gravity="end"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="ADMIN PAGE"
                 android:textColor="@color/black"
-                android:textStyle="bold"
                 android:textSize="25sp"
-                android:layout_marginEnd="30dp"/>
+                android:textStyle="bold" />
+
+
+            <ImageView
+                android:id="@+id/appbar_admin_gear"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:layout_gravity="end"
+                android:layout_marginEnd="30dp"
+                android:gravity="center"
+                android:src="@drawable/gear_icon" />
+
 
         </androidx.appcompat.widget.Toolbar>
 
     </com.google.android.material.appbar.AppBarLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
+

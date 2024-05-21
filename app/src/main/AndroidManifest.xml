@@ -6,32 +6,38 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
-        android:name="com.example.openbook.MyApplication"
+        android:name=".MyApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
+        android:hardwareAccelerated="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:largeHeap="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Openbook"
-        android:windowSoftInputMode="adjustPan"
         android:usesCleartextTraffic="true"
-        tools:targetApi="31"
-        android:hardwareAccelerated="false"
-        android:largeHeap="true"
-        android:vmSafeMode="true">
+        android:vmSafeMode="true"
+        android:windowSoftInputMode="adjustPan"
+        tools:targetApi="31">
+        <activity
+            android:name=".Activity.DrawableActivity"
+            android:exported="false"
+            android:label="@string/title_activity_drawable"
+            android:theme="@style/Theme.Openbook.NoActionBar" />
 
-        <service android:name="com.example.openbook.FCM.FCM"
+        <service
+            android:name=".FCM.FCM"
             android:enabled="true"
             android:exported="false">
             <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
+
             <meta-data
                 android:name="firebase_messaging_auto_init_enabled"
                 android:value="false" />
@@ -41,7 +47,7 @@
         </service>
 
         <activity
-            android:name="com.example.openbook.Activity.Intro"
+            android:name=".Activity.Intro"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -49,63 +55,55 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity android:name=".Activity.Login" />
-        <activity android:name="com.example.openbook.Activity.SignUp"/>
-
-        <activity android:name="com.example.openbook.Activity.PaymentSelect"/>
-        <activity android:name="com.example.openbook.Activity.Menu" />
-
-        <activity android:name="com.example.openbook.Activity.Table"
+        <activity android:name=".Activity.SignUp" />
+        <activity android:name=".Activity.PaymentSelect" />
+        <activity android:name=".Activity.Menu" />
+        <activity
+            android:name=".Activity.Table"
             android:exported="true">
             <intent-filter>
-                <action android:name="tableInformationArrived"/>
+                <action android:name="tableInformationArrived" />
             </intent-filter>
         </activity>
-
-
-        <activity android:name="com.example.openbook.Activity.CallServer" />
-
-        <activity android:name="com.example.openbook.Chatting.ChattingUI"
+        <activity android:name=".Activity.CallServer" />
+        <activity
+            android:name=".Chatting.ChattingUI"
             android:exported="true">
             <intent-filter>
-                <action android:name="chattingDataArrived"/>
+                <action android:name="chattingDataArrived" />
             </intent-filter>
             <intent-filter>
-                <action android:name="SendChattingData"/>
+                <action android:name="SendChattingData" />
             </intent-filter>
             <intent-filter>
-                <action android:name="isReadArrived"/>
+                <action android:name="isReadArrived" />
             </intent-filter>
         </activity>
-
-        <activity android:name="com.example.openbook.Activity.PopUpChatting"
-            android:theme="@android:style/Theme.Dialog"/>
-
-        <activity android:name="com.example.openbook.Activity.PopUpProfile"
-            android:theme="@android:style/Theme.Dialog"/>
-
-        <activity android:name="com.example.openbook.Activity.PopUpGift"
-            android:theme="@android:style/Theme.Dialog"/>
-
-        <activity android:name="com.example.openbook.Activity.AdminModifyTableQuantity"
-            android:theme="@android:style/Theme.Dialog"/>
-
-        <activity android:name="com.example.openbook.Activity.AdminModifyMenu"
-            android:theme="@android:style/Theme.Dialog"/>
-
-        <activity android:name="com.example.openbook.Activity.AdminPaymentLaterPopup"
-            android:theme="@android:style/Theme.Dialog"/>
-
-        <activity android:name="com.example.openbook.Activity.AdminPaymentNowPopup"
-            android:theme="@android:style/Theme.Dialog"/>
-
-        <activity android:name="com.example.openbook.Activity.AdminSales"/>
-
-        <activity android:name="com.example.openbook.Activity.Admin"/>
-        <activity android:name="com.example.openbook.kakaopay.KakaoPay"/>
-
-
+        <activity
+            android:name=".Activity.PopUpChatting"
+            android:theme="@android:style/Theme.Dialog" />
+        <activity
+            android:name=".Activity.PopUpProfile"
+            android:theme="@android:style/Theme.Dialog" />
+        <activity
+            android:name=".Activity.PopUpGift"
+            android:theme="@android:style/Theme.Dialog" />
+        <activity
+            android:name=".Activity.AdminModifyTableQuantity"
+            android:theme="@android:style/Theme.Dialog" />
+        <activity
+            android:name=".Activity.AdminModifyMenu"
+            android:theme="@android:style/Theme.Dialog" />
+        <activity
+            android:name=".Activity.AdminPaymentLaterPopup"
+            android:theme="@android:style/Theme.Dialog" />
+        <activity
+            android:name=".Activity.AdminPaymentNowPopup"
+            android:theme="@android:style/Theme.Dialog" />
+        <activity android:name=".Activity.AdminSales" />
+        <activity android:name=".Activity.Admin" />
+        <activity android:name=".kakaopay.KakaoPay" />
     </application>
 
 </manifest>

@@ -1,6 +1,5 @@
 package com.example.openbook.kakaopay;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -85,16 +84,13 @@ public class KakaoPay extends AppCompatActivity {
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
 
             String url = request.getUrl().toString();
-            Log.d(TAG, "처음에 들어오는 shouldOverrideUrlLoading url : " + url);
 
             if (url.contains("pg_token=")) {
 
                 String pg_token = url.substring(url.indexOf("pg_token=") + 9);
                 pgToken = pg_token;
-                Log.d(TAG, "pgtoken : " + pgToken);
 
                 url = url.replace("?pg_token=" + pg_token, "");
-                Log.d(TAG, "pg_token이 포함되었던 url: " + url);
 
                 sendApprovalRequest();
             }
@@ -128,7 +124,6 @@ public class KakaoPay extends AppCompatActivity {
         paymentRequest.put("approval_url", BuildConfig.SERVER_IP + "kakaopay/success");
         paymentRequest.put("cancel_url", BuildConfig.SERVER_IP + "kakaopay/cancel");
         paymentRequest.put("fail_url", BuildConfig.SERVER_IP + "kakaopay/fail");
-//        Log.d(TAG, "sendPaymentRequest: " + paymentRequest);
 
         Call<KakaoPayReadyResponseDTO> call = retrofitService.createPaymentRequest(BuildConfig.KAKAOPAY_ADMIN_KEY, paymentRequest);
         call.enqueue(new Callback<KakaoPayReadyResponseDTO>() {
@@ -224,8 +219,6 @@ public class KakaoPay extends AppCompatActivity {
                                 intent.putExtra("myData", myData);
                                 intent.putExtra("isPayment", true);
                                 startActivity(intent);
-//                                setResult(RESULT_OK, intent);
-//                                finish();
                             }
                             break;
 
@@ -245,10 +238,7 @@ public class KakaoPay extends AppCompatActivity {
                                 finish();
                             }
                             break;
-
                     }
-
-
                 } else {
                     Log.d(TAG, "onResponse saveOrderDetailsOnServer is not successful");
                 }
