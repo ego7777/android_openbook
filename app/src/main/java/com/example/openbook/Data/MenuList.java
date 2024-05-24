@@ -22,11 +22,11 @@ public class MenuList {
 //        this.menu_price = price;
 //    }
 
-    public int getMenu_price() {
+    public int getMenuPrice() {
         return menuPrice;
     }
 
-    public void setMenu_price(int menu_price) {
+    public void setMenuPrice(int menu_price) {
         this.menuPrice = menu_price;
     }
 
@@ -39,11 +39,11 @@ public class MenuList {
     }
 
 
-    public String getMenu_name() {
+    public String getMenuName() {
         return menuName;
     }
 
-    public void setMenu_name(String menu_name) {
+    public void setMenuName(String menu_name) {
         this.menuName = menu_name;
     }
 

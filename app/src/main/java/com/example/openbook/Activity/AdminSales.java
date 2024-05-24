@@ -18,10 +18,12 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import com.example.openbook.BuildConfig;
 import com.example.openbook.Data.AdminData;
 import com.example.openbook.Data.AdminTableList;
+import com.example.openbook.DialogManager;
 import com.example.openbook.R;
 import com.example.openbook.retrofit.SalesDTO;
 import com.example.openbook.retrofit.RetrofitManager;
 import com.example.openbook.retrofit.RetrofitService;
+import com.example.openbook.retrofit.SalesItemDTO;
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.components.XAxis;
@@ -32,6 +34,7 @@ import com.github.mikephil.charting.data.BarEntry;
 import com.google.android.material.navigation.NavigationView;
 import com.google.gson.Gson;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
@@ -51,32 +54,29 @@ import retrofit2.Retrofit;
 public class AdminSales extends AppCompatActivity {
 
     String TAG = "AdminSales_TAG";
-
     AdminData adminData;
     ArrayList<AdminTableList> adminTableList;
-
     TextView appbarHome, appbarAddMenu, appbarModifyTable;
-
     ImageView beforeButton, afterButton, appbarGear, drawerHeaderCancel;
     TextView totalSales, drawerHeaderDuration;
-
     BarChart chart;
     XAxis xAxis;
     YAxis yAxisRight;
     YAxis yAxisLeft;
-
     RetrofitService service;
-
     Gson gson;
     String targetDate, targetDuration;
 
     DrawerLayout drawerLayout;
     NavigationView navigationView;
+    DialogManager dialogManager;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.admin_sales);
+
+        overridePendingTransition(0, 0);
 
         adminData = getIntent().getParcelableExtra("adminData");
         appbarHome = findViewById(R.id.appbar_admin_home);
@@ -115,12 +115,12 @@ public class AdminSales extends AppCompatActivity {
         Retrofit retrofit = retrofitManager.getRetrofit(BuildConfig.SERVER_IP);
         service = retrofit.create(RetrofitService.class);
 
-//        currentDate = LocalDate.now().toString();
-        targetDate = "2024-05-08";
+        targetDate = LocalDate.now().toString();
         targetDuration = "day";
-        setHeaderDuration();
-        setRetrofitClient(targetDuration, targetDate);
+        drawerHeaderDuration.setText(getDuration());
+        requestSalesData(targetDuration, targetDate);
 
+        dialogManager = new DialogManager();
     }
 
 
@@ -130,14 +130,14 @@ public class AdminSales extends AppCompatActivity {
 
 
         beforeButton.setOnClickListener(view -> {
-            switch (targetDuration){
-                case "day" :
+            switch (targetDuration) {
+                case "day":
                     targetDate = LocalDate.parse(targetDate).minusDays(1).toString();
                     break;
                 case "week":
                     targetDate = LocalDate.parse(targetDate).minusWeeks(1).toString();
                     break;
-                case "month" :
+                case "month":
                     targetDate = LocalDate.parse(targetDate).minusMonths(1).toString();
                     break;
                 case "year":
@@ -145,51 +145,60 @@ public class AdminSales extends AppCompatActivity {
                     break;
             }
             Log.d(TAG, "targetDate: " + targetDate);
-            setHeaderDuration();
-            setRetrofitClient(targetDuration, targetDate);
+            drawerHeaderDuration.setText(getDuration());
+            requestSalesData(targetDuration, targetDate);
         });
 
         afterButton.setOnClickListener(view -> {
-            switch (targetDuration){
-                case "day" :
+            switch (targetDuration) {
+                case "day":
                     targetDate = LocalDate.parse(targetDate).plusDays(1).toString();
                     break;
                 case "week":
                     targetDate = LocalDate.parse(targetDate).plusWeeks(1).toString();
                     break;
-                case "month" :
+                case "month":
                     targetDate = LocalDate.parse(targetDate).plusMonths(1).toString();
                     break;
                 case "year":
                     targetDate = LocalDate.parse(targetDate).plusYears(1).toString();
                     break;
             }
-            setHeaderDuration();
-            setRetrofitClient(targetDuration, targetDate);
+            drawerHeaderDuration.setText(getDuration());
+            requestSalesData(targetDuration, targetDate);
         });
 
 
         navigationView.setNavigationItemSelectedListener(menuItem -> {
-            switch (menuItem.getItemId()) {
-                case R.id.daily_sales:
-                    targetDuration = "day";
-                    setHeaderDuration();
-                    setRetrofitClient(targetDuration, targetDate);
-                    break;
-                case R.id.weekly_sales:
-                    targetDuration = "week";
-                    setRetrofitClient(targetDuration, targetDate);
-                    break;
-                case R.id.monthly_sales:
-                    targetDuration = "month";
-                    setRetrofitClient(targetDuration, targetDate);
-                    break;
-                case R.id.yearly_sales:
-                    targetDuration = "year";
-                    setRetrofitClient("year", targetDate);
-                    break;
+            int itemId = menuItem.getItemId();
+
+            if (itemId == R.id.daily_sales) {
+                targetDuration = "day";
+                drawerHeaderDuration.setText(getDuration());
+                requestSalesData(targetDuration, targetDate);
+
+            } else if (itemId == R.id.weekly_sales) {
+                targetDuration = "week";
+                drawerHeaderDuration.setText(getDuration());
+                requestSalesData(targetDuration, targetDate);
+
+            } else if (itemId == R.id.monthly_sales) {
+                targetDuration = "month";
+                drawerHeaderDuration.setText(getDuration());
+                requestSalesData(targetDuration, targetDate);
+
+            } else if (itemId == R.id.yearly_sales) {
+                drawerHeaderDuration.setText(getDuration());
+                targetDuration = "year";
+                requestSalesData("year", targetDate);
+
+            } else if (itemId == R.id.max_sales) {
+                Log.d(TAG, "date: " + targetDate + "\nduration :" + targetDuration);
+                setSalesItems(targetDuration, targetDate, "max");
+
+            } else if (itemId == R.id.min_sales) {
+                setSalesItems(targetDuration, targetDate, "min");
             }
-            setHeaderDuration();
             drawerLayout.closeDrawer(GravityCompat.END);
             return true;
         });
@@ -212,8 +221,46 @@ public class AdminSales extends AppCompatActivity {
         });
     }
 
+    public void setSalesItems(String duration, String currentDate, String standard) {
+        Call<SalesItemDTO> call = service.requestSalesItems(duration, currentDate, standard);
+        call.enqueue(new Callback<SalesItemDTO>() {
+            @Override
+            public void onResponse(@NonNull Call<SalesItemDTO> call, @NonNull Response<SalesItemDTO> response) {
+                Log.d(TAG, "onResponse setSalesItems: " + response.body().getResult());
+                if (response.isSuccessful()) {
+                    switch (response.body().getResult()) {
+                        case "success":
+                            String header = null;
+                            if (standard.equals("max")) {
+                                header = drawerHeaderDuration.getText().toString() + " 최다 판매";
+                            } else {
+                                header = drawerHeaderDuration.getText().toString() + " 최저 판매";
+                            }
+                            dialogManager.showSalesItemsDialog
+                                    (AdminSales.this,
+                                            response.body().getSalesItems(), header).show();
+                            break;
+                        case "failed":
+                            dialogManager.positiveBtnDialog
+                                    (AdminSales.this,
+                                            "데이터가 존재하지 않습니다.").show();
+                            break;
+                    }
+                } else {
+                    Log.d(TAG, "setSalesItems is not successful");
+                }
 
-    public void setRetrofitClient(String duration, String currentDate) {
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<SalesItemDTO> call, @NonNull Throwable t) {
+                Log.d(TAG, "onFailure setSalesItems: " + t.getMessage());
+            }
+        });
+    }
+
+
+    public void requestSalesData(String duration, String currentDate) {
         Call<SalesDTO> call = service.requestSalesData(duration, currentDate);
         call.enqueue(new Callback<SalesDTO>() {
             @Override
@@ -229,7 +276,7 @@ public class AdminSales extends AppCompatActivity {
                             chart.clear();
                             chart.setNoDataText(getResources().getString(R.string.noSales));
                             chart.setNoDataTextColor(Color.RED);
-                            totalSales.setText("매출 데이터가 존재하지 않습니다.");
+                            totalSales.setText(drawerHeaderDuration.getText().toString());
                             chart.invalidate();
                             break;
                     }
@@ -257,8 +304,7 @@ public class AdminSales extends AppCompatActivity {
 
         switch (duration) {
             case "day":
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy년 MM월 dd일");
-                title = LocalDate.parse(targetDate).format(formatter);
+                drawerHeaderDuration.getText().toString();
                 xAxis.setAxisMinimum(-1f);
                 xAxis.setAxisMaximum(23.9f);
                 xAxis.setValueFormatter((value, axis) -> (int) value + "시");
@@ -272,12 +318,7 @@ public class AdminSales extends AppCompatActivity {
                 break;
 
             case "week":
-                LocalDate weekDate = LocalDate.parse(targetDate);
-                int year = weekDate.getYear();
-                int month = weekDate.getMonthValue();
-                int week = weekDate.get(WeekFields.of(Locale.getDefault()).weekOfMonth());
-                title = String.format("%d년 %d월 %d째주", year, month, week);
-
+                drawerHeaderDuration.getText().toString();
                 xAxis.setAxisMinimum((float) -0.9);
                 xAxis.setAxisMaximum((float) 7.1);
                 xAxis.setTextSize(15);
@@ -299,7 +340,7 @@ public class AdminSales extends AppCompatActivity {
                 break;
 
             case "month":
-                formatter = DateTimeFormatter.ofPattern("yyyy년 MM월");
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy년 MM월");
                 title = LocalDate.parse(targetDate).format(formatter);
 
                 xAxis.setAxisMinimum((float) -0.9);
@@ -323,8 +364,7 @@ public class AdminSales extends AppCompatActivity {
                 break;
 
             case "year":
-                year = LocalDate.parse(targetDate).getYear();
-                title = year + "년";
+                drawerHeaderDuration.getText().toString();
                 xAxis.setAxisMinimum((float) -0.9);
                 xAxis.setAxisMaximum((float) 12.1);
 
@@ -360,38 +400,36 @@ public class AdminSales extends AppCompatActivity {
 
     }
 
-    public void setHeaderDuration(){
-        switch (targetDuration){
-            case "day" :
-                String day = targetDate.replace("-", "/");
-                drawerHeaderDuration.setText(day);
-                break;
+    public String getDuration() {
+        switch (targetDuration) {
+            case "day":
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy년 MM월 dd일");
+                return LocalDate.parse(targetDate).format(formatter);
+
             case "week":
                 LocalDate weekDate = LocalDate.parse(targetDate);
+                WeekFields weekFields = WeekFields.of(DayOfWeek.MONDAY, 4);
+                int year = weekDate.getYear();
+                int weekOfMonth = weekDate.get(weekFields.weekOfMonth());
                 int month = weekDate.getMonthValue();
-//                int weekOfYear = weekDate.get(WeekFields.ISO.weekOfYear());
-//                Log.d(TAG, "setHeaderDuration weekOfYear: " + weekOfYear);
-                int weekOfMonth = weekDate.get(WeekFields.of(Locale.UK).weekOfMonth());
-                String headerDuration = month + "월 " + weekOfMonth + "째주";
-                drawerHeaderDuration.setText(headerDuration);
-                break;
+
+                return year + "년" + month + "월 " + weekOfMonth + "째주";
+
             case "month":
                 LocalDate monthDate = LocalDate.parse(targetDate);
                 YearMonth yearMonth = YearMonth.from(monthDate);
 
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+                formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
                 String start = yearMonth.atDay(1).format(formatter);
                 String end = yearMonth.atEndOfMonth().format(formatter);
 
-                headerDuration = start + "~" + end;
-                drawerHeaderDuration.setText(headerDuration);
-                break;
+                return start + "~" + end;
+
             case "year":
                 int yearDate = LocalDate.parse(targetDate).getYear();
-                headerDuration = yearDate + "년";
-                drawerHeaderDuration.setText(headerDuration);
-                break;
+                return yearDate + "년";
         }
+        return "";
     }
 
     public void init() {
@@ -426,7 +464,7 @@ public class AdminSales extends AppCompatActivity {
 
     }
 
-    public Pair<Integer, String> dayOfWeekNumber(String dateString){
+    public Pair<Integer, String> dayOfWeekNumber(String dateString) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
         LocalDate localDate = LocalDate.parse(dateString, formatter);
 
@@ -439,8 +477,6 @@ public class AdminSales extends AppCompatActivity {
 
         return Pair.create(dayOfWeekNumber, dayOfWeek);
     }
-
-
 
 
 }

@@ -19,7 +19,7 @@
         android:padding="20dp"
         android:text="안녕하세요"
         android:textColor="@color/black"
-        android:background="@drawable/radius_50dp"/>
+        android:background="@drawable/pale_gray_radius_50dp"/>
 
     <TextView
         android:id="@+id/chatting_receiver_time"

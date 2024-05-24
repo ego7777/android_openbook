@@ -108,7 +108,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
 
-        android:background="@drawable/radius_10dp_lime"
+        android:background="@drawable/lime_radius_10"
 
         android:text="선물하기"
         android:textStyle="bold"
@@ -125,7 +125,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
 
-        android:background="@drawable/radius_10dp_lime"
+        android:background="@drawable/lime_radius_10"
 
         android:text="취소"
         android:textStyle="bold"

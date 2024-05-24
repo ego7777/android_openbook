@@ -147,8 +147,6 @@ public class SendNotification {
 
     }
 
-
-
     public void sendMenu(Map<String, String> orderItems, SendMenuCallback callback) {
 
         Call<SuccessOrNot> call = service.sendRequestFcm("admin", gson.toJson(orderItems));

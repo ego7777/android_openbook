@@ -1,6 +1,8 @@
 package com.example.openbook.retrofit;
 
 
+import android.view.MenuItem;
+
 import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
@@ -8,25 +10,16 @@ import java.util.List;
 
 public class MenuListDTO {
     String result;
-    @SerializedName("items")
-    private Items items;
 
     public String getResult() {
         return result;
     }
 
-    public Items getItems() {
-        return items;
-    }
+    @SerializedName("items")
+    private List<MenuItem> itemList;
 
-
-    public class Items{
-        @SerializedName("item")
-        private List<MenuItem> itemList;
-        public List<MenuItem> getItemList() {
-            return itemList;
-        }
-
+    public List<MenuItem> getItemList() {
+        return itemList;
     }
 
 

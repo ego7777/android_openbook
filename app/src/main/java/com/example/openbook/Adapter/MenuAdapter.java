@@ -1,9 +1,7 @@
 package com.example.openbook.Adapter;
 
 import android.annotation.SuppressLint;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.util.Log;
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,19 +11,15 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.example.openbook.R;
 import com.example.openbook.Data.MenuList;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 
 public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
     ArrayList<MenuList> menuItem;
-
     String TAG = "RecyclerViewAdapter";
-    Bitmap bitmap = null;
 
     /**
      * 커스텀 리스너 인터페이스 정의
@@ -59,18 +53,9 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
      **/
     @Override
     public void onBindViewHolder(@NonNull MenuAdapter.ViewHolder holder, @SuppressLint("RecyclerView") int position) {
-        try {
-            holder.onBind(menuItem.get(position));
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        }
-//        Log.d(TAG, "onCreateViewHolder: onBIndViewHolder");
+        holder.onBind(menuItem.get(position), holder.itemView.getContext());
     }
 
-
-    /**
-     * 리사이클러뷰 리스트 사이즈를 불러옴
-     **/
     @Override
     public int getItemCount() {
         if (menuItem == null) {
@@ -91,11 +76,9 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
      **/
     class ViewHolder extends RecyclerView.ViewHolder {
 
-        ImageView menu_image;
-        TextView menu_name;
-        TextView menu_price;
+        ImageView menuImage;
+        TextView menuName, menuPrice;
         private int viewType;
-
 
         public ViewHolder(@NonNull View itemView, int viewType) {
             super(itemView);
@@ -103,26 +86,20 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
 
             if (viewType == TYPE_YES) {
 
-                menu_image = itemView.findViewById(R.id.menu_image);
-                menu_name = itemView.findViewById(R.id.menu_name);
-                menu_price = itemView.findViewById(R.id.menu_price);
+                menuImage = itemView.findViewById(R.id.menu_image);
+                menuName = itemView.findViewById(R.id.menu_name);
+                menuPrice = itemView.findViewById(R.id.menu_price);
                 /**
                  * 아이템뷰 클릭
                  */
-                itemView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        int position = getAdapterPosition();
-//                        Uri url = menuItem.get(position).getUrl();
-                        String name = menuItem.get(position).getMenu_name();
-                        int price = menuItem.get(position).getMenu_price();
-                        Log.d(TAG, "onClick: 2");
+                itemView.setOnClickListener(view -> {
+                    int position = getAdapterPosition();
+                    String name = menuItem.get(position).getMenuName();
+                    int price = menuItem.get(position).getMenuPrice();
 
-                        if (position != RecyclerView.NO_POSITION) {
-                            Log.d(TAG, "onClick: 3");
-                            if (myListener != null) {
-                                myListener.onItemClick(view, name, price, position);
-                            }
+                    if (position != RecyclerView.NO_POSITION) {
+                        if (myListener != null) {
+                            myListener.onItemClick(view, name, price, position);
                         }
                     }
                 });
@@ -131,63 +108,41 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
 
         }
 
-        void onBind(MenuList item) throws MalformedURLException {
+        void onBind(MenuList item, Context context) {
             if (viewType == TYPE_NO) {
                 onBindNo(item);
             } else if (viewType == TYPE_YES) {
-                Log.d(TAG, "onBindYES: ");
-                onBindYes(item);
+                onBindYes(item, context);
             }
         }
 
-        void onBindYes(MenuList items) throws MalformedURLException {
-            URL url = new URL(items.getUrl());
-            Log.d(TAG, "onBindYes url : " + url);
+        void onBindYes(MenuList items, Context context) {
 
-            Thread bitmapThread = new Thread(){
-                @Override
-                public void run() {
-                    try {
-                        bitmap = BitmapFactory.decodeStream
-                                (url.openConnection().getInputStream());
+//            URL url = null;
+//            try {
+//                url = new URL(items.getUrl());
+//            } catch (MalformedURLException e) {
+//                throw new RuntimeException(e);
+//            }
 
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-            };
-            bitmapThread.start();
-
-            try{
-                bitmapThread.join();
-                menu_image.setImageBitmap(bitmap);
-                menu_name.setText(items.getMenu_name());
-                Log.d(TAG, "onBindYes menuName: " + items.getMenu_name());
-                menu_price.setText(String.valueOf(items.getMenu_price()));
-                Log.d(TAG, "onBindYes menuPrice: " + items.getMenu_price());
-
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-
+            Glide.with(context).load(items.getUrl()).into(menuImage);
+            menuName.setText(items.getMenuName());
+            menuPrice.setText(String.valueOf(items.getMenuPrice()));
 
         }
 
         void onBindNo(MenuList items) {
-            ImageView temp_img = itemView.findViewById(R.id.temp_img);
-            TextView temp_name = itemView.findViewById(R.id.temp_name);
+//            ImageView tempImg = itemView.findViewById(R.id.temp_img);
+            TextView tempName = itemView.findViewById(R.id.temp_name);
 
-            temp_name.setText(items.getMenu_name());
-//            temp_price.setText(String.valueOf(items.getMenu_price()));
+            tempName.setText(items.getMenuName());
         }
 
     }
 
     // view type
-    private int TYPE_NO = 101;
-    private int TYPE_YES = 102;
-
+    private final int TYPE_NO = 101;
+    private final int TYPE_YES = 102;
 
 
     private int getViewSrc(int viewType) {

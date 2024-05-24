@@ -129,7 +129,7 @@
 
         android:autoSizeMinTextSize="20sp"
         android:autoSizeTextType="uniform"
-        android:background="@drawable/radius_10dp_lime"
+        android:background="@drawable/lime_radius_10"
 
         android:text="login"
         android:textColor="@color/black"
@@ -158,7 +158,7 @@
         android:autoSizeMinTextSize="20sp"
         android:autoSizeTextType="uniform"
 
-        android:background="@drawable/radius_10dp_lime"
+        android:background="@drawable/lime_radius_10"
         android:text="sign up"
         android:textColor="@color/black"
 

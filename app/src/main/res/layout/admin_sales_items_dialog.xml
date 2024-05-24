@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="800dp"
+    android:layout_height="450dp"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@drawable/black_radius_30">
+
+    <ImageView
+        android:id="@+id/sales_items_dialog_cancel"
+        android:layout_width="0dp"
+        android:layout_height="52dp"
+        app:layout_constraintHorizontal_weight="0.1"
+        android:src="@drawable/cancel_icon"
+        android:background="@drawable/lime_top_left_radius_30dp"
+        android:padding="8dp"
+
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintVertical_bias="0"/>
+
+    <TextView
+        android:id="@+id/sales_items_dialog_header"
+        android:layout_width="0dp"
+        android:layout_height="52dp"
+        android:background="@drawable/lime_top_right_radius_30"
+        android:textColor="@color/black"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:textSize="23sp"
+
+        app:layout_constraintHorizontal_weight="9.9"
+        app:layout_constraintStart_toEndOf="@id/sales_items_dialog_cancel"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintVertical_bias="0"/>
+
+    <LinearLayout
+        android:id="@+id/sales_items_main"
+        android:layout_width="185dp"
+        android:layout_height="262dp"
+        android:orientation="vertical"
+        android:background="@drawable/white_radius_30"
+        
+        android:layout_marginStart="60dp"
+        android:layout_marginEnd="30dp"
+        android:gravity="center"
+
+        app:layout_constraintTop_toBottomOf="@id/sales_items_dialog_header"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/sales_items_side">
+        
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="메인"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            android:gravity="center"/>
+
+        <ImageView
+            android:id="@+id/sales_items_main_image"
+            android:layout_width="135dp"
+            android:layout_height="135dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="20dp"/>
+
+        <TextView
+            android:id="@+id/sales_items_main_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/black"
+            android:textStyle="bold"
+            android:textSize="20sp"
+            android:gravity="center"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/sales_items_side"
+        android:layout_width="185dp"
+        android:layout_height="262dp"
+        android:orientation="vertical"
+        android:background="@drawable/white_radius_30"
+        
+        android:layout_marginStart="30dp"
+        android:layout_marginEnd="30dp"
+        android:gravity="center"
+
+        app:layout_constraintTop_toBottomOf="@id/sales_items_dialog_header"
+        app:layout_constraintStart_toEndOf="@id/sales_items_main"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/sales_items_drink">
+        
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="사이드"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            android:gravity="center"/>
+
+        <ImageView
+            android:id="@+id/sales_items_side_image"
+            android:layout_width="135dp"
+            android:layout_height="135dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="20dp"/>
+
+        <TextView
+            android:id="@+id/sales_items_side_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/black"
+            android:textStyle="bold"
+            android:textSize="20sp"
+            android:gravity="center"/>
+
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/sales_items_drink"
+        android:layout_width="185dp"
+        android:layout_height="262dp"
+        android:orientation="vertical"
+        android:background="@drawable/white_radius_30"
+
+        android:layout_marginEnd="60dp"
+        android:layout_marginStart="30dp"
+        android:gravity="center"
+
+        app:layout_constraintTop_toBottomOf="@id/sales_items_dialog_header"
+        app:layout_constraintStart_toEndOf="@id/sales_items_side"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="주류"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            android:gravity="center" />
+
+        <ImageView
+            android:id="@+id/sales_items_drink_image"
+            android:layout_width="135dp"
+            android:layout_height="135dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="20dp"/>
+
+        <TextView
+            android:id="@+id/sales_items_drink_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/black"
+            android:textStyle="bold"
+            android:textSize="20sp"
+            android:gravity="center"/>
+
+        
+    </LinearLayout>
+
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

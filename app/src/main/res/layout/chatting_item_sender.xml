@@ -30,7 +30,7 @@
         android:autoSizeTextType="uniform"
         android:autoSizeMaxTextSize="25sp"
         android:textColor="@color/black"
-        android:background="@drawable/radius_50dp"
+        android:background="@drawable/pale_gray_radius_50dp"
         android:backgroundTint="@color/light_gray"/>
 
 

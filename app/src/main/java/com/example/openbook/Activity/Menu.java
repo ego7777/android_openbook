@@ -177,7 +177,6 @@ public class Menu extends AppCompatActivity {
         isPayment = getIntent().getBooleanExtra("isPayment", false);
 
 
-
         /**
          * 로그인을 성공하면 id, token을 firebase realtime db에 저장
          */
@@ -276,14 +275,16 @@ public class Menu extends AppCompatActivity {
                     if (response.isSuccessful()) {
                         switch (response.body().getResult()) {
                             case "success":
-                                setMenuList(response.body().getItems().getItemList());
+                                setMenuList(response.body().getItemList());
                                 break;
                             case "failed":
+                                progressbar.dismiss();
                                 Toast.makeText(Menu.this, "가져올 데이터가 없습니다.", Toast.LENGTH_SHORT).show();
                                 break;
                         }
 
                     } else {
+                        progressbar.dismiss();
                         Toast.makeText(Menu.this, R.string.networkError, Toast.LENGTH_SHORT).show();
                     }
                 }
@@ -337,7 +338,7 @@ public class Menu extends AppCompatActivity {
         if (isPayment) {
             Log.d(TAG, "isPayment: " + isPayment);
             sendNotification.sendMenu(submitOrder(), result -> {
-                if(result.equals("success")){
+                if (result.equals("success")) {
                     orderSharedPreference();
                     successOrder();
                 }
@@ -553,12 +554,12 @@ public class Menu extends AppCompatActivity {
                         break;
 
                     case NOW:
-                                Intent intent = new Intent(Menu.this, KakaoPay.class);
-                                intent.putExtra("orderItemName", getOrderItemName());
-                                intent.putExtra("totalPrice", totalPrice);
-                                intent.putExtra("myData", myData);
-                                intent.putExtra("orderItems", getOrderList());
-                                startActivity(intent);
+                        Intent intent = new Intent(Menu.this, KakaoPay.class);
+                        intent.putExtra("orderItemName", getOrderItemName());
+                        intent.putExtra("totalPrice", totalPrice);
+                        intent.putExtra("myData", myData);
+                        intent.putExtra("orderItems", getOrderList());
+                        startActivity(intent);
 //                                paymentLauncher.launch(intent);
 
 
@@ -694,21 +695,20 @@ public class Menu extends AppCompatActivity {
 
     public void setMenuList(List<MenuListDTO.MenuItem> menuList) {
 
-        new Thread(() -> {
-            for (MenuListDTO.MenuItem menuItem : menuList) {
+        for (MenuListDTO.MenuItem menuItem : menuList) {
 
-                String url = BuildConfig.SERVER_IP + "MenuImages/" + menuItem.getImageURL();
-                String menuName = menuItem.getMenuName();
-                int price = menuItem.getMenuPrice();
-                int category = menuItem.getMenuCategory();
+            String url = BuildConfig.SERVER_IP + "MenuImages/" + menuItem.getImageURL();
+            String menuName = menuItem.getMenuName();
+            int price = menuItem.getMenuPrice();
+            int category = menuItem.getMenuCategory();
 
-                menuLists.add(new MenuList(url, menuName, price, category, 1));
-                dbHelper.insertMenuData(menuName, price, url, category);
+            menuLists.add(new MenuList(url, menuName, price, category, 1));
+            dbHelper.insertMenuData(menuName, price, url, category);
 
-            }
-            menuAdapter.setAdapterItem(menuLists);
-            Log.d(TAG, "setMenuList setAdapter: ");
-        }).start();
+        }
+        menuAdapter.setAdapterItem(menuLists);
+        Log.d(TAG, "setMenuList setAdapter: ");
+
     }
 
 

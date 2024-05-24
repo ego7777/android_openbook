@@ -90,5 +90,7 @@ public interface RetrofitService {
                                     @Field("current_date") String currentDate);
     @POST("SalesItemAnalyzer.php")
     @FormUrlEncoded
-    Call<SalesItemDTO> requestSalesItemDate(@Field("duration") String duration);
+    Call<SalesItemDTO> requestSalesItems(@Field("duration") String duration,
+                                            @Field("current_date") String currentDate,
+                                            @Field("standard") String standard);
 }

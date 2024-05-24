@@ -4,7 +4,6 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Handler;
@@ -20,26 +19,29 @@ import android.widget.TextView;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.CircularProgressDrawable;
 
+import com.bumptech.glide.Glide;
 import com.example.openbook.Activity.Table;
 import com.example.openbook.Adapter.AdminPopUpAdapter;
 import com.example.openbook.Chatting.ClientSocket;
 import com.example.openbook.Data.OrderList;
 import com.example.openbook.FCM.SendNotification;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
+import com.example.openbook.retrofit.SalesItemDTO;
+
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 
 public class DialogManager {
 
     String TAG = "DialogManagerTAG";
-    Gson gson = new Gson();
 
-    public Dialog progressDialog(Context context){
+    public Dialog progressDialog(Context context) {
         Dialog dialog = new Dialog(context);
-        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        Objects.requireNonNull(dialog.getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         dialog.setContentView(new ProgressBar(context));
         dialog.setCanceledOnTouchOutside(false);
 
@@ -47,7 +49,7 @@ public class DialogManager {
     }
 
 
-    public Dialog positiveBtnDialog(Context context, String message){
+    public Dialog positiveBtnDialog(Context context, String message) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
 
         builder.setMessage(message)
@@ -55,12 +57,10 @@ public class DialogManager {
                 .setPositiveButton("확인", (dialog, which) -> dialog.dismiss())
                 .setIcon(R.drawable.openbook_logo);
 
-        AlertDialog alertDialog = builder.create();
-
-        return alertDialog;
+        return builder.create();
     }
 
-    public void noButtonDialog(Context context, String message){
+    public void noButtonDialog(Context context, String message) {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
 
@@ -73,11 +73,11 @@ public class DialogManager {
 
         Handler handler = new Handler();
 
-        handler.postDelayed(() -> alertDialog.dismiss(), 1000);
+        handler.postDelayed(alertDialog::dismiss, 1000);
     }
 
     //Menu Activity 에서 Table Activity 로 넘어가는 dialog
-    public void moveActivity(Context context, String message, String id, Boolean orderCk, ClientSocket clientSocket){
+    public void moveActivity(Context context, String message, String id, Boolean orderCk, ClientSocket clientSocket) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setMessage(message)
                 .setTitle("알람")
@@ -98,12 +98,8 @@ public class DialogManager {
     }
 
 
-
-
-
-
     //Table.class에서 채팅하기 누르면 나오는 dialog
-    public void chattingRequest(Context context, String message, String clickTable, String get_id){
+    public void chattingRequest(Context context, String message, String clickTable, String get_id) {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
 
@@ -116,7 +112,7 @@ public class DialogManager {
                             .setPositiveButton("네", (dialog1, which1) -> {
                                 //프로필 조회권 주고
                                 SendNotification sendNotification = new SendNotification();
-                                sendNotification.requestChatting(clickTable, get_id,"yesTicket",
+                                sendNotification.requestChatting(clickTable, get_id, "yesTicket",
                                         "에서 채팅을 요청하였습니다. 수락하시겠습니까?\n** 프로필 오픈 티켓 동봉 **");
                                 //
                                 //sendNotification class에서 저장하고, table.class에서 조회해서 까보기..!!!!!
@@ -124,7 +120,7 @@ public class DialogManager {
                             })
                             .setNegativeButton("아니오", (dialog12, which12) -> {
                                 SendNotification sendNotification = new SendNotification();
-                                sendNotification.requestChatting(clickTable, get_id,"noTicket",
+                                sendNotification.requestChatting(clickTable, get_id, "noTicket",
                                         "에서 채팅을 요청하였습니다. 수락하시겠습니까?");
                                 dialog12.dismiss();
                             }).setIcon(R.drawable.heart);
@@ -140,7 +136,7 @@ public class DialogManager {
 
     }
 
-    public Dialog popUpAdmin(Context context, ArrayList<OrderList> orderList){
+    public Dialog popUpAdmin(Context context, ArrayList<OrderList> orderList) {
         Dialog dialog = new Dialog(context);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(R.layout.admin_popup);
@@ -159,15 +155,15 @@ public class DialogManager {
         popUpButton.setOnClickListener(view -> dialog.dismiss());
 
         Handler handler = new Handler();
-        handler.postDelayed(() -> dialog.dismiss(), 5000);
+        handler.postDelayed(dialog::dismiss, 5000);
 
         return dialog;
     }
 
-    public Dialog successOrder(Context context){
+    public Dialog successOrder(Context context) {
         Dialog dialog = new Dialog(context);
         dialog.setContentView(R.layout.order_complete);
-        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        Objects.requireNonNull(dialog.getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
 
         ImageView img = dialog.findViewById(R.id.serve_img);
         TextView text = dialog.findViewById(R.id.serve_text);
@@ -182,7 +178,7 @@ public class DialogManager {
         return dialog;
     }
 
-    public Dialog showReceiptDialog(Context context, ArrayList<OrderList> orderLists, String totalPrice){
+    public Dialog showReceiptDialog(Context context, ArrayList<OrderList> orderLists, String totalPrice) {
         Dialog dialog = new Dialog(context);
         dialog.setContentView(R.layout.receipt_dialog);
 
@@ -200,6 +196,72 @@ public class DialogManager {
         receiptCancel.setOnClickListener(view -> dialog.dismiss());
 
         return dialog;
+    }
+
+    public Dialog showSalesItemsDialog(Context context,
+                                       List<SalesItemDTO.SalesItemData> salesItem,
+                                       String header) {
+        Dialog dialog = new Dialog(context);
+        dialog.setContentView(R.layout.admin_sales_items_dialog);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+
+        ImageView dialogCancel = dialog.findViewById(R.id.sales_items_dialog_cancel);
+        TextView dialogHeader = dialog.findViewById(R.id.sales_items_dialog_header);
+        dialogHeader.setText(header);
+
+        String url = BuildConfig.SERVER_IP + "/MenuImages/";
+
+        ImageView mainImage = dialog.findViewById(R.id.sales_items_main_image);
+        ImageView sideImage = dialog.findViewById(R.id.sales_items_side_image);
+        ImageView drinkImage = dialog.findViewById(R.id.sales_items_drink_image);
+
+        TextView mainName = dialog.findViewById(R.id.sales_items_main_name);
+        TextView sideName = dialog.findViewById(R.id.sales_items_side_name);
+        TextView drinkName = dialog.findViewById(R.id.sales_items_drink_name);
+
+        for (SalesItemDTO.SalesItemData item : salesItem) {
+            String imageURL = url + item.getImageUrl();
+
+            switch (item.getMenuCategory()) {
+                case 0:
+                    mainName.setText(item.getMenuName());
+                    Glide.with(mainImage.getContext())
+                            .load(imageURL)
+                            .placeholder(getProgress(mainImage.getContext()))
+                            .into(mainImage);
+                    break;
+                case 1:
+                    sideName.setText(item.getMenuName());
+                    Glide.with(sideImage.getContext())
+                            .load(imageURL)
+                            .placeholder(getProgress(sideImage.getContext()))
+                            .into(sideImage);
+
+                    break;
+                case 2:
+                    drinkName.setText(item.getMenuName());
+                    Glide.with(drinkImage.getContext())
+                            .load(imageURL)
+                            .placeholder(getProgress(drinkImage.getContext()))
+                            .into(drinkImage);
+                    break;
+            }
+        }
+
+        dialogCancel.setOnClickListener(view -> dialog.dismiss());
+
+        return dialog;
+    }
+
+    private CircularProgressDrawable getProgress(Context context) {
+        CircularProgressDrawable progressDrawable = new CircularProgressDrawable(context);
+
+        progressDrawable.setStrokeWidth(5f);
+        progressDrawable.setCenterRadius(30f);
+        progressDrawable.setBackgroundColor(context.getColor(R.color.gray));
+        progressDrawable.start();
+
+        return progressDrawable;
     }
 
 }

@@ -13,7 +13,7 @@
         android:textStyle="bold"
         android:textSize="25sp"
         android:textColor="@color/black"
-        android:background="@drawable/radius_10dp_white"
+        android:background="@drawable/white_radius_10_stroke_gray"
         android:backgroundTint="@color/light_green"/>
 
 </LinearLayout>
