@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Handler;
 import android.util.Log;
+import android.view.View;
 import android.view.Window;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -22,11 +23,14 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.CircularProgressDrawable;
 
 import com.bumptech.glide.Glide;
+import com.example.openbook.Activity.Admin;
 import com.example.openbook.Activity.Table;
 import com.example.openbook.Adapter.AdminPopUpAdapter;
 import com.example.openbook.Chatting.ClientSocket;
 import com.example.openbook.Data.OrderList;
 import com.example.openbook.FCM.SendNotification;
+import com.example.openbook.QRcode.MakeQR;
+import com.example.openbook.retrofit.AdminTableDTO;
 import com.example.openbook.retrofit.SalesItemDTO;
 
 
@@ -253,6 +257,49 @@ public class DialogManager {
         return dialog;
     }
 
+    public Dialog addMenu(Context context){
+        Dialog dialog = new Dialog(context);
+        dialog.setContentView(R.layout.admin_modify_menu);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+
+        TextView cancel = dialog.findViewById(R.id.admin_modify_menu_cancel);
+        ImageView qrCode = dialog.findViewById(R.id.admin_modify_menu_qrCode);
+
+        MakeQR makeQR = new MakeQR();
+        qrCode.setImageBitmap(makeQR.adminQr());
+
+        cancel.setOnClickListener(view -> dialog.dismiss());
+
+        return dialog;
+    }
+
+    public Dialog tableInformationDialog(Context context, AdminTableDTO tableInfo){
+        Dialog dialog = new Dialog(context);
+        dialog.setContentView(R.layout.table_information_dialog);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+
+        ImageView tableInfoImg = dialog.findViewById(R.id.table_info_img);
+        TextView tableInfoText = dialog.findViewById(R.id.table_info_text);
+        TextView tableInfoStatement = dialog.findViewById(R.id.table_info_statement);
+        TextView tableInfoGender = dialog.findViewById(R.id.table_info_gender);
+        TextView tableInfoMember = dialog.findViewById(R.id.table_info_member);
+        TextView tableInfoClose = dialog.findViewById(R.id.table_info_close);
+
+        tableInfoText.setVisibility(View.INVISIBLE);
+
+        String imageUrl = BuildConfig.SERVER_IP + "Profile/" + tableInfo.getImageUrl();
+        Glide.with(tableInfoImg.getContext()).load(imageUrl).into(tableInfoImg);
+
+        tableInfoImg.setClickable(false);
+        tableInfoStatement.setText(tableInfo.getStatement());
+        tableInfoGender.setText(tableInfo.getGender());
+        tableInfoMember.setText(tableInfo.getGuestNumber() + "명");
+
+        tableInfoClose.setOnClickListener(view -> dialog.dismiss());
+
+        return  dialog;
+    }
+
     private CircularProgressDrawable getProgress(Context context) {
         CircularProgressDrawable progressDrawable = new CircularProgressDrawable(context);
 
@@ -263,5 +310,7 @@ public class DialogManager {
 
         return progressDrawable;
     }
+
+
 
 }

@@ -258,9 +258,31 @@ public class DBHelper extends SQLiteOpenHelper {
 
 
     public Cursor getTableData(String tableName) {
+        if(isExistTable(tableName)){
+            SQLiteDatabase db = this.getWritableDatabase();
+            return db.rawQuery("SELECT * FROM " + tableName, null);
+        }else{
+            return null;
+        }
+    }
+
+    public boolean isExistTable(String tableName) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?", new String[]{tableName});
+        boolean exists = false;
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                exists = (cursor.getInt(0) > 0);
+            }
+            cursor.close();
+        }
+        return exists;
+    }
+
+
+    public void dropTable(String tableName){
         SQLiteDatabase db = this.getWritableDatabase();
-        Cursor res = db.rawQuery("SELECT * FROM " + tableName, null);
-        return res;
+        db.execSQL("DROP TABLE IF EXISTS " + tableName);
     }
 
 

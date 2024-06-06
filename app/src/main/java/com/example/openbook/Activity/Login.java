@@ -15,6 +15,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.example.openbook.Chatting.DBHelper;
 import com.example.openbook.Data.AdminData;
 import com.example.openbook.BuildConfig;
 import com.example.openbook.Data.AdminTableList;
@@ -81,6 +82,9 @@ public class Login extends AppCompatActivity {
         RetrofitManager retrofitManager = new RetrofitManager();
         Retrofit retrofit = retrofitManager.getRetrofit(BuildConfig.SERVER_IP);
         service = retrofit.create(RetrofitService.class);
+
+        DBHelper dbHelper = new DBHelper(Login.this, 2);
+        dbHelper.dropTable("menuListTable");
 
 
         /**

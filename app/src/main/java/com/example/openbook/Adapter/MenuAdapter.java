@@ -117,14 +117,6 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
         }
 
         void onBindYes(MenuList items, Context context) {
-
-//            URL url = null;
-//            try {
-//                url = new URL(items.getUrl());
-//            } catch (MalformedURLException e) {
-//                throw new RuntimeException(e);
-//            }
-
             Glide.with(context).load(items.getUrl()).into(menuImage);
             menuName.setText(items.getMenuName());
             menuPrice.setText(String.valueOf(items.getMenuPrice()));

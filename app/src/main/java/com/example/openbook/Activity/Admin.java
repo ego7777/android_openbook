@@ -4,12 +4,10 @@ import android.app.Dialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.icu.text.DecimalFormat;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.Pair;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -31,7 +29,6 @@ import com.example.openbook.Data.AdminTableList;
 import com.example.openbook.Data.OrderList;
 import com.example.openbook.DialogManager;
 import com.example.openbook.FCM.FCM;
-import com.example.openbook.ImageLoadTask;
 import com.example.openbook.retrofit.RetrofitManager;
 import com.example.openbook.retrofit.RetrofitService;
 
@@ -59,15 +56,12 @@ public class Admin extends AppCompatActivity {
     TextView appbarAdminSales, appbarAdminAddMenu, appbarAdminModifyTable;
     TextView adminSidebarMenu, adminSidebarInfo, adminSidebarPay;
 
-    String gender, guestNumber, tableName, tableStatement, menuName;
+    String menuName;
     int totalPrice, tableIdentifier;
     boolean isPayment;
 
     SharedPreferences sharedPreference;
     SharedPreferences.Editor editor;
-    ImageView tableInfoImg;
-    TextView tableInfoStatement, tableInfoText, tableInfoGender, tableInfoMember;
-    Button tableInfoClose;
     AdminData adminData;
     RetrofitService service;
     ArrayList<AdminTableList> adminTableLists;
@@ -272,12 +266,8 @@ public class Admin extends AppCompatActivity {
         });
 
 
-        appbarAdminAddMenu.setOnClickListener(view -> {
-            // 메뉴 이름, 가격, 이미지를 등록하면 서버로 들어가서 menuList Db에 등록된다
-            startActivityClass(AdminModifyMenu.class);
-        });
+        appbarAdminAddMenu.setOnClickListener(view -> dialogManager.addMenu(Admin.this).show());
         appbarAdminModifyTable.setOnClickListener(view -> startActivityClass(AdminModifyTableQuantity.class));
-
 
         adapter.setOnItemClickListener((view, position) -> {
 
@@ -293,41 +283,9 @@ public class Admin extends AppCompatActivity {
                     dialogManager.noButtonDialog(Admin.this, getResources().getString(R.string.unusableTable));
 
                 }
-
-
-//                if (adminData.getAdminTableLists().get(position).getAdminTableMenu() == null) {
-//
-//                    dialogCustom.HandlerAlertDialog(Admin.this, "빈 좌석이거나 아직 주문하지 않은 좌석입니다.");
-//
-//                } else if (adminData.getAdminTableLists().get(position).getAdminTableStatement() == null) {
-//                    dialogCustom.HandlerAlertDialog(Admin.this, "빈 좌석이거나 아직 주문하지 않은 좌석입니다.");
-//                    Log.d(TAG, "선불: ");
-//                } else {
-//                    showReceiptDialog(position);
-//
-//                }
             });
 
-            adminSidebarInfo.setOnClickListener(v -> {
-                Dialog dlg = new Dialog(Admin.this, R.style.RadiusDialogStyle);
-                dlg.setContentView(R.layout.table_information_dialog);
-
-                dlg.show();
-
-                tableInfoImg = dlg.findViewById(R.id.table_info_img);
-                tableInfoText = dlg.findViewById(R.id.table_info_text);
-                tableInfoStatement = dlg.findViewById(R.id.table_info_statement);
-                tableInfoGender = dlg.findViewById(R.id.table_info_gender);
-                tableInfoMember = dlg.findViewById(R.id.table_info_member);
-                tableInfoClose = dlg.findViewById(R.id.table_info_close);
-
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    requestTableInfo(position + 1);
-                }
-
-                tableInfoClose.setOnClickListener(v1 -> dlg.dismiss());
-            });
+            adminSidebarInfo.setOnClickListener(v -> requestTableInfo(position + 1));
 
             adminSidebarPay.setOnClickListener(v -> {
 
@@ -335,7 +293,7 @@ public class Admin extends AppCompatActivity {
 
                 if (table.getAdminTablePrice() != null) {
                     String tableName = table.getAdminTableNumber();
-                    String tablePrice =table.getAdminTablePrice();
+                    String tablePrice = table.getAdminTablePrice();
                     totalPrice = removeCommas(tablePrice);
 
                     Intent intent = new Intent(Admin.this, KakaoPay.class);
@@ -354,7 +312,7 @@ public class Admin extends AppCompatActivity {
 
     }
 
-    public String getOrderList(int position){
+    public String getOrderList(int position) {
         String clickTable = adminTableLists.get(position).getAdminTableNumber();
         String sharedOrderList = sharedPreference.getString(clickTable, null);
 
@@ -428,7 +386,7 @@ public class Admin extends AppCompatActivity {
         String orderItems = sharedPreference.getString(tableName, null);
         Type type = new TypeToken<ArrayList<CartList>>() {
         }.getType();
-        ArrayList<CartList> orderLists = gson.fromJson(orderItems,type);
+        ArrayList<CartList> orderLists = gson.fromJson(orderItems, type);
 
         String orderItemName = orderLists.stream()
                 .map(cartItem -> cartItem.getMenuName() + " " + cartItem.getMenuQuantity() + "개")
@@ -475,23 +433,11 @@ public class Admin extends AppCompatActivity {
                 if (response.isSuccessful()) {
                     switch (response.body().getResult()) {
                         case "success":
-                            tableInfoText.setVisibility(View.INVISIBLE);
-
-                            String imageUrl = BuildConfig.SERVER_IP + "Profile/" + response.body().getImageUrl();
-                            ImageLoadTask task = new ImageLoadTask(Admin.this, true, imageUrl, tableInfoImg);
-                            task.execute();
-
-                            tableInfoImg.setClickable(false);
-                            tableInfoStatement.setText(response.body().getStatement());
-                            tableInfoGender.setText(response.body().getGender());
-                            tableInfoMember.setText(response.body().getGuestNumber() + "명");
+                            dialogManager.tableInformationDialog(Admin.this, response.body());
                             break;
 
                         case "failed":
-                            tableInfoText.setVisibility(View.INVISIBLE);
-                            tableInfoStatement.setText("정보를 입력하지 않은 테이블입니다.");
-                            tableInfoGender.setVisibility(View.GONE);
-                            tableInfoMember.setVisibility(View.GONE);
+                            dialogManager.positiveBtnDialog(Admin.this, "정보를 입력하지 않은 테이블입니다.");
                             break;
 
                         default:
@@ -681,7 +627,7 @@ public class Admin extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
 
-        if(popUpDialog != null && popUpDialog.isShowing()){
+        if (popUpDialog != null && popUpDialog.isShowing()) {
             popUpDialog.dismiss();
         }
     }

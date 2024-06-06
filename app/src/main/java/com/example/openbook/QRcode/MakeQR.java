@@ -2,6 +2,7 @@ package com.example.openbook.QRcode;
 
 import android.graphics.Bitmap;
 
+import com.example.openbook.BuildConfig;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
@@ -11,6 +12,7 @@ import com.journeyapps.barcodescanner.BarcodeEncoder;
 public class MakeQR {
     
     public Bitmap clientQR(String get_id){
+
         String text = "http://3.36.255.141/WriteTableInfo.php?table="+get_id;
 
         MultiFormatWriter multiFormatWriter = new MultiFormatWriter();
@@ -31,7 +33,8 @@ public class MakeQR {
     }
 
     public Bitmap adminQr(){
-        String text = "http://3.36.255.141/WriteMenuInfo.php";
+
+        String url = BuildConfig.SERVER_IP + "RegisterMenu.php";
 
         MultiFormatWriter multiFormatWriter = new MultiFormatWriter();
 
@@ -39,7 +42,7 @@ public class MakeQR {
 
         {
             try {
-                bitMatrix = multiFormatWriter.encode(text, BarcodeFormat.QR_CODE,200,200);
+                bitMatrix = multiFormatWriter.encode(url, BarcodeFormat.QR_CODE,200,200);
             } catch (WriterException e) {
                 e.printStackTrace();
             }

@@ -1,7 +1,6 @@
 package com.example.openbook.Activity;
 
 
-import android.app.Activity;
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -9,10 +8,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 
 import android.icu.text.DecimalFormat;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -25,13 +22,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 
-import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -113,7 +106,6 @@ public class Menu extends AppCompatActivity {
     ActivityResultLauncher<Intent> paymentLauncher;
 
     DBHelper dbHelper;
-    SQLiteDatabase sqLiteDatabase;
 
     SendNotification sendNotification;
 
@@ -146,8 +138,6 @@ public class Menu extends AppCompatActivity {
         }
     };
 
-
-    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -257,14 +247,14 @@ public class Menu extends AppCompatActivity {
         version++;
 
         dbHelper = new DBHelper(Menu.this, version);
-        sqLiteDatabase = dbHelper.getWritableDatabase();
         Cursor res = dbHelper.getTableData("menuListTable");
+
 
         RetrofitManager retrofitManager = new RetrofitManager();
         Retrofit retrofit = retrofitManager.getRetrofit(BuildConfig.SERVER_IP);
         service = retrofit.create(RetrofitService.class);
 
-        if (res.getCount() == 0) {
+        if (res == null) {
             Log.d(TAG, "메뉴 db 새로 받아오기");
 
             Call<MenuListDTO> call = service.getMenuList();
@@ -275,6 +265,7 @@ public class Menu extends AppCompatActivity {
                     if (response.isSuccessful()) {
                         switch (response.body().getResult()) {
                             case "success":
+                                Log.d(TAG, "onResponse itemList: " + response.body().getItemList());
                                 setMenuList(response.body().getItemList());
                                 break;
                             case "failed":
@@ -697,7 +688,7 @@ public class Menu extends AppCompatActivity {
 
         for (MenuListDTO.MenuItem menuItem : menuList) {
 
-            String url = BuildConfig.SERVER_IP + "MenuImages/" + menuItem.getImageURL();
+            String url = BuildConfig.SERVER_IP + "menuImages/" + menuItem.getImageURL();
             String menuName = menuItem.getMenuName();
             int price = menuItem.getMenuPrice();
             int category = menuItem.getMenuCategory();

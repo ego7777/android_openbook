@@ -98,9 +98,7 @@
         <activity
             android:name=".Activity.AdminPaymentLaterPopup"
             android:theme="@android:style/Theme.Dialog" />
-        <activity
-            android:name=".Activity.AdminPaymentNowPopup"
-            android:theme="@android:style/Theme.Dialog" />
+       
         <activity android:name=".Activity.AdminSales" />
         <activity android:name=".Activity.Admin" />
         <activity android:name=".kakaopay.KakaoPay" />
