@@ -161,7 +161,7 @@ public class ChattingUI extends AppCompatActivity {
         Log.d(TAG, "chattingData: " + chattingDataHashMap);
 
 
-        chattingDataHashMap.get("table"+table_num).setChattingAgree(true);
+//        chattingDataHashMap.get("table"+table_num).setChattingAgree(true);
         version++;
 
         dbHelper = new DBHelper(ChattingUI.this, version);
@@ -335,7 +335,7 @@ public class ChattingUI extends AppCompatActivity {
 
                     msg.what = MSG_SEND;
                     msg.obj = myData.getId() + "_" + chat_edit.getText().toString() + "_table" + table_num;
-                    Log.d(TAG, "msg 전송 :" + (String) msg.obj);
+                    Log.d(TAG, "msg 전송 :" + msg.obj);
 
                     mServiceHandler.sendMessage(msg);
 
@@ -392,51 +392,48 @@ public class ChattingUI extends AppCompatActivity {
 
     public void chattingUpdate(String line) {
 
-        Runnable showUpdate = new Runnable() {
-            @Override
-            public void run() {
+        Runnable showUpdate = () -> {
+            /**
+             * sendMsg[0] : message
+             * sendMsg[1] : 보낸 테이블 번호 (table + table_num)
+             * sendMsg[2] : 안읽음(0)/읽음(1)
+             */
+
+            String message[] = line.split("_");
+
+            //table1 형태
+            String receiver = message[1];
+
+            message[1] = message[1].replace("table", "");
+
+
+            if (String.valueOf(table_num).equals(message[1])) {
+                //처음엔 읽었는지 안읽었는지 모르니까 공란으로 넘겨버림
+                chatLists.add(new ChattingList(message[0], 0, localTime.format(DateTimeFormatter.ofPattern("HH:mm")), ""));
+                Log.d(TAG, "showUpdate : " + line);
+
+
+                chattingAdapter.notifyDataSetChanged();
+                chatting_view.smoothScrollToPosition(chatLists.size());
+
+                time = localTime.format(DateTimeFormatter.ofPattern("HH:mm"));
+
+                dbHelper.insertChattingData(message[0], time, receiver, myData.getId(), "");
+                Log.d(TAG, "전송 받은거 저장");
+
+
+                //상대방한테 알려줘야지
+                Intent intent = new Intent("SendChattingData");
                 /**
-                 * sendMsg[0] : message
-                 * sendMsg[1] : 보낸 테이블 번호 (table + table_num)
-                 * sendMsg[2] : 안읽음(0)/읽음(1)
+                 * 읽음_from_to
                  */
-
-                String message[] = line.split("_");
-
-                //table1 형태
-                String receiver = message[1];
-
-                message[1] = message[1].replace("table", "");
+                intent.putExtra("sendToServer", "isRead_"+myData.getId()+"_table" + table_num);
+                LocalBroadcastManager.getInstance(ChattingUI.this).sendBroadcast(intent);
 
 
-                if (String.valueOf(table_num).equals(message[1])) {
-                    //처음엔 읽었는지 안읽었는지 모르니까 공란으로 넘겨버림
-                    chatLists.add(new ChattingList(message[0], 0, localTime.format(DateTimeFormatter.ofPattern("HH:mm")), ""));
-                    Log.d(TAG, "showUpdate : " + line);
+            } // 해당 테이블에 데이터 넣어주기
 
 
-                    chattingAdapter.notifyDataSetChanged();
-                    chatting_view.smoothScrollToPosition(chatLists.size());
-
-                    time = localTime.format(DateTimeFormatter.ofPattern("HH:mm"));
-
-                    dbHelper.insertChattingData(message[0], time, receiver, myData.getId(), "");
-                    Log.d(TAG, "전송 받은거 저장");
-
-
-                    //상대방한테 알려줘야지
-                    Intent intent = new Intent("SendChattingData");
-                    /**
-                     * 읽음_from_to
-                     */
-                    intent.putExtra("sendToServer", "isRead_"+myData.getId()+"_table" + table_num);
-                    LocalBroadcastManager.getInstance(ChattingUI.this).sendBroadcast(intent);
-
-
-                } // 해당 테이블에 데이터 넣어주기
-
-
-            }
         };
 
         mMainHandler.post(showUpdate);
@@ -444,34 +441,31 @@ public class ChattingUI extends AppCompatActivity {
 
     private void isReadUpdate(String line){
 
-        Runnable isReadUpdate =new Runnable() {
-            @Override
-            public void run() {
-                /**
-                 * sendMsg[0] : isRead
-                 * sendMsg[1] : 보낸 테이블 번호 (get_id)
-                 */
+        Runnable isReadUpdate = () -> {
+            /**
+             * sendMsg[0] : isRead
+             * sendMsg[1] : 보낸 테이블 번호 (get_id)
+             */
 
-                Log.d(TAG, "isReadUpdate: ");
+            Log.d(TAG, "isReadUpdate: ");
 
-                String message[] = line.split("_");
+            String message[] = line.split("_");
 
 
 
-                message[0] = message[0].replace("table", "");
-                Log.d(TAG, "run: " + message[0]);
+            message[0] = message[0].replace("table", "");
+            Log.d(TAG, "run: " + message[0]);
 
-                if(String.valueOf(table_num).equals(message[0])){
+            if(String.valueOf(table_num).equals(message[0])){
 
-                    for(int i =0; i<chatLists.size(); i++){
-                        chatLists.get(i).setRead("");
-                        Log.d(TAG, "setRead: ");
-                    }
-
-                    chattingAdapter.notifyDataSetChanged();
-
-                    dbHelper.upDateIsRead(myData.getId(), "table"+table_num);
+                for(int i =0; i<chatLists.size(); i++){
+                    chatLists.get(i).setRead("");
+                    Log.d(TAG, "setRead: ");
                 }
+
+                chattingAdapter.notifyDataSetChanged();
+
+                dbHelper.upDateIsRead(myData.getId(), "table"+table_num);
             }
         };
 
@@ -496,6 +490,5 @@ public class ChattingUI extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         //안드로이드 백버튼 막기
-        return;
     }
 }

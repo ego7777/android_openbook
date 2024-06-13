@@ -23,7 +23,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.CircularProgressDrawable;
 
 import com.bumptech.glide.Glide;
-import com.example.openbook.Activity.Admin;
+import com.bumptech.glide.request.RequestOptions;
 import com.example.openbook.Activity.Table;
 import com.example.openbook.Adapter.AdminPopUpAdapter;
 import com.example.openbook.Chatting.ClientSocket;
@@ -32,11 +32,15 @@ import com.example.openbook.FCM.SendNotification;
 import com.example.openbook.QRcode.MakeQR;
 import com.example.openbook.retrofit.AdminTableDTO;
 import com.example.openbook.retrofit.SalesItemDTO;
+import com.example.openbook.retrofit.TableInformationDTO;
+
 
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import jp.wasabeef.glide.transformations.BlurTransformation;
 
 
 public class DialogManager {
@@ -257,7 +261,7 @@ public class DialogManager {
         return dialog;
     }
 
-    public Dialog addMenu(Context context){
+    public Dialog addMenu(Context context) {
         Dialog dialog = new Dialog(context);
         dialog.setContentView(R.layout.admin_modify_menu);
         dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -273,7 +277,106 @@ public class DialogManager {
         return dialog;
     }
 
-    public Dialog tableInformationDialog(Context context, AdminTableDTO tableInfo){
+    public Dialog myTableDialog(Context context,
+                                TableInformationDTO tableDTO,
+                                String id) {
+        Dialog dialog = new Dialog(context);
+        dialog.setContentView(R.layout.table_information_dialog);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+
+        ImageView tableInfoImg = dialog.findViewById(R.id.table_info_img);
+        TextView tableInfoText = dialog.findViewById(R.id.table_info_text);
+        TextView tableInfoStatement = dialog.findViewById(R.id.table_info_statement);
+        TextView tableInfoGender = dialog.findViewById(R.id.table_info_gender);
+        TextView tableInfoMember = dialog.findViewById(R.id.table_info_member);
+        TextView tableInfoClose = dialog.findViewById(R.id.table_info_close);
+
+        if (tableDTO.getResult().equals("notExist")) {
+            MakeQR qr = new MakeQR();
+            tableInfoImg.setImageBitmap(qr.clientQR(id));
+            tableInfoImg.setClickable(false);
+            tableInfoText.setVisibility(View.INVISIBLE);
+            tableInfoStatement.setText("사진과 정보를 입력하시려면 다음 큐알로 입장해주세요 :)");
+            tableInfoGender.setVisibility(View.GONE);
+            tableInfoMember.setVisibility(View.GONE);
+
+        } else {
+            String imageUrl = BuildConfig.SERVER_IP + "/Profile/" + tableDTO.getImageUrl();
+            Glide.with(tableInfoImg.getContext())
+                    .load(imageUrl)
+                    .into(tableInfoImg);
+
+            tableInfoText.setText("다시 등록하시려면 \n프로필 사진을 터치해주세요!");
+
+            tableInfoStatement.setText(tableDTO.getStatement());
+            tableInfoGender.setText(tableDTO.getGender());
+            tableInfoMember.setText(tableDTO.getUserCount());
+        }
+
+        tableInfoClose.setOnClickListener(view -> dialog.dismiss());
+
+        return dialog;
+    }
+
+    public Dialog otherTableDialog(Context context, TableInformationDTO tableDTO, boolean ticket){
+        Dialog dialog = new Dialog(context);
+        dialog.setContentView(R.layout.table_information_dialog);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+
+        ImageView tableInfoImg = dialog.findViewById(R.id.table_info_img);
+        TextView tableInfoText = dialog.findViewById(R.id.table_info_text);
+        TextView tableInfoStatement = dialog.findViewById(R.id.table_info_statement);
+        TextView tableInfoGender = dialog.findViewById(R.id.table_info_gender);
+        TextView tableInfoMember = dialog.findViewById(R.id.table_info_member);
+        TextView tableInfoClose = dialog.findViewById(R.id.table_info_close);
+
+        if(tableDTO.getResult().equals("notExist")){
+            tableInfoText.setVisibility(View.INVISIBLE);
+            tableInfoStatement.setText("정보를 입력하지 않은 테이블입니다.");
+            tableInfoGender.setVisibility(View.INVISIBLE);
+            tableInfoMember.setVisibility(View.INVISIBLE);
+        }else{
+            String imageUrl = BuildConfig.SERVER_IP + "/Profile/" + tableDTO.getImageUrl();
+
+            tableInfoStatement.setText(tableDTO.getStatement());
+            tableInfoGender.setText(tableDTO.getGender());
+            tableInfoMember.setText(tableDTO.getUserCount());
+
+            if(ticket){
+                Glide.with(tableInfoImg.getContext())
+                        .load(imageUrl)
+                        .into(tableInfoImg);
+            }else{
+                Glide.with(tableInfoImg.getContext())
+                        .load(imageUrl)
+                        .apply(RequestOptions.bitmapTransform(new BlurTransformation(25, 3)))
+                        .into(tableInfoImg);
+
+                tableInfoImg.setOnClickListener(view ->{
+                    /**
+                     * 티켓이 없으면 구매할거냐고 물어보는 팝업이 하나 더 생기고, 티켓이 있으면 사용할거냐고 물어보는 팝업이 하나 더 띄워진다.
+                     */
+//                    Intent intent = new Intent(Table.this, PopUpProfile.class);
+//                    intent.putExtra("title", "프로필 조회권 구매");
+//                    intent.putExtra("body", "프로필 조회권을 구매하시겠습니까?\n** 프로필 조회권 2000원");
+//
+//                    intent.putExtra("myData", myData);
+//                    intent.putExtra("clickTable", clickTable);
+//                    intent.putExtra("chattingData", chattingDataHashMap);
+//                    intent.putExtra("ticketData", ticketDataHashMap);
+//                    intent.putExtra("tableList", tableList);
+//
+//                    startActivity(intent);
+                });
+            }
+        }
+
+        tableInfoClose.setOnClickListener(view -> dialog.dismiss());
+
+        return dialog;
+    }
+
+    public Dialog adminTableInformationDialog(Context context, AdminTableDTO tableInfo) {
         Dialog dialog = new Dialog(context);
         dialog.setContentView(R.layout.table_information_dialog);
         dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -297,7 +400,7 @@ public class DialogManager {
 
         tableInfoClose.setOnClickListener(view -> dialog.dismiss());
 
-        return  dialog;
+        return dialog;
     }
 
     private CircularProgressDrawable getProgress(Context context) {
@@ -310,7 +413,6 @@ public class DialogManager {
 
         return progressDrawable;
     }
-
 
 
 }

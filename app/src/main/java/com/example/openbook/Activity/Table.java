@@ -6,8 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -16,8 +14,8 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -34,10 +32,7 @@ import com.example.openbook.Data.MenuList;
 import com.example.openbook.Data.MyData;
 import com.example.openbook.Deco.menu_recyclerview_deco;
 import com.example.openbook.DialogManager;
-import com.example.openbook.FCM.SendNotification;
-import com.example.openbook.ImageLoadTask;
 import com.example.openbook.PaymentCategory;
-import com.example.openbook.QRcode.MakeQR;
 import com.example.openbook.R;
 import com.example.openbook.Data.TicketData;
 import com.example.openbook.Data.TableList;
@@ -45,8 +40,6 @@ import com.example.openbook.retrofit.RetrofitManager;
 import com.example.openbook.retrofit.RetrofitService;
 import com.example.openbook.retrofit.SuccessOrNot;
 import com.example.openbook.retrofit.TableInformationDTO;
-import com.example.openbook.retrofit.TableListDTO;
-import com.example.openbook.TableQuantity;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -70,21 +63,16 @@ public class Table extends AppCompatActivity {
     HashMap<String, ChattingData> chattingDataHashMap;
     ArrayList<TableList> tableList;
 
-    //다이얼로그
-    ImageView table_info_img;
-    TextView tableInfoStatement, tableInfoText, tableInfoGender, tableInfoMember;
-    Button tableInfoClose;
-
     int clickTable, myTable, sendGiftQuantity;
     TableAdapter adapter;
 
     TextView appbarMenu, appbarOrderList, requestChatting, checkInformation, sendGift;
-    LinearLayout table_sidebar;
-
-    ImageLoadTask task;
+    LinearLayout tableSidebar;
     String url;
 
     RetrofitService service;
+
+    DialogManager dialogManager;
 
     SendToPopUp sendToPopUp = new SendToPopUp();
 
@@ -116,7 +104,6 @@ public class Table extends AppCompatActivity {
 
     int tablePosition;
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -131,7 +118,19 @@ public class Table extends AppCompatActivity {
         chattingDataHashMap = (HashMap<String, ChattingData>) getIntent().getSerializableExtra("chattingData");
         ticketDataHashMap = (HashMap<String, TicketData>) getIntent().getSerializableExtra("ticketData");
         tableList = (ArrayList<TableList>) getIntent().getSerializableExtra("tableList");
-        Log.d(TAG, "tableList size: " + tableList.size());
+        if(tableList != null){
+            Log.d(TAG, "tableList size: " + tableList.size());
+        }else{
+            tableList = new ArrayList<>();
+
+            for (int i = 1; i < myData.getTableFromDB() + 1; i++) {
+                if (i == myTable) {
+                    tableList.add(new TableList(myData.getId(), null, 0));
+                } else {
+                    tableList.add(new TableList(i, null, 1));
+                }
+            }
+        }
 
 
         if (!myData.getId().equals("구글로그인")) {
@@ -148,20 +147,17 @@ public class Table extends AppCompatActivity {
 
         appbarOrderList = findViewById(R.id.appbar_menu_orderList);
 
-        RecyclerView table_grid = findViewById(R.id.tableGrid);
+        RecyclerView tableGrid = findViewById(R.id.tableGrid);
         adapter = new TableAdapter(tableList, myTable);
 
         //그리드 레이아웃 설정
-        table_grid.setLayoutManager(new GridLayoutManager(this, 5));
-
-        //어댑터 연결
-        table_grid.setAdapter(adapter);
+        tableGrid.setLayoutManager(new GridLayoutManager(this, 5));
+        tableGrid.setAdapter(adapter);
 
 
         //오른쪽 사이드 메뉴
-        table_sidebar = findViewById(R.id.table_sidebar);
-        table_sidebar.setVisibility(View.INVISIBLE);
-
+        tableSidebar = findViewById(R.id.table_sidebar);
+        tableSidebar.setVisibility(View.INVISIBLE);
 
         requestChatting = findViewById(R.id.chatting);
         checkInformation = findViewById(R.id.take_info);
@@ -174,7 +170,6 @@ public class Table extends AppCompatActivity {
     } //onCreate
 
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onResume() {
         super.onResume();
@@ -194,41 +189,13 @@ public class Table extends AppCompatActivity {
         Log.d(TAG, "activeTable: " + activeTable);
 
         if (tableList != null) {
-
-            tableUpdate(activeTable);
-
-        } else {
-            TableQuantity tableQuantity = new TableQuantity();
-            tableQuantity.getTableQuantity(new Callback<TableListDTO>() {
-                @Override
-                public void onResponse(Call<TableListDTO> call, Response<TableListDTO> response) {
-                    if(response.isSuccessful()){
-                        tableList = new ArrayList<>();
-
-                        for (int i = 1; i < response.body().getTableCount() + 1; i++) {
-                            if (i == myTable) {
-                                tableList.add(new TableList(myData.getId(), (Drawable) null, 0));
-                            } else {
-                                tableList.add(new TableList(i, (Drawable) null, 1));
-                            }
-                        }
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<TableListDTO> call, Throwable t) {
-
-                }
-            });
-
             tableUpdate(activeTable);
         }
-
 
         appbarMenu.setOnClickListener(this::moveToMenu);
 
         appbarOrderList.setOnClickListener(v -> {
-//                showReceiptDialog();
+
         });
 
 
@@ -236,7 +203,7 @@ public class Table extends AppCompatActivity {
          * table 누르면 옆에 사이드 메뉴 popup
          */
         adapter.setOnItemClickListener((view, position) -> {
-            table_sidebar.setVisibility(View.VISIBLE);
+            tableSidebar.setVisibility(View.VISIBLE);
             clickTable = position + 1;
 
             if (myData.getPaymentCategory() == PaymentCategory.NOW) {
@@ -258,51 +225,61 @@ public class Table extends AppCompatActivity {
         requestChatting.setOnClickListener(view -> {
 
             if (!myData.isOrder()) {
-                dialogManager.positiveBtnDialog(Table.this, "주문 후 채팅이 가능합니다.");
+                dialogManager.positiveBtnDialog(Table.this, "주문 후 채팅이 가능합니다.").show();
 
             } else if (clickTable == myTable) {
 
                 dialogManager.positiveBtnDialog(Table.this,
-                        "나의 채팅방 입니다. 다른 테이블과 채팅해보세요!");
+                        "나의 채팅방 입니다. 다른 테이블과 채팅해보세요!").show();
 
-            } else if (tableList.get(clickTable - 1).getViewType() == 2) {
+            }
+//            else if (tableList.get(clickTable - 1).getViewType() == 2) {
+//
+//                if (chattingDataHashMap == null ||
+//                        !chattingDataHashMap.get("table" + clickTable).isChattingAgree()) {
+//
+//                    dialogManager.chattingRequest(Table.this,
+//                            String.valueOf(clickTable) + R.string.chattingAlarm,
+//                            "table" + clickTable, myData.getId());
+//
+//                    Log.d(TAG, "채팅 신청");
+//
+//                } else if (chattingDataHashMap.get("table" + clickTable).isChattingAgree()) {
+//
+//                    Intent intent = new Intent(Table.this, ChattingUI.class);
+//                    intent.putExtra("tableNumber", clickTable);
+//                    intent.putExtra("myData", myData);
+//                    intent.putExtra("chattingData", chattingDataHashMap);
+//                    intent.putExtra("ticketData", ticketDataHashMap);
+//                    intent.putExtra("tableList", tableList);
+//                    //여기서 이미 채팅 agree면 isRead를 보내는거야
+//
+//                    //상대방한테 알려줘야지
+//                    Intent isRead = new Intent("SendChattingData");
+//                    /**
+//                     * 읽음_from_to
+//                     */
+//                    isRead.putExtra("sendToServer", "isRead_" + myData.getId() + "_table" + clickTable);
+//                    LocalBroadcastManager.getInstance(Table.this).sendBroadcast(isRead);
+//
+//                    startActivity(intent);
+//
+//                }
 
-                if (chattingDataHashMap == null ||
-                        !chattingDataHashMap.get("table" + clickTable).isChattingAgree()) {
-
-                    dialogManager.chattingRequest(Table.this,
-                            String.valueOf(clickTable) + R.string.chattingAlarm,
-                            "table" + clickTable, myData.getId());
-
-                    Log.d(TAG, "채팅 신청");
-
-                } else if (chattingDataHashMap.get("table" + clickTable).isChattingAgree()) {
-
+//            } else if (tableList.get(clickTable - 1).getViewType() != 2) {
+//                Log.d(TAG, "비어있는 테이블");
+//                dialogManager.positiveBtnDialog(Table.this,
+//                        String.valueOf(R.string.unusableTable));
+//            }
+            else{
                     Intent intent = new Intent(Table.this, ChattingUI.class);
                     intent.putExtra("tableNumber", clickTable);
                     intent.putExtra("myData", myData);
                     intent.putExtra("chattingData", chattingDataHashMap);
                     intent.putExtra("ticketData", ticketDataHashMap);
                     intent.putExtra("tableList", tableList);
-                    //여기서 이미 채팅 agree면 isRead를 보내는거야
-
-                    //상대방한테 알려줘야지
-                    Intent isRead = new Intent("SendChattingData");
-                    /**
-                     * 읽음_from_to
-                     */
-                    isRead.putExtra("sendToServer", "isRead_" + myData.getId() + "_table" + clickTable);
-                    LocalBroadcastManager.getInstance(Table.this).sendBroadcast(isRead);
-
                     startActivity(intent);
-
-                }
-
-            } else if (tableList.get(clickTable - 1).getViewType() != 2) {
-                Log.d(TAG, "비어있는 테이블");
-                dialogManager.positiveBtnDialog(Table.this,
-                        String.valueOf(R.string.unusableTable));
-            } // if-else  list.length>0 끝
+            }
         }); //setOnClickListener
 
 
@@ -311,30 +288,17 @@ public class Table extends AppCompatActivity {
          */
         checkInformation.setOnClickListener(view -> {
 
-            Dialog dlg = new Dialog(Table.this, R.style.RadiusDialogStyle);
-            dlg.setContentView(R.layout.table_information_dialog);
-            dlg.show();
-
-
-            table_info_img = dlg.findViewById(R.id.table_info_img);
-            tableInfoText = dlg.findViewById(R.id.table_info_text);
-            tableInfoStatement = dlg.findViewById(R.id.table_info_statement);
-            tableInfoGender = dlg.findViewById(R.id.table_info_gender);
-            tableInfoMember = dlg.findViewById(R.id.table_info_member);
-            tableInfoClose = dlg.findViewById(R.id.table_info_close);
-
-
             requestTableInfo(new Callback<TableInformationDTO>() {
                 @Override
-                public void onResponse(Call<TableInformationDTO> call, Response<TableInformationDTO> response) {
+                public void onResponse(@NonNull Call<TableInformationDTO> call, @NonNull Response<TableInformationDTO> response) {
                     if (response.isSuccessful()) {
                         /**
                          *  등록을 했으면 등록된 정보를 보여주고 등록 안했으면 하단 set
                          */
                         if (clickTable == myTable) {
-                            handleMyTableInfo(response.body());
+                            dialogManager.myTableDialog(Table.this, response.body(), myData.getId()).show();
                         } else {
-                            handleOtherTableInfo(response.body());
+                            dialogManager.otherTableDialog(Table.this, response.body(), false).show();
                         }
                     }else{
                         Log.d(TAG, "onResponse tableInformation isNotSuccessful");
@@ -342,44 +306,10 @@ public class Table extends AppCompatActivity {
                 }
 
                 @Override
-                public void onFailure(Call<TableInformationDTO> call, Throwable t) {
+                public void onFailure(@NonNull Call<TableInformationDTO> call, @NonNull Throwable t) {
                     Log.d(TAG, "onFailure tableInformation: " + t.getMessage());
                 }
             });
-
-
-
-            /**
-             * 사진을 누르면 돈내고 사진 깔거냐고 물어보기
-             */
-
-            table_info_img.setOnClickListener(v -> {
-
-                if (clickTable == myTable) {
-                    MakeQR makeQR = new MakeQR();
-                    table_info_img.setImageBitmap(makeQR.clientQR(myData.getId()));
-                    tableInfoText.setVisibility(View.INVISIBLE);
-
-                } else {
-
-                    Intent intent = new Intent(Table.this, PopUpProfile.class);
-                    intent.putExtra("title", "프로필 조회권 구매");
-                    intent.putExtra("body", "프로필 조회권을 구매하시겠습니까?\n** 프로필 조회권 2000원");
-
-                    intent.putExtra("myData", myData);
-                    intent.putExtra("clickTable", clickTable);
-                    intent.putExtra("chattingData", chattingDataHashMap);
-                    intent.putExtra("ticketData", ticketDataHashMap);
-                    intent.putExtra("tableList", tableList);
-
-                    startActivity(intent);
-                    dlg.dismiss();
-                }
-            });
-
-
-            tableInfoClose.setOnClickListener(v -> dlg.dismiss());
-
 
         }); //info-click
 
@@ -398,9 +328,7 @@ public class Table extends AppCompatActivity {
                 RecyclerView sendGiftRecyclerview = dlg.findViewById(R.id.send_gift_select_recyclerview);
                 TextView sendGiftCancel = dlg.findViewById(R.id.send_gift_select_cancel);
 
-                sendGiftCancel.setOnClickListener(view -> {
-                    dlg.dismiss();
-                });
+                sendGiftCancel.setOnClickListener(view -> dlg.dismiss());
 
                 sendGiftRecyclerview.setLayoutManager(new LinearLayoutManager
                         (Table.this, RecyclerView.HORIZONTAL, false));
@@ -483,13 +411,13 @@ public class Table extends AppCompatActivity {
         Call<TableInformationDTO> call = service.getTableImage("table" + clickTable);
         call.enqueue(new Callback<TableInformationDTO>() {
             @Override
-            public void onResponse(Call<TableInformationDTO> call, Response<TableInformationDTO> response) {
+            public void onResponse(@NonNull Call<TableInformationDTO> call, @NonNull Response<TableInformationDTO> response) {
                 Log.d(TAG, "onResponse: " + response.body().getResult());
                 callback.onResponse(call, response);
             }
 
             @Override
-            public void onFailure(Call<TableInformationDTO> call, Throwable t) {
+            public void onFailure(@NonNull Call<TableInformationDTO> call, @NonNull Throwable t) {
                 Log.d(TAG, "onFailure: " + t.getMessage());
             }
         });
@@ -543,12 +471,7 @@ public class Table extends AppCompatActivity {
                     int color = getColor(R.color.skyblue);
                     tablePosition = table[i] - 1;
                     tableList.get(tablePosition).setViewType(2);
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            adapter.changeItemColor(tablePosition, color);
-                        }
-                    });
+                    runOnUiThread(() -> adapter.changeItemColor(tablePosition, color));
 
                 } else {
                     Log.d(TAG, "같음");
@@ -557,95 +480,6 @@ public class Table extends AppCompatActivity {
 
         } catch (JSONException e) {
             e.printStackTrace();
-        }
-    }
-
-    private void handleMyTableInfo(TableInformationDTO tableInformationDTO) {
-
-
-        if (tableInformationDTO.getResult().equals("notExist")) {
-            MakeQR makeQR = new MakeQR();
-            table_info_img.setImageBitmap(makeQR.clientQR(myData.getId()));
-            table_info_img.setClickable(false);
-
-            tableInfoText.setVisibility(View.INVISIBLE);
-
-            tableInfoStatement.setText("사진과 정보를 입력하시려면 다음 큐알로 입장해주세요 :)");
-            tableInfoGender.setVisibility(View.GONE);
-            tableInfoMember.setVisibility(View.GONE);
-
-        } else  {
-            String url = BuildConfig.SERVER_IP + "/Profile/" + tableInformationDTO.getImageUrl();
-            Log.d(TAG, "url :" + url);
-
-            task = new ImageLoadTask(Table.this, true, url, table_info_img);
-            task.execute();
-
-            tableInfoText.setText("다시 등록하시려면 \n프로필 사진을 터치해주세요!");
-
-            tableInfoStatement.setText(tableInformationDTO.getStatement());
-            tableInfoGender.setText(tableInformationDTO.getGender());
-            tableInfoMember.setText(tableInformationDTO.getUserCount());
-        }
-    }
-
-    private void handleOtherTableInfo(TableInformationDTO tableInformation) {
-
-        if (tableInformation.getResult().equals("notExist")) {
-            tableInfoText.setVisibility(View.INVISIBLE);
-            tableInfoStatement.setText("정보를 입력하지 않은 테이블입니다.");
-            tableInfoGender.setVisibility(View.INVISIBLE);
-            tableInfoMember.setVisibility(View.INVISIBLE);
-
-            /**
-             * table 정보 있을 때
-             */
-        } else {
-
-            url = BuildConfig.SERVER_IP + "image/" + tableInformation.getImageUrl();
-
-
-            if (ticketDataHashMap != null) {
-                Log.d(TAG, "ticket: " + ticketDataHashMap.get("table" + clickTable).getUseTable());
-            }
-            //전체를 조회해서...?
-
-
-            /**
-             * 티켓 유무
-             */
-            if (ticketDataHashMap == null ||
-                    ticketDataHashMap.get("table" + clickTable) == null) {
-
-                Log.d(TAG, "티켓 없어서 블러 처리");
-                task = new ImageLoadTask(Table.this, false, url, table_info_img);
-                task.execute();
-
-
-            } else if (ticketDataHashMap.get("table" + clickTable).getUseTable().equals("table" + clickTable)) {
-                //만약 티켓을 가지고 있다면?
-
-
-                Log.d(TAG, "티켓 사용 유무 :" + ticketDataHashMap.get("table" + clickTable).getUseTable());
-
-                ticketDataHashMap.get("table" + clickTable).setIsUsed(true);
-                Log.d(TAG, "table 조회 :" + ticketDataHashMap.get("table" + clickTable).isUsed());
-                task = new ImageLoadTask(Table.this, true, url, table_info_img);
-                task.execute();
-                tableInfoText.setVisibility(View.INVISIBLE);
-                table_info_img.setClickable(false);
-
-                SendNotification sendNotification = new SendNotification();
-
-                String whoBuy = ticketDataHashMap.get("table" + clickTable).getWhoBuy();
-//                sendNotification.sendMenu(sendTicketToAdmin(whoBuy));
-
-            }
-
-            tableInfoStatement.setText(tableInformation.getStatement());
-            tableInfoGender.setText(tableInformation.getGender());
-            tableInfoMember.setText(tableInformation.getUserCount());
-
         }
     }
 
@@ -695,12 +529,12 @@ public class Table extends AppCompatActivity {
 
         call.enqueue(new Callback<SuccessOrNot>() {
             @Override
-            public void onResponse(Call<SuccessOrNot> call, Response<SuccessOrNot> response) {
+            public void onResponse(@NonNull Call<SuccessOrNot> call, @NonNull Response<SuccessOrNot> response) {
 
             }
 
             @Override
-            public void onFailure(Call<SuccessOrNot> call, Throwable t) {
+            public void onFailure(@NonNull Call<SuccessOrNot> call, @NonNull Throwable t) {
 
             }
         });
@@ -711,7 +545,6 @@ public class Table extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         //안드로이드 백버튼 막기
-        return;
     }
 
 }

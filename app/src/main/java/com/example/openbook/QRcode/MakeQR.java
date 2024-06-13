@@ -13,7 +13,7 @@ public class MakeQR {
     
     public Bitmap clientQR(String get_id){
 
-        String text = "http://3.36.255.141/WriteTableInfo.php?table="+get_id;
+        String text = BuildConfig.SERVER_IP + "WriteTableInfo.php?table="+get_id;
 
         MultiFormatWriter multiFormatWriter = new MultiFormatWriter();
 

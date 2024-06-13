@@ -3,18 +3,20 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="30dp">
+    android:padding="20dp">
 
 
     <TextView
         android:id="@+id/cart_item_menuName"
-        android:layout_width="wrap_content"
+        android:layout_width="120dp"
         android:layout_height="wrap_content"
 
         android:text="메뉴 이름"
         android:textColor="@color/black"
         android:textSize="20sp"
         android:textStyle="bold"
+        android:breakStrategy="simple"
+        android:textAlignment="viewStart"
 
         app:layout_constraintHorizontal_bias="0"
 
@@ -25,11 +27,12 @@
 
     <ImageButton
         android:id="@+id/plus"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
         android:background="@drawable/round_add"
 
-        app:layout_constraintHorizontal_bias="0.3"
+        app:layout_constraintHorizontal_bias="0.35"
+
 
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -38,12 +41,12 @@
 
     <TextView
         android:id="@+id/cart_item_count"
-        android:layout_width="wrap_content"
+        android:layout_width="25dp"
         android:layout_height="wrap_content"
         android:text="개수"
         android:textColor="@color/black"
-        android:textSize="23sp"
-        android:textStyle="bold"
+        android:textSize="20sp"
+        android:textAlignment="center"
 
         app:layout_constraintHorizontal_bias="0.45"
 
@@ -54,8 +57,8 @@
 
     <ImageButton
         android:id="@+id/minus"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
         android:background="@drawable/round_remove"
 
         app:layout_constraintHorizontal_bias="0.56"
@@ -68,15 +71,16 @@
 
     <TextView
         android:id="@+id/cart_item_price"
-        android:layout_width="wrap_content"
+        android:layout_width="100dp"
         android:layout_height="wrap_content"
 
         android:textColor="@color/black"
         android:textSize="20sp"
         android:textStyle="bold"
         android:text="3000"
+        android:textAlignment="viewEnd"
 
-        app:layout_constraintHorizontal_bias="0.8"
+        app:layout_constraintHorizontal_bias="0.84"
 
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -85,8 +89,8 @@
 
     <ImageButton
         android:id="@+id/delete"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
         android:background="@drawable/round_cancel"
 
         app:layout_constraintHorizontal_bias="1"

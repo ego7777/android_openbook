@@ -6,13 +6,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.os.Build;
 
 import android.util.Log;
 
-import androidx.annotation.RequiresApi;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+
+import com.example.openbook.BuildConfig;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -28,30 +28,27 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 
-@RequiresApi(api = Build.VERSION_CODES.O)
 public class ClientSocket extends Thread implements Serializable{
 
     private final String TAG = "ClientSocket";
     SocketAddress socketAddress;
 
-    final int connection_timeout = 999999;
+    final int connectionTimeout = 999999;
     BufferedWriter networkWrite;
-    String get_id;
+    String id;
 
     public Socket socket;
     boolean loop;
-
-
     Context context;
     private SharedPreferences sharedPreferences;
     private SharedPreferences.Editor editor;
 
 
-    public ClientSocket(String get_id, Context context) {
+    public ClientSocket(String id, Context context) {
         //서버 ip 주소와 사용할 포트번호로 소켓 어드레스 객체 생성
-        this.get_id = get_id;
+        this.id = id;
         this.context = context;
-        socketAddress = new InetSocketAddress("3.36.255.141", 7777);
+        socketAddress = new InetSocketAddress(BuildConfig.IP, 7777);
 
     }
 
@@ -63,12 +60,7 @@ public class ClientSocket extends Thread implements Serializable{
                 String message = intent.getStringExtra("sendToServer");
                 Log.d(TAG, "onReceive message: " + message);
 
-                Thread thread = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        sendToServer(message);
-                    }
-                });
+                Thread thread = new Thread(() -> sendToServer(message));
                 thread.start();
 
             }
@@ -76,7 +68,6 @@ public class ClientSocket extends Thread implements Serializable{
     };
 
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public void run() {
         super.run();
@@ -86,14 +77,14 @@ public class ClientSocket extends Thread implements Serializable{
              * 1. 클라이언트 소켓생성
              */
             socket = new Socket();
-            socket.setSoTimeout(connection_timeout);
-            socket.setSoLinger(true, connection_timeout);
+            socket.setSoTimeout(connectionTimeout);
+            socket.setSoLinger(true, connectionTimeout);
 
 
             /** 2. 소켓 연결
              /블록모드로 작동하는 connect() 메소드에서 반환되면 서버와 정상적으로 연결된 것
              */
-            socket.connect(socketAddress, connection_timeout);
+            socket.connect(socketAddress, connectionTimeout);
             Log.d(TAG, "소켓 연결 : " + socket.isConnected());
 
 
@@ -105,7 +96,7 @@ public class ClientSocket extends Thread implements Serializable{
             /**
              * 소켓이 생성이 되면 테이블 Id 값을 넘겨준다.
              */
-            sendToServer(get_id + "_table");
+            sendToServer(id + "_table");
 
             // 로컬 브로드캐스트 리시버 등록
             IntentFilter intentFilter = new IntentFilter("SendChattingData");
@@ -116,8 +107,6 @@ public class ClientSocket extends Thread implements Serializable{
 
                 String line = networkReader.readLine();
                 Log.d(TAG, "line: " + line);
-
-
 
                 if(line.contains("[")){
 
@@ -190,7 +179,7 @@ public class ClientSocket extends Thread implements Serializable{
          * sendMsg[1] : 보낸 테이블 번호 (table + table_num)
          * sendMsg[2] : 안읽음(1)/읽음(0)
          */
-        String sendMsg[] = line.split("_");
+        String[] sendMsg = line.split("_");
 
 
         LocalDateTime localTime = LocalDateTime.now();
@@ -199,7 +188,7 @@ public class ClientSocket extends Thread implements Serializable{
 
         //db에 저장
         DBHelper dbHelper = new DBHelper(context, 2);
-        dbHelper.insertChattingData(sendMsg[0], time, sendMsg[1],get_id, sendMsg[2]);
+        dbHelper.insertChattingData(sendMsg[0], time, sendMsg[1],id, sendMsg[2]);
 
 
         Intent intent = new Intent("chattingDataArrived");
@@ -214,7 +203,7 @@ public class ClientSocket extends Thread implements Serializable{
          */
         Log.d(TAG, "receiveIsRead: ");
 
-        String sendMsg[] = line.split("_");
+        String[] sendMsg = line.split("_");
 
         //table1 형태
         String receiver = sendMsg[1];
@@ -222,7 +211,7 @@ public class ClientSocket extends Thread implements Serializable{
 
         DBHelper dbHelper = new DBHelper(context, 2);
         //db 수정하기
-        dbHelper.upDateIsRead(get_id, receiver);
+        dbHelper.upDateIsRead(id, receiver);
 
 //        Cursor cursor = dbHelper.getTableData("chattingTable");
 //        if(cursor.getString(3).equals(get_id)){

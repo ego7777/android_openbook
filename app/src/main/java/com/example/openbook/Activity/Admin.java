@@ -433,7 +433,7 @@ public class Admin extends AppCompatActivity {
                 if (response.isSuccessful()) {
                     switch (response.body().getResult()) {
                         case "success":
-                            dialogManager.tableInformationDialog(Admin.this, response.body());
+                            dialogManager.adminTableInformationDialog(Admin.this, response.body());
                             break;
 
                         case "failed":

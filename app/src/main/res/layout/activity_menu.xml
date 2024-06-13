@@ -57,7 +57,7 @@
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/menu_cart_recyclerview"
                 android:layout_width="match_parent"
-                android:layout_height="400dp"
+                android:layout_height="200dp"
                 android:layout_gravity="end"
                 android:scrollbars="vertical"
                 android:scrollbarFadeDuration="0"

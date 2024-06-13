@@ -362,7 +362,7 @@ public class Menu extends AppCompatActivity {
          * Appbar: table 클래스로 이동
          */
         appbarMenuTable.setOnClickListener(view -> {
-            Intent intent = new Intent(getApplicationContext(), Table.class);
+            Intent intent = new Intent(Menu.this, Table.class);
             intent.putExtra("myData", myData);
             intent.putExtra("chattingData", chattingDataHashMap);
             intent.putExtra("ticketData", ticketDataHashMap);
@@ -538,10 +538,11 @@ public class Menu extends AppCompatActivity {
                             }
                         });
 
-//                        if (clientSocket == null) {
-//                            clientSocket = new ClientSocket(myData.getId(), Menu.this);
-//                            clientSocket.start();
-//                        }
+                        if (clientSocket == null) {
+                            clientSocket = new ClientSocket(myData.getId(), Menu.this);
+                            clientSocket.start();
+                            Log.d(TAG, "clientSocket Start: " + clientSocket);
+                        }
                         break;
 
                     case NOW:
