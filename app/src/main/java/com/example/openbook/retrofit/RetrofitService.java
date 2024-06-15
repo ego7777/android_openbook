@@ -2,7 +2,6 @@ package com.example.openbook.retrofit;
 
 import com.example.openbook.kakaopay.KakaoPayApproveResponseDTO;
 import com.example.openbook.kakaopay.KakaoPayReadyResponseDTO;
-import com.example.openbook.startActivity.LoginResponseModel;
 
 import java.util.HashMap;
 

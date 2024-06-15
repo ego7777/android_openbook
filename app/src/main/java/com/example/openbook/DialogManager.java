@@ -26,8 +26,12 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.example.openbook.Activity.Table;
 import com.example.openbook.Adapter.AdminPopUpAdapter;
+import com.example.openbook.Adapter.MenuAdapter;
 import com.example.openbook.Chatting.ClientSocket;
+import com.example.openbook.Chatting.DBHelper;
+import com.example.openbook.Data.MenuList;
 import com.example.openbook.Data.OrderList;
+import com.example.openbook.Deco.menu_recyclerview_deco;
 import com.example.openbook.FCM.SendNotification;
 import com.example.openbook.QRcode.MakeQR;
 import com.example.openbook.retrofit.AdminTableDTO;
@@ -412,6 +416,37 @@ public class DialogManager {
         progressDrawable.start();
 
         return progressDrawable;
+    }
+
+    public Dialog giftSelectDialog(Context context){
+        Dialog dialog = new Dialog(context);
+        dialog.setContentView(R.layout.send_gift_select_dialog);
+
+        RecyclerView sendGiftRecyclerview = dialog.findViewById(R.id.send_gift_select_recyclerview);
+        TextView sendGiftCancel = dialog.findViewById(R.id.send_gift_select_cancel);
+
+        sendGiftCancel.setOnClickListener(view -> dialog.dismiss());
+
+        sendGiftRecyclerview.setLayoutManager(new LinearLayoutManager
+                (context, RecyclerView.HORIZONTAL, false));
+
+        MenuAdapter menuAdapter = new MenuAdapter();
+        ArrayList<MenuList> menuLists = new ArrayList<>();
+
+        sendGiftRecyclerview.setAdapter(menuAdapter);
+        sendGiftRecyclerview.addItemDecoration(new menu_recyclerview_deco(context));
+        menuAdapter.setAdapterItem(menuLists);
+
+        int version = 1;
+        version++;
+
+        DBHelper dbHelper = new DBHelper(context, version);
+        menuLists = dbHelper.getTableData(menuLists);
+        Log.d(TAG, "menuLists size: " + menuLists.size());
+
+        menuAdapter.setAdapterItem(menuLists);
+
+        return dialog;
     }
 
 

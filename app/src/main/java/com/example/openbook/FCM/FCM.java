@@ -331,5 +331,9 @@ public class FCM extends FirebaseMessagingService {
         // onNewToken에서는 서버로 변경된 키값을 전달
     }
 
-
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        stopSelf();
+    }
 }

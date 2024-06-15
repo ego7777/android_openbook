@@ -56,10 +56,6 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> 
 
     @NonNull
     @Override
-    /**
-     * 리스트 아이템을 가져와서 레이아웃을 실체화 해줌
-     * 실체화를 해주는 아이가 Inflater
-     * **/
     public TableAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
 
         View view = LayoutInflater.from(parent.getContext())
@@ -68,10 +64,6 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> 
         return new TableAdapter.ViewHolder(view, viewType);
     }
 
-
-    /**
-     * 액티비티에서 받아온 데이터를 바인딩해줌.
-     **/
     @Override
     public void onBindViewHolder(@NonNull TableAdapter.ViewHolder holder, @SuppressLint("RecyclerView") int position) {
 
@@ -80,7 +72,6 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> 
         int color;
 
         if (position == lastClickedPosition) {
-            //여기가 1순위여야함
             color = holder.itemView.getContext().getColor(R.color.blue_purple);
             holder.itemView.setBackgroundColor(color);
         } else if (position == myTable - 1) {
@@ -140,8 +131,8 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> 
     class ViewHolder extends RecyclerView.ViewHolder {
 
         TextView tableNum;
-        TextView table_grid_gender;
-        TextView table_grid_guestNum;
+        TextView tableGridGender;
+        TextView tableGridGuestNum;
 
         int position;
         private int viewType;
@@ -152,24 +143,21 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> 
             this.viewType = viewType;
 
             tableNum = itemView.findViewById(R.id.tableNum);
-            table_grid_gender = itemView.findViewById(R.id.table_grid_gender);
-            table_grid_guestNum = itemView.findViewById(R.id.table_grid_guestNum);
+            tableGridGender = itemView.findViewById(R.id.table_grid_gender);
+            tableGridGuestNum = itemView.findViewById(R.id.table_grid_guestNum);
 
-            itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    position = getAdapterPosition();
+            itemView.setOnClickListener(view -> {
+                position = getAdapterPosition();
 
-                    if (position != RecyclerView.NO_POSITION) {
-                        if (myListener != null) {
-                            myListener.onItemClick(view, position);
-                            notifyDataSetChanged();
+                if (position != RecyclerView.NO_POSITION) {
+                    if (myListener != null) {
+                        myListener.onItemClick(view, position);
+                        notifyDataSetChanged();
 
-                            notifyItemChanged(lastClickedPosition);
-                            lastClickedPosition = position;
-                            Log.d(TAG, "lastClickedPosition: " + lastClickedPosition);
-                            notifyItemChanged(position);
-                        }
+                        notifyItemChanged(lastClickedPosition);
+                        lastClickedPosition = position;
+                        Log.d(TAG, "lastClickedPosition: " + lastClickedPosition);
+                        notifyItemChanged(position);
                     }
                 }
             });
@@ -188,14 +176,14 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> 
 
         void onBindOthers(TableList items) {
             tableNum.setText(String.valueOf(items.getTableNum()));
-            table_grid_gender.setText(items.getTableGender());
-            table_grid_guestNum.setText(items.getTableGuestNum());
+            tableGridGender.setText(items.getTableGender());
+            tableGridGuestNum.setText(items.getTableGuestNum());
         }
 
         void onBindMine(TableList items) {
             tableNum.setText(items.getMyTable());
-            table_grid_gender.setText(items.getTableGender());
-            table_grid_guestNum.setText(items.getTableGuestNum());
+            tableGridGender.setText(items.getTableGender());
+            tableGridGuestNum.setText(items.getTableGuestNum());
 
         }
 

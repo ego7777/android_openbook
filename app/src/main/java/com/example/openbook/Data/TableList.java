@@ -11,11 +11,9 @@ public class TableList implements Serializable {
     int tableNum;
     Drawable tableColor;
     String myTable;
-
     String tableGender;
     String tableGuestNum;
 
-    // 0->
     public int getViewType() {
         return viewType;
     }

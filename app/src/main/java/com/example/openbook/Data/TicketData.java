@@ -1,9 +1,8 @@
 package com.example.openbook.Data;
 
 
-import java.io.Serializable;
 
-public class TicketData implements Serializable {
+public class TicketData  {
 
     String whoBuy;
     boolean isUsed;

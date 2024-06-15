@@ -10,7 +10,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -34,7 +33,6 @@ import com.example.openbook.Deco.menu_recyclerview_deco;
 import com.example.openbook.DialogManager;
 import com.example.openbook.PaymentCategory;
 import com.example.openbook.R;
-import com.example.openbook.Data.TicketData;
 import com.example.openbook.Data.TableList;
 import com.example.openbook.retrofit.RetrofitManager;
 import com.example.openbook.retrofit.RetrofitService;
@@ -59,7 +57,6 @@ public class Table extends AppCompatActivity {
 
     String TAG = "TableTAG";
     MyData myData;
-    HashMap<String, TicketData> ticketDataHashMap;
     HashMap<String, ChattingData> chattingDataHashMap;
     ArrayList<TableList> tableList;
 
@@ -68,7 +65,6 @@ public class Table extends AppCompatActivity {
 
     TextView appbarMenu, appbarOrderList, requestChatting, checkInformation, sendGift;
     LinearLayout tableSidebar;
-    String url;
 
     RetrofitService service;
 
@@ -76,7 +72,6 @@ public class Table extends AppCompatActivity {
 
     SendToPopUp sendToPopUp = new SendToPopUp();
 
-    //액티비티가 onCreate 되면 자동으로 받는거고
     BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -88,15 +83,16 @@ public class Table extends AppCompatActivity {
             } else if (intent.getAction().equals("chattingRequestArrived")) {
                 String fcmData = intent.getStringExtra("fcmData");
 
-                sendToPopUp.sendToPopUpChatting(Table.this, myData,
-                        chattingDataHashMap, ticketDataHashMap, tableList, fcmData);
+//                sendToPopUp.sendToPopUpChatting(Table.this, myData,
+//                        chattingDataHashMap, ticketDataHashMap, tableList, fcmData);
+
             } else if (intent.getAction().equals("giftArrived")) {
 
                 String from = intent.getStringExtra("tableName");
                 String menuName = intent.getStringExtra("menuName");
 
-                sendToPopUp.sendToPopUpGift(Table.this, myData,
-                        chattingDataHashMap, ticketDataHashMap, tableList, from, menuName);
+//                sendToPopUp.sendToPopUpGift(Table.this, myData,
+//                        chattingDataHashMap, ticketDataHashMap, tableList, from, menuName);
             }
         }
     };
@@ -116,8 +112,8 @@ public class Table extends AppCompatActivity {
         Log.d(TAG, "myData IsOrder: " + myData.isOrder());
 
         chattingDataHashMap = (HashMap<String, ChattingData>) getIntent().getSerializableExtra("chattingData");
-        ticketDataHashMap = (HashMap<String, TicketData>) getIntent().getSerializableExtra("ticketData");
         tableList = (ArrayList<TableList>) getIntent().getSerializableExtra("tableList");
+
         if(tableList != null){
             Log.d(TAG, "tableList size: " + tableList.size());
         }else{
@@ -182,10 +178,9 @@ public class Table extends AppCompatActivity {
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, intentFilter);
 
 
-        SharedPreferences sharedPreferences = getSharedPreferences("ActiveTable", MODE_PRIVATE);
+        SharedPreferences customerDataSp = getSharedPreferences("CustomerData", MODE_PRIVATE);
 
-        //onCreate 되기 이전에 데이터들은 저장이 되었다가 가져오는 것
-        String activeTable = sharedPreferences.getString("ActiveTable", null);
+        String activeTable = customerDataSp.getString("ActiveTable", null);
         Log.d(TAG, "activeTable: " + activeTable);
 
         if (tableList != null) {
@@ -212,8 +207,7 @@ public class Table extends AppCompatActivity {
 
         });
 
-
-        DialogManager dialogManager = new DialogManager();
+        dialogManager = new DialogManager();
 
 
         /**
@@ -221,14 +215,13 @@ public class Table extends AppCompatActivity {
          * 1. 내가 주문을 안했으면 주문하라고 팝업이 뜨고
          * 2. 상대방이 주문을 안했으면 알려주기
          */
-        // onClick
+
         requestChatting.setOnClickListener(view -> {
 
             if (!myData.isOrder()) {
                 dialogManager.positiveBtnDialog(Table.this, "주문 후 채팅이 가능합니다.").show();
 
             } else if (clickTable == myTable) {
-
                 dialogManager.positiveBtnDialog(Table.this,
                         "나의 채팅방 입니다. 다른 테이블과 채팅해보세요!").show();
 
@@ -276,7 +269,6 @@ public class Table extends AppCompatActivity {
                     intent.putExtra("tableNumber", clickTable);
                     intent.putExtra("myData", myData);
                     intent.putExtra("chattingData", chattingDataHashMap);
-                    intent.putExtra("ticketData", ticketDataHashMap);
                     intent.putExtra("tableList", tableList);
                     startActivity(intent);
             }
@@ -288,19 +280,17 @@ public class Table extends AppCompatActivity {
          */
         checkInformation.setOnClickListener(view -> {
 
-            requestTableInfo(new Callback<TableInformationDTO>() {
+            requestTableInfo(new Callback<>() {
                 @Override
                 public void onResponse(@NonNull Call<TableInformationDTO> call, @NonNull Response<TableInformationDTO> response) {
                     if (response.isSuccessful()) {
-                        /**
-                         *  등록을 했으면 등록된 정보를 보여주고 등록 안했으면 하단 set
-                         */
+
                         if (clickTable == myTable) {
                             dialogManager.myTableDialog(Table.this, response.body(), myData.getId()).show();
                         } else {
                             dialogManager.otherTableDialog(Table.this, response.body(), false).show();
                         }
-                    }else{
+                    } else {
                         Log.d(TAG, "onResponse tableInformation isNotSuccessful");
                     }
                 }
@@ -311,7 +301,7 @@ public class Table extends AppCompatActivity {
                 }
             });
 
-        }); //info-click
+        });
 
         sendGift.setOnClickListener(v -> {
 
@@ -409,7 +399,7 @@ public class Table extends AppCompatActivity {
 
     private void requestTableInfo(Callback<TableInformationDTO> callback) {
         Call<TableInformationDTO> call = service.getTableImage("table" + clickTable);
-        call.enqueue(new Callback<TableInformationDTO>() {
+        call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<TableInformationDTO> call, @NonNull Response<TableInformationDTO> response) {
                 Log.d(TAG, "onResponse: " + response.body().getResult());
@@ -435,7 +425,6 @@ public class Table extends AppCompatActivity {
         Intent intent = new Intent(Table.this, Menu.class);
         intent.putExtra("myData", myData);
         intent.putExtra("chattingData", chattingDataHashMap);
-        intent.putExtra("ticketData", ticketDataHashMap);
         intent.putExtra("tableList", tableList);
 
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -495,8 +484,6 @@ public class Table extends AppCompatActivity {
         chattingDataHashMap = (HashMap<String, ChattingData>) data.getSerializableExtra("chattingData");
         Log.d(TAG, "onActivityResult chattingData: " + chattingDataHashMap);
 
-        ticketDataHashMap = (HashMap<String, TicketData>) data.getSerializableExtra("ticketData");
-        Log.d(TAG, "onActivityResult ticketData :" + ticketDataHashMap);
 
     }
 
@@ -527,7 +514,7 @@ public class Table extends AppCompatActivity {
         Call<SuccessOrNot> call = service.sendGiftOtherTable("table" + clickTable,
                 myData.getId(), menuName, menuQuantity, menuPrice);
 
-        call.enqueue(new Callback<SuccessOrNot>() {
+        call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<SuccessOrNot> call, @NonNull Response<SuccessOrNot> response) {
 

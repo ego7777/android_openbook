@@ -11,8 +11,9 @@ import android.util.Log;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-
 import com.example.openbook.BuildConfig;
+import com.example.openbook.MessageDTO;
+import com.google.gson.Gson;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -28,7 +29,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 
-public class ClientSocket extends Thread implements Serializable{
+public class ClientSocket extends Thread implements Serializable {
 
     private final String TAG = "ClientSocket";
     SocketAddress socketAddress;
@@ -42,10 +43,9 @@ public class ClientSocket extends Thread implements Serializable{
     Context context;
     private SharedPreferences sharedPreferences;
     private SharedPreferences.Editor editor;
-
+    Gson gson = new Gson();
 
     public ClientSocket(String id, Context context) {
-        //서버 ip 주소와 사용할 포트번호로 소켓 어드레스 객체 생성
         this.id = id;
         this.context = context;
         socketAddress = new InetSocketAddress(BuildConfig.IP, 7777);
@@ -71,56 +71,44 @@ public class ClientSocket extends Thread implements Serializable{
     @Override
     public void run() {
         super.run();
-        //
+
         try {
-            /**
-             * 1. 클라이언트 소켓생성
-             */
+
             socket = new Socket();
             socket.setSoTimeout(connectionTimeout);
             socket.setSoLinger(true, connectionTimeout);
 
-
-            /** 2. 소켓 연결
-             /블록모드로 작동하는 connect() 메소드에서 반환되면 서버와 정상적으로 연결된 것
-             */
             socket.connect(socketAddress, connectionTimeout);
-            Log.d(TAG, "소켓 연결 : " + socket.isConnected());
-
-
-            //3. 데이터 입출력 메소드 설정
 
             BufferedReader networkReader = new BufferedReader(
                     new InputStreamReader(socket.getInputStream()));
 
-            /**
-             * 소켓이 생성이 되면 테이블 Id 값을 넘겨준다.
-             */
-            sendToServer(id + "_table");
+            MessageDTO messageDTO = new MessageDTO("", id, "add");
+            sendToServer(gson.toJson(messageDTO));
 
             // 로컬 브로드캐스트 리시버 등록
             IntentFilter intentFilter = new IntentFilter("SendChattingData");
             LocalBroadcastManager.getInstance(context).registerReceiver(broadcastReceiver, intentFilter);
 
 
-            while(loop){
+            while (loop) {
 
                 String line = networkReader.readLine();
-                Log.d(TAG, "line: " + line);
+                MessageDTO messageDiv = gson.fromJson(line, MessageDTO.class);
 
-                if(line.contains("[")){
+                if (line.contains("[")) {
 
                     receiveTableInfo(line);
 
-                }else if(line.contains("isRead")){
+                } else if (messageDiv.getIsRead() == 0) {
                     Log.d(TAG, "isRead: ");
                     receiveIsRead(line);
 
-                }else{
+                } else {
                     receiveChattingData(line);
                 }
 
-                if(line == null){
+                if (line == null) {
                     Log.d(TAG, "line null: ");
                     break;
                 }
@@ -135,16 +123,16 @@ public class ClientSocket extends Thread implements Serializable{
 
     }
 
-    private void sendToServer(String message){
+    private void sendToServer(String message) {
 
         try {
-            OutputStreamWriter o =  new OutputStreamWriter(socket.getOutputStream());
+            OutputStreamWriter o = new OutputStreamWriter(socket.getOutputStream());
             networkWrite = new BufferedWriter(o);
 
             networkWrite.write(message);
             networkWrite.newLine();
             networkWrite.flush();
-            Log.d(TAG, "id flush");
+            Log.d(TAG, "sendToServer: " + message);
 
             networkWrite = null;
 
@@ -158,60 +146,40 @@ public class ClientSocket extends Thread implements Serializable{
     }
 
 
-    private void receiveTableInfo(String line){
+    private void receiveTableInfo(String line) {
 
-        sharedPreferences = context.getSharedPreferences("ActiveTable", Context.MODE_PRIVATE);
+        sharedPreferences = context.getSharedPreferences("CustomerData", Context.MODE_PRIVATE);
         editor = sharedPreferences.edit();
 
         editor.putString("ActiveTable", line);
         editor.commit();
 
 
-        Intent intent =new Intent("tableInformationArrived");
+        Intent intent = new Intent("tableInformationArrived");
         intent.putExtra("tableInformation", line);
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
 
     }
 
-    private void receiveChattingData(String line){
-        /**
-         * sendMsg[0] : message
-         * sendMsg[1] : 보낸 테이블 번호 (table + table_num)
-         * sendMsg[2] : 안읽음(1)/읽음(0)
-         */
-        String[] sendMsg = line.split("_");
-
-
-        LocalDateTime localTime = LocalDateTime.now();
-
-        String time = localTime.format(DateTimeFormatter.ofPattern("HH:mm"));
-
-        //db에 저장
-        DBHelper dbHelper = new DBHelper(context, 2);
-        dbHelper.insertChattingData(sendMsg[0], time, sendMsg[1],id, sendMsg[2]);
-
+    private void receiveChattingData(String line) {
 
         Intent intent = new Intent("chattingDataArrived");
         intent.putExtra("chattingData", line);
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+
     }
 
-    private void receiveIsRead(String line){
-        /**
-         * sendMsg[1] : isRead
-         * sendMsg[0] : 보낸 테이블 번호
-         */
+    private void receiveIsRead(String line) {
         Log.d(TAG, "receiveIsRead: ");
 
-        String[] sendMsg = line.split("_");
+        MessageDTO messageDTO = gson.fromJson(line, MessageDTO.class);
+        String from = messageDTO.getFrom();
+        int isRead = messageDTO.getIsRead();
 
-        //table1 형태
-        String receiver = sendMsg[1];
-        Log.d(TAG, "receiver: " + receiver);
 
         DBHelper dbHelper = new DBHelper(context, 2);
         //db 수정하기
-        dbHelper.upDateIsRead(id, receiver);
+        dbHelper.upDateIsRead(id, from);
 
 //        Cursor cursor = dbHelper.getTableData("chattingTable");
 //        if(cursor.getString(3).equals(get_id)){
@@ -230,7 +198,6 @@ public class ClientSocket extends Thread implements Serializable{
     }
 
 
-
     public void quit() {
         loop = false;
         try {
@@ -245,7 +212,6 @@ public class ClientSocket extends Thread implements Serializable{
             Log.d(TAG, "quit: e" + e);
         }
     }
-
 
 }
 

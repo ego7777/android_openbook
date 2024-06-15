@@ -16,13 +16,6 @@ public class ChattingList {
 
     String read;
 
-    public ChattingList(int imgId,String text, int viewType, String time){
-        this.imgId = imgId;
-        this.text = text;
-        this.viewType = viewType;
-        this.time = time;
-    }
-
     public ChattingList(String text, int viewType, String time, String read){
         this.text = text;
         this.viewType =viewType;
@@ -50,9 +43,6 @@ public class ChattingList {
         return imgId;
     }
 
-    public void setImgId(int imgId) {
-        this.imgId = imgId;
-    }
 
     public int getViewType() {
         return viewType;
