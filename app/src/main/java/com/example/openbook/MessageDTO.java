@@ -5,7 +5,8 @@ public class MessageDTO {
     String to;
     String from;
     String message;
-    int isRead;
+//    int isRead;
+
 
     public MessageDTO(String to, String from, String message){
         this.to = to;
@@ -13,18 +14,18 @@ public class MessageDTO {
         this.message = message;
     }
 
-    public MessageDTO(String from, int isRead){
-        this.from = from;
-        this.isRead = isRead;
-    }
-
-    public void setIsRead(int isRead) {
-        this.isRead = isRead;
-    }
-
-    public int getIsRead() {
-        return isRead;
-    }
+//    public MessageDTO(String from, int isRead){
+//        this.from = from;
+//        this.isRead = isRead;
+//    }
+//
+//    public void setIsRead(int isRead) {
+//        this.isRead = isRead;
+//    }
+//
+//    public int getIsRead() {
+//        return isRead;
+//    }
 
     public void setTo(String to) {
         this.to = to;

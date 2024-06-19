@@ -1,11 +1,11 @@
 package com.example.openbook;
 
-public enum ChattingCategory {
+public enum TableCategory {
 
-    MY(0), OTHER(1);
+    MY(0), OTHER(1), ACTIVE(2);
     private int value;
 
-    ChattingCategory(int value){
+    TableCategory(int value){
         this.value = value;
     }
 

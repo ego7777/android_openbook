@@ -5,8 +5,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 
+import android.content.SharedPreferences;
 import android.util.Log;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -25,8 +25,6 @@ import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 
 public class ClientSocket extends Thread implements Serializable {
@@ -41,8 +39,6 @@ public class ClientSocket extends Thread implements Serializable {
     public Socket socket;
     boolean loop;
     Context context;
-    private SharedPreferences sharedPreferences;
-    private SharedPreferences.Editor editor;
     Gson gson = new Gson();
 
     public ClientSocket(String id, Context context) {
@@ -86,39 +82,59 @@ public class ClientSocket extends Thread implements Serializable {
             MessageDTO messageDTO = new MessageDTO("", id, "add");
             sendToServer(gson.toJson(messageDTO));
 
-            // 로컬 브로드캐스트 리시버 등록
             IntentFilter intentFilter = new IntentFilter("SendChattingData");
             LocalBroadcastManager.getInstance(context).registerReceiver(broadcastReceiver, intentFilter);
 
 
             while (loop) {
 
-                String line = networkReader.readLine();
-                MessageDTO messageDiv = gson.fromJson(line, MessageDTO.class);
+                String newChat = networkReader.readLine();
+                Log.d(TAG, "newChat: " + newChat);
+                MessageDTO messageDiv = gson.fromJson(newChat, MessageDTO.class);
 
-                if (line.contains("[")) {
+                if (messageDiv.getMessage().equals("newTable")) {
 
-                    receiveTableInfo(line);
+                    updateNewTable(messageDiv.getFrom());
 
-                } else if (messageDiv.getIsRead() == 0) {
+                } else if (messageDiv.getMessage().equals("isRead")) {
                     Log.d(TAG, "isRead: ");
-                    receiveIsRead(line);
+                    receiveIsRead(newChat);
 
-                } else {
-                    receiveChattingData(line);
+                } else if(messageDiv.getMessage().equals("welcome")){
+                    Log.d(TAG, "message : welcome");
+                    Log.d(TAG, "tableList: " + messageDiv.getFrom());
+                    activeTableList(messageDiv.getFrom());
+                }
+                else {
+                    receiveChattingData(newChat);
                 }
 
-                if (line == null) {
-                    Log.d(TAG, "line null: ");
+                if (newChat == null) {
+                    Log.d(TAG, "newChat is null");
                     break;
                 }
             }
 
         } catch (Exception e) {
-//            loop = false;
+            loop = false;
             Log.d(TAG, "소켓을 생성하지 못했습니다.");
             Log.d(TAG, "Exception " + e);
 
+        }finally {
+            loop = false;
+            if (socket != null && !socket.isClosed()) {
+                try {
+                    // 서버에 종료를 알리는 메시지 전송
+                    MessageDTO messageDTO = new MessageDTO("", id, "disconnect");
+                    sendToServer(gson.toJson(messageDTO));
+
+                    // 소켓 닫기
+                    socket.close();
+                    Log.d(TAG, "Socket closed in finally block.");
+                } catch (IOException e) {
+                    Log.d(TAG, "Failed to close socket in finally block: " + e);
+                }
+            }
         }
 
     }
@@ -138,7 +154,6 @@ public class ClientSocket extends Thread implements Serializable {
 
             loop = true;
 
-
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -146,40 +161,50 @@ public class ClientSocket extends Thread implements Serializable {
     }
 
 
-    private void receiveTableInfo(String line) {
+    private void updateNewTable(String newTable) {
 
-        sharedPreferences = context.getSharedPreferences("CustomerData", Context.MODE_PRIVATE);
-        editor = sharedPreferences.edit();
+        int tableNumber = Integer.parseInt(newTable.replace("table", ""));
 
-        editor.putString("ActiveTable", line);
+        Intent intent = new Intent("updateNewTable");
+        intent.putExtra("newTable", tableNumber);
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+
+    }
+
+    private void activeTableList(String activeTableList){
+
+        SharedPreferences sharedPreferences = context.getSharedPreferences("CustomerData", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString("activeTableList", activeTableList);
         editor.commit();
 
+        Intent intent = new Intent("updateNewTable");
+        intent.putExtra("activeTableList", activeTableList);
 
-        Intent intent = new Intent("tableInformationArrived");
-        intent.putExtra("tableInformation", line);
+        Log.d(TAG, "activeTableList: " + intent.getAction());
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+    }
+
+    private void receiveChattingData(String newChat) {
+        Log.d(TAG, "receiveChattingData: " + newChat);
+
+        Intent intent = new Intent("newChatArrived");
+        intent.putExtra("chat", newChat);
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
 
     }
 
-    private void receiveChattingData(String line) {
-
-        Intent intent = new Intent("chattingDataArrived");
-        intent.putExtra("chattingData", line);
-        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
-
-    }
-
-    private void receiveIsRead(String line) {
+    private void receiveIsRead(String isRead) {
         Log.d(TAG, "receiveIsRead: ");
 
-        MessageDTO messageDTO = gson.fromJson(line, MessageDTO.class);
-        String from = messageDTO.getFrom();
-        int isRead = messageDTO.getIsRead();
+//        MessageDTO messageDTO = gson.fromJson(isRead, MessageDTO.class);
+//        String from = messageDTO.getFrom();
+//        int isRead = messageDTO.getIsRead();
 
 
-        DBHelper dbHelper = new DBHelper(context, 2);
-        //db 수정하기
-        dbHelper.upDateIsRead(id, from);
+//        DBHelper dbHelper = new DBHelper(context, 2);
+//        //db 수정하기
+//        dbHelper.upDateIsRead(id, from);
 
 //        Cursor cursor = dbHelper.getTableData("chattingTable");
 //        if(cursor.getString(3).equals(get_id)){
@@ -189,7 +214,7 @@ public class ClientSocket extends Thread implements Serializable {
         Log.d(TAG, "receiveIsRead: 1");
 
         Intent intent = new Intent("isReadArrived");
-        intent.putExtra("isRead", line);
+        intent.putExtra("isRead", isRead);
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
 
         Log.d(TAG, "receiveIsRead: 2");

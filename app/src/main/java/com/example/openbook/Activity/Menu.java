@@ -143,6 +143,8 @@ public class Menu extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_menu);
 
+        overridePendingTransition(0, 0);
+
         dialogManager = new DialogManager();
         progressbar = dialogManager.progressDialog(Menu.this);
         progressbar.show();
@@ -538,7 +540,7 @@ public class Menu extends AppCompatActivity {
                             }
                         });
 
-                        if (clientSocket == null) {
+                        if (clientSocket == null || !clientSocket.isAlive()) {
                             clientSocket = new ClientSocket(myData.getId(), Menu.this);
                             clientSocket.start();
                             Log.d(TAG, "clientSocket Start: " + clientSocket);

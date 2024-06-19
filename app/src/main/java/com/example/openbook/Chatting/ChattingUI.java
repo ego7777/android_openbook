@@ -22,7 +22,7 @@ import com.example.openbook.Activity.SendToPopUp;
 import com.example.openbook.Activity.Table;
 import com.example.openbook.Adapter.ChattingAdapter;
 import com.example.openbook.Activity.Menu;
-import com.example.openbook.ChattingCategory;
+import com.example.openbook.TableCategory;
 import com.example.openbook.Data.ChattingData;
 import com.example.openbook.Data.MyData;
 import com.example.openbook.Data.TableList;
@@ -61,8 +61,8 @@ public class ChattingUI extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
 
-            if (intent.getAction().equals("chattingDataArrived")) {
-                String message = intent.getStringExtra("chattingData");
+            if (intent.getAction().equals("newChatArrived")) {
+                String message = intent.getStringExtra("chat");
                 Log.d(TAG, "onReceive message: " + message);
                 chattingUpdate(message);
 
@@ -71,7 +71,7 @@ public class ChattingUI extends AppCompatActivity {
                 Log.d(TAG, "onReceive isRead: " + message);
                 isReadUpdate(message);
 
-            } else if (intent.getAction().equals("chattingRequestArrived")) {
+            } else if (intent.getAction().equals("chatRequest")) {
                 String fcmData = intent.getStringExtra("fcmData");
 //                sendToPopUp.sendToPopUpChatting(ChattingUI.this, myData,
 //                        chattingDataHashMap, ticketDataHashMap, tableList, fcmData);
@@ -92,9 +92,9 @@ public class ChattingUI extends AppCompatActivity {
         super.onResume();
 
         IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction("chattingDataArrived");
+        intentFilter.addAction("newChatArrived");
         intentFilter.addAction("isReadArrived");
-        intentFilter.addAction("chattingRequestArrived");
+        intentFilter.addAction("chatRequest");
         intentFilter.addAction("giftArrived");
         LocalBroadcastManager.getInstance(ChattingUI.this).registerReceiver(broadcastReceiver, intentFilter);
 
@@ -230,7 +230,7 @@ public class ChattingUI extends AppCompatActivity {
 
             chatLists.add(new ChattingList
                     (content,
-                            ChattingCategory.MY.getValue(),
+                            TableCategory.MY.getValue(),
                             time,
                             ""));
 

@@ -34,10 +34,14 @@ import com.example.openbook.DialogManager;
 import com.example.openbook.PaymentCategory;
 import com.example.openbook.R;
 import com.example.openbook.Data.TableList;
+import com.example.openbook.TableCategory;
 import com.example.openbook.retrofit.RetrofitManager;
 import com.example.openbook.retrofit.RetrofitService;
 import com.example.openbook.retrofit.SuccessOrNot;
 import com.example.openbook.retrofit.TableInformationDTO;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonParser;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -70,29 +74,46 @@ public class Table extends AppCompatActivity {
 
     DialogManager dialogManager;
 
+    SharedPreferences customerDataSp;
+    SharedPreferences.Editor editor;
+    Gson gson;
+
+
     SendToPopUp sendToPopUp = new SendToPopUp();
 
     BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (intent.getAction().equals("tableInformationArrived")) {
+            switch (intent.getAction()) {
+                case "updateNewTable":
+                    int newTableNumber = intent.getIntExtra("newTable", 1000);
+                    String activeTableList = intent.getStringExtra("activeTableList");
 
-                String message = intent.getStringExtra("tableInformation");
-                tableUpdate(message);
+                    if (newTableNumber != 1000) {
+                        Log.d(TAG, "newTableNumber: " + newTableNumber);
+                        updateNewTable(newTableNumber);
 
-            } else if (intent.getAction().equals("chattingRequestArrived")) {
-                String fcmData = intent.getStringExtra("fcmData");
+                    } else if (activeTableList != null) {
+                        Log.d(TAG, "activeTableList: " + activeTableList);
+                        activeTableUpdate(activeTableList);
+                    }else{
+                        Log.d(TAG, "updateNewTable nothing");
+                    }
+                    break;
+
+                case "chatRequest":
+                    String fcmData = intent.getStringExtra("fcmData");
 
 //                sendToPopUp.sendToPopUpChatting(Table.this, myData,
 //                        chattingDataHashMap, ticketDataHashMap, tableList, fcmData);
-
-            } else if (intent.getAction().equals("giftArrived")) {
-
-                String from = intent.getStringExtra("tableName");
-                String menuName = intent.getStringExtra("menuName");
+                    break;
+                case "giftArrived":
+                    String from = intent.getStringExtra("tableName");
+                    String menuName = intent.getStringExtra("menuName");
 
 //                sendToPopUp.sendToPopUpGift(Table.this, myData,
 //                        chattingDataHashMap, ticketDataHashMap, tableList, from, menuName);
+                    break;
             }
         }
     };
@@ -108,22 +129,32 @@ public class Table extends AppCompatActivity {
         overridePendingTransition(0, 0);
 
         myData = (MyData) getIntent().getSerializableExtra("myData");
-        Log.d(TAG, "myData Id: " + myData.getId());
         Log.d(TAG, "myData IsOrder: " + myData.isOrder());
+        myTable = Integer.parseInt(myData.getId().replace("table", ""));
+        Log.d(TAG, "myTable: " + myTable);
 
         chattingDataHashMap = (HashMap<String, ChattingData>) getIntent().getSerializableExtra("chattingData");
         tableList = (ArrayList<TableList>) getIntent().getSerializableExtra("tableList");
 
-        if(tableList != null){
+        customerDataSp = getSharedPreferences("CustomerData", MODE_PRIVATE);
+        String activeTable = customerDataSp.getString("activeTableList", null);
+
+        Log.d(TAG, "activeTable: " + activeTable);
+
+        if (tableList != null) {
+
             Log.d(TAG, "tableList size: " + tableList.size());
-        }else{
+
+        } else {
+            Log.d(TAG, "table is null");
+
             tableList = new ArrayList<>();
 
             for (int i = 1; i < myData.getTableFromDB() + 1; i++) {
                 if (i == myTable) {
-                    tableList.add(new TableList(myData.getId(), null, 0));
+                    tableList.add(new TableList(myData.getId(), TableCategory.MY));
                 } else {
-                    tableList.add(new TableList(i, null, 1));
+                    tableList.add(new TableList(i, TableCategory.OTHER));
                 }
             }
         }
@@ -137,7 +168,7 @@ public class Table extends AppCompatActivity {
 
 
         /**
-         * Appbar: Menu 누르면 이동
+         * Appbar
          */
         appbarMenu = findViewById(R.id.appbar_menu_menu);
 
@@ -149,6 +180,10 @@ public class Table extends AppCompatActivity {
         //그리드 레이아웃 설정
         tableGrid.setLayoutManager(new GridLayoutManager(this, 5));
         tableGrid.setAdapter(adapter);
+
+        if(activeTable != null) {
+            activeTableUpdate(activeTable);
+        }
 
 
         //오른쪽 사이드 메뉴
@@ -171,21 +206,18 @@ public class Table extends AppCompatActivity {
         super.onResume();
         //로컬 브로드 캐스트 등록
         IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction("tableInformationArrived");
-        intentFilter.addAction("chattingRequestArrived");
+        intentFilter.addAction("updateNewTable");
+        intentFilter.addAction("chatRequest");
         intentFilter.addAction("sendChattingData");
         intentFilter.addAction("giftArrived");
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, intentFilter);
 
 
-        SharedPreferences customerDataSp = getSharedPreferences("CustomerData", MODE_PRIVATE);
 
-        String activeTable = customerDataSp.getString("ActiveTable", null);
-        Log.d(TAG, "activeTable: " + activeTable);
-
-        if (tableList != null) {
-            tableUpdate(activeTable);
-        }
+//
+//        if (tableList != null) {
+//            updateNewTable(activeTable);
+//        }
 
         appbarMenu.setOnClickListener(this::moveToMenu);
 
@@ -200,6 +232,7 @@ public class Table extends AppCompatActivity {
         adapter.setOnItemClickListener((view, position) -> {
             tableSidebar.setVisibility(View.VISIBLE);
             clickTable = position + 1;
+            Log.d(TAG, "clickTable: " + clickTable);
 
             if (myData.getPaymentCategory() == PaymentCategory.NOW) {
                 requestChatting.setVisibility(View.GONE);
@@ -223,8 +256,11 @@ public class Table extends AppCompatActivity {
 
             } else if (clickTable == myTable) {
                 dialogManager.positiveBtnDialog(Table.this,
-                        "나의 채팅방 입니다. 다른 테이블과 채팅해보세요!").show();
+                        getResources().getString(R.string.myTable)).show();
 
+            } else if (tableList.get(clickTable - 1).getCategory() != TableCategory.ACTIVE) {
+                dialogManager.positiveBtnDialog(Table.this,
+                        getResources().getString(R.string.unusableTable)).show();
             }
 //            else if (tableList.get(clickTable - 1).getViewType() == 2) {
 //
@@ -259,18 +295,13 @@ public class Table extends AppCompatActivity {
 //
 //                }
 
-//            } else if (tableList.get(clickTable - 1).getViewType() != 2) {
-//                Log.d(TAG, "비어있는 테이블");
-//                dialogManager.positiveBtnDialog(Table.this,
-//                        String.valueOf(R.string.unusableTable));
-//            }
-            else{
-                    Intent intent = new Intent(Table.this, ChattingUI.class);
-                    intent.putExtra("tableNumber", clickTable);
-                    intent.putExtra("myData", myData);
-                    intent.putExtra("chattingData", chattingDataHashMap);
-                    intent.putExtra("tableList", tableList);
-                    startActivity(intent);
+            else {
+                Intent intent = new Intent(Table.this, ChattingUI.class);
+                intent.putExtra("tableNumber", clickTable);
+                intent.putExtra("myData", myData);
+                intent.putExtra("chattingData", chattingDataHashMap);
+                intent.putExtra("tableList", tableList);
+                startActivity(intent);
             }
         }); //setOnClickListener
 
@@ -278,34 +309,30 @@ public class Table extends AppCompatActivity {
         /**
          * info 누르면 해당 테이블 정보 볼 수 있게
          */
-        checkInformation.setOnClickListener(view -> {
+        checkInformation.setOnClickListener(view -> requestTableInfo(new Callback<>() {
+            @Override
+            public void onResponse(@NonNull Call<TableInformationDTO> call, @NonNull Response<TableInformationDTO> response) {
+                if (response.isSuccessful()) {
 
-            requestTableInfo(new Callback<>() {
-                @Override
-                public void onResponse(@NonNull Call<TableInformationDTO> call, @NonNull Response<TableInformationDTO> response) {
-                    if (response.isSuccessful()) {
-
-                        if (clickTable == myTable) {
-                            dialogManager.myTableDialog(Table.this, response.body(), myData.getId()).show();
-                        } else {
-                            dialogManager.otherTableDialog(Table.this, response.body(), false).show();
-                        }
+                    if (clickTable == myTable) {
+                        dialogManager.myTableDialog(Table.this, response.body(), myData.getId()).show();
                     } else {
-                        Log.d(TAG, "onResponse tableInformation isNotSuccessful");
+                        dialogManager.otherTableDialog(Table.this, response.body(), false).show();
                     }
+                } else {
+                    Log.d(TAG, "onResponse tableInformation isNotSuccessful");
                 }
+            }
 
-                @Override
-                public void onFailure(@NonNull Call<TableInformationDTO> call, @NonNull Throwable t) {
-                    Log.d(TAG, "onFailure tableInformation: " + t.getMessage());
-                }
-            });
-
-        });
+            @Override
+            public void onFailure(@NonNull Call<TableInformationDTO> call, @NonNull Throwable t) {
+                Log.d(TAG, "onFailure tableInformation: " + t.getMessage());
+            }
+        }));
 
         sendGift.setOnClickListener(v -> {
 
-            if (tableList.get(clickTable - 1).getViewType() != 2) {
+            if (tableList.get(clickTable - 1).getCategory() != TableCategory.ACTIVE) {
                 Log.d(TAG, "비어있는 테이블");
                 dialogManager.positiveBtnDialog(Table.this,
                         String.valueOf(R.string.unusableTable));
@@ -431,110 +458,110 @@ public class Table extends AppCompatActivity {
         startActivity(intent);
     }
 
-    public void tableUpdate(String line) {
-        Log.d(TAG, "tableUpdate: ");
-        int table[];
+    public void updateNewTable(int newTableNumber) {
+        Log.d(TAG, "tableUpdate: " + newTableNumber);
+        editor = customerDataSp.edit();
+        String activeTable = customerDataSp.getString("activeTableList", null);
+        int[] table = gson.fromJson(activeTable, int[].class);
+        table[table.length+1] = newTableNumber;
 
-        if (line == null) {
-            Log.d(TAG, "tableUpdate line null: " + line);
+        Log.d(TAG, "add updateNewTable: " + Arrays.toString(table));
+        editor.putString("activeTableList", Arrays.toString(table));
+        editor.commit();
+
+        if (newTableNumber == 1000) {
+            Log.d(TAG, "tableUpdate line null: ");
             return;
         }
 
-        try {
-            JSONArray jsonArray = new JSONArray(line);
+        tableList.get(newTableNumber - 1).setCategory(TableCategory.ACTIVE);
+        adapter.notifyItemChanged(newTableNumber - 1);
+    }
 
-            table = new int[jsonArray.length()];
+    public void activeTableUpdate(String activeTableList) {
+        Log.d(TAG, "activeTableUpdate: " + activeTableList);
 
+        gson = new Gson();
+        int[] table = gson.fromJson(activeTableList, int[].class);
+        Arrays.sort(table);
+        Log.d(TAG, "activeTableUpdate after sort: " + Arrays.toString(table));
 
-            for (int j = 0; j < jsonArray.length(); j++) {
-                JSONObject jsonObject = jsonArray.getJSONObject(j);
-                table[j] = jsonObject.getInt("table");
+        for (int i = 0; i < table.length; i++) {
+//            table[i] = Integer.parseInt(table[i]);
+
+            if (table[i] != myTable) {
+                Log.d(TAG, "activeTableUpdate table: " + table[i]);
+                tablePosition = table[i] - 1;
+                tableList.get(tablePosition).setCategory(TableCategory.ACTIVE);
+                adapter.notifyItemChanged(tablePosition);
             }
 
-            Arrays.sort(table);
-            Log.d(TAG, "new table :" + Arrays.toString(table));
+        }
+    }
 
-            for (int i = 0; i < table.length; i++) {
-                if (table[i] != myTable) {
 
-                    int color = getColor(R.color.skyblue);
-                    tablePosition = table[i] - 1;
-                    tableList.get(tablePosition).setViewType(2);
-                    runOnUiThread(() -> adapter.changeItemColor(tablePosition, color));
+        @Override
+        protected void onActivityResult ( int requestCode, int resultCode, @Nullable Intent data){
+            super.onActivityResult(requestCode, resultCode, data);
 
-                } else {
-                    Log.d(TAG, "같음");
+            myData = (MyData) data.getSerializableExtra("myData");
+            Log.d(TAG, "onActivityResult myData Id: " + myData.getId());
+            Log.d(TAG, "onActivityResult myData IsOrder: " + myData.isOrder());
+
+            chattingDataHashMap = (HashMap<String, ChattingData>) data.getSerializableExtra("chattingData");
+            Log.d(TAG, "onActivityResult chattingData: " + chattingDataHashMap);
+
+
+        }
+
+        public String sendTicketToAdmin (String whoBuy){
+            JSONObject jsonObject = new JSONObject();
+
+            try {
+                JSONArray menujArray = new JSONArray();//배열이 필요할때
+                JSONObject object = new JSONObject();
+
+                object.put("menu", "profileTicket");
+                object.put("price", 2000);
+                object.put("quantity", 1);
+                menujArray.put(object);
+
+                jsonObject.put("item", menujArray);
+                jsonObject.put("menuName", "profileTicket");
+                jsonObject.put("tableName", whoBuy);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            return jsonObject.toString();
+        }
+
+        public void sendGiftOtherTable (String menuName,int menuQuantity, int menuPrice){
+
+            Call<SuccessOrNot> call = service.sendGiftOtherTable("table" + clickTable,
+                    myData.getId(), menuName, menuQuantity, menuPrice);
+
+            call.enqueue(new Callback<>() {
+                @Override
+                public void onResponse(@NonNull Call<SuccessOrNot> call, @NonNull Response<SuccessOrNot> response) {
+
                 }
-            }
 
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-    }
+                @Override
+                public void onFailure(@NonNull Call<SuccessOrNot> call, @NonNull Throwable t) {
 
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        myData = (MyData) data.getSerializableExtra("myData");
-        Log.d(TAG, "onActivityResult myData Id: " + myData.getId());
-        Log.d(TAG, "onActivityResult myData IsOrder: " + myData.isOrder());
-
-        chattingDataHashMap = (HashMap<String, ChattingData>) data.getSerializableExtra("chattingData");
-        Log.d(TAG, "onActivityResult chattingData: " + chattingDataHashMap);
+                }
+            });
 
 
-    }
-
-    public String sendTicketToAdmin(String whoBuy) {
-        JSONObject jsonObject = new JSONObject();
-
-        try {
-            JSONArray menujArray = new JSONArray();//배열이 필요할때
-            JSONObject object = new JSONObject();
-
-            object.put("menu", "profileTicket");
-            object.put("price", 2000);
-            object.put("quantity", 1);
-            menujArray.put(object);
-
-            jsonObject.put("item", menujArray);
-            jsonObject.put("menuName", "profileTicket");
-            jsonObject.put("tableName", whoBuy);
-        } catch (JSONException e) {
-            e.printStackTrace();
         }
 
-        return jsonObject.toString();
-    }
-
-    public void sendGiftOtherTable(String menuName, int menuQuantity, int menuPrice) {
-
-        Call<SuccessOrNot> call = service.sendGiftOtherTable("table" + clickTable,
-                myData.getId(), menuName, menuQuantity, menuPrice);
-
-        call.enqueue(new Callback<>() {
-            @Override
-            public void onResponse(@NonNull Call<SuccessOrNot> call, @NonNull Response<SuccessOrNot> response) {
-
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<SuccessOrNot> call, @NonNull Throwable t) {
-
-            }
-        });
-
+        @Override
+        public void onBackPressed () {
+            //안드로이드 백버튼 막기
+        }
 
     }
-
-    @Override
-    public void onBackPressed() {
-        //안드로이드 백버튼 막기
-    }
-
-}
 
 
 

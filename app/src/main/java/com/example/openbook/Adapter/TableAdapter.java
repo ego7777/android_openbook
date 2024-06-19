@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.openbook.R;
 import com.example.openbook.Data.TableList;
+import com.example.openbook.TableCategory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,14 +30,14 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> 
     public TableAdapter(ArrayList<TableList> table, int myTable) {
         this.table = table;
         this.myTable = myTable;
-        Log.d(TAG, "TableAdapter get_id: " + myTable);
+        Log.d(TAG, "TableAdapter myTable: " + myTable);
     }
 
-    public void changeItemColor(int position, int color){
-        positionColorMap.put(position, color);
-        Log.d(TAG, "changeItemColor: " + position);
-        notifyDataSetChanged();
-    }
+//    public void changeItemColor(int position, int color){
+//        positionColorMap.put(position, color);
+//        Log.d(TAG, "changeItemColor: " + position);
+//        notifyDataSetChanged();
+//    }
 
 
     /**
@@ -61,54 +62,56 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> 
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.table_gridview_item, parent, false);
 
-        return new TableAdapter.ViewHolder(view, viewType);
+        return new TableAdapter.ViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull TableAdapter.ViewHolder holder, @SuppressLint("RecyclerView") int position) {
 
-
         holder.onBind(table.get(position));
+
         int color;
 
         if (position == lastClickedPosition) {
             color = holder.itemView.getContext().getColor(R.color.blue_purple);
             holder.itemView.setBackgroundColor(color);
-        } else if (position == myTable - 1) {
+
+        } else if (table.get(position).getCategory() == TableCategory.MY) {
             color = holder.itemView.getContext().getColor(R.color.flower_pink);
             holder.itemView.setBackgroundColor(color);
+
+        } else if(table.get(position).getCategory() == TableCategory.ACTIVE){
+            color = holder.itemView.getContext().getColor(R.color.skyblue);
+            holder.itemView.setBackgroundColor(color);
+
         } else {
             color = holder.itemView.getContext().getColor(R.color.light_gray);
             holder.itemView.setBackgroundColor(color);
         }
 
 
-        Integer orderedTable = positionColorMap.get(position);
-        Log.d(TAG, "orderTable: " + orderedTable);
+
+
+//        Integer orderedTable = positionColorMap.get(position);
+//        Log.d(TAG, "orderTable: " + orderedTable);
 
 
 
-        if(orderedTable != null){
-            if (position == lastClickedPosition) {
-                Log.d(TAG, "equal ");
-                color = holder.itemView.getContext().getColor(R.color.blue_purple);
-                holder.itemView.setBackgroundColor(color);
-
-            } else {
-                Log.d(TAG, "not equal: " + position);
-                holder.itemView.setBackgroundColor(orderedTable);
-            }
-
-
-        }
+//        if(orderedTable != null){
+//            if (position == lastClickedPosition) {
+//                Log.d(TAG, "equal ");
+//                color = holder.itemView.getContext().getColor(R.color.blue_purple);
+//                holder.itemView.setBackgroundColor(color);
+//
+//            } else {
+//                Log.d(TAG, "not equal: " + position);
+//                holder.itemView.setBackgroundColor(orderedTable);
+//            }
+//        }
 
 
     }
 
-
-    /**
-     * 리사이클러뷰 리스트 사이즈를 불러옴
-     **/
     @Override
     public int getItemCount() {
         if (table == null) {
@@ -120,27 +123,19 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> 
 
     public void setAdapterItem(ArrayList<TableList> items) {
         this.table = items;
-
         notifyDataSetChanged();
     }
 
 
-    /**
-     * 뷰홀더 생성
-     **/
     class ViewHolder extends RecyclerView.ViewHolder {
-
         TextView tableNum;
         TextView tableGridGender;
         TextView tableGridGuestNum;
 
         int position;
-        private int viewType;
 
-
-        public ViewHolder(@NonNull View itemView, int viewType) {
+        public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            this.viewType = viewType;
 
             tableNum = itemView.findViewById(R.id.tableNum);
             tableGridGender = itemView.findViewById(R.id.table_grid_gender);
@@ -166,16 +161,21 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> 
 
 
         void onBind(TableList items) {
-            if (viewType == 0) {
-                onBindMine(items);
-            } else if (viewType == 1) {
-                onBindOthers(items);
+            switch (items.getCategory()){
+                case MY:
+                    onBindMine(items);
+                    break;
+                case OTHER:
+                case ACTIVE:
+                    onBindOthers(items);
+                    break;
+
             }
 
         }
 
         void onBindOthers(TableList items) {
-            tableNum.setText(String.valueOf(items.getTableNum()));
+            tableNum.setText(String.valueOf(items.getTableNumber()));
             tableGridGender.setText(items.getTableGender());
             tableGridGuestNum.setText(items.getTableGuestNum());
         }
@@ -191,7 +191,7 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> 
 
     @Override
     public int getItemViewType(int position) {
-        if (table.get(position).getViewType() == 0) {
+        if (table.get(position).getCategory() == TableCategory.MY) {
             return 0;
         } else {
             return 1;

@@ -8,6 +8,7 @@
     <string name="unusableTable">"비어있는 테이블이거나 아직 주문하지 않은 테이블 입니다."</string>
     <string name="menuOrderError">"메뉴 주문에 실패하였습니다. 잠시 후 다시 시도해주세요."</string>
     <string name="noSales">매출 데이터가 존재하지 않습니다.</string>
+    <string name="myTable">"나의 채팅방 입니다. 다른 테이블과 채팅해보세요!"</string>
 
     <string-array name="sideMenu">
         <item>"메인안주"</item>

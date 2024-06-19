@@ -3,57 +3,29 @@ package com.example.openbook.Data;
 import android.graphics.drawable.Drawable;
 
 
+import com.example.openbook.TableCategory;
 
 import java.io.Serializable;
 
 public class TableList implements Serializable {
 
-    int tableNum;
-    Drawable tableColor;
-    String myTable;
+    int tableNumber;
+    boolean isActive;
     String tableGender;
     String tableGuestNum;
+    TableCategory category;
 
-    public int getViewType() {
-        return viewType;
+    String myTable;
+
+
+    public TableList(int tableNumber, TableCategory category){
+        this.tableNumber = tableNumber;
+        this.category = category;
     }
 
-    public void setViewType(int viewType) {
-        this.viewType = viewType;
-    }
-
-    int viewType;
-
-
-    public TableList(int tableNum, Drawable tableColor, int viewType){
-        this.tableNum = tableNum;
-        this.tableColor = tableColor;
-        this.viewType = viewType;
-    }
-
-    public TableList(String myTable, Drawable tableColor, int viewType){
+    public TableList(String myTable, TableCategory category){
         this.myTable = myTable;
-        this.tableColor = tableColor;
-        this.viewType = viewType;
-    }
-
-
-
-
-    public int getTableNum() {
-        return tableNum;
-    }
-
-    public void setTableNum(int tableNum) {
-        this.tableNum = tableNum;
-    }
-
-    public Drawable getTableColor(){
-        return tableColor;
-    }
-
-    public void setTableColor(Drawable tableColor){
-        this.tableColor = tableColor;
+        this.category = category;
     }
 
     public String getMyTable() {
@@ -62,6 +34,18 @@ public class TableList implements Serializable {
 
     public void setMyTable(String myTable) {
         this.myTable = myTable;
+    }
+
+    public int getTableNumber() {
+        return tableNumber;
+    }
+
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean active) {
+        isActive = active;
     }
 
     public String getTableGender() {
@@ -78,6 +62,14 @@ public class TableList implements Serializable {
 
     public void setTableGuestNum(String tableGuestNum) {
         this.tableGuestNum = tableGuestNum;
+    }
+
+    public TableCategory getCategory() {
+        return category;
+    }
+
+    public void setCategory(TableCategory category) {
+        this.category = category;
     }
 
 }

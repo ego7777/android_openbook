@@ -24,11 +24,7 @@
         android:vmSafeMode="true"
         android:windowSoftInputMode="adjustPan"
         tools:targetApi="31">
-        <activity
-            android:name=".Activity.DrawableActivity"
-            android:exported="false"
-            android:label="@string/title_activity_drawable"
-            android:theme="@style/Theme.Openbook.NoActionBar" />
+
 
         <service
             android:name=".FCM.FCM"
@@ -91,9 +87,6 @@
             android:theme="@android:style/Theme.Dialog" />
         <activity
             android:name=".Activity.AdminModifyTableQuantity"
-            android:theme="@android:style/Theme.Dialog" />
-        <activity
-            android:name=".Activity.AdminModifyMenu"
             android:theme="@android:style/Theme.Dialog" />
         <activity
             android:name=".Activity.AdminPaymentLaterPopup"
