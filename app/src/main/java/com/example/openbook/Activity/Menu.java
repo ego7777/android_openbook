@@ -9,6 +9,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 
+import android.database.sqlite.SQLiteDatabase;
 import android.icu.text.DecimalFormat;
 import android.os.Bundle;
 import android.os.Handler;
@@ -245,22 +246,23 @@ public class Menu extends AppCompatActivity {
             }
         });
 
-        int version = 1;
-        version++;
 
-        dbHelper = new DBHelper(Menu.this, version);
+        dbHelper = new DBHelper(Menu.this);
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        dbHelper.onCreate(db);
         Cursor res = dbHelper.getTableData("menuListTable");
+
 
 
         RetrofitManager retrofitManager = new RetrofitManager();
         Retrofit retrofit = retrofitManager.getRetrofit(BuildConfig.SERVER_IP);
         service = retrofit.create(RetrofitService.class);
 
-        if (res == null) {
+        if (res.getCount() == 0) {
             Log.d(TAG, "메뉴 db 새로 받아오기");
 
             Call<MenuListDTO> call = service.getMenuList();
-            call.enqueue(new Callback<MenuListDTO>() {
+            call.enqueue(new Callback<>() {
                 @Override
                 public void onResponse(@NonNull Call<MenuListDTO> call, @NonNull Response<MenuListDTO> response) {
                     Log.d(TAG, "onResponse: " + response);

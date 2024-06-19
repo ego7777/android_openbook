@@ -53,9 +53,6 @@ public class AdminPaymentLaterPopup extends Activity {
 
     ArrayList<AdminTableList> adminTableList;
     DBHelper dbHelper;
-
-    int version = 2;
-
     SharedPreferences sharedPreference;
     SharedPreferences.Editor editor;
 
@@ -83,8 +80,7 @@ public class AdminPaymentLaterPopup extends Activity {
         adminPopUpAdapter.setAdapterItem(orderLists);
 
 
-        dbHelper = new DBHelper(AdminPaymentLaterPopup.this, version);
-        version++;
+        dbHelper = new DBHelper(AdminPaymentLaterPopup.this);
 
         sharedPreference = getSharedPreferences("oldMenuSummary", MODE_PRIVATE);
         editor = sharedPreference.edit();

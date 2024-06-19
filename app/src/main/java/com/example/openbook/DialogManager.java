@@ -437,10 +437,8 @@ public class DialogManager {
         sendGiftRecyclerview.addItemDecoration(new menu_recyclerview_deco(context));
         menuAdapter.setAdapterItem(menuLists);
 
-        int version = 1;
-        version++;
 
-        DBHelper dbHelper = new DBHelper(context, version);
+        DBHelper dbHelper = new DBHelper(context);
         menuLists = dbHelper.getTableData(menuLists);
         Log.d(TAG, "menuLists size: " + menuLists.size());
 

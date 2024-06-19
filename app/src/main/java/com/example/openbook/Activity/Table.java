@@ -357,10 +357,8 @@ public class Table extends AppCompatActivity {
                 sendGiftRecyclerview.addItemDecoration(new menu_recyclerview_deco(Table.this));
                 menuAdapter.setAdapterItem(menuLists);
 
-                int version = 1;
-                version++;
 
-                DBHelper dbHelper = new DBHelper(Table.this, version);
+                DBHelper dbHelper = new DBHelper(Table.this);
                 menuLists = dbHelper.getTableData(menuLists);
                 Log.d(TAG, "menuLists size: " + menuLists.size());
 

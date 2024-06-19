@@ -83,7 +83,7 @@ public class Login extends AppCompatActivity {
         Retrofit retrofit = retrofitManager.getRetrofit(BuildConfig.SERVER_IP);
         service = retrofit.create(RetrofitService.class);
 
-        DBHelper dbHelper = new DBHelper(Login.this, 2);
+        DBHelper dbHelper = new DBHelper(Login.this);
         dbHelper.dropTable("menuListTable");
 
 

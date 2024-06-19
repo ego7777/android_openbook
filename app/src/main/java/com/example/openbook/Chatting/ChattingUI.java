@@ -118,9 +118,9 @@ public class ChattingUI extends AppCompatActivity {
         Log.d(TAG, "chattingData: " + chattingDataHashMap);
 
 //        chattingDataHashMap.get("table"+table_num).setChattingAgree(true);
-        version++;
 
-        dbHelper = new DBHelper(ChattingUI.this, version);
+
+        dbHelper = new DBHelper(ChattingUI.this);
 
         TextView moveMenu = findViewById(R.id.appbar_menu_menu);
         moveMenu.setOnClickListener(view -> moveActivity(Menu.class));

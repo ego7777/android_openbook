@@ -16,65 +16,80 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.security.spec.ECField;
 import java.util.ArrayList;
 
 public class DBHelper extends SQLiteOpenHelper {
 
     static String DBName = "OpenbookLocal.db";
+    static int DB_VERSION = 2;
     String TAG = "dbHelperTAG";
 
-
-    public DBHelper(@Nullable Context context, int version) {
-        super(context, DBName, null, version);
+    public DBHelper(@Nullable Context context) {
+        super(context, DBName, null, DB_VERSION);
     }
 
 
     @Override
     public void onCreate(SQLiteDatabase db) {
 
-        String queryChatting = "CREATE TABLE chattingTable" +
-                "(id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                "content VARCHAR(2000) not null," +
-                "time VARCHAR(8) not null," +
-                "sender VARCHAR(10) not null," +
-                "receiver VARCAHR(10) not null," +
-                "read VARCHAR(4))";
+        Log.d(TAG, "dbHelper onCreate");
 
-        db.execSQL(queryChatting);
+        try{
+            Log.d(TAG, "dbHelper onCreate in try");
+
+            String queryChatting = "CREATE TABLE IF NOT EXISTS chattingTable" +
+                    "(id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    "content VARCHAR(2000) not null," +
+                    "time VARCHAR(8) not null," +
+                    "sender VARCHAR(10) not null," +
+                    "receiver VARCAHR(10) not null," +
+                    "read VARCHAR(4))";
+
+            db.execSQL(queryChatting);
+
+            Log.d(TAG, "creating chattingTable");
 
 
-        //menu.class
-        String queryMenu = "CREATE TABLE menuListTable" +
-                "(id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                "menuName VARCHAR(20) not null," +
-                "menuPrice INT not null," +
-                "menuImage String not null, " +
-                "menuType INT not null)";
+            //menu.class
+            String queryMenu = "CREATE TABLE IF NOT EXISTS menuListTable" +
+                    "(id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    "menuName VARCHAR(20) not null," +
+                    "menuPrice INT not null," +
+                    "menuImage String not null, " +
+                    "menuType INT not null)";
 
-        db.execSQL(queryMenu);
+            db.execSQL(queryMenu);
 
-        String queryAdmin = "CREATE TABLE adminTableList" +
-                "(id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                "tableName VARCHAR(20) not null," +
-                "menuName VARCHAR(20) not null," +
-                "menuQuantity INT not null, " +
-                "menuPrice INT not null, " +
-                "identifier INT not null)";
+            Log.d(TAG, "creating menuListTable");
 
-        db.execSQL(queryAdmin);
+            String queryAdmin = "CREATE TABLE IF NOT EXISTS adminTableList" +
+                    "(id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    "tableName VARCHAR(20) not null," +
+                    "menuName VARCHAR(20) not null," +
+                    "menuQuantity INT not null, " +
+                    "menuPrice INT not null, " +
+                    "identifier INT not null)";
 
+            db.execSQL(queryAdmin);
+
+            Log.d(TAG, "creating adminTableList");
+
+        } catch (Exception e){
+            Log.d(TAG, "Error creating tables :" + e.getMessage());
+        }
 
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        String queryChatting = "DROP TABLE chattingTable";
+        String queryChatting = "DROP TABLE IF EXISTS chattingTable";
         db.execSQL(queryChatting);
 
-        String queryMenu = "DROP TABLE menuListTable";
+        String queryMenu = "DROP TABLE IF EXISTS menuListTable";
         db.execSQL(queryMenu);
 
-        String queryAdmin = "DROP TABLE adminTableList";
+        String queryAdmin = "DROP TABLE IF EXISTS adminTableList";
         db.execSQL(queryAdmin);
 
         onCreate(db);
@@ -97,6 +112,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public boolean insertMenuData(String menuName, int menuPrice, String menuImage, int menuType) {
         SQLiteDatabase db = this.getWritableDatabase();
+
         ContentValues contentValues = new ContentValues();
         contentValues.put("menuName", menuName);
         contentValues.put("menuPrice", menuPrice);
@@ -104,9 +120,12 @@ public class DBHelper extends SQLiteOpenHelper {
         contentValues.put("menuType", menuType);
 
         long result = db.insert("menuListTable", null, contentValues);
+
         if (result == -1) {
+            Log.d(TAG, "insertMenuData insert false");
             return false;
         }
+        Log.d(TAG, "insertMenuData insert true");
         return true;
     }
 
