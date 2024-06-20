@@ -10,6 +10,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.openbook.Category.ChattingCategory;
 import com.example.openbook.R;
 import com.example.openbook.Data.ChattingList;
 
@@ -130,11 +131,9 @@ public class ChattingAdapter extends RecyclerView.Adapter<ChattingAdapter.ViewHo
     }
 
 
-
-
     @Override
     public int getItemViewType(int position) {
-        if (chat.get(position).getViewType() == 0) {
+        if (chat.get(position).getType() == ChattingCategory.OTHERS) {
             return TYPE_Receive;
         } else {
             return TYPE_Send;

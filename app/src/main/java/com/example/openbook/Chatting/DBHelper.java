@@ -16,7 +16,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.security.spec.ECField;
 import java.util.ArrayList;
 
 public class DBHelper extends SQLiteOpenHelper {
@@ -104,10 +103,7 @@ public class DBHelper extends SQLiteOpenHelper {
         contentValues.put("receiver", receiver);
         contentValues.put("read", read);
         long result = db.insert("chattingTable", null, contentValues);
-        if (result == -1) {
-            return false;
-        }
-        return true;
+        return result != -1;
     }
 
     public boolean insertMenuData(String menuName, int menuPrice, String menuImage, int menuType) {
@@ -140,10 +136,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
 
         long result = db.insert("adminTableList", null, contentValues);
-        if (result == -1) {
-            return false;
-        }
-        return true;
+        return result != -1;
     }
 
     public void addMenu(String tableNumber, String menu, int quantity, int price, int identifier) {
@@ -164,12 +157,12 @@ public class DBHelper extends SQLiteOpenHelper {
                     "' WHERE tableName = '" + tableNumber + "' AND menuName = '" + menu + "'";
 
             db.execSQL(query);
-
-
         } else {
             // 메뉴 이름이 존재하지 않는 경우
             insertAdminData(tableNumber, menu, quantity, price, identifier);
         }
+
+        cursor.close();
 
     }
 
@@ -191,6 +184,8 @@ public class DBHelper extends SQLiteOpenHelper {
 
         }
 
+        cursor.close();
+
         return list;
 
     }
@@ -204,7 +199,6 @@ public class DBHelper extends SQLiteOpenHelper {
         String selection = "menuName IN (?, ?, ?, ?)";
         Cursor cursor = db.query("menuListTable", columns, selection, menuNames, null, null, null);
 
-        // 가져온 데이터 처리
         if (cursor != null) {
             while (cursor.moveToNext()) {
 
@@ -261,7 +255,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public void upDateIsRead(String myTable, String otherTable) {
         SQLiteDatabase db = this.getWritableDatabase();
-        String updateQuery = "UPDATE chattingTable SET read = '' WHERE receiver = '" + otherTable + "' AND sender = '" + myTable + "'";
+        String updateQuery = "UPDATE chattingTable SET read = '' WHERE receiver = '" + otherTable + "' AND sender = '" + myTable + "' AND read = '1'";
         Log.d(TAG, "upDateIsRead: ");
         db.execSQL(updateQuery);
         Log.d(TAG, "upDateIsRead: done? ");

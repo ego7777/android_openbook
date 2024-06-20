@@ -1,9 +1,11 @@
 package com.example.openbook.Data;
 
+import com.example.openbook.Category.ChattingCategory;
+
 public class ChattingList {
     String text;
     int imgId;
-    int viewType;
+    ChattingCategory type;
     String time;
 
     public String getRead() {
@@ -16,19 +18,19 @@ public class ChattingList {
 
     String read;
 
-    public ChattingList(String text, int viewType, String time, String read){
+    public ChattingList(String text, ChattingCategory type, String time, String read){
         this.text = text;
-        this.viewType =viewType;
+        this.type =type;
         this.time = time;
         this.read = read;
     }
 
-    public String getTime(){
-        return time;
+    public ChattingCategory getType() {
+        return type;
     }
 
-    public void setTime(String time) {
-        this.time = time;
+    public String getTime(){
+        return time;
     }
 
     public String getText() {
@@ -44,11 +46,4 @@ public class ChattingList {
     }
 
 
-    public int getViewType() {
-        return viewType;
-    }
-
-    public void setViewType(int viewType) {
-        this.viewType = viewType;
-    }
 }

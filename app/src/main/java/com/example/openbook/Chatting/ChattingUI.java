@@ -22,16 +22,15 @@ import com.example.openbook.Activity.SendToPopUp;
 import com.example.openbook.Activity.Table;
 import com.example.openbook.Adapter.ChattingAdapter;
 import com.example.openbook.Activity.Menu;
-import com.example.openbook.TableCategory;
+import com.example.openbook.Category.ChattingCategory;
 import com.example.openbook.Data.ChattingData;
 import com.example.openbook.Data.MyData;
 import com.example.openbook.Data.TableList;
-import com.example.openbook.MessageDTO;
 import com.example.openbook.R;
 import com.example.openbook.Data.ChattingList;
 import com.google.gson.Gson;
 
-import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -48,8 +47,6 @@ public class ChattingUI extends AppCompatActivity {
     EditText chattingEditText;
 
     DBHelper dbHelper;
-    int version = 1;
-    LocalDateTime localTime = LocalDateTime.now();
     ArrayList<TableList> tableList;
 
     MyData myData;
@@ -67,9 +64,9 @@ public class ChattingUI extends AppCompatActivity {
                 chattingUpdate(message);
 
             } else if (intent.getAction().equals("isReadArrived")) {
-                String message = intent.getStringExtra("isRead");
-                Log.d(TAG, "onReceive isRead: " + message);
-                isReadUpdate(message);
+                String readTable = intent.getStringExtra("readTable");
+                Log.d(TAG, "onReceive isRead: " + readTable);
+                isReadUpdate(readTable);
 
             } else if (intent.getAction().equals("chatRequest")) {
                 String fcmData = intent.getStringExtra("fcmData");
@@ -109,7 +106,7 @@ public class ChattingUI extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.chatting);
+        setContentView(R.layout.activity_chatting);
 
         tableNumber = getIntent().getIntExtra("tableNumber", 0);
         myData = (MyData) getIntent().getSerializableExtra("myData");
@@ -119,8 +116,6 @@ public class ChattingUI extends AppCompatActivity {
 
 //        chattingDataHashMap.get("table"+table_num).setChattingAgree(true);
 
-
-        dbHelper = new DBHelper(ChattingUI.this);
 
         TextView moveMenu = findViewById(R.id.appbar_menu_menu);
         moveMenu.setOnClickListener(view -> moveActivity(Menu.class));
@@ -138,39 +133,16 @@ public class ChattingUI extends AppCompatActivity {
         TextView chattingSendButton = findViewById(R.id.chatting_sendBtn);
 
 
-        /**
-         * 채팅방 화면: 리사이클러뷰로 내가 보낸 것은 ViewType 1으로, 상대방이 보낸 것은 ViewType 0로 설정해서 화면에 띄워준다
-         */
         chattingRecyclerView = findViewById(R.id.chatting_recyclerview);
         chattingAdapter = new ChattingAdapter();
         chattingRecyclerView.setLayoutManager(new LinearLayoutManager(ChattingUI.this, RecyclerView.VERTICAL, false));
         chattingRecyclerView.setAdapter(chattingAdapter);
 
-        chatLists = new ArrayList<>();
 
-        /**
-         * 기존에 채팅한 내역이 있으면 채팅 내역을 가져온다.
-         */
+        dbHelper = new DBHelper(ChattingUI.this);
         Cursor res = dbHelper.getTableData("chattingTable");
 
-        if (res.getCount() == 0) {
-            Log.d(TAG, "SQlite에서 데이터를 찾을 수 없습니다.");
-        }
-
-
-        while (res.moveToNext()) {
-            //sender 가 get_id인 것은 viewType 1로
-            if (res.getString(3).equals(myData.getId())
-                    && res.getString(4).equals("table" + tableNumber)) {
-                chatLists.add(new ChattingList(res.getString(1), 1, res.getString(2), res.getString(5)));
-                Log.d(TAG, "viewType: 오른쪽: " + res.getString(1));
-                //receiver 가 table_num 인 것은 viewType 0으로
-            } else if (res.getString(3).equals("table" + tableNumber) && res.getString(4).equals(myData.getId())) {
-                chatLists.add(new ChattingList(res.getString(1), 0, res.getString(2), res.getString(5)));
-                Log.d(TAG, "viewType 왼쪽: " + res.getString(1));
-            }
-        }
-
+        chatLists = initChattingList(res);
 
         chattingAdapter.setAdapterItem(chatLists);
 
@@ -180,27 +152,27 @@ public class ChattingUI extends AppCompatActivity {
         TextView chattingBack = findViewById(R.id.chatting_back);
         chattingBack.setOnClickListener(view -> moveActivity(Table.class));
 
-
         chattingSendButton.setOnClickListener(view -> {
 
             String chattingText = chattingEditText.getText().toString();
 
             if (!chattingText.isBlank()) {
 
+                time = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
+
                 MessageDTO message = new MessageDTO(
                         "table" + tableNumber,
                         myData.getId(),
-                        chattingText);
+                        chattingText,
+                        time);
 
                 Intent intent = new Intent("SendChattingData");
                 intent.putExtra("sendToServer", gson.toJson(message));
                 LocalBroadcastManager.getInstance(ChattingUI.this).sendBroadcast(intent);
 
-                time = localTime.format(DateTimeFormatter.ofPattern("HH:mm"));
+                chatLists.add(new ChattingList(message.getMessage(), ChattingCategory.MINE, time, "1"));
 
-                chatLists.add(new ChattingList(message.getMessage(), 1, time, "1"));
-
-                chattingAdapter.setAdapterItem(chatLists);
+                chattingAdapter.notifyItemChanged(chatLists.size());
                 chattingRecyclerView.smoothScrollToPosition(chatLists.size());
 
                 dbHelper.insertChattingData(message.getMessage(), time, myData.getId(), message.getTo(), "1");
@@ -212,7 +184,46 @@ public class ChattingUI extends AppCompatActivity {
 
             }
         });
+    }
 
+    public void notifyRead(){
+        Log.d(TAG, "notifyRead 호출");
+        Intent intent = new Intent("SendChattingData");
+        MessageDTO message = new MessageDTO
+                ("table" + tableNumber,
+                        myData.getId(),
+                        "isRead",
+                        "");
+        intent.putExtra("sendToServer", gson.toJson(message));
+        LocalBroadcastManager.getInstance(ChattingUI.this).sendBroadcast(intent);
+    }
+
+    public ArrayList<ChattingList> initChattingList(Cursor res){
+        chatLists = new ArrayList<>();
+
+        if (res.getCount() > 0) {
+
+            while (res.moveToNext()) {
+
+                String message = res.getString(1);
+                String time = res.getString(2);
+                String sender = res.getString(3);
+                String receiver = res.getString(4);
+                String isRead = res.getString(5);
+
+                if (sender.equals(myData.getId()) && receiver.equals("table" + tableNumber)) {
+                    chatLists.add(new ChattingList(message, ChattingCategory.MINE, time, isRead));
+                    Log.d(TAG, "내가 보낸 메세지: " + message);
+
+                } else if (sender.equals("table" + tableNumber) && receiver.equals(myData.getId())) {
+                    chatLists.add(new ChattingList(message, ChattingCategory.OTHERS, time, isRead));
+                    Log.d(TAG, "받은 메세지: " + message);
+                }
+            }
+            notifyRead();
+        }
+
+        return chatLists;
     }
 
 
@@ -224,48 +235,36 @@ public class ChattingUI extends AppCompatActivity {
         String from = message.getFrom();
         String content = message.getMessage();
         int fromNumber = Integer.parseInt(from.replace("table", ""));
+        String receivedTime = message.getTime();
 
         if (tableNumber == fromNumber) {
-            time = localTime.format(DateTimeFormatter.ofPattern("HH:mm"));
 
             chatLists.add(new ChattingList
                     (content,
-                            TableCategory.MY.getValue(),
-                            time,
+                            ChattingCategory.OTHERS,
+                            receivedTime,
                             ""));
 
             chattingAdapter.notifyDataSetChanged();
             chattingRecyclerView.smoothScrollToPosition(chatLists.size());
-
-
-            dbHelper.insertChattingData(content, time, from, myData.getId(), "");
-
-            Intent intent = new Intent("SendChattingData");
-            message = new MessageDTO("table" + tableNumber, myData.getId(), "isRead");
-            intent.putExtra("sendToServer", gson.toJson(message));
-            LocalBroadcastManager.getInstance(ChattingUI.this).sendBroadcast(intent);
+            notifyRead();
         }
 
     }
 
-    private void isReadUpdate(String line) {
+    private void isReadUpdate(String readTable) {
 
-        Log.d(TAG, "isReadUpdate 호출");
-
-        MessageDTO message = gson.fromJson(line, MessageDTO.class);
-        String from = message.getFrom();
-        int fromTable = Integer.parseInt(from.replace("table", ""));
+        int fromTable = Integer.parseInt(readTable.replace("table", ""));
 
         if (tableNumber == fromTable) {
 
             for (int i = 0; i < chatLists.size(); i++) {
-                chatLists.get(i).setRead("");
-                Log.d(TAG, "setRead: ");
+                if(chatLists.get(i).getRead().equals("1")){
+                    chatLists.get(i).setRead("");
+                }
             }
 
             chattingAdapter.notifyDataSetChanged();
-
-            dbHelper.upDateIsRead(myData.getId(), from);
         }
 
     }

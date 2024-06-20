@@ -1,4 +1,4 @@
-package com.example.openbook;
+package com.example.openbook.Category;
 
 public enum CartCategory {
 

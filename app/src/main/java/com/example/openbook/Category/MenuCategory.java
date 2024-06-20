@@ -1,4 +1,4 @@
-package com.example.openbook;
+package com.example.openbook.Category;
 
 public enum MenuCategory {
     MAIN(0), SIDE(1), DRINK(2);

@@ -1,17 +1,18 @@
-package com.example.openbook;
+package com.example.openbook.Chatting;
 
 public class MessageDTO {
 
     String to;
     String from;
     String message;
-//    int isRead;
+    String time;
 
 
-    public MessageDTO(String to, String from, String message){
+    public MessageDTO(String to, String from, String message, String time){
         this.to = to;
         this.from = from;
         this.message = message;
+        this.time = time;
     }
 
 //    public MessageDTO(String from, int isRead){
@@ -27,16 +28,13 @@ public class MessageDTO {
 //        return isRead;
 //    }
 
-    public void setTo(String to) {
-        this.to = to;
+
+    public String getTime() {
+        return time;
     }
 
     public void setFrom(String from) {
         this.from = from;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
     }
 
     public String getTo() {

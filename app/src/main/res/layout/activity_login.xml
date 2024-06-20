@@ -55,6 +55,7 @@
         android:autoSizeMaxTextSize="40sp"
         android:autoSizeMinTextSize="25sp"
         android:autoSizeTextType="uniform"
+        android:imeOptions="flagNoExtractUi"
 
         app:layout_constraintBottom_toTopOf="@id/login_editText_pw"
         app:layout_constraintEnd_toEndOf="parent"
@@ -104,6 +105,7 @@
         android:maxLines="1"
         android:padding="10dp"
         android:textColor="@color/black"
+        android:imeOptions="flagNoExtractUi"
 
         android:autoSizeMaxTextSize="40sp"
         android:autoSizeMinTextSize="25sp"

@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.openbook.R;
 import com.example.openbook.Data.TableList;
-import com.example.openbook.TableCategory;
+import com.example.openbook.Category.TableCategory;
 
 import java.util.ArrayList;
 import java.util.HashMap;

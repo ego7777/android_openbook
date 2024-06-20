@@ -1,7 +1,7 @@
 package com.example.openbook.Data;
 
 
-import com.example.openbook.PaymentCategory;
+import com.example.openbook.Category.PaymentCategory;
 
 import java.io.Serializable;
 

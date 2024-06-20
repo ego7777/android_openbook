@@ -13,7 +13,7 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.openbook.Data.AdminTableList;
-import com.example.openbook.PaymentCategory;
+import com.example.openbook.Category.PaymentCategory;
 import com.example.openbook.R;
 
 import java.util.ArrayList;

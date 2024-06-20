@@ -5,9 +5,7 @@ import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
 
-import com.example.openbook.PaymentCategory;
-
-import java.io.Serializable;
+import com.example.openbook.Category.PaymentCategory;
 
 public class AdminTableList implements Parcelable {
 

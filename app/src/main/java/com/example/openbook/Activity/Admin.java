@@ -18,11 +18,11 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.openbook.Adapter.AdminTableAdapter;
-import com.example.openbook.CartCategory;
+import com.example.openbook.Category.CartCategory;
 import com.example.openbook.Data.AdminData;
 import com.example.openbook.BuildConfig;
 import com.example.openbook.Data.CartList;
-import com.example.openbook.PaymentCategory;
+import com.example.openbook.Category.PaymentCategory;
 import com.example.openbook.kakaopay.KakaoPay;
 import com.example.openbook.retrofit.AdminTableDTO;
 import com.example.openbook.Data.AdminTableList;

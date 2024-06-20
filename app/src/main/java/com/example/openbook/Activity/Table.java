@@ -31,17 +31,15 @@ import com.example.openbook.Data.MenuList;
 import com.example.openbook.Data.MyData;
 import com.example.openbook.Deco.menu_recyclerview_deco;
 import com.example.openbook.DialogManager;
-import com.example.openbook.PaymentCategory;
+import com.example.openbook.Category.PaymentCategory;
 import com.example.openbook.R;
 import com.example.openbook.Data.TableList;
-import com.example.openbook.TableCategory;
+import com.example.openbook.Category.TableCategory;
 import com.example.openbook.retrofit.RetrofitManager;
 import com.example.openbook.retrofit.RetrofitService;
 import com.example.openbook.retrofit.SuccessOrNot;
 import com.example.openbook.retrofit.TableInformationDTO;
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonParser;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -181,7 +179,7 @@ public class Table extends AppCompatActivity {
         tableGrid.setLayoutManager(new GridLayoutManager(this, 5));
         tableGrid.setAdapter(adapter);
 
-        if(activeTable != null) {
+        if(activeTable != null && tableList.size() > 0) {
             activeTableUpdate(activeTable);
         }
 
@@ -458,20 +456,11 @@ public class Table extends AppCompatActivity {
 
     public void updateNewTable(int newTableNumber) {
         Log.d(TAG, "tableUpdate: " + newTableNumber);
-        editor = customerDataSp.edit();
-        String activeTable = customerDataSp.getString("activeTableList", null);
-        int[] table = gson.fromJson(activeTable, int[].class);
-        table[table.length+1] = newTableNumber;
-
-        Log.d(TAG, "add updateNewTable: " + Arrays.toString(table));
-        editor.putString("activeTableList", Arrays.toString(table));
-        editor.commit();
 
         if (newTableNumber == 1000) {
             Log.d(TAG, "tableUpdate line null: ");
             return;
         }
-
         tableList.get(newTableNumber - 1).setCategory(TableCategory.ACTIVE);
         adapter.notifyItemChanged(newTableNumber - 1);
     }
@@ -485,7 +474,6 @@ public class Table extends AppCompatActivity {
         Log.d(TAG, "activeTableUpdate after sort: " + Arrays.toString(table));
 
         for (int i = 0; i < table.length; i++) {
-//            table[i] = Integer.parseInt(table[i]);
 
             if (table[i] != myTable) {
                 Log.d(TAG, "activeTableUpdate table: " + table[i]);

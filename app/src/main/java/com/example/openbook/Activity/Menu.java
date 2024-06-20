@@ -37,7 +37,7 @@ import com.example.openbook.Adapter.CartAdapter;
 import com.example.openbook.Adapter.MenuAdapter;
 import com.example.openbook.Adapter.SideListViewAdapter;
 import com.example.openbook.BuildConfig;
-import com.example.openbook.CartCategory;
+import com.example.openbook.Category.CartCategory;
 import com.example.openbook.Chatting.ClientSocket;
 import com.example.openbook.Chatting.DBHelper;
 import com.example.openbook.Data.ChattingData;
@@ -48,7 +48,7 @@ import com.example.openbook.Deco.menu_recyclerview_deco;
 import com.example.openbook.DialogManager;
 import com.example.openbook.FCM.FCM;
 import com.example.openbook.FCM.SendNotification;
-import com.example.openbook.PaymentCategory;
+import com.example.openbook.Category.PaymentCategory;
 import com.example.openbook.kakaopay.KakaoPay;
 import com.example.openbook.retrofit.MenuListDTO;
 import com.example.openbook.retrofit.RetrofitManager;
@@ -251,7 +251,6 @@ public class Menu extends AppCompatActivity {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         dbHelper.onCreate(db);
         Cursor res = dbHelper.getTableData("menuListTable");
-
 
 
         RetrofitManager retrofitManager = new RetrofitManager();

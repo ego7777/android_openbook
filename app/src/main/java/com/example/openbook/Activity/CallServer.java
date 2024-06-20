@@ -19,7 +19,7 @@ import androidx.recyclerview.widget.SimpleItemAnimator;
 import com.example.openbook.Adapter.CartAdapter;
 import com.example.openbook.Adapter.RequestAdapter;
 
-import com.example.openbook.CartCategory;
+import com.example.openbook.Category.CartCategory;
 import com.example.openbook.Data.ChattingData;
 import com.example.openbook.Data.MyData;
 import com.example.openbook.Data.TableList;

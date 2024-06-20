@@ -1,9 +1,7 @@
 package com.example.openbook.Data;
 
-import android.graphics.drawable.Drawable;
 
-
-import com.example.openbook.TableCategory;
+import com.example.openbook.Category.TableCategory;
 
 import java.io.Serializable;
 

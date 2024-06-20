@@ -1,8 +1,7 @@
 package com.example.openbook.Data;
 
 
-import com.example.openbook.CartCategory;
-import com.google.gson.annotations.Expose;
+import com.example.openbook.Category.CartCategory;
 
 public class CartList {
 

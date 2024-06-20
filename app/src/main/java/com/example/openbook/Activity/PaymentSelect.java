@@ -10,7 +10,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.openbook.Data.MyData;
-import com.example.openbook.PaymentCategory;
+import com.example.openbook.Category.PaymentCategory;
 import com.example.openbook.R;
 import com.example.openbook.retrofit.TableListDTO;
 import com.example.openbook.TableQuantity;

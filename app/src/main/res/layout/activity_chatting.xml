@@ -75,9 +75,9 @@
         android:padding="10dp"
         android:textColor="@color/black"
         android:textSize="20sp"
+        android:imeOptions="flagNoExtractUi"
 
         app:layout_constraintBottom_toBottomOf="parent"
-
 
         app:layout_constraintEnd_toStartOf="@id/chatting_sendBtn"
         app:layout_constraintHorizontal_weight="8"

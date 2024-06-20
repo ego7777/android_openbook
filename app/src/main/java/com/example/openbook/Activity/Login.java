@@ -21,7 +21,7 @@ import com.example.openbook.BuildConfig;
 import com.example.openbook.Data.AdminTableList;
 import com.example.openbook.Data.MyData;
 import com.example.openbook.DialogManager;
-import com.example.openbook.PaymentCategory;
+import com.example.openbook.Category.PaymentCategory;
 import com.example.openbook.R;
 import com.example.openbook.retrofit.LoginResponseModel;
 import com.example.openbook.retrofit.RetrofitManager;

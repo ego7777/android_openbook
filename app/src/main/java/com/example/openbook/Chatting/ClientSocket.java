@@ -12,7 +12,6 @@ import android.util.Log;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.example.openbook.BuildConfig;
-import com.example.openbook.MessageDTO;
 import com.google.gson.Gson;
 
 import java.io.BufferedReader;
@@ -25,6 +24,8 @@ import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 
 public class ClientSocket extends Thread implements Serializable {
@@ -79,7 +80,7 @@ public class ClientSocket extends Thread implements Serializable {
             BufferedReader networkReader = new BufferedReader(
                     new InputStreamReader(socket.getInputStream()));
 
-            MessageDTO messageDTO = new MessageDTO("", id, "add");
+            MessageDTO messageDTO = new MessageDTO("", id, "add", "");
             sendToServer(gson.toJson(messageDTO));
 
             IntentFilter intentFilter = new IntentFilter("SendChattingData");
@@ -92,21 +93,24 @@ public class ClientSocket extends Thread implements Serializable {
                 Log.d(TAG, "newChat: " + newChat);
                 MessageDTO messageDiv = gson.fromJson(newChat, MessageDTO.class);
 
-                if (messageDiv.getMessage().equals("newTable")) {
+                switch (messageDiv.getMessage()) {
+                    case "newTable":
+                        updateNewTable(messageDiv.getFrom());
+                        break;
 
-                    updateNewTable(messageDiv.getFrom());
+                    case "isRead":
+                        receiveIsRead(messageDiv.getFrom());
+                        break;
 
-                } else if (messageDiv.getMessage().equals("isRead")) {
-                    Log.d(TAG, "isRead: ");
-                    receiveIsRead(newChat);
+                    case "welcome":
+                        Log.d(TAG, "message : welcome");
+                        Log.d(TAG, "tableList: " + messageDiv.getFrom());
+                        activeTableList(messageDiv.getFrom());
+                        break;
 
-                } else if(messageDiv.getMessage().equals("welcome")){
-                    Log.d(TAG, "message : welcome");
-                    Log.d(TAG, "tableList: " + messageDiv.getFrom());
-                    activeTableList(messageDiv.getFrom());
-                }
-                else {
-                    receiveChattingData(newChat);
+                    default:
+                        receiveChattingData(newChat);
+                        break;
                 }
 
                 if (newChat == null) {
@@ -125,7 +129,7 @@ public class ClientSocket extends Thread implements Serializable {
             if (socket != null && !socket.isClosed()) {
                 try {
                     // 서버에 종료를 알리는 메시지 전송
-                    MessageDTO messageDTO = new MessageDTO("", id, "disconnect");
+                    MessageDTO messageDTO = new MessageDTO("", id, "disconnect", "");
                     sendToServer(gson.toJson(messageDTO));
 
                     // 소켓 닫기
@@ -163,7 +167,17 @@ public class ClientSocket extends Thread implements Serializable {
 
     private void updateNewTable(String newTable) {
 
+        SharedPreferences sharedPreferences = context.getSharedPreferences("CustomerData", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        String activeTable = sharedPreferences.getString("activeTableList", null);
+
+        ArrayList activeTableArray = gson.fromJson(activeTable, ArrayList.class);
+
         int tableNumber = Integer.parseInt(newTable.replace("table", ""));
+
+        activeTableArray.add(tableNumber);
+        editor.putString("activeTableList", gson.toJson(activeTableArray));
 
         Intent intent = new Intent("updateNewTable");
         intent.putExtra("newTable", tableNumber);
@@ -188,38 +202,31 @@ public class ClientSocket extends Thread implements Serializable {
     private void receiveChattingData(String newChat) {
         Log.d(TAG, "receiveChattingData: " + newChat);
 
+        MessageDTO messageDiv = gson.fromJson(newChat, MessageDTO.class);
+
+        DBHelper dbHelper = new DBHelper(context);
+        dbHelper.insertChattingData
+                (messageDiv.getMessage(),
+                messageDiv.getTime(),
+                messageDiv.getFrom(),
+                id,
+                "1");
+
         Intent intent = new Intent("newChatArrived");
         intent.putExtra("chat", newChat);
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
 
     }
 
-    private void receiveIsRead(String isRead) {
+    private void receiveIsRead(String from) {
         Log.d(TAG, "receiveIsRead: ");
 
-//        MessageDTO messageDTO = gson.fromJson(isRead, MessageDTO.class);
-//        String from = messageDTO.getFrom();
-//        int isRead = messageDTO.getIsRead();
-
-
-//        DBHelper dbHelper = new DBHelper(context, 2);
-//        //db 수정하기
-//        dbHelper.upDateIsRead(id, from);
-
-//        Cursor cursor = dbHelper.getTableData("chattingTable");
-//        if(cursor.getString(3).equals(get_id)){
-//            Log.d(TAG, "수정 됨?: " + cursor.getString(5));
-//        }
-
-        Log.d(TAG, "receiveIsRead: 1");
+        DBHelper dbHelper = new DBHelper(context);
+        dbHelper.upDateIsRead(id, from);
 
         Intent intent = new Intent("isReadArrived");
-        intent.putExtra("isRead", isRead);
+        intent.putExtra("readTable", from);
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
-
-        Log.d(TAG, "receiveIsRead: 2");
-
-
     }
 
 
@@ -227,6 +234,9 @@ public class ClientSocket extends Thread implements Serializable {
         loop = false;
         try {
             if (socket != null) {
+                MessageDTO messageDTO = new MessageDTO("", id, "finish", "");
+                sendToServer(gson.toJson(messageDTO));
+
                 socket.close();
                 socket = null;
                 Log.d(TAG, "quit: ");
