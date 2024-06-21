@@ -1,7 +1,10 @@
 package com.example.openbook.Activity;
 
 import android.app.Dialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.icu.text.DecimalFormat;
 import android.os.Bundle;
@@ -14,6 +17,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -33,6 +37,7 @@ import com.example.openbook.retrofit.RetrofitManager;
 import com.example.openbook.retrofit.RetrofitService;
 
 import com.example.openbook.R;
+import com.example.openbook.retrofit.TableInformationDTO;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -70,6 +75,51 @@ public class Admin extends AppCompatActivity {
     String tableRequest;
     DialogManager dialogManager;
     Dialog popUpDialog;
+
+    BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            switch (intent.getAction()){
+                case "tableRequest":
+                    String fcmData = intent.getStringExtra("fcmData");
+                    Log.d(TAG, "onReceive tableRequest: " + fcmData);
+                    if (fcmData != null) {
+
+                        JsonObject requestJson = gson.fromJson(fcmData, JsonObject.class);
+                        Log.d(TAG, "requestJson: " + requestJson);
+                        String request = requestJson.get("request").getAsString();
+                        String tableName = requestJson.get("tableName").getAsString();
+                        int tableNumber = Integer.parseInt(tableName.replace("table", "")) - 1;
+
+                        switch (request) {
+                            case "PayNow":
+                            case "End":
+                            case "PayLater":
+                                updateTable(request, tableName, tableNumber);
+                                break;
+                            case "Order":
+                                String items = requestJson.get("items").getAsString();
+                                JsonArray jsonArray = gson.fromJson(items, JsonArray.class);
+                                String orderItemName = requestJson.get("orderItemName").getAsString();
+                                int totalPrice = requestJson.get("totalPrice").getAsInt();
+                                orderMenu(tableName, tableNumber, orderItemName, jsonArray, totalPrice);
+                                break;
+
+                            case "GiftMenuOrder":
+                                items = requestJson.get("items").getAsString();
+                                jsonArray = gson.fromJson(items, JsonArray.class);
+                                String from = requestJson.get("fromTable").getAsString();
+                                orderItemName = requestJson.get("orderItemName").getAsString();
+                                orderMenu(tableName, tableNumber, orderItemName , jsonArray, 0);
+
+
+                        }
+                    }
+
+                    break;
+            }
+        }
+    };
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -196,34 +246,6 @@ public class Admin extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
 
-        tableRequest = getIntent().getStringExtra("tableRequest");
-        Log.d(TAG, "onStart tableRequest: " + tableRequest);
-
-        if (tableRequest != null) {
-
-            JsonObject requestJson = gson.fromJson(tableRequest, JsonObject.class);
-            Log.d(TAG, "requestJson: " + requestJson);
-            String request = requestJson.get("request").getAsString();
-            String tableName = requestJson.get("tableName").getAsString();
-            int tableNumber = Integer.parseInt(tableName.replace("table", "")) - 1;
-
-            switch (request) {
-                case "PayNow":
-                case "End":
-                case "PayLater":
-                    updateTable(request, tableName, tableNumber);
-                    break;
-                case "Order":
-                    String items = requestJson.get("items").getAsString();
-                    JsonArray jsonArray = gson.fromJson(items, JsonArray.class);
-                    String orderItemName = requestJson.get("orderItemName").getAsString();
-                    int totalPrice = requestJson.get("totalPrice").getAsInt();
-                    orderMenu(tableName, tableNumber, orderItemName, jsonArray, totalPrice);
-                    break;
-            }
-        }
-
-
         if (menuName != null) {
             int pastCount = Integer.parseInt(String.valueOf(menuName.indexOf(menuName.length())));
             Log.d(TAG, "pastCount: " + pastCount);
@@ -259,6 +281,10 @@ public class Admin extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction("tableRequest");
+        LocalBroadcastManager.getInstance(Admin.this).registerReceiver(broadcastReceiver, intentFilter);
 
         appbarAdminSales.setOnClickListener(v -> {
             //매출 액티비티가 나온다
@@ -425,15 +451,15 @@ public class Admin extends AppCompatActivity {
 
     private void requestTableInfo(int clickTable) {
 
-        Call<AdminTableDTO> call = service.requestTableInfo("table" + clickTable);
-        call.enqueue(new Callback<AdminTableDTO>() {
+        Call<TableInformationDTO> call = service.getTableImage("table" + clickTable);
+        call.enqueue(new Callback<>() {
             @Override
-            public void onResponse(@NonNull Call<AdminTableDTO> call, @NonNull Response<AdminTableDTO> response) {
+            public void onResponse(Call<TableInformationDTO> call, Response<TableInformationDTO> response) {
                 Log.d(TAG, "onResponse tableInfoCheck: " + response.body().getResult());
                 if (response.isSuccessful()) {
                     switch (response.body().getResult()) {
                         case "success":
-                            dialogManager.adminTableInformationDialog(Admin.this, response.body());
+                            dialogManager.otherTableDialog(Admin.this, "admin", "table" + clickTable, response.body(), true).show();
                             break;
 
                         case "failed":
@@ -449,7 +475,7 @@ public class Admin extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(@NonNull Call<AdminTableDTO> call, @NonNull Throwable t) {
+            public void onFailure(Call<TableInformationDTO> call, Throwable t) {
                 Log.d(TAG, "onFailure tableInfoCheck :" + t.getMessage());
             }
         });

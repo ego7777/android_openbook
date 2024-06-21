@@ -195,7 +195,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
         // SQL 쿼리 실행하여 원하는 데이터 가져오기
         String[] columns = {"menuName", "menuPrice", "menuImage", "menuType"};
-        String[] menuNames = {"소주", "병맥주", "초코에몽", "Idh"};
+        String[] menuNames = {"소주", "병맥주", "카니미소", "후토마끼"};
         String selection = "menuName IN (?, ?, ?, ?)";
         Cursor cursor = db.query("menuListTable", columns, selection, menuNames, null, null, null);
 
@@ -203,13 +203,9 @@ public class DBHelper extends SQLiteOpenHelper {
             while (cursor.moveToNext()) {
 
                 String name = cursor.getString(0);
-                Log.d(TAG, "getTableData name : " + name);
                 int price = cursor.getInt(1);
-                Log.d(TAG, "getTableData price : " + price);
                 String image = cursor.getString(2);
-                Log.d(TAG, "getTableData image: " + image);
                 int type = cursor.getInt(3);
-                Log.d(TAG, "getTableData type: " + type);
                 list.add(new MenuList(image, name, price, type, 1));
             }
             cursor.close();

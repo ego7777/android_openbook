@@ -7,6 +7,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.example.openbook.Activity.Admin;
 
@@ -65,14 +66,14 @@ public class FCM extends FirebaseMessagingService {
 
         Call<SuccessOrNot> call = service.saveFcmToken(identifier, token);
 
-        call.enqueue(new Callback<SuccessOrNot>() {
+        call.enqueue(new Callback<>() {
             @Override
-            public void onResponse(Call<SuccessOrNot> call, Response<SuccessOrNot> response) {
+            public void onResponse(@NonNull Call<SuccessOrNot> call, @NonNull Response<SuccessOrNot> response) {
                 Log.d(TAG, "onResponse save fcm token: " + response.body().getResult());
             }
 
             @Override
-            public void onFailure(Call<SuccessOrNot> call, Throwable t) {
+            public void onFailure(@NonNull Call<SuccessOrNot> call, @NonNull Throwable t) {
                 Log.d(TAG, "onFailure save fcm token: " + t.getMessage());
             }
         });
@@ -84,11 +85,8 @@ public class FCM extends FirebaseMessagingService {
     @Override
     public void onMessageReceived(@NonNull RemoteMessage message) {
         super.onMessageReceived(message);
-
-        // 푸시메시지 수신시 할 작업을 작성
         Log.d(TAG, "fcm message: " + message.getData());
 
-        // Check if message contains a notification payload.
         if (message.getData().size() > 0) {
             handleDataMessage(message.getData());
         }
@@ -102,96 +100,61 @@ public class FCM extends FirebaseMessagingService {
             case "PayNow" :
             case "End" :
             case "PayLater":
-                handleAdminPaymentNow(data.get("request"), data.get("tableName"));
+                handleAdminPaymentType(data.get("request"), data.get("tableName"));
                 break;
 
             case "Order" :
                 handleAdminTableMenu(data);
                 break;
 
+            case "Gift" :
+                handleGiftOtherTable
+                        (data.get("tableName"),
+                        data.get("menuItem"),
+                        data.get("count"));
+                break;
+
+            case "IsGiftAccept" :
+                handleIsGiftAccept
+                        (data.get("tableName"),
+                        Boolean.parseBoolean(data.get("isAccept")),
+                                data.get("meuItem"));
+                break;
         }
 
-//        if (data.containsKey("title")) {
-//            Log.d(TAG, "handleDataMessage: " + data);
-//
-//            // 채팅 요청 처리 메소드 호출
-//            handleChatRequest(data);
-//        } else if (data.containsKey("gender")) {
-//
-//            String gender = data.get("gender");
-//            String guestNumber = data.get("guestNumber");
-//            String tableName = data.get("tableName");
-//
-//            // admin page table 정보 업데이트 처리 메소드 호출
-//            handleAdminTableInformation(gender, guestNumber, tableName);
-//        } else if (data.containsKey("tableStatement")) {
-//
-//            String tableStatement = data.get("tableStatement");
-//            String tableNumber = data.get("tableNumber");
-//            int identifier = Integer.parseInt(data.get("tableIdentifier"));
-//            Log.d(TAG, "handleDataMessage identifier: " + identifier);
-//
-//            // admin page 선불좌석 표시 처리 메소드 호출
-//            handleAdminPaymentBefore(tableStatement, tableNumber, identifier);
-//        } else if (data.containsKey("menuName") && !data.containsKey("state")) {
-//            Log.d(TAG, "handleDataMessage menuName: ");
-//
-//            String tableName = data.get("tableName");
-//            String menuName = data.get("menuName");
-//            String item = data.get("item");
-//
-//            int identifier;
-//            if(data.get("identifier") == null){
-//                identifier = 0;
-//            }else{
-//                identifier = Integer.parseInt(data.get("identifier"));
-//            }
-//
-//            // admin page 메뉴 표시 처리 메소드 호출
-//            handleAdminTableMenu(tableName, menuName, item, identifier);
-//        } else if (data.containsKey("action")) {
-//
-//            String tableName = data.get("tableName");
-//
-//            saveChattingData(tableName);
-//
-//        } else if(data.get("state").equals("gift") && data.containsKey("menuName")){
-//            Log.d(TAG, "handleDataMessage state: ");
-//            String tableName = data.get("tableName");
-//            String menu = data.get("menuName");
-//
-//            handleGiftOtherTable(tableName, menu);
-//
-//
-//            //admin에게도 보내야함
-//
-//        }
     }
 
-//    public void handleGiftOtherTable(String tableName, String menuName){
-//        Intent intent = new Intent("giftArrived");
-//        intent.putExtra("tableName", tableName);
-//        intent.putExtra("menuName", menuName);
-//        LocalBroadcastManager.getInstance(FCM.this).sendBroadcast(intent);
-//
-//    }
+    public void handleIsGiftAccept(String from, boolean isAccept, String menuItem){
+        Log.d(TAG, "handleIsGiftAccept 호출");
+        Intent intent = new Intent("isGiftAccept");
+        intent.putExtra("from", from);
+
+        if(isAccept){
+            intent.putExtra("isAccept", true);
+            intent.putExtra("menuItem", menuItem);
+        }else{
+            intent.putExtra("isAccept", false);
+        }
+        LocalBroadcastManager.getInstance(FCM.this).sendBroadcast(intent);
+    }
+
+    public void handleGiftOtherTable(String from, String menuItem, String count){
+        Log.d(TAG, "handleGiftOtherTable 호출");
+        Intent intent = new Intent("giftArrived");
+        intent.putExtra("from", from);
+        intent.putExtra("menuItem", menuItem);
+        intent.putExtra("count", count);
+        LocalBroadcastManager.getInstance(FCM.this).sendBroadcast(intent);
+
+    }
 
 
     public void handleAdminTableMenu(Map<String, String> data) {
 
-        Intent intent = new Intent(this, Admin.class);
-        intent.putExtra("tableRequest", gson.toJson(data));
+        Intent intent = new Intent("tableRequest");
+        intent.putExtra("fcmData", gson.toJson(data));
 
-        requestCode = (int) System.currentTimeMillis();
-
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, requestCode, intent, PendingIntent.FLAG_IMMUTABLE);
-
-        try {
-            pendingIntent.send();
-        } catch (PendingIntent.CanceledException e) {
-            e.printStackTrace();
-        }
+        LocalBroadcastManager.getInstance(FCM.this).sendBroadcast(intent);
     }
 
 //    public void handleAdminTableInformation(String gender, String guestNumber, String tableName) {
@@ -215,24 +178,19 @@ public class FCM extends FirebaseMessagingService {
 //    }
 
 
-    public void handleAdminPaymentNow(String request, String tableName) {
-        Intent intent = new Intent(this, Admin.class);
+    public void handleAdminPaymentType(String request, String tableName) {
+        Intent intent = new Intent("tableRequest");
         Map<String, String> tableRequest = new HashMap<>();
         tableRequest.put("request", request);
         tableRequest.put("tableName", tableName);
 
-        intent.putExtra("tableRequest", gson.toJson(tableRequest));
+        intent.putExtra("fcmData", gson.toJson(tableRequest));
 
-        requestCode = (int) System.currentTimeMillis();
+        LocalBroadcastManager.getInstance(FCM.this).sendBroadcast(intent);
 
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, requestCode, intent, PendingIntent.FLAG_IMMUTABLE);
 
-        try {
-            pendingIntent.send();
-        } catch (PendingIntent.CanceledException e) {
-            e.printStackTrace();
-        }
+
+
 
     }
 

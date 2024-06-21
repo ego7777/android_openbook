@@ -30,12 +30,10 @@ import retrofit2.Retrofit;
 
 public class SendNotification {
     String TAG = "SendNotificationTAG";
-
     RetrofitManager retrofitManager = new RetrofitManager();
     Retrofit retrofit = retrofitManager.getRetrofit(BuildConfig.SERVER_IP);
     RetrofitService service = retrofit.create(RetrofitService.class);
-
-    Gson gson = new Gson();
+    Gson gson = new Gson();;
 
     DatabaseReference mRootRef = FirebaseDatabase.getInstance().getReference();
 
@@ -90,75 +88,19 @@ public class SendNotification {
 
     }
 
-    public void requestChatting(String clickTable, String get_id, String ticket, String message) {
-
-        mRootRef.child(clickTable).child("fcmToken").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                String pushToken = (String) snapshot.getValue();
-
-                try {
-
-                    JSONObject notification = new JSONObject();
-
-                    notification.put("title", get_id);
-                    notification.put("body", get_id + message);
-                    notification.put("clickTable", clickTable);
-                    notification.put("ticket", ticket);
-
-//                    RequestBody formBody = new FormBody.Builder().
-//                            add("to", pushToken).
-//                            add("notification", notification.toString()).
-//                            add("clickTable", clickTable).
-//                            build();
-//
-//                    Request httpRequest = new Request.Builder()
-//                            .url("http://3.36.255.141/fcmPush.php")
-//                            .addHeader("Authorization", "key=" + SERVER_KEY)
-//                            .post(formBody)
-//                            .build();
-//
-//
-//                    okHttpClient.newCall(httpRequest).enqueue(new Callback() {
-//                        @Override
-//                        public void onFailure(@NonNull Call call, @NonNull IOException e) {
-//                            Log.d(TAG, "chatting onFailure: " + e);
-//                        }
-//
-//                        @Override
-//                        public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-//                            Log.d(TAG, "chatting body: " + response.body().string());
-//                        }
-//                    });
-
-
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                    Log.d(TAG, "onDataChange e: " + e);
-                }
-
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                Log.d(TAG, "onCancelled: " + error);
-            }
-        });
-
-    }
 
     public void sendMenu(Map<String, String> orderItems, SendMenuCallback callback) {
-
+        Log.d(TAG, "sendMenu: " + gson.toJson(orderItems));
         Call<SuccessOrNot> call = service.sendRequestFcm("admin", gson.toJson(orderItems));
-        call.enqueue(new Callback<SuccessOrNot>() {
+        call.enqueue(new Callback<>() {
             @Override
-            public void onResponse(Call<SuccessOrNot> call, Response<SuccessOrNot> response) {
+            public void onResponse(@NonNull Call<SuccessOrNot> call, @NonNull Response<SuccessOrNot> response) {
                 Log.d(TAG, "onResponse sendMenu: " + response.body());
-                if(response.isSuccessful()){
+                if (response.isSuccessful()) {
                     Log.d(TAG, "onResponse sendMenu :" + response.body().getResult());
                     callback.onResultReceived(response.body().getResult());
 
-                }else{
+                } else {
                     Log.d(TAG, "onResponse sendMenu is not successful");
                     callback.onResultReceived("isNotSuccessful");
                 }
@@ -166,7 +108,7 @@ public class SendNotification {
             }
 
             @Override
-            public void onFailure(Call<SuccessOrNot> call, Throwable t) {
+            public void onFailure(@NonNull Call<SuccessOrNot> call, @NonNull Throwable t) {
                 Log.d(TAG, "onFailure sendMenu: " + t.getMessage());
                 callback.onResultReceived(t.getMessage());
             }
@@ -174,7 +116,6 @@ public class SendNotification {
     }
 
     public void usingTableUpdate(String to, String tableName, String request) {
-
         Map<String, String> data = new HashMap<>();
         data.put("request", request);
         data.put("tableName", tableName);
@@ -182,17 +123,77 @@ public class SendNotification {
 
 
         Call<SuccessOrNot> call = service.sendRequestFcm(to, gson.toJson(data));
-        call.enqueue(new Callback<SuccessOrNot>() {
+        call.enqueue(new Callback<>() {
             @Override
-            public void onResponse(Call<SuccessOrNot> call, Response<SuccessOrNot> response) {
+            public void onResponse(@NonNull Call<SuccessOrNot> call, @NonNull Response<SuccessOrNot> response) {
                 Log.d(TAG, "onResponse usingTableUpdate: " + response.body().getResult());
             }
 
             @Override
-            public void onFailure(Call<SuccessOrNot> call, Throwable t) {
+            public void onFailure(@NonNull Call<SuccessOrNot> call, @NonNull Throwable t) {
                 Log.d(TAG, "onFailure usingTableUpdate: " + t.getMessage());
             }
         });
+    }
+
+    public void sendGift(String to, String from, String menuItem, String count){
+        Log.d(TAG, "sendGift to: " + to);
+        Map<String, String> data = new HashMap<>();
+        data.put("tableName", from);
+        data.put("request", "Gift");
+        data.put("menuItem", menuItem);
+        data.put("count", count);
+
+        Log.d(TAG, "sendGift: " + gson.toJson(data));
+
+        Call<SuccessOrNot> call = service.sendRequestFcm(to, gson.toJson(data));
+        call.enqueue(new Callback<>() {
+            @Override
+            public void onResponse(@NonNull Call<SuccessOrNot> call,
+                                   @NonNull Response<SuccessOrNot> response) {
+                Log.d(TAG, "Send Gift :" + response.body().getResult());
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<SuccessOrNot> call,
+                                  @NonNull Throwable t) {
+                Log.d(TAG, "Send Gift onFailure :" + t.getMessage());
+            }
+        });
+    }
+
+    public void notifyIsGiftAccept(String to, String from, String menuItem, boolean isAccept){
+        //거절했다고 from에게 알려주는 fcm을 호출한다
+
+        Map<String, String> data = new HashMap<>();
+
+        if(isAccept){
+            data.put("tableName", from);
+            data.put("request", "IsGiftAccept");
+            data.put("menuItem", menuItem);
+            data.put("isAccept", "true");
+        }else{
+            data.put("tableName", from);
+            data.put("request", "IsGiftAccept");
+            data.put("isAccept", "false");
+        }
+
+
+        Call<SuccessOrNot> call = service.sendRequestFcm(to, gson.toJson(data));
+        call.enqueue(new Callback<>() {
+            @Override
+            public void onResponse(@NonNull Call<SuccessOrNot> call,
+                                   @NonNull Response<SuccessOrNot> response) {
+                Log.d(TAG, "Is Gift Accept:" + response.body().getResult());
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<SuccessOrNot> call,
+                                  @NonNull Throwable t) {
+                Log.d(TAG, "Is Gift Accept onFailure :" + t.getMessage());
+            }
+        });
+
     }
 
 }

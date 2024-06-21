@@ -85,7 +85,7 @@ public class PaymentSelect extends AppCompatActivity {
         super.onResume();
 
         paymentSelectLater.setOnClickListener(view ->{
-            startActivityString(PaymentCategory.LATER, 0);
+            startActivityString(PaymentCategory.LATER, myData.getId().hashCode());
         });
 
         paymentSelectNow.setOnClickListener(view ->{

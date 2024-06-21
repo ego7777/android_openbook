@@ -18,14 +18,13 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.openbook.Activity.SendToPopUp;
 import com.example.openbook.Activity.Table;
 import com.example.openbook.Adapter.ChattingAdapter;
 import com.example.openbook.Activity.Menu;
 import com.example.openbook.Category.ChattingCategory;
-import com.example.openbook.Data.ChattingData;
 import com.example.openbook.Data.MyData;
 import com.example.openbook.Data.TableList;
+import com.example.openbook.DialogManager;
 import com.example.openbook.R;
 import com.example.openbook.Data.ChattingList;
 import com.google.gson.Gson;
@@ -50,37 +49,47 @@ public class ChattingUI extends AppCompatActivity {
     ArrayList<TableList> tableList;
 
     MyData myData;
-    HashMap<String, ChattingData> chattingDataHashMap;
     Gson gson = new Gson();
-    SendToPopUp sendToPopUp = new SendToPopUp();
+    DialogManager dialogManager;
 
     BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
 
-            if (intent.getAction().equals("newChatArrived")) {
-                String message = intent.getStringExtra("chat");
-                Log.d(TAG, "onReceive message: " + message);
-                chattingUpdate(message);
+            switch (intent.getAction()){
+                case "newChatArrived" :
+                    String message = intent.getStringExtra("chat");
+                    Log.d(TAG, "onReceive message: " + message);
+                    chattingUpdate(message);
+                    break;
 
-            } else if (intent.getAction().equals("isReadArrived")) {
-                String readTable = intent.getStringExtra("readTable");
-                Log.d(TAG, "onReceive isRead: " + readTable);
-                isReadUpdate(readTable);
+                case "isReadArrived" :
+                    String readTable = intent.getStringExtra("readTable");
+                    Log.d(TAG, "onReceive isRead: " + readTable);
+                    isReadUpdate(readTable);
+                    break;
 
-            } else if (intent.getAction().equals("chatRequest")) {
-                String fcmData = intent.getStringExtra("fcmData");
-//                sendToPopUp.sendToPopUpChatting(ChattingUI.this, myData,
-//                        chattingDataHashMap, ticketDataHashMap, tableList, fcmData);
+                case "giftArrived" :
+                    String from = intent.getStringExtra("from");
+                    String menuItem = intent.getStringExtra("menuItem");
+                    String count = intent.getStringExtra("count");
 
-            } else if (intent.getAction().equals("giftArrived")) {
-                String from = intent.getStringExtra("tableName");
-                String menuName = intent.getStringExtra("menuName");
+                    dialogManager.giftReceiveDialog(ChattingUI.this, myData.getId(),from, menuItem, count).show();
+                    break;
 
-//                sendToPopUp.sendToPopUpGift(ChattingUI.this, myData,
-//                        chattingDataHashMap, ticketDataHashMap, tableList, from, menuName);
+                case "isGiftAccept":
+                    from = intent.getStringExtra("from");
+                    boolean isAccept = intent.getBooleanExtra("isAccept", false);
+                    String acceptMessage;
+                    if(isAccept){
+                        acceptMessage = from + "에서 선물을 수락하였습니다.";
+                        //여기서 메뉴 주문 메뉴 저장하기
+                    }else{
+                        acceptMessage = from + "에서 선물을 거절하였습니다.";
+                    }
+                    dialogManager.positiveBtnDialog(ChattingUI.this, acceptMessage).show();
+                    break;
             }
-
         }
     };
 
@@ -91,8 +100,8 @@ public class ChattingUI extends AppCompatActivity {
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction("newChatArrived");
         intentFilter.addAction("isReadArrived");
-        intentFilter.addAction("chatRequest");
         intentFilter.addAction("giftArrived");
+        intentFilter.addAction("isGiftAccept");
         LocalBroadcastManager.getInstance(ChattingUI.this).registerReceiver(broadcastReceiver, intentFilter);
 
     }
@@ -111,11 +120,7 @@ public class ChattingUI extends AppCompatActivity {
         tableNumber = getIntent().getIntExtra("tableNumber", 0);
         myData = (MyData) getIntent().getSerializableExtra("myData");
 
-        chattingDataHashMap = (HashMap<String, ChattingData>) getIntent().getSerializableExtra("chattingData");
-        Log.d(TAG, "chattingData: " + chattingDataHashMap);
-
-//        chattingDataHashMap.get("table"+table_num).setChattingAgree(true);
-
+        dialogManager = new DialogManager();
 
         TextView moveMenu = findViewById(R.id.appbar_menu_menu);
         moveMenu.setOnClickListener(view -> moveActivity(Menu.class));
@@ -273,9 +278,7 @@ public class ChattingUI extends AppCompatActivity {
     public void moveActivity(Class activity) {
         Intent intent = new Intent(ChattingUI.this, activity);
         intent.putExtra("myData", myData);
-        intent.putExtra("chattingData", chattingDataHashMap);
         intent.putExtra("tableList", tableList);
-//        intent.putExtra("ticketData", ticketDataHashMap);
         startActivity(intent);
     }
 

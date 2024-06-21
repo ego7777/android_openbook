@@ -15,20 +15,6 @@ public class MessageDTO {
         this.time = time;
     }
 
-//    public MessageDTO(String from, int isRead){
-//        this.from = from;
-//        this.isRead = isRead;
-//    }
-//
-//    public void setIsRead(int isRead) {
-//        this.isRead = isRead;
-//    }
-//
-//    public int getIsRead() {
-//        return isRead;
-//    }
-
-
     public String getTime() {
         return time;
     }

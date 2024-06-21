@@ -166,13 +166,19 @@ public class ClientSocket extends Thread implements Serializable {
 
 
     private void updateNewTable(String newTable) {
+        Log.d(TAG, "updateNewTable: " + newTable);
 
         SharedPreferences sharedPreferences = context.getSharedPreferences("CustomerData", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
 
         String activeTable = sharedPreferences.getString("activeTableList", null);
+        ArrayList activeTableArray;
 
-        ArrayList activeTableArray = gson.fromJson(activeTable, ArrayList.class);
+        if(activeTable==null){
+            activeTableArray = new ArrayList();
+        }else{
+            activeTableArray = gson.fromJson(activeTable, ArrayList.class);
+        }
 
         int tableNumber = Integer.parseInt(newTable.replace("table", ""));
 

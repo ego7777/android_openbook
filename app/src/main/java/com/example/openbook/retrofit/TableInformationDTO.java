@@ -3,7 +3,7 @@ package com.example.openbook.retrofit;
 public class TableInformationDTO {
     String result;
     String gender;
-    int userCount;
+    int guestNumber;
     String imageUrl;
     String statement;
 
@@ -15,8 +15,8 @@ public class TableInformationDTO {
         return imageUrl;
     }
 
-    public int getUserCount() {
-        return userCount;
+    public int getGuestNumber() {
+        return guestNumber;
     }
 
     public String getGender() {

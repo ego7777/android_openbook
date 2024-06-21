@@ -3,6 +3,7 @@ package com.example.openbook.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
@@ -10,6 +11,8 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.content.res.AppCompatResources;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -20,10 +23,10 @@ import com.example.openbook.Adapter.CartAdapter;
 import com.example.openbook.Adapter.RequestAdapter;
 
 import com.example.openbook.Category.CartCategory;
-import com.example.openbook.Data.ChattingData;
 import com.example.openbook.Data.MyData;
 import com.example.openbook.Data.TableList;
 import com.example.openbook.Data.TicketData;
+import com.example.openbook.DialogManager;
 import com.example.openbook.R;
 import com.example.openbook.Data.CartList;
 import com.example.openbook.Data.RequestList;
@@ -39,27 +42,35 @@ public class CallServer extends AppCompatActivity {
 
     boolean menuExist = false;
     MyData myData;
-    HashMap<String, ChattingData> chattingDataHashMap;
-    HashMap<String, TicketData> ticketDataHashMap;
     ArrayList<TableList> tableLists;
+    DialogManager dialogManager;
 
-    SendToPopUp sendToPopUp = new SendToPopUp();
 
     //액티비티가 onCreate 되면 자동으로 받는거고
     BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (intent.getAction().equals("chattingRequestArrived")) {
-                String fcmData = intent.getStringExtra("fcmData");
+            switch (intent.getAction()) {
+                case "giftArrived":
+                    String from = intent.getStringExtra("from");
+                    String menuItem = intent.getStringExtra("menuItem");
+                    String count = intent.getStringExtra("count");
 
-                sendToPopUp.sendToPopUpChatting(CallServer.this, myData,
-                        chattingDataHashMap, ticketDataHashMap, tableLists, fcmData);
-            } else if (intent.getAction().equals("giftArrived")) {
-                String from = intent.getStringExtra("tableName");
-                String menuName = intent.getStringExtra("menuName");
+                    dialogManager.giftReceiveDialog(CallServer.this, myData.getId(), from, menuItem, count).show();
+                    break;
 
-                sendToPopUp.sendToPopUpGift(CallServer.this, myData,
-                        chattingDataHashMap, ticketDataHashMap, tableLists, from, menuName);
+                case "isGiftAccept":
+                    from = intent.getStringExtra("from");
+                    boolean isAccept = intent.getBooleanExtra("isAccept", false);
+                    String message;
+                    if(isAccept){
+                        message = from + "에서 선물을 수락하였습니다.";
+                        //여기서 메뉴 주문 메뉴 저장하기
+                    }else{
+                        message = from + "에서 선물을 거절하였습니다.";
+                    }
+                    dialogManager.positiveBtnDialog(CallServer.this, message).show();
+                    break;
             }
         }
     };
@@ -70,25 +81,21 @@ public class CallServer extends AppCompatActivity {
         setContentView(R.layout.activity_service);
 
         myData = (MyData) getIntent().getSerializableExtra("myData");
-        chattingDataHashMap = (HashMap<String, ChattingData>) getIntent().getSerializableExtra("chattingData");
-        ticketDataHashMap = (HashMap<String, TicketData>) getIntent().getSerializableExtra("ticketData");
         tableLists = (ArrayList<TableList>) getIntent().getSerializableExtra("tableList");
+
+        dialogManager = new DialogManager();
 
         TextView close = findViewById(R.id.call_server_close);
         close.setOnClickListener(view -> {
 
             Intent intent = new Intent(CallServer.this, Menu.class);
             intent.putExtra("myData", myData);
-            intent.putExtra("chattingData", chattingDataHashMap);
-            intent.putExtra("ticketData", ticketDataHashMap);
+            intent.putExtra("tableList", tableLists);
 
             startActivity(intent);
         });
 
 
-        /**
-         * 요구사항 리사이클러뷰 생성
-         */
         RecyclerView request = findViewById(R.id.request_item);
         RequestAdapter requestAdapter = new RequestAdapter();
 
@@ -122,7 +129,8 @@ public class CallServer extends AppCompatActivity {
          * 요구사항 장바구니
          */
         DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(this, 1);
-        dividerItemDecoration.setDrawable(getDrawable(R.drawable.divider_gray));
+        dividerItemDecoration.setDrawable(AppCompatResources.getDrawable(this, R.drawable.divider_gray));
+
 
 
         RecyclerView cart = findViewById(R.id.request_item_cart);
@@ -193,7 +201,6 @@ public class CallServer extends AppCompatActivity {
             @Override
             public void onDeleteClick(View view, int position) {
                 cartLists.remove(position);
-//                cartAdapter.notifyItemChanged(position);
                 cartAdapter.notifyItemRemoved(position);
             }
 
@@ -222,6 +229,17 @@ public class CallServer extends AppCompatActivity {
             Toast.makeText(getApplicationContext(), "요청이 완료되었습니다. ", Toast.LENGTH_LONG).show();
         });
 
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction("giftArrived");
+        intentFilter.addAction("isGiftAccept");
+        LocalBroadcastManager.getInstance(CallServer.this).registerReceiver(broadcastReceiver, intentFilter);
 
     }
 }

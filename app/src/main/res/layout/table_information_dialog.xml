@@ -3,7 +3,8 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="wrap_content"
+    android:background="@color/white">
 
     <TextView
         android:id="@+id/table_info_title"
@@ -23,13 +24,13 @@
     <FrameLayout
         android:id="@+id/table_info_frameLayout"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="250dp"
+        android:layout_marginTop="10dp"
 
         app:layout_constraintBottom_toTopOf="@id/table_info_statement"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/table_info_title"
-        app:layout_constraintVertical_weight="2">
+        app:layout_constraintTop_toBottomOf="@id/table_info_title">
 
 
         <ImageView
@@ -37,8 +38,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:scaleType="fitCenter"
-            android:src="@drawable/soju" />
+            android:src="@drawable/soju"/>
 
         <TextView
             android:id="@+id/table_info_text"
@@ -59,28 +59,28 @@
     <TextView
         android:id="@+id/table_info_statement"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="wrap_content"
         android:layout_marginStart="12dp"
-        android:layout_marginTop="30dp"
+        android:layout_marginTop="10dp"
         android:layout_marginEnd="12dp"
         android:background="@drawable/statement_border"
 
-        android:padding="12dp"
+        android:padding="10dp"
 
         android:text="상태 메세지"
         android:textColor="@color/white"
         android:textSize="20sp"
         android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
 
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/table_info_member"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/table_info_frameLayout"
-        app:layout_constraintVertical_weight="0.5" />
+        app:layout_constraintTop_toBottomOf="@id/table_info_frameLayout" />
 
     <TextView
         android:id="@+id/table_info_gender"
         android:layout_width="wrap_content"
-        android:layout_height="0dp"
+        android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
 
         android:background="@drawable/statement_border"
@@ -98,17 +98,17 @@
         app:layout_constraintEnd_toStartOf="@id/table_info_member"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/table_info_statement"
-        app:layout_constraintVertical_weight="0.2" />
+        app:layout_constraintBottom_toTopOf="@id/table_info_close" />
 
 
     <TextView
         android:id="@+id/table_info_member"
         android:layout_width="wrap_content"
-        android:layout_height="0dp"
+        android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
 
-
         android:background="@drawable/statement_border"
+
         android:paddingStart="40dp"
         android:paddingTop="10dp"
         android:paddingEnd="40dp"
@@ -122,23 +122,22 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/table_info_gender"
         app:layout_constraintTop_toBottomOf="@id/table_info_statement"
-        app:layout_constraintVertical_weight="0.2" />
+        app:layout_constraintBottom_toTopOf="@id/table_info_close" />
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/table_info_close"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:layout_marginBottom="20dp"
 
         android:background="@drawable/statement_border"
         android:backgroundTint="@color/blue_purple"
-
 
         android:paddingStart="40dp"
         android:paddingTop="10dp"
         android:paddingEnd="40dp"
         android:paddingBottom="10dp"
+
+        android:layout_marginBottom="30dp"
 
         android:text="닫기"
         android:textColor="@color/black"
@@ -148,8 +147,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/table_info_statement"
-        app:layout_constraintVertical_weight="0.5" />
+        app:layout_constraintTop_toBottomOf="@id/table_info_gender" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -3,12 +3,14 @@ package com.example.openbook;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
-import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Handler;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -16,6 +18,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -23,12 +26,15 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.CircularProgressDrawable;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
-import com.example.openbook.Activity.Table;
+import com.bumptech.glide.request.target.Target;
 import com.example.openbook.Adapter.AdminPopUpAdapter;
 import com.example.openbook.Adapter.MenuAdapter;
-import com.example.openbook.Chatting.ClientSocket;
+import com.example.openbook.Category.CartCategory;
+import com.example.openbook.Category.MenuCategory;
 import com.example.openbook.Chatting.DBHelper;
+import com.example.openbook.Data.CartList;
 import com.example.openbook.Data.MenuList;
 import com.example.openbook.Data.OrderList;
 import com.example.openbook.Deco.menu_recyclerview_deco;
@@ -37,11 +43,15 @@ import com.example.openbook.QRcode.MakeQR;
 import com.example.openbook.retrofit.AdminTableDTO;
 import com.example.openbook.retrofit.SalesItemDTO;
 import com.example.openbook.retrofit.TableInformationDTO;
-
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import jp.wasabeef.glide.transformations.BlurTransformation;
@@ -50,6 +60,11 @@ import jp.wasabeef.glide.transformations.BlurTransformation;
 public class DialogManager {
 
     String TAG = "DialogManagerTAG";
+
+    Gson gson;
+    SharedPreferences sharedPreferences;
+    SharedPreferences.Editor editor;
+    SendNotification sendNotification;
 
     public Dialog progressDialog(Context context) {
         Dialog dialog = new Dialog(context);
@@ -86,66 +101,6 @@ public class DialogManager {
         Handler handler = new Handler();
 
         handler.postDelayed(alertDialog::dismiss, 1000);
-    }
-
-    //Menu Activity 에서 Table Activity 로 넘어가는 dialog
-    public void moveActivity(Context context, String message, String id, Boolean orderCk, ClientSocket clientSocket) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setMessage(message)
-                .setTitle("알람")
-                .setPositiveButton("확인", (dialog, which) -> {
-                    Intent intent = new Intent(context, Table.class);
-                    intent.putExtra("get_id", id);
-                    intent.putExtra("orderCk", orderCk);
-                    intent.putExtra("clientSocket", clientSocket);
-                    Log.d(TAG, "clientSocket : " + clientSocket.isAlive());
-                    context.startActivity(intent);
-                })
-                .setNegativeButton("취소", (dialog, which) -> dialog.dismiss())
-                .setIcon(R.drawable.warning);
-
-
-        AlertDialog alertDialog = builder.create();
-        alertDialog.show();
-    }
-
-
-    //Table.class에서 채팅하기 누르면 나오는 dialog
-    public void chattingRequest(Context context, String message, String clickTable, String get_id) {
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-
-        builder.setMessage(message)
-                .setTitle("채팅 신청")
-                .setPositiveButton("확인", (dialog, which) -> {
-
-                    builder.setMessage("상대방 테이블에게 프로필 사진 조회권을 보내시겠습니까?\n* 2,000원의 추가금이 발생합니다.")
-                            .setTitle("프로필 사진 동봉")
-                            .setPositiveButton("네", (dialog1, which1) -> {
-                                //프로필 조회권 주고
-                                SendNotification sendNotification = new SendNotification();
-                                sendNotification.requestChatting(clickTable, get_id, "yesTicket",
-                                        "에서 채팅을 요청하였습니다. 수락하시겠습니까?\n** 프로필 오픈 티켓 동봉 **");
-                                //
-                                //sendNotification class에서 저장하고, table.class에서 조회해서 까보기..!!!!!
-                                dialog1.dismiss();
-                            })
-                            .setNegativeButton("아니오", (dialog12, which12) -> {
-                                SendNotification sendNotification = new SendNotification();
-                                sendNotification.requestChatting(clickTable, get_id, "noTicket",
-                                        "에서 채팅을 요청하였습니다. 수락하시겠습니까?");
-                                dialog12.dismiss();
-                            }).setIcon(R.drawable.heart);
-                    AlertDialog alertDialog2 = builder.create();
-                    alertDialog2.show();
-                })
-                .setNegativeButton("취소", (dialog, which) -> dialog.dismiss())
-                .setIcon(R.drawable.heart);
-
-
-        AlertDialog alertDialog = builder.create();
-        alertDialog.show();
-
     }
 
     public Dialog popUpAdmin(Context context, ArrayList<OrderList> orderList) {
@@ -286,8 +241,11 @@ public class DialogManager {
                                 String id) {
         Dialog dialog = new Dialog(context);
         dialog.setContentView(R.layout.table_information_dialog);
-        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
+        int width = (int) (displayMetrics.widthPixels * 0.7);  // 화면 너비의 70%로 설정
+        dialog.getWindow().setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT);
 
+        TextView tableInfoTitle = dialog.findViewById(R.id.table_info_title);
         ImageView tableInfoImg = dialog.findViewById(R.id.table_info_img);
         TextView tableInfoText = dialog.findViewById(R.id.table_info_text);
         TextView tableInfoStatement = dialog.findViewById(R.id.table_info_statement);
@@ -295,26 +253,38 @@ public class DialogManager {
         TextView tableInfoMember = dialog.findViewById(R.id.table_info_member);
         TextView tableInfoClose = dialog.findViewById(R.id.table_info_close);
 
-        if (tableDTO.getResult().equals("notExist")) {
+        tableInfoTitle.setText(id);
+
+        if (tableDTO.getResult().equals("failed")) {
             MakeQR qr = new MakeQR();
             tableInfoImg.setImageBitmap(qr.clientQR(id));
             tableInfoImg.setClickable(false);
             tableInfoText.setVisibility(View.INVISIBLE);
             tableInfoStatement.setText("사진과 정보를 입력하시려면 다음 큐알로 입장해주세요 :)");
-            tableInfoGender.setVisibility(View.GONE);
-            tableInfoMember.setVisibility(View.GONE);
+            tableInfoGender.setVisibility(View.INVISIBLE);
+            tableInfoMember.setVisibility(View.INVISIBLE);
 
         } else {
             String imageUrl = BuildConfig.SERVER_IP + "/Profile/" + tableDTO.getImageUrl();
+            Glide.with(context).clear(tableInfoImg);
             Glide.with(tableInfoImg.getContext())
                     .load(imageUrl)
+                    .override(Target.SIZE_ORIGINAL)
+                    .diskCacheStrategy(DiskCacheStrategy.NONE)
+                    .skipMemoryCache(true)
                     .into(tableInfoImg);
 
             tableInfoText.setText("다시 등록하시려면 \n프로필 사진을 터치해주세요!");
 
             tableInfoStatement.setText(tableDTO.getStatement());
             tableInfoGender.setText(tableDTO.getGender());
-            tableInfoMember.setText(tableDTO.getUserCount());
+            tableInfoMember.setText(tableDTO.getGuestNumber() + "명");
+
+            tableInfoImg.setOnClickListener(view -> {
+                tableInfoImg.setImageBitmap(new MakeQR().clientQR(id));
+                tableInfoText.setVisibility(View.GONE);
+            });
+
         }
 
         tableInfoClose.setOnClickListener(view -> dialog.dismiss());
@@ -322,11 +292,15 @@ public class DialogManager {
         return dialog;
     }
 
-    public Dialog otherTableDialog(Context context, TableInformationDTO tableDTO, boolean ticket){
+    public Dialog otherTableDialog(Context context, String id, String table, TableInformationDTO tableDTO, boolean ticket) {
         Dialog dialog = new Dialog(context);
         dialog.setContentView(R.layout.table_information_dialog);
-        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
+        int width = (int) (displayMetrics.widthPixels * 0.7);  // 화면 너비의 70%로 설정
 
+        dialog.getWindow().setLayout(width, ViewGroup.LayoutParams.MATCH_PARENT);
+
+        TextView tableTitle = dialog.findViewById(R.id.table_info_title);
         ImageView tableInfoImg = dialog.findViewById(R.id.table_info_img);
         TextView tableInfoText = dialog.findViewById(R.id.table_info_text);
         TextView tableInfoStatement = dialog.findViewById(R.id.table_info_statement);
@@ -334,44 +308,42 @@ public class DialogManager {
         TextView tableInfoMember = dialog.findViewById(R.id.table_info_member);
         TextView tableInfoClose = dialog.findViewById(R.id.table_info_close);
 
-        if(tableDTO.getResult().equals("notExist")){
+        tableTitle.setText(table);
+
+        if (tableDTO.getResult().equals("failed")) {
             tableInfoText.setVisibility(View.INVISIBLE);
             tableInfoStatement.setText("정보를 입력하지 않은 테이블입니다.");
             tableInfoGender.setVisibility(View.INVISIBLE);
             tableInfoMember.setVisibility(View.INVISIBLE);
-        }else{
+        } else {
             String imageUrl = BuildConfig.SERVER_IP + "/Profile/" + tableDTO.getImageUrl();
 
             tableInfoStatement.setText(tableDTO.getStatement());
             tableInfoGender.setText(tableDTO.getGender());
-            tableInfoMember.setText(tableDTO.getUserCount());
+            tableInfoMember.setText(tableDTO.getGuestNumber() + "명");
 
-            if(ticket){
-                Glide.with(tableInfoImg.getContext())
+            if (ticket) {
+                tableInfoText.setVisibility(View.GONE);
+
+                Glide.with(context).clear(tableInfoImg);
+                Glide.with(context)
                         .load(imageUrl)
+                        .override(Target.SIZE_ORIGINAL)
+                        .diskCacheStrategy(DiskCacheStrategy.NONE)
+                        .skipMemoryCache(true)
                         .into(tableInfoImg);
-            }else{
-                Glide.with(tableInfoImg.getContext())
+            } else {
+                Glide.with(context).clear(tableInfoImg);
+                Glide.with(context)
                         .load(imageUrl)
                         .apply(RequestOptions.bitmapTransform(new BlurTransformation(25, 3)))
                         .into(tableInfoImg);
 
                 tableInfoImg.setOnClickListener(view ->{
-                    /**
-                     * 티켓이 없으면 구매할거냐고 물어보는 팝업이 하나 더 생기고, 티켓이 있으면 사용할거냐고 물어보는 팝업이 하나 더 띄워진다.
-                     */
-//                    Intent intent = new Intent(Table.this, PopUpProfile.class);
-//                    intent.putExtra("title", "프로필 조회권 구매");
-//                    intent.putExtra("body", "프로필 조회권을 구매하시겠습니까?\n** 프로필 조회권 2000원");
-//
-//                    intent.putExtra("myData", myData);
-//                    intent.putExtra("clickTable", clickTable);
-//                    intent.putExtra("chattingData", chattingDataHashMap);
-//                    intent.putExtra("ticketData", ticketDataHashMap);
-//                    intent.putExtra("tableList", tableList);
-//
-//                    startActivity(intent);
+                    dialog.dismiss();
+                    buyProfileTicketDialog(context, id, table).show();
                 });
+
             }
         }
 
@@ -380,29 +352,76 @@ public class DialogManager {
         return dialog;
     }
 
-    public Dialog adminTableInformationDialog(Context context, AdminTableDTO tableInfo) {
+    public Dialog buyProfileTicketDialog(Context context, String from, String to) {
         Dialog dialog = new Dialog(context);
-        dialog.setContentView(R.layout.table_information_dialog);
-        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        dialog.setContentView(R.layout.popup);
 
-        ImageView tableInfoImg = dialog.findViewById(R.id.table_info_img);
-        TextView tableInfoText = dialog.findViewById(R.id.table_info_text);
-        TextView tableInfoStatement = dialog.findViewById(R.id.table_info_statement);
-        TextView tableInfoGender = dialog.findViewById(R.id.table_info_gender);
-        TextView tableInfoMember = dialog.findViewById(R.id.table_info_member);
-        TextView tableInfoClose = dialog.findViewById(R.id.table_info_close);
+        TextView title = dialog.findViewById(R.id.popup_title);
+        title.setText("프로필 티켓 구매");
 
-        tableInfoText.setVisibility(View.INVISIBLE);
+        TextView body = dialog.findViewById(R.id.popup_body);
+        body.setText("프로필 티켓을 구매하시겠습니까?\n가격: 2000원");
 
-        String imageUrl = BuildConfig.SERVER_IP + "Profile/" + tableInfo.getImageUrl();
-        Glide.with(tableInfoImg.getContext()).load(imageUrl).into(tableInfoImg);
+        Button yesButton = dialog.findViewById(R.id.popup_button_yes);
+        yesButton.setText("확인");
 
-        tableInfoImg.setClickable(false);
-        tableInfoStatement.setText(tableInfo.getStatement());
-        tableInfoGender.setText(tableInfo.getGender());
-        tableInfoMember.setText(tableInfo.getGuestNumber() + "명");
+        yesButton.setOnClickListener(view -> {
+            //노티피케이션으로 티켓 구매 알리고, 나한테도 주문 내역에 들어가야함!!
 
-        tableInfoClose.setOnClickListener(view -> dialog.dismiss());
+            gson = new Gson();
+            JsonObject menuItem = new JsonObject();
+            menuItem.addProperty("menuName", "프로필 티켓");
+            menuItem.addProperty("menuPrice", 2000);
+            menuItem.addProperty("menuQuantity", 1);
+            menuItem.addProperty("menuCategory",CartCategory.MENU.getValue());
+
+            JsonArray menuItems = new JsonArray();
+            menuItems.add(menuItem);
+
+            Log.d(TAG, "buyProfileTicketDialog menuItems: " + gson.toJson(menuItems));
+
+            //admin에게 주문한다
+            Map<String, String> request = new HashMap<>();
+            request.put("request", "Order");
+            request.put("tableName", from);
+            request.put("orderItemName", "프로필 티켓 1개");
+            request.put("items", gson.toJson(menuItems));
+            request.put("totalPrice", "2000");
+
+            sendNotification = new SendNotification();
+            sendNotification.sendMenu(request, result -> {
+                if (result.equals("failed")) {
+                    Toast.makeText(context, context.getResources().getString(R.string.menuOrderError), Toast.LENGTH_SHORT).show();
+                }else{
+                    //성공하면 클라이언트 주문 내역에 저장
+                    ManageOrderItems manageOrderItems = new ManageOrderItems();
+                    manageOrderItems.orderSharedPreference(context);
+
+                    //프로필 티켓도 업데이트
+                    sharedPreferences = context.getSharedPreferences("CustomerData", Context.MODE_PRIVATE);
+                    editor = sharedPreferences.edit();
+
+                    String profileTicket = sharedPreferences.getString("profileTicket", null);
+                    HashMap<String, Boolean> profileTicketMap = gson.fromJson(profileTicket, HashMap.class);
+
+                    if(profileTicketMap == null) {
+                        profileTicketMap = new HashMap<>();
+
+                    }
+                    profileTicketMap.put(to, true);
+
+                    editor.putString("profileTicket", gson.toJson(profileTicketMap));
+                    editor.commit();
+                }
+                dialog.dismiss();
+            });
+
+        });
+
+        Button noButton = dialog.findViewById(R.id.popup_button_no);
+        noButton.setText("취소");
+
+        noButton.setOnClickListener(view -> dialog.dismiss());
 
         return dialog;
     }
@@ -418,7 +437,7 @@ public class DialogManager {
         return progressDrawable;
     }
 
-    public Dialog giftSelectDialog(Context context){
+    public Dialog giftSelectDialog(Context context, String from, String to) {
         Dialog dialog = new Dialog(context);
         dialog.setContentView(R.layout.send_gift_select_dialog);
 
@@ -431,21 +450,158 @@ public class DialogManager {
                 (context, RecyclerView.HORIZONTAL, false));
 
         MenuAdapter menuAdapter = new MenuAdapter();
-        ArrayList<MenuList> menuLists = new ArrayList<>();
 
         sendGiftRecyclerview.setAdapter(menuAdapter);
         sendGiftRecyclerview.addItemDecoration(new menu_recyclerview_deco(context));
-        menuAdapter.setAdapterItem(menuLists);
-
 
         DBHelper dbHelper = new DBHelper(context);
-        menuLists = dbHelper.getTableData(menuLists);
-        Log.d(TAG, "menuLists size: " + menuLists.size());
-
+        final ArrayList<MenuList> menuLists = dbHelper.getTableData(new ArrayList());
         menuAdapter.setAdapterItem(menuLists);
+
+        menuAdapter.setOnItemClickListener((view, name, price, position) -> {
+            dialog.dismiss();
+
+            MenuList menuItem = menuLists.get(position);
+
+            giftSendDialog(context, to, from, menuItem).show();
+        });
 
         return dialog;
     }
 
+    public Dialog giftSendDialog(Context context, String to, String from, MenuList menuItem) {
+        Dialog dialog = new Dialog(context);
+        dialog.setContentView(R.layout.send_gift_quantity_dialog);
+
+        TextView menuName = dialog.findViewById(R.id.send_gift_quantity_menuName);
+        TextView menuQuantity = dialog.findViewById(R.id.send_gift_quantity_menuQuantity);
+        TextView menuPrice = dialog.findViewById(R.id.send_gift_quantity_price);
+        Button sendGiftButton = dialog.findViewById(R.id.send_gift_button);
+        TextView plus = dialog.findViewById(R.id.send_gift_quantity_plus);
+        Button minus = dialog.findViewById(R.id.send_gift_quantity_minus);
+        Button cancel = dialog.findViewById(R.id.send_gift_quantity_cancel);
+
+        cancel.setOnClickListener(v -> dialog.dismiss());
+
+        menuName.setText(menuItem.getMenuName());
+        menuPrice.setText(String.valueOf(menuItem.getMenuPrice()));
+        menuQuantity.setText(String.valueOf(1));
+
+        plus.setOnClickListener(v -> {
+            int oldQuantity = Integer.parseInt(menuQuantity.getText().toString());
+            int newQuantity = oldQuantity + 1;
+            menuQuantity.setText(String.valueOf(newQuantity));
+
+            int totalPrice = newQuantity * menuItem.getMenuPrice();
+            menuPrice.setText(String.valueOf(totalPrice));
+
+        });
+
+        minus.setOnClickListener(v -> {
+            int oldQuantity = Integer.parseInt(menuQuantity.getText().toString());
+            if (oldQuantity > 1) {
+                int newQuantity = oldQuantity - 1;
+                menuQuantity.setText(String.valueOf(newQuantity));
+
+                int totalPrice = newQuantity * menuItem.getMenuPrice();
+                menuPrice.setText(String.valueOf(totalPrice));
+            } else {
+                Toast.makeText(context, "선물 가능한 최소 개수는 1개 입니다.", Toast.LENGTH_SHORT).show();
+            }
+
+        });
+
+        sendGiftButton.setOnClickListener(v -> {
+            String quantity = menuQuantity.getText().toString();
+            gson = new Gson();
+
+            JsonObject jsonObject = new JsonObject();
+            jsonObject.addProperty("menuName", menuItem.getMenuName());
+            jsonObject.addProperty("menuPrice", menuItem.getMenuPrice());
+            jsonObject.addProperty("menuType", menuItem.getMenuType());
+            jsonObject.addProperty("imageUrl", menuItem.getUrl());
+            jsonObject.addProperty("menuType", menuItem.getMenuType());
+
+            JsonArray jsonArray = new JsonArray();
+            jsonArray.add(jsonObject);
+
+            sendNotification = new SendNotification();
+            sendNotification.sendGift(to, from, jsonArray.toString(), quantity);
+            dialog.dismiss();
+        });
+
+        return dialog;
+
+    }
+
+    public Dialog giftReceiveDialog(Context context, String to, String from, String menuItem, String count) {
+        Dialog dialog = new Dialog(context);
+        dialog.setContentView(R.layout.popup);
+
+        TextView title = dialog.findViewById(R.id.popup_title);
+        ImageView image = dialog.findViewById(R.id.popup_image);
+        TextView body = dialog.findViewById(R.id.popup_body);
+        Button yesButton = dialog.findViewById(R.id.popup_button_yes);
+        Button noButton = dialog.findViewById(R.id.popup_button_no);
+
+        title.setText("선물 도착");
+
+        gson = new Gson();
+        JsonArray jsonArray = gson.fromJson(menuItem, JsonArray.class);
+        JsonObject item = jsonArray.get(0).getAsJsonObject();
+        String menuName =  item.get("menuName").getAsString();
+        int menuPrice =  item.get("menuPrice").getAsInt();
+        String url = item.get("imageUrl").getAsString();
+        Log.d(TAG, "giftReceiveDialog url: " + url);
+        Glide.with(context).load(url).into(image);
+
+        String message;
+
+        if (item.get("menuType").getAsInt() == MenuCategory.DRINK.getValue()) {
+            message = from + " 에서 " + menuName + " " + count + "병을 선물하였습니다.";
+        } else {
+            message = from + " 에서 " + menuName + " " + count + "개를 선물하였습니다.";
+        }
+        body.setText(message);
+
+
+        sendNotification = new SendNotification();
+
+        yesButton.setOnClickListener(view -> {
+            //수락했다고 from에게 알려주는 fcm을 호출한다 -> 주문내역에 추가한다
+
+            sendNotification.notifyIsGiftAccept(from, to, menuItem, true);
+            int quantity = Integer.parseInt(count);
+
+            int totalPrice = menuPrice * quantity;
+            //admin에게 주문한다
+            Map<String, String> request = new HashMap<>();
+            request.put("request", "GiftMenuOrder");
+            request.put("tableName", to);
+            request.put("fromTable", from);
+            request.put("items", menuItem);
+
+            String orderItemName = menuName + " " + quantity + "개";
+
+            request.put("orderItemName", orderItemName);
+            request.put("totalPrice", String.valueOf(totalPrice));
+
+            sendNotification.sendMenu(request, result -> {
+                if (result.equals("failed")) {
+                    Toast.makeText(context, context.getResources().getString(R.string.menuOrderError), Toast.LENGTH_SHORT).show();
+                }
+                dialog.dismiss();
+            });
+
+        });
+
+        noButton.setOnClickListener(view -> {
+            Log.d(TAG, "giftReceiveDialog: no");
+            sendNotification.notifyIsGiftAccept(from, to, menuItem, false);
+            dialog.dismiss();
+        });
+
+        return dialog;
+    }
 
 }

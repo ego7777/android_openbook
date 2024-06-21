@@ -43,9 +43,9 @@ public interface RetrofitService {
     @FormUrlEncoded
     Call<TableListDTO> setTableList(@Field("table_count") int tableCount);
 
-    @POST("GetTableImage.php")
+    @POST("TableInfoCheck.php")
     @FormUrlEncoded
-    Call<TableInformationDTO> getTableImage(@Field("table") String table);
+    Call<TableInformationDTO> getTableImage(@Field("tableName") String table);
 
     Call<SuccessOrNot> sendGiftOtherTable(@Field("to") String to,
                                           @Field("from") String from,

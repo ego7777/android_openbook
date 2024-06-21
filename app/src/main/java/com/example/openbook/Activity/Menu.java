@@ -40,7 +40,6 @@ import com.example.openbook.BuildConfig;
 import com.example.openbook.Category.CartCategory;
 import com.example.openbook.Chatting.ClientSocket;
 import com.example.openbook.Chatting.DBHelper;
-import com.example.openbook.Data.ChattingData;
 import com.example.openbook.Data.MyData;
 import com.example.openbook.Data.OrderList;
 import com.example.openbook.Data.SideList;
@@ -49,12 +48,12 @@ import com.example.openbook.DialogManager;
 import com.example.openbook.FCM.FCM;
 import com.example.openbook.FCM.SendNotification;
 import com.example.openbook.Category.PaymentCategory;
+import com.example.openbook.ManageOrderItems;
 import com.example.openbook.kakaopay.KakaoPay;
 import com.example.openbook.retrofit.MenuListDTO;
 import com.example.openbook.retrofit.RetrofitManager;
 import com.example.openbook.retrofit.RetrofitService;
 import com.example.openbook.R;
-import com.example.openbook.Data.TicketData;
 import com.example.openbook.Data.CartList;
 import com.example.openbook.Data.MenuList;
 import com.example.openbook.Data.TableList;
@@ -111,9 +110,6 @@ public class Menu extends AppCompatActivity {
     SendNotification sendNotification;
 
     MyData myData;
-    HashMap<String, ChattingData> chattingDataHashMap;
-    HashMap<String, TicketData> ticketDataHashMap;
-    SendToPopUp sendToPopUp = new SendToPopUp();
     RetrofitService service;
     DialogManager dialogManager;
     Dialog progressbar;
@@ -123,18 +119,31 @@ public class Menu extends AppCompatActivity {
     BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (intent.getAction().equals("chattingRequestArrived")) {
-                String fcmData = intent.getStringExtra("fcmData");
+            switch (intent.getAction()) {
+                case "giftArrived":
+                    Log.d(TAG, "onReceive: " + intent.getAction());
+                    String from = intent.getStringExtra("from");
+                    String menuItem = intent.getStringExtra("menuItem");
+                    String count = intent.getStringExtra("count");
 
-                sendToPopUp.sendToPopUpChatting(Menu.this, myData,
-                        chattingDataHashMap, ticketDataHashMap, tableList, fcmData);
-            } else if (intent.getAction().equals("giftArrived")) {
-                String from = intent.getStringExtra("tableName");
-                String menuName = intent.getStringExtra("menuName");
+                    dialogManager.giftReceiveDialog(Menu.this, myData.getId(), from, menuItem, count).show();
+                    break;
 
-                sendToPopUp.sendToPopUpGift(Menu.this, myData,
-                        chattingDataHashMap, ticketDataHashMap, tableList, from, menuName);
+                case "isGiftAccept":
+                    Log.d(TAG, "onReceive: " + intent.getAction());
+                    from = intent.getStringExtra("from");
 
+                    boolean isAccept = intent.getBooleanExtra("isAccept", false);
+                    String message;
+
+                    if(isAccept){
+                        message = from + "에서 선물을 수락하였습니다.";
+                        //여기서 메뉴 주문 메뉴 저장하기
+                    }else{
+                        message = from + "에서 선물을 거절하였습니다.";
+                    }
+                    dialogManager.positiveBtnDialog(Menu.this, message).show();
+                    break;
             }
         }
     };
@@ -151,33 +160,22 @@ public class Menu extends AppCompatActivity {
         progressbar.show();
         gson = new Gson();
 
-
-        // 로컬 브로드캐스트 리시버 등록
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction("chattingRequestArrived");
-        intentFilter.addAction("giftArrived");
-        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, intentFilter);
-
         myData = (MyData) getIntent().getSerializableExtra("myData");
-
-        chattingDataHashMap = (HashMap<String, ChattingData>) getIntent().getSerializableExtra("chattingData");
-        Log.d(TAG, "chattingData size: " + chattingDataHashMap);
-
-        ticketDataHashMap = (HashMap<String, TicketData>) getIntent().getSerializableExtra("ticketData");
 
         tableList = (ArrayList<TableList>) getIntent().getSerializableExtra("tableList");
 
         isPayment = getIntent().getBooleanExtra("isPayment", false);
 
-
-        /**
-         * 로그인을 성공하면 id, token을 firebase realtime db에 저장
-         */
+        sharedPreference = getSharedPreferences("CustomerData", MODE_PRIVATE);
+        editor = sharedPreference.edit();
 
         if (!myData.isFcmExist()) {
-            Intent fcm = new Intent(getApplicationContext(), FCM.class);
-            fcm.putExtra("identifier", myData.getIdentifier());
-            startService(fcm);
+            FCM fcm = new FCM();
+            fcm.getToken(myData.getIdentifier());
+            myData.setFcmExist(true);
+
+            editor.putBoolean("isFcmExist", true);
+            editor.commit();
         }
 
         sendNotification = new SendNotification();
@@ -203,9 +201,6 @@ public class Menu extends AppCompatActivity {
         appbarOrderList = findViewById(R.id.appbar_menu_orderList);
 
 
-        /**
-         * 장바구니
-         */
         RecyclerView cartRecyclerview = findViewById(R.id.menu_cart_recyclerview);
         cartRecyclerview.setLayoutManager(new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
 
@@ -213,9 +208,6 @@ public class Menu extends AppCompatActivity {
         if (animator instanceof SimpleItemAnimator) {
             ((SimpleItemAnimator) animator).setSupportsChangeAnimations(false);
         }
-
-        sharedPreference = getSharedPreferences("CustomerData", MODE_PRIVATE);
-        editor = sharedPreference.edit();
 
         cartOrderTotalPrice = findViewById(R.id.cart_order_total_price);
         cartOrderButton = findViewById(R.id.cart_order_button);
@@ -225,9 +217,6 @@ public class Menu extends AppCompatActivity {
         setCartItems();
         cartRecyclerview.setAdapter(cartAdapter);
 
-        /**
-         * 안주
-         */
         menuRecyclerview = findViewById(R.id.menu_recyclerview);
         menuRecyclerview.setLayoutManager(new GridLayoutManager(this, 3));
         menuRecyclerview.addItemDecoration(new menu_recyclerview_deco(Menu.this));
@@ -292,25 +281,22 @@ public class Menu extends AppCompatActivity {
 
         } else {
             Log.d(TAG, "메뉴db 있는거 사용");
+//
+//            new Thread(() -> {
+            while (res.moveToNext()) {
+                menuLists.add(new MenuList(res.getString(3),//img
+                        res.getString(1), //name
+                        res.getInt(2), //price
+                        res.getInt(4), //menuType
+                        1));
+            }
+            menuAdapter.setAdapterItem(menuLists);
 
-            new Thread(() -> {
-                while (res.moveToNext()) {
-                    menuLists.add(new MenuList(res.getString(3),//img
-                            res.getString(1), //name
-                            res.getInt(2), //price
-                            res.getInt(4), //menuType
-                            1));
-                }
-
-                runOnUiThread(() -> menuAdapter.setAdapterItem(menuLists));
-            }).start();
+//                runOnUiThread(() -> menuAdapter.setAdapterItem(menuLists));
+//            }).start();
 
         }
 
-
-        /**
-         * 사이드 네비게이션
-         */
         menuNavigation = findViewById(R.id.menu_navigation);
         sideAdapter = new SideListViewAdapter();
 
@@ -321,14 +307,12 @@ public class Menu extends AppCompatActivity {
         }
         menuNavigation.setAdapter(sideAdapter);
 
-
-    } // onCreate()
-
+    }
 
     @Override
     protected void onStart() {
         super.onStart();
-        //액티비티가 사용자에게 보여질 때, 사용자와 상호작용 X
+
         if (isPayment) {
             Log.d(TAG, "isPayment: " + isPayment);
             sendNotification.sendMenu(submitOrder(), result -> {
@@ -347,9 +331,10 @@ public class Menu extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        //사용자와 상호작용 하는 단계, 어플 기능은 여기서
 
-        IntentFilter intentFilter = new IntentFilter("chattingRequestArrived");
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction("giftArrived");
+        intentFilter.addAction("isGiftAccept");
         LocalBroadcastManager.getInstance(Menu.this).registerReceiver(broadcastReceiver, intentFilter);
 
         useStop.setOnClickListener(view -> {
@@ -361,28 +346,21 @@ public class Menu extends AppCompatActivity {
         });
 
 
-        /**
-         * Appbar: table 클래스로 이동
-         */
         appbarMenuTable.setOnClickListener(view -> {
             Intent intent = new Intent(Menu.this, Table.class);
             intent.putExtra("myData", myData);
-            intent.putExtra("chattingData", chattingDataHashMap);
-            intent.putExtra("ticketData", ticketDataHashMap);
             intent.putExtra("tableList", tableList);
             startActivity(intent);
         });
 
 
         appbarOrderList.setOnClickListener(view -> {
-            Pair<ArrayList<OrderList>, String> pair = getReceiptData();
-            dialogManager.showReceiptDialog(Menu.this, pair.first, pair.second).show();
+            ManageOrderItems manageOrderItems = new ManageOrderItems();
+            Pair<ArrayList<OrderList>, String> pair = manageOrderItems.getReceiptData(this, myData);
+            dialogManager.showReceiptDialog(this, pair.first, pair.second).show();
         });
 
 
-        /**
-         * 장바구니 클릭 이벤트
-         */
         cartAdapter.setOnItemClickListener(new CartAdapter.OnItemClickListener() {
             @Override
             public void onPlusClick(View view, int position) {
@@ -499,8 +477,6 @@ public class Menu extends AppCompatActivity {
                 case "직원호출":
                     Intent intent = new Intent(Menu.this, CallServer.class);
                     intent.putExtra("myData", myData);
-                    intent.putExtra("chattingData", chattingDataHashMap);
-                    intent.putExtra("ticketData", ticketDataHashMap);
                     intent.putExtra("tableList", tableList);
                     startActivity(intent);
                     break;
@@ -512,7 +488,6 @@ public class Menu extends AppCompatActivity {
         /**
          * 1. 주문내역 관리자한테 넘어가기
          * 2. 채팅온거 표시 -> 카트 밑에 빈공간에
-         * 3. 읽으면 <읽음> 표시만 하기…………
          * 4. 채팅 신청 (하트대신!!!)-> 궁금하면 사진 까봐 -> 채팅하기
          */
 
@@ -553,7 +528,7 @@ public class Menu extends AppCompatActivity {
                         intent.putExtra("orderItemName", getOrderItemName());
                         intent.putExtra("totalPrice", totalPrice);
                         intent.putExtra("myData", myData);
-                        intent.putExtra("orderItems", getOrderList());
+                        intent.putExtra("orderItems", getCartList());
                         startActivity(intent);
 //                                paymentLauncher.launch(intent);
 
@@ -592,7 +567,7 @@ public class Menu extends AppCompatActivity {
         request.put("tableName", myData.getId());
         request.put("orderItemName", getOrderItemName());
         request.put("totalPrice", String.valueOf(totalPrice));
-        request.put("items", getOrderList());
+        request.put("items", getCartList());
 
         return request;
     }
@@ -669,7 +644,7 @@ public class Menu extends AppCompatActivity {
     }
 
 
-    public String getOrderList() {
+    public String getCartList() {
 
         JsonArray menuItems = new JsonArray();
 
@@ -683,7 +658,7 @@ public class Menu extends AppCompatActivity {
             menuItems.add(menuItem);
         }
 
-        Log.d(TAG, "orderList: " + menuItems);
+        Log.d(TAG, "get CartList: " + gson.toJson(menuItems));
         return gson.toJson(menuItems);
     }
 
@@ -723,46 +698,6 @@ public class Menu extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         //안드로이드 백버튼 막기
-    }
-
-    private Pair<ArrayList<OrderList>, String> getReceiptData() {
-        Dialog dialog = new Dialog(Menu.this);
-        dialog.setContentView(R.layout.receipt_dialog);
-
-        ArrayList<OrderList> orderLists = new ArrayList<>();
-
-        String sharedOrderList = sharedPreference.getString("orderItems", null);
-        Log.d(TAG, "showReceiptDialog orderList: " + sharedOrderList);
-        int price = 0;
-
-        if (sharedOrderList != null) {
-
-            JsonArray jsonArray = gson.fromJson(sharedOrderList, JsonArray.class);
-
-            for (int i = 0; i < jsonArray.size(); i++) {
-                JsonObject jsonObject = jsonArray.get(i).getAsJsonObject();
-
-                orderLists.add(new OrderList(myData.getPaymentCategory().getValue(),
-                        myData.getId(),
-                        jsonObject.get("menuName").getAsString(),
-                        jsonObject.get("menuQuantity").getAsInt(),
-                        jsonObject.get("menuPrice").getAsInt()));
-
-                price = price + jsonObject.get("menuPrice").getAsInt();
-
-            }
-
-        } else {
-            orderLists.add(new OrderList(myData.getPaymentCategory().getValue(),
-                    myData.getId(),
-                    "주문 내역이 없습니다."));
-        }
-
-
-        String totalPrice = addCommasToNumber(price, 1);
-
-        return Pair.create(orderLists, totalPrice);
-
     }
 
 
