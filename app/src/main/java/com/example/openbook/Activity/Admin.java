@@ -13,6 +13,7 @@ import android.util.Pair;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -23,12 +24,13 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.openbook.Adapter.AdminTableAdapter;
 import com.example.openbook.Category.CartCategory;
+import com.example.openbook.Chatting.ChattingUI;
 import com.example.openbook.Data.AdminData;
 import com.example.openbook.BuildConfig;
 import com.example.openbook.Data.CartList;
 import com.example.openbook.Category.PaymentCategory;
+import com.example.openbook.FCM.SendNotification;
 import com.example.openbook.kakaopay.KakaoPay;
-import com.example.openbook.retrofit.AdminTableDTO;
 import com.example.openbook.Data.AdminTableList;
 import com.example.openbook.Data.OrderList;
 import com.example.openbook.DialogManager;
@@ -60,9 +62,7 @@ public class Admin extends AppCompatActivity {
 
     TextView appbarAdminSales, appbarAdminAddMenu, appbarAdminModifyTable;
     TextView adminSidebarMenu, adminSidebarInfo, adminSidebarPay;
-
-    String menuName;
-    int totalPrice, tableIdentifier;
+    int totalPrice;
     boolean isPayment;
 
     SharedPreferences sharedPreference;
@@ -72,51 +72,51 @@ public class Admin extends AppCompatActivity {
     ArrayList<AdminTableList> adminTableLists;
     ArrayList<OrderList> orderLists;
     Gson gson;
-    String tableRequest;
     DialogManager dialogManager;
     Dialog popUpDialog;
+    String paidTable;
 
     BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            switch (intent.getAction()){
-                case "tableRequest":
-                    String fcmData = intent.getStringExtra("fcmData");
-                    Log.d(TAG, "onReceive tableRequest: " + fcmData);
-                    if (fcmData != null) {
+            if (intent.getAction().equals("tableRequest")) {
+                String fcmData = intent.getStringExtra("fcmData");
+                Log.d(TAG, "onReceive tableRequest: " + fcmData);
+                if (fcmData != null) {
 
-                        JsonObject requestJson = gson.fromJson(fcmData, JsonObject.class);
-                        Log.d(TAG, "requestJson: " + requestJson);
-                        String request = requestJson.get("request").getAsString();
-                        String tableName = requestJson.get("tableName").getAsString();
-                        int tableNumber = Integer.parseInt(tableName.replace("table", "")) - 1;
+                    JsonObject requestJson = gson.fromJson(fcmData, JsonObject.class);
+                    Log.d(TAG, "requestJson: " + requestJson);
+                    String request = requestJson.get("request").getAsString();
+                    String tableName = requestJson.get("tableName").getAsString();
+                    int tableNumber = Integer.parseInt(tableName.replace("table", "")) - 1;
 
-                        switch (request) {
-                            case "PayNow":
-                            case "End":
-                            case "PayLater":
-                                updateTable(request, tableName, tableNumber);
-                                break;
-                            case "Order":
-                                String items = requestJson.get("items").getAsString();
-                                JsonArray jsonArray = gson.fromJson(items, JsonArray.class);
-                                String orderItemName = requestJson.get("orderItemName").getAsString();
-                                int totalPrice = requestJson.get("totalPrice").getAsInt();
-                                orderMenu(tableName, tableNumber, orderItemName, jsonArray, totalPrice);
-                                break;
+                    switch (request) {
+                        case "PayNow":
+                        case "End":
+                        case "PayLater":
+                            updateTable(request, tableName, tableNumber);
+                            break;
+                        case "Order":
+                            String items = requestJson.get("items").getAsString();
+                            JsonArray jsonArray = gson.fromJson(items, JsonArray.class);
+                            String orderItemName = requestJson.get("orderItemName").getAsString();
+                            int totalPrice = requestJson.get("totalPrice").getAsInt();
+                            orderMenu(tableName, tableNumber, orderItemName, jsonArray, totalPrice);
+                            break;
 
-                            case "GiftMenuOrder":
-                                items = requestJson.get("items").getAsString();
-                                jsonArray = gson.fromJson(items, JsonArray.class);
-                                String from = requestJson.get("fromTable").getAsString();
-                                orderItemName = requestJson.get("orderItemName").getAsString();
-                                orderMenu(tableName, tableNumber, orderItemName , jsonArray, 0);
+                        case "GiftMenuOrder":
+                            Log.d(TAG, "onReceive: ");
+                            String fromMenuItem = requestJson.get("fromMenuItem").getAsString();
+                            JsonArray fromJsonArray = gson.fromJson(fromMenuItem, JsonArray.class);
+                            String from = requestJson.get("fromTable").getAsString();
 
+                            String toMenuItem = requestJson.get("toMenuItem").getAsString();
+                            JsonArray toJsonArray = gson.fromJson(toMenuItem, JsonArray.class);
 
-                        }
+                            orderGiftMenu(tableName, tableNumber,toJsonArray,from, fromJsonArray);
+                            break;
                     }
-
-                    break;
+                }
             }
         }
     };
@@ -131,6 +131,7 @@ public class Admin extends AppCompatActivity {
         adminData = getIntent().getParcelableExtra("adminData");
         Log.d(TAG, "adminData: " + adminData);
         isPayment = getIntent().getBooleanExtra("isPayment", false);
+        paidTable = getIntent().getStringExtra("paidTable");
 
         adminTableLists = new ArrayList<>();
         orderLists = new ArrayList<>();
@@ -151,7 +152,7 @@ public class Admin extends AppCompatActivity {
         tableGrid.setAdapter(adapter);
 
 
-        if (adminData.getAdminTableLists() != null) {
+        if (adminData.getAdminTableLists() != null && adminData.getAdminTableLists().size() != 0) {
             Log.d(TAG, "adminTableList size : " + adminData.getAdminTableLists().size());
             adminTableLists = adminData.getAdminTableLists();
             adapter.setAdapterItem(adminTableLists);
@@ -170,45 +171,6 @@ public class Admin extends AppCompatActivity {
         service = retrofit.create(RetrofitService.class);
 
         dialogManager = new DialogManager();
-
-
-//            int table = tableQuantity.getTableQuantity();
-//            Log.d(TAG, "tableQuantity : " + table);
-
-//            for (int i = 1; i < table + 1; i++) {
-//
-//                String summary = sharedPreference.getString("table" + i + "menu", null);
-//                Log.d(TAG, "summary: " + summary);
-//
-//                int price = sharedPreference.getInt("table" + i + "price", 0);
-//                Log.d(TAG, "price: " + price);
-//
-//                String gender = sharedPreference.getString("table" + i + "gender", null);
-//                Log.d(TAG, "gender: " + gender);
-//
-//                String guestNumber = sharedPreference.getString("table" + i + "guestNumber", null);
-//                Log.d(TAG, "guestNumber: " + guestNumber);
-//
-//                int viewType = sharedPreference.getInt("table" + i + "viewType", 0);
-//                Log.d(TAG, "viewType: " + viewType);
-//
-//                int identifier = sharedPreference.getInt("table" + i + "tableIdentifier", 0);
-//                Log.d(TAG, "identifier: " + identifier);
-//
-//
-//                if (summary != null) {
-//                    adminTableList.add(new AdminTableList("table" + i,
-//                            summary, String.valueOf(price), gender, guestNumber, viewType, identifier));
-//
-//                } else {
-//                    adminTableList.add(new AdminTableList("table" + i,
-//                            null,
-//                            null,
-//                            null,
-//                            null,0, 0));
-//                }
-//
-//            }// for문 끝
 
 
         /**
@@ -242,41 +204,6 @@ public class Admin extends AppCompatActivity {
     }
 
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-
-        if (menuName != null) {
-            int pastCount = Integer.parseInt(String.valueOf(menuName.indexOf(menuName.length())));
-            Log.d(TAG, "pastCount: " + pastCount);
-
-        }
-        menuName = getIntent().getStringExtra("menuName");
-
-//        if (afterPaymentList != null) {
-//            SaveOrderDeleteData orderSaveDeleteData = new SaveOrderDeleteData();
-//            //저장하고,
-//
-//            try {
-//                boolean success = orderSaveDeleteData.orderSave(afterPaymentList);
-//
-//                Log.d(TAG, "success: " + success);
-//
-//                if (success) {
-////                    deleteLocalData();
-//                    Log.d(TAG, "deleteData: ");
-//
-//                    orderSaveDeleteData.deleteServerData(tableName); // 서버 데이터
-//                    Log.d(TAG, "deleteServerData: ");
-//                }
-//
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
-//
-//        }
-
-    }
 
     @Override
     protected void onResume() {
@@ -290,6 +217,18 @@ public class Admin extends AppCompatActivity {
             //매출 액티비티가 나온다
             startActivityClass(AdminSales.class);
         });
+
+        if(paidTable != null && isPayment == true){
+            int paidTableNumber = Integer.parseInt(paidTable.replace("table", ""));
+            adminData.getAdminTableLists().get(paidTableNumber).init();
+            adapter.notifyItemChanged(paidTableNumber);
+
+            editor.putString("adminTableList", gson.toJson(adminData.getAdminTableLists()));
+            editor.commit();
+
+            SendNotification sendNotification = new SendNotification();
+            sendNotification.CompletePayment(paidTable, "CompletePayment");
+        }
 
 
         appbarAdminAddMenu.setOnClickListener(view -> dialogManager.addMenu(Admin.this).show());
@@ -317,7 +256,12 @@ public class Admin extends AppCompatActivity {
 
                 AdminTableList table = adminData.getAdminTableLists().get(position);
 
-                if (table.getAdminTablePrice() != null) {
+                if(table.getPaymentType() == PaymentCategory.NOW.getValue()){
+                    Toast.makeText(this, "선불 이용 좌석입니다.", Toast.LENGTH_SHORT).show();
+
+                } else if (table.getAdminTablePrice() != null &&
+                        table.getPaymentType() == PaymentCategory.LATER.getValue()) {
+
                     String tableName = table.getAdminTableNumber();
                     String tablePrice = table.getAdminTablePrice();
                     totalPrice = removeCommas(tablePrice);
@@ -327,7 +271,6 @@ public class Admin extends AppCompatActivity {
                     intent.putExtra("totalPrice", totalPrice);
                     intent.putExtra("tableName", tableName);
                     intent.putExtra("orderItems", getOrderList(position));
-//                    intent.putExtra("paymentStyle", PaymentCategory.LATER);
                     startActivity(intent);
                 } else {
                     dialogManager.noButtonDialog(Admin.this, getResources().getString(R.string.unusableTable));
@@ -423,38 +366,12 @@ public class Admin extends AppCompatActivity {
         return orderItemName;
     }
 
-
-//    public void deleteLocalData() {
-//
-//        runOnUiThread(() -> {
-//
-//            //서버에서도 데이터를 이동하는 것이 좋겠다...! 채팅 데이터를 서버로 보내야함 여기서 + 얘기만(gender)
-//
-//            Log.d(TAG, "run: " + tableName);
-//            dbHelper.deleteTableData(tableName, "adminTableList", "tableName"); //sqlite에서 지우고
-//            editor.remove(tableName + "price"); //s.p에서도 지움
-//            editor.remove(tableName + "menu");
-//            editor.remove(tableName + "gender");
-//            editor.remove(tableName + "guestName");
-//            editor.commit();
-//
-//            int tableNameInt = Integer.parseInt(tableName.replace("table", "")) - 1;
-//            Log.d(TAG, "tableNameInt: " + tableNameInt);
-//            adminTableList.get(tableNameInt).setAdminTableMenu(null);
-//            adminTableList.get(tableNameInt).setAdminTablePrice(null);
-//            adminTableList.get(tableNameInt).setAdminTableGender(null);
-//            adminTableList.get(tableNameInt).setAdminTableGuestNumber(null);
-//            adapter.notifyItemChanged(tableNameInt);
-//
-//        });
-//    }
-
     private void requestTableInfo(int clickTable) {
 
         Call<TableInformationDTO> call = service.getTableImage("table" + clickTable);
         call.enqueue(new Callback<>() {
             @Override
-            public void onResponse(Call<TableInformationDTO> call, Response<TableInformationDTO> response) {
+            public void onResponse(@NonNull Call<TableInformationDTO> call, @NonNull Response<TableInformationDTO> response) {
                 Log.d(TAG, "onResponse tableInfoCheck: " + response.body().getResult());
                 if (response.isSuccessful()) {
                     switch (response.body().getResult()) {
@@ -475,7 +392,7 @@ public class Admin extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<TableInformationDTO> call, Throwable t) {
+            public void onFailure(@NonNull Call<TableInformationDTO> call, @NonNull Throwable t) {
                 Log.d(TAG, "onFailure tableInfoCheck :" + t.getMessage());
             }
         });
@@ -546,6 +463,51 @@ public class Admin extends AppCompatActivity {
                 break;
 
         }
+    }
+
+    public void orderGiftMenu(String to, int tableNumber,
+                              JsonArray toMenuArray,
+                              String from, JsonArray fromMenuArray){
+
+        ArrayList<OrderList> orderLists = new ArrayList<>();
+        JsonObject toItem = toMenuArray.get(0).getAsJsonObject();
+
+        String toMenuName = toItem.get("menuName").getAsString();
+        int menuQuantity = toItem.get("menuQuantity").getAsInt();
+
+        JsonObject fromItem = fromMenuArray.get(0).getAsJsonObject();
+        int menuPrice = fromItem.get("menuPrice").getAsInt();
+
+        orderLists.add(new OrderList
+                (PaymentCategory.LATER.getValue(),
+                to, toMenuName, menuQuantity, 0));
+
+        popUpDialog = dialogManager.popUpAdmin(this, orderLists);
+        popUpDialog.show();
+
+        int fromTableNumber = Integer.parseInt(from.replace("table", "")) - 1;
+
+        String oldPrice = adminData.getAdminTableLists().get(fromTableNumber).getAdminTablePrice();
+        Log.d(TAG, "orderGiftMenu oldPrice: " + oldPrice);
+
+        if (oldPrice != null) {
+            int newPrice = removeCommas(oldPrice) + menuPrice;
+            Log.d(TAG, "orderGiftMenu newPrice: " + newPrice);
+            adminData.getAdminTableLists().get(fromTableNumber).setAdminTablePrice(addCommasToNumber(newPrice));
+        } else {
+            adminData.getAdminTableLists().get(fromTableNumber).setAdminTablePrice(addCommasToNumber(menuPrice));
+        }
+
+        adminTableLists = new ArrayList<>();
+        adminTableLists = adminData.getAdminTableLists();
+
+        adapter.notifyItemChanged(fromTableNumber);
+        editor.putString("adminTableList", gson.toJson(adminTableLists));
+        editor.commit();
+
+        updateOrderList(from, fromMenuArray);
+        updateOrderList(to, toMenuArray);
+
     }
 
     public void orderMenu(String tableName,

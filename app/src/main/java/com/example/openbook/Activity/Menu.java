@@ -23,7 +23,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 
-import androidx.activity.result.ActivityResultLauncher;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -103,8 +103,6 @@ public class Menu extends AppCompatActivity {
 
     ClientSocket clientSocket;
 
-    ActivityResultLauncher<Intent> paymentLauncher;
-
     DBHelper dbHelper;
 
     SendNotification sendNotification;
@@ -144,9 +142,27 @@ public class Menu extends AppCompatActivity {
                     }
                     dialogManager.positiveBtnDialog(Menu.this, message).show();
                     break;
+                case "CompletePayment" :
+                    boolean isCompletePayment = intent.getBooleanExtra("isCompletePayment", false);
+
+                    if(isCompletePayment){
+                        setUseStop();
+                        clientSocket.quit();
+                        // 채팅 데이터 저장 및 삭제
+                        // 테이블 정보 삭제
+                    }
+
+                    break;
             }
         }
     };
+
+    public void setUseStop(){
+        Intent intent = new Intent(Menu.this, PaymentSelect.class);
+        myData.init();
+        intent.putExtra("myData", myData);
+        startActivity(intent);
+    }
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -281,8 +297,6 @@ public class Menu extends AppCompatActivity {
 
         } else {
             Log.d(TAG, "메뉴db 있는거 사용");
-//
-//            new Thread(() -> {
             while (res.moveToNext()) {
                 menuLists.add(new MenuList(res.getString(3),//img
                         res.getString(1), //name
@@ -291,10 +305,6 @@ public class Menu extends AppCompatActivity {
                         1));
             }
             menuAdapter.setAdapterItem(menuLists);
-
-//                runOnUiThread(() -> menuAdapter.setAdapterItem(menuLists));
-//            }).start();
-
         }
 
         menuNavigation = findViewById(R.id.menu_navigation);
@@ -335,14 +345,12 @@ public class Menu extends AppCompatActivity {
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction("giftArrived");
         intentFilter.addAction("isGiftAccept");
+        intentFilter.addAction("CompletePayment");
         LocalBroadcastManager.getInstance(Menu.this).registerReceiver(broadcastReceiver, intentFilter);
 
         useStop.setOnClickListener(view -> {
             sendNotification.usingTableUpdate("admin", myData.getId(), "End");
-            Intent intent = new Intent(Menu.this, PaymentSelect.class);
-            myData.init();
-            intent.putExtra("myData", myData);
-            startActivity(intent);
+            setUseStop();
         });
 
 
@@ -485,20 +493,6 @@ public class Menu extends AppCompatActivity {
         });
 
 
-        /**
-         * 1. 주문내역 관리자한테 넘어가기
-         * 2. 채팅온거 표시 -> 카트 밑에 빈공간에
-         * 4. 채팅 신청 (하트대신!!!)-> 궁금하면 사진 까봐 -> 채팅하기
-         */
-
-
-        /**
-         * paymentStyle = "before" -> 바로 결제 붙여서 서버로 넘아가고 db에 저장
-         * paymentStyle = "after" -> 이면 그냥 주문 fcm으로 날리고
-         * -> admin에서 팝업 확인 누르면 -> admin s.p(or any db)에 메뉴 정보 담아서
-         * -> admin에서 결제하면 -> db로 넘어가도록...!!!!
-         */
-
         cartOrderButton.setOnClickListener(view -> {
 
             if (cartLists.size() == 0) {
@@ -530,9 +524,6 @@ public class Menu extends AppCompatActivity {
                         intent.putExtra("myData", myData);
                         intent.putExtra("orderItems", getCartList());
                         startActivity(intent);
-//                                paymentLauncher.launch(intent);
-
-
                         break;
 
                     default:

@@ -9,15 +9,9 @@ import com.example.openbook.SendMenuCallback;
 import com.example.openbook.retrofit.RetrofitManager;
 import com.example.openbook.retrofit.RetrofitService;
 import com.example.openbook.retrofit.SuccessOrNot;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+
 import com.google.gson.Gson;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -35,54 +29,22 @@ public class SendNotification {
     RetrofitService service = retrofit.create(RetrofitService.class);
     Gson gson = new Gson();;
 
-    DatabaseReference mRootRef = FirebaseDatabase.getInstance().getReference();
 
 
-    public void saveChatting(String tableName){
-        mRootRef.child(tableName).child("fcmToken").addListenerForSingleValueEvent(new ValueEventListener() {
+    public void CompletePayment(String to, String request){
+        Call<SuccessOrNot> call = service.sendRequestFcm(to, request);
+        call.enqueue(new Callback<>() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                String pushToken = (String) snapshot.getValue();
-
-                try{
-                    JSONObject notification = new JSONObject();
-
-                    notification.put("tableName", tableName);
-                    notification.put("action", "delete");
-
-//                    RequestBody formBody = new FormBody.Builder()
-//                            .add("to", pushToken)
-//                            .add("notification", notification.toString())
-//                            .build();
-//
-//                    Request request = new Request.Builder()
-//                            .url("http://3.36.255.141/fcmPush.php")
-//                            .addHeader("Authorization", "key=" + SERVER_KEY)
-//                            .post(formBody)
-//                            .build();
-//
-//                    okHttpClient.newCall(request).enqueue(new Callback() {
-//                        @Override
-//                        public void onFailure(@NonNull Call call, @NonNull IOException e) {
-//                            Log.d(TAG, "onFailure: " + e);
-//                        }
-//
-//                        @Override
-//                        public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-//                            String responseBody = response.body().string();
-//                            Log.d(TAG, "onResponse: "  + responseBody);
-//                        }
-//                    });
-
-                }catch (JSONException e){
-                    e.printStackTrace();
+            public void onResponse(Call<SuccessOrNot> call, Response<SuccessOrNot> response) {
+                if(response.isSuccessful()){
+                    Log.d(TAG, "onResponse CompletePayment: " + response.body().getResult());
+                }else{
+                    Log.d(TAG, "CompletePayment is not successful ");
                 }
-
             }
-
             @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
+            public void onFailure(Call<SuccessOrNot> call, Throwable t) {
+                Log.d(TAG, "onFailure CompletePayment: " + t.getMessage());
             }
         });
 

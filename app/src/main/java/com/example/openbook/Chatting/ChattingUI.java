@@ -102,15 +102,11 @@ public class ChattingUI extends AppCompatActivity {
         intentFilter.addAction("isReadArrived");
         intentFilter.addAction("giftArrived");
         intentFilter.addAction("isGiftAccept");
+        intentFilter.addAction("CompletePayment");
         LocalBroadcastManager.getInstance(ChattingUI.this).registerReceiver(broadcastReceiver, intentFilter);
 
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        LocalBroadcastManager.getInstance(ChattingUI.this).unregisterReceiver(broadcastReceiver);
-    }
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {

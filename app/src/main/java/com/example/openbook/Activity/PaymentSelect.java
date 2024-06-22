@@ -40,6 +40,7 @@ public class PaymentSelect extends AppCompatActivity {
 
         editor.remove("orderItems");
         editor.remove("cartItems");
+        editor.remove("activeTableList");
         editor.commit();
 
 

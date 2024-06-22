@@ -103,7 +103,12 @@ public class FCM extends FirebaseMessagingService {
                 handleAdminPaymentType(data.get("request"), data.get("tableName"));
                 break;
 
+            case "CompletePayment":
+                handleCompletePayment();
+                break;
+
             case "Order" :
+            case "GiftMenuOrder":
                 handleAdminTableMenu(data);
                 break;
 
@@ -122,6 +127,12 @@ public class FCM extends FirebaseMessagingService {
                 break;
         }
 
+    }
+
+    public void handleCompletePayment(){
+        Intent intent = new Intent("CompletePayment");
+        intent.putExtra("isCompletePayment", true);
+        LocalBroadcastManager.getInstance(FCM.this).sendBroadcast(intent);
     }
 
     public void handleIsGiftAccept(String from, boolean isAccept, String menuItem){
@@ -157,27 +168,6 @@ public class FCM extends FirebaseMessagingService {
         LocalBroadcastManager.getInstance(FCM.this).sendBroadcast(intent);
     }
 
-//    public void handleAdminTableInformation(String gender, String guestNumber, String tableName) {
-//        Intent intent = new Intent(this, Admin.class);
-//        intent.putExtra("gender", gender);
-//        intent.putExtra("guestNumber", guestNumber);
-//        intent.putExtra("tableName", tableName);
-//
-//
-//        requestCode = (int) System.currentTimeMillis();
-//
-//        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-//        PendingIntent pendingIntent = PendingIntent.getActivity(this, requestCode, intent, PendingIntent.FLAG_IMMUTABLE);
-//
-//        try {
-//            pendingIntent.send();
-//        } catch (PendingIntent.CanceledException e) {
-//            e.printStackTrace();
-//        }
-//
-//    }
-
-
     public void handleAdminPaymentType(String request, String tableName) {
         Intent intent = new Intent("tableRequest");
         Map<String, String> tableRequest = new HashMap<>();
@@ -187,10 +177,6 @@ public class FCM extends FirebaseMessagingService {
         intent.putExtra("fcmData", gson.toJson(tableRequest));
 
         LocalBroadcastManager.getInstance(FCM.this).sendBroadcast(intent);
-
-
-
-
 
     }
 

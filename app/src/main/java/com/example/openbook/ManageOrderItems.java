@@ -27,6 +27,18 @@ public class ManageOrderItems {
     SharedPreferences sharedPreferences;
     SharedPreferences.Editor editor;
 
+    public String getMenuItem(String menuName, int menuQuantity, int menuPrice){
+        JsonObject menuItem = new JsonObject();
+        menuItem.addProperty("menuName", menuName);
+        menuItem.addProperty("menuQuantity", menuQuantity);
+        menuItem.addProperty("menuPrice", menuPrice);
+
+        JsonArray menuItems = new JsonArray();
+        menuItems.add(menuItem);
+
+        return gson.toJson(menuItems);
+    }
+
     public void orderSharedPreference(Context context) {
         sharedPreferences = context.getSharedPreferences("CustomerData", MODE_PRIVATE);
         editor = sharedPreferences.edit();

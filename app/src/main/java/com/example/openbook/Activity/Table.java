@@ -204,6 +204,7 @@ public class Table extends AppCompatActivity {
         intentFilter.addAction("sendChattingData");
         intentFilter.addAction("giftArrived");
         intentFilter.addAction("isGiftAccept");
+        intentFilter.addAction("CompletePayment");
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, intentFilter);
 
         appbarMenu.setOnClickListener(this::moveToMenu);
@@ -262,7 +263,7 @@ public class Table extends AppCompatActivity {
                         (Table.this,
                         getResources().getString(R.string.notOrder)).show();
 
-            }else if(tableList.get(clickTable - 1).getCategory() != TableCategory.ACTIVE){
+            }else if(tableList.get(clickTable - 1).getCategory() == TableCategory.OTHER){
                 dialogManager.positiveBtnDialog(Table.this,
                         getResources().getString(R.string.unusableTable)).show();
             }else{
@@ -277,7 +278,7 @@ public class Table extends AppCompatActivity {
                         (Table.this,
                                 getResources().getString(R.string.notOrder)).show();
 
-            }else if(tableList.get(clickTable - 1).getCategory() != TableCategory.ACTIVE){
+            }else if(tableList.get(clickTable - 1).getCategory() == TableCategory.OTHER){
                 dialogManager.positiveBtnDialog(Table.this,
                         getResources().getString(R.string.unusableTable)).show();
             }else{
@@ -406,25 +407,6 @@ public class Table extends AppCompatActivity {
         return jsonObject.toString();
     }
 
-    public void sendGiftOtherTable(String menuName, int menuQuantity, int menuPrice) {
-
-        Call<SuccessOrNot> call = service.sendGiftOtherTable("table" + clickTable,
-                myData.getId(), menuName, menuQuantity, menuPrice);
-
-        call.enqueue(new Callback<>() {
-            @Override
-            public void onResponse(@NonNull Call<SuccessOrNot> call, @NonNull Response<SuccessOrNot> response) {
-
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<SuccessOrNot> call, @NonNull Throwable t) {
-
-            }
-        });
-
-
-    }
 
     @Override
     public void onBackPressed() {

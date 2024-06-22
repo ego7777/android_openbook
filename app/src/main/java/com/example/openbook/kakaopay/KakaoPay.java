@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.openbook.Activity.Admin;
 import com.example.openbook.Activity.Menu;
 import com.example.openbook.BuildConfig;
+import com.example.openbook.Data.AdminData;
 import com.example.openbook.Data.MyData;
 import com.example.openbook.R;
 import com.example.openbook.retrofit.RetrofitManager;
@@ -37,6 +38,7 @@ public class KakaoPay extends AppCompatActivity {
     String tid, pgToken, orderItemName, tableName;
     int totalPrice, partnerUserId;
     MyData myData;
+    AdminData adminData;
     RetrofitService retrofitService;
     RetrofitManager retrofitManager;
     Gson gson;
@@ -48,9 +50,11 @@ public class KakaoPay extends AppCompatActivity {
         setContentView(R.layout.kakaopay_activity);
 
         myData = (MyData) getIntent().getSerializableExtra("myData");
+        adminData = getIntent().getParcelableExtra("adminData");
 
         tableName = getIntent().getStringExtra("tableName");
         orderItems = getIntent().getStringExtra("orderItems");
+        Log.d(TAG, "orderItems: " + orderItems);
 
         if (myData != null) {
             partnerUserId = myData.getIdentifier();
@@ -126,7 +130,7 @@ public class KakaoPay extends AppCompatActivity {
         paymentRequest.put("fail_url", BuildConfig.SERVER_IP + "kakaopay/fail");
 
         Call<KakaoPayReadyResponseDTO> call = retrofitService.createPaymentRequest(BuildConfig.KAKAOPAY_ADMIN_KEY, paymentRequest);
-        call.enqueue(new Callback<KakaoPayReadyResponseDTO>() {
+        call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<KakaoPayReadyResponseDTO> call, @NonNull Response<KakaoPayReadyResponseDTO> response) {
                 Log.d(TAG, "onResponse create kakaopay : " + response);
@@ -159,7 +163,7 @@ public class KakaoPay extends AppCompatActivity {
         approvedRequest.put("pg_token", pgToken);
 
         Call<KakaoPayApproveResponseDTO> call = retrofitService.requestApprovedPayment(BuildConfig.KAKAOPAY_ADMIN_KEY, approvedRequest);
-        call.enqueue(new Callback<KakaoPayApproveResponseDTO>() {
+        call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<KakaoPayApproveResponseDTO> call, @NonNull Response<KakaoPayApproveResponseDTO> response) {
                 Log.d(TAG, "onResponse kakao approved: " + response);
@@ -169,7 +173,7 @@ public class KakaoPay extends AppCompatActivity {
                     String paymentMethodType = response.body().getPaymentMethodType();
                     int identifier = Integer.parseInt(response.body().getPartnerUserId());
 
-                    int payment = 101;
+                    int payment;
 
                     if (paymentMethodType.equals("MONEY")) {
                         payment = 0;
@@ -177,7 +181,7 @@ public class KakaoPay extends AppCompatActivity {
                         payment = 1;
                     }
 
-                    if (payment != 101) {
+                    if (payment == 0 || payment == 1) {
                         saveOrderDetailsOnServer(approvedAt, payment, identifier);
                     }
                 }
@@ -200,17 +204,17 @@ public class KakaoPay extends AppCompatActivity {
         Call<SuccessOrNot> call = retrofitService.savePayment(tid,
                 approvedAt, totalPrice, identifier, paymentMethodType, orderItems);
 
-        call.enqueue(new Callback<SuccessOrNot>() {
+        call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<SuccessOrNot> call, @NonNull Response<SuccessOrNot> response) {
-                Log.d(TAG, "onResponse saveOrderDetailsOnServer: " + response.body().getResult());
+                Log.d(TAG, "onResponse saveOrderDetailsOnServer: " + response.body());
                 if (response.isSuccessful()) {
                     switch (response.body().getResult()) {
                         case "success":
                             if (myData == null) {
                                 Intent intent = new Intent(KakaoPay.this, Admin.class);
                                 //가서 해당 tableName sharedPreference 지우기, 테이블 초기화 하기
-                                intent.putExtra("tableName", tableName);
+                                intent.putExtra("paidTable", tableName);
                                 intent.putExtra("isPayment", true);
                                 startActivity(intent);
 

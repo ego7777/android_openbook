@@ -239,6 +239,7 @@ public class CallServer extends AppCompatActivity {
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction("giftArrived");
         intentFilter.addAction("isGiftAccept");
+        intentFilter.addAction("CompletePayment");
         LocalBroadcastManager.getInstance(CallServer.this).registerReceiver(broadcastReceiver, intentFilter);
 
     }

@@ -184,6 +184,7 @@ public class ClientSocket extends Thread implements Serializable {
 
         activeTableArray.add(tableNumber);
         editor.putString("activeTableList", gson.toJson(activeTableArray));
+        editor.commit();
 
         Intent intent = new Intent("updateNewTable");
         intent.putExtra("newTable", tableNumber);

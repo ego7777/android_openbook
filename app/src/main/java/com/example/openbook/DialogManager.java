@@ -66,6 +66,8 @@ public class DialogManager {
     SharedPreferences.Editor editor;
     SendNotification sendNotification;
 
+    ManageOrderItems manageOrderItems;
+
     public Dialog progressDialog(Context context) {
         Dialog dialog = new Dialog(context);
         Objects.requireNonNull(dialog.getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -394,7 +396,7 @@ public class DialogManager {
                     Toast.makeText(context, context.getResources().getString(R.string.menuOrderError), Toast.LENGTH_SHORT).show();
                 }else{
                     //성공하면 클라이언트 주문 내역에 저장
-                    ManageOrderItems manageOrderItems = new ManageOrderItems();
+                    manageOrderItems = new ManageOrderItems();
                     manageOrderItems.orderSharedPreference(context);
 
                     //프로필 티켓도 업데이트
@@ -552,7 +554,7 @@ public class DialogManager {
         String menuName =  item.get("menuName").getAsString();
         int menuPrice =  item.get("menuPrice").getAsInt();
         String url = item.get("imageUrl").getAsString();
-        Log.d(TAG, "giftReceiveDialog url: " + url);
+
         Glide.with(context).load(url).into(image);
 
         String message;
@@ -564,6 +566,13 @@ public class DialogManager {
         }
         body.setText(message);
 
+       manageOrderItems = new ManageOrderItems();
+
+        String fromMenuName = menuName + "(" + to + ")";
+        String toMenuName = menuName + "(" + from + ")";
+
+        String fromMenuItem = manageOrderItems.getMenuItem(fromMenuName, Integer.parseInt(count), menuPrice);
+        String toMenuItem = manageOrderItems.getMenuItem(toMenuName, Integer.parseInt(count), 0);
 
         sendNotification = new SendNotification();
 
@@ -571,20 +580,14 @@ public class DialogManager {
             //수락했다고 from에게 알려주는 fcm을 호출한다 -> 주문내역에 추가한다
 
             sendNotification.notifyIsGiftAccept(from, to, menuItem, true);
-            int quantity = Integer.parseInt(count);
 
-            int totalPrice = menuPrice * quantity;
             //admin에게 주문한다
             Map<String, String> request = new HashMap<>();
             request.put("request", "GiftMenuOrder");
             request.put("tableName", to);
             request.put("fromTable", from);
-            request.put("items", menuItem);
-
-            String orderItemName = menuName + " " + quantity + "개";
-
-            request.put("orderItemName", orderItemName);
-            request.put("totalPrice", String.valueOf(totalPrice));
+            request.put("fromMenuItem", fromMenuItem);
+            request.put("toMenuItem", toMenuItem);
 
             sendNotification.sendMenu(request, result -> {
                 if (result.equals("failed")) {
