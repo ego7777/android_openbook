@@ -15,7 +15,6 @@ import com.example.openbook.Data.TableList;
 import com.example.openbook.Category.TableCategory;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> {
 
@@ -24,8 +23,6 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> 
     String TAG = "TableAdapterTAG";
 
     private int lastClickedPosition = -1;
-    private HashMap<Integer, Integer> positionColorMap = new HashMap<>();
-
 
     public TableAdapter(ArrayList<TableList> table, int myTable) {
         this.table = table;
@@ -33,16 +30,7 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> 
         Log.d(TAG, "TableAdapter myTable: " + myTable);
     }
 
-//    public void changeItemColor(int position, int color){
-//        positionColorMap.put(position, color);
-//        Log.d(TAG, "changeItemColor: " + position);
-//        notifyDataSetChanged();
-//    }
 
-
-    /**
-     * 커스텀 리스너 인터페이스 정의
-     */
     public interface OnItemClickListener {
         void onItemClick(View view, int position);
 
@@ -88,28 +76,6 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> 
             color = holder.itemView.getContext().getColor(R.color.light_gray);
             holder.itemView.setBackgroundColor(color);
         }
-
-
-
-
-//        Integer orderedTable = positionColorMap.get(position);
-//        Log.d(TAG, "orderTable: " + orderedTable);
-
-
-
-//        if(orderedTable != null){
-//            if (position == lastClickedPosition) {
-//                Log.d(TAG, "equal ");
-//                color = holder.itemView.getContext().getColor(R.color.blue_purple);
-//                holder.itemView.setBackgroundColor(color);
-//
-//            } else {
-//                Log.d(TAG, "not equal: " + position);
-//                holder.itemView.setBackgroundColor(orderedTable);
-//            }
-//        }
-
-
     }
 
     @Override
@@ -147,12 +113,6 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> 
                 if (position != RecyclerView.NO_POSITION) {
                     if (myListener != null) {
                         myListener.onItemClick(view, position);
-                        notifyDataSetChanged();
-
-                        notifyItemChanged(lastClickedPosition);
-                        lastClickedPosition = position;
-                        Log.d(TAG, "lastClickedPosition: " + lastClickedPosition);
-                        notifyItemChanged(position);
                     }
                 }
             });
@@ -198,4 +158,17 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> 
         }
     }
 
+    public void setLastClickedPosition(int position, boolean focus) {
+        if (focus) {
+
+            int previousClickedPosition = lastClickedPosition;
+            lastClickedPosition = position;
+            notifyItemChanged(previousClickedPosition);
+            notifyItemChanged(lastClickedPosition);
+
+        } else {
+            lastClickedPosition = -1;
+            notifyItemChanged(position);
+        }
+    }
 }

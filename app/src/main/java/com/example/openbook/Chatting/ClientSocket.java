@@ -12,6 +12,7 @@ import android.util.Log;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.example.openbook.BuildConfig;
+import com.example.openbook.DBHelper;
 import com.google.gson.Gson;
 
 import java.io.BufferedReader;
@@ -25,7 +26,6 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 
 public class ClientSocket extends Thread implements Serializable {

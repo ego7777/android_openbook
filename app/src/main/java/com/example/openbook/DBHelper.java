@@ -1,4 +1,4 @@
-package com.example.openbook.Chatting;
+package com.example.openbook;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -17,6 +17,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class DBHelper extends SQLiteOpenHelper {
 
@@ -39,11 +41,11 @@ public class DBHelper extends SQLiteOpenHelper {
 
             String queryChatting = "CREATE TABLE IF NOT EXISTS chattingTable" +
                     "(id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                    "content VARCHAR(2000) not null," +
+                    "message VARCHAR(2000) not null," +
                     "time VARCHAR(8) not null," +
                     "sender VARCHAR(10) not null," +
                     "receiver VARCAHR(10) not null," +
-                    "read VARCHAR(4))";
+                    "isRead VARCHAR(4))";
 
             db.execSQL(queryChatting);
 
@@ -97,11 +99,11 @@ public class DBHelper extends SQLiteOpenHelper {
     public boolean insertChattingData(String content, String time, String sender, String receiver, String read) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
-        contentValues.put("content", content);
+        contentValues.put("message", content);
         contentValues.put("time", time);
         contentValues.put("sender", sender);
         contentValues.put("receiver", receiver);
-        contentValues.put("read", read);
+        contentValues.put("isRead", read);
         long result = db.insert("chattingTable", null, contentValues);
         return result != -1;
     }
@@ -178,7 +180,7 @@ public class DBHelper extends SQLiteOpenHelper {
             String menuName = cursor.getString(2);
             int menuQuantity = cursor.getInt(3);
             int menuPrice = cursor.getInt(4);
-            int identifier = cursor.getInt(5);
+            int menuCategory = cursor.getInt(5);
 
             list.add(new OrderList(1, tableNumber, menuName, menuQuantity, menuPrice));
 
@@ -193,7 +195,6 @@ public class DBHelper extends SQLiteOpenHelper {
     public ArrayList getTableData(ArrayList list) {
         SQLiteDatabase db = this.getWritableDatabase();
 
-        // SQL 쿼리 실행하여 원하는 데이터 가져오기
         String[] columns = {"menuName", "menuPrice", "menuImage", "menuType"};
         String[] menuNames = {"소주", "병맥주", "카니미소", "후토마끼"};
         String selection = "menuName IN (?, ?, ?, ?)";
@@ -201,7 +202,6 @@ public class DBHelper extends SQLiteOpenHelper {
 
         if (cursor != null) {
             while (cursor.moveToNext()) {
-
                 String name = cursor.getString(0);
                 int price = cursor.getInt(1);
                 String image = cursor.getString(2);
@@ -214,39 +214,48 @@ public class DBHelper extends SQLiteOpenHelper {
         return list;
     }
 
-    public String chattingJson(String tableValue) {
-        // SQLite 데이터베이스에서 데이터 가져오기
-        SQLiteDatabase db = this.getWritableDatabase();
-        String selectQuery = "SELECT * FROM chattingTable WHERE sender = ?";
-        Cursor cursor = db.rawQuery(selectQuery, new String[]{tableValue});
+    public String getChatting(String sender) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String[] columns = {"message", "time", "receiver"};
+        String selection = "sender = ?";
+        String[] selectionArgs = {sender};
 
-        JSONArray jsonArray = new JSONArray();
-        if (cursor.moveToFirst()) {
-            do {
+        Cursor cursor = db.query("chattingTable", columns, selection, selectionArgs, null, null, null);
+
+        // Map to hold receivers and their messages
+        Map<String, JSONArray> messagesByReceiver = new HashMap<>();
+
+        while (cursor.moveToNext()) {
+            try {
+                String message = cursor.getString(cursor.getColumnIndexOrThrow("message"));
+                String time = cursor.getString(cursor.getColumnIndexOrThrow("time"));
+                String receiver = cursor.getString(cursor.getColumnIndexOrThrow("receiver"));
+
                 JSONObject jsonObject = new JSONObject();
-                try {
-                    String message = cursor.getString(1);
-                    String time = cursor.getString(2);
-                    String receiver = cursor.getString(4);
+                jsonObject.put("message", message);
+                jsonObject.put("time", time);
 
-                    jsonObject.put("message", message);
-                    jsonObject.put("time", time);
-                    jsonObject.put("receiver", receiver);
-
-                    jsonArray.put(jsonObject);
-                } catch (JSONException e) {
-                    e.printStackTrace();
+                if (!messagesByReceiver.containsKey(receiver)) {
+                    messagesByReceiver.put(receiver, new JSONArray());
                 }
-            } while (cursor.moveToNext());
+                messagesByReceiver.get(receiver).put(jsonObject);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         cursor.close();
+        db.close();
 
-        // JSON 형식으로 변환된 데이터 출력 또는 전송 등의 작업 수행
-        String jsonData = jsonArray.toString();
-        Log.d("ChatData", jsonData);
-
-        return jsonData;
-
+        // Convert the map to a JSON object
+        JSONObject resultJson = new JSONObject();
+        for (Map.Entry<String, JSONArray> entry : messagesByReceiver.entrySet()) {
+            try {
+                resultJson.put(entry.getKey(), entry.getValue());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return resultJson.toString();
     }
 
     public void upDateIsRead(String myTable, String otherTable) {
@@ -258,10 +267,9 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
 
-    public void deleteTableData(String tableValue, String tableListName, String column) {
+    public void deleteAllChatMessages() {
         SQLiteDatabase db = getWritableDatabase();
-        String deleteQuery = "DELETE FROM " + tableListName + " WHERE " + column + " = '" + tableValue + "'";
-        db.execSQL(deleteQuery);
+        db.execSQL("DELETE FROM chattingTable");
         db.close();
     }
 

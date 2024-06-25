@@ -12,7 +12,6 @@ import retrofit2.Retrofit;
 public class TableQuantity {
     String TAG = "TableQuantityTAG";
 
-
     int tableQuantity;
 
     public void getTableQuantity(Callback<TableListDTO> callback)  {

@@ -24,7 +24,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.openbook.Adapter.AdminTableAdapter;
 import com.example.openbook.Category.CartCategory;
-import com.example.openbook.Chatting.ChattingUI;
 import com.example.openbook.Data.AdminData;
 import com.example.openbook.BuildConfig;
 import com.example.openbook.Data.CartList;
@@ -63,7 +62,7 @@ public class Admin extends AppCompatActivity {
     TextView appbarAdminSales, appbarAdminAddMenu, appbarAdminModifyTable;
     TextView adminSidebarMenu, adminSidebarInfo, adminSidebarPay;
     int totalPrice;
-    boolean isPayment;
+    String tid;
 
     SharedPreferences sharedPreference;
     SharedPreferences.Editor editor;
@@ -130,7 +129,7 @@ public class Admin extends AppCompatActivity {
 
         adminData = getIntent().getParcelableExtra("adminData");
         Log.d(TAG, "adminData: " + adminData);
-        isPayment = getIntent().getBooleanExtra("isPayment", false);
+        tid = getIntent().getStringExtra("tid");
         paidTable = getIntent().getStringExtra("paidTable");
 
         adminTableLists = new ArrayList<>();
@@ -218,7 +217,7 @@ public class Admin extends AppCompatActivity {
             startActivityClass(AdminSales.class);
         });
 
-        if(paidTable != null && isPayment == true){
+        if(paidTable != null && tid != null){
             int paidTableNumber = Integer.parseInt(paidTable.replace("table", ""));
             adminData.getAdminTableLists().get(paidTableNumber).init();
             adapter.notifyItemChanged(paidTableNumber);
@@ -226,8 +225,12 @@ public class Admin extends AppCompatActivity {
             editor.putString("adminTableList", gson.toJson(adminData.getAdminTableLists()));
             editor.commit();
 
+            JsonObject jsonObject = new JsonObject();
+            jsonObject.addProperty("request", "CompletePayment");
+            jsonObject.addProperty("tid", tid);
+
             SendNotification sendNotification = new SendNotification();
-            sendNotification.CompletePayment(paidTable, "CompletePayment");
+            sendNotification.CompletePayment(paidTable, jsonObject.toString());
         }
 
 
@@ -368,7 +371,7 @@ public class Admin extends AppCompatActivity {
 
     private void requestTableInfo(int clickTable) {
 
-        Call<TableInformationDTO> call = service.getTableImage("table" + clickTable);
+        Call<TableInformationDTO> call = service.requestTableInfo("table" + clickTable);
         call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<TableInformationDTO> call, @NonNull Response<TableInformationDTO> response) {

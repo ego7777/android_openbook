@@ -18,7 +18,7 @@
                 android:id="@+id/appbar_menu_menu"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:text="Menu"
+                android:text="메뉴"
                 android:textSize="25sp"
                 android:textStyle="bold"
                 android:textColor="@color/black" />
@@ -28,7 +28,7 @@
                 android:layout_marginStart="40dp"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:text="Table"
+                android:text="테이블"
                 android:textSize="25sp"
                 android:textStyle="bold"
                 android:textColor="@color/black"/>
@@ -38,7 +38,7 @@
                 android:layout_marginStart="40dp"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:text="Order List"
+                android:text="주문내역"
                 android:textSize="25sp"
                 android:textStyle="bold"
                 android:textColor="@color/black" />
@@ -48,7 +48,6 @@
                 android:layout_gravity="end"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ORDER LIST"
                 android:textColor="@color/black"
                 android:textStyle="bold"
                 android:textSize="25sp"

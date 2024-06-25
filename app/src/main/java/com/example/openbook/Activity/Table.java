@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.util.Pair;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -19,6 +20,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.SimpleItemAnimator;
 
 import com.example.openbook.Adapter.TableAdapter;
 import com.example.openbook.BuildConfig;
@@ -33,7 +35,6 @@ import com.example.openbook.Data.TableList;
 import com.example.openbook.Category.TableCategory;
 import com.example.openbook.retrofit.RetrofitManager;
 import com.example.openbook.retrofit.RetrofitService;
-import com.example.openbook.retrofit.SuccessOrNot;
 import com.example.openbook.retrofit.TableInformationDTO;
 import com.google.gson.Gson;
 
@@ -64,12 +65,15 @@ public class Table extends AppCompatActivity {
     TextView appbarMenu, appbarOrderList, requestChatting, checkInformation, sendGift;
     LinearLayout tableSidebar;
 
+    ImageView tableDocument;
+
     RetrofitService service;
 
     DialogManager dialogManager;
 
     SharedPreferences customerDataSp;
     Gson gson;
+    int previousClickTable;
 
 
     BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
@@ -122,7 +126,7 @@ public class Table extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.table_activity);
+        setContentView(R.layout.activity_table);
 
         overridePendingTransition(0, 0);
 
@@ -168,12 +172,17 @@ public class Table extends AppCompatActivity {
 
         appbarOrderList = findViewById(R.id.appbar_menu_orderList);
 
-        RecyclerView tableGrid = findViewById(R.id.tableGrid);
+        RecyclerView tableRecyclerview = findViewById(R.id.tableGrid);
         adapter = new TableAdapter(tableList, myTable);
 
+        RecyclerView.ItemAnimator animator = tableRecyclerview.getItemAnimator();
+        if (animator instanceof SimpleItemAnimator) {
+            ((SimpleItemAnimator) animator).setSupportsChangeAnimations(false);
+        }
+
         //그리드 레이아웃 설정
-        tableGrid.setLayoutManager(new GridLayoutManager(this, 5));
-        tableGrid.setAdapter(adapter);
+        tableRecyclerview.setLayoutManager(new GridLayoutManager(this, 5));
+        tableRecyclerview.setAdapter(adapter);
 
         if (activeTable != null && tableList.size() > 0) {
             activeTableUpdate(activeTable);
@@ -182,7 +191,7 @@ public class Table extends AppCompatActivity {
 
         //오른쪽 사이드 메뉴
         tableSidebar = findViewById(R.id.table_sidebar);
-        tableSidebar.setVisibility(View.INVISIBLE);
+        tableDocument = findViewById(R.id.table_document);
 
         requestChatting = findViewById(R.id.chatting);
         checkInformation = findViewById(R.id.take_info);
@@ -220,8 +229,20 @@ public class Table extends AppCompatActivity {
          * table 누르면 옆에 사이드 메뉴 popup
          */
         adapter.setOnItemClickListener((view, position) -> {
-            tableSidebar.setVisibility(View.VISIBLE);
+
             clickTable = position + 1;
+            if(previousClickTable == clickTable){
+                tableSidebar.setVisibility(View.INVISIBLE);
+                tableDocument.setVisibility(View.VISIBLE);
+                previousClickTable = -1;
+                adapter.setLastClickedPosition(position, false);
+            }else{
+                tableSidebar.setVisibility(View.VISIBLE);
+                tableDocument.setVisibility(View.INVISIBLE);
+                previousClickTable = clickTable;
+                adapter.setLastClickedPosition(position, true);
+            }
+
             Log.d(TAG, "clickTable: " + clickTable);
 
             if (myData.getPaymentCategory() == PaymentCategory.NOW) {
@@ -290,7 +311,7 @@ public class Table extends AppCompatActivity {
     } //onResume
 
     private void requestTableInfo() {
-        Call<TableInformationDTO> call = service.getTableImage("table" + clickTable);
+        Call<TableInformationDTO> call = service.requestTableInfo("table" + clickTable);
         call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<TableInformationDTO> call, @NonNull Response<TableInformationDTO> response) {

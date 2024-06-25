@@ -39,7 +39,7 @@ import com.example.openbook.Adapter.SideListViewAdapter;
 import com.example.openbook.BuildConfig;
 import com.example.openbook.Category.CartCategory;
 import com.example.openbook.Chatting.ClientSocket;
-import com.example.openbook.Chatting.DBHelper;
+import com.example.openbook.DBHelper;
 import com.example.openbook.Data.MyData;
 import com.example.openbook.Data.OrderList;
 import com.example.openbook.Data.SideList;
@@ -49,6 +49,7 @@ import com.example.openbook.FCM.FCM;
 import com.example.openbook.FCM.SendNotification;
 import com.example.openbook.Category.PaymentCategory;
 import com.example.openbook.ManageOrderItems;
+import com.example.openbook.TableDataManager;
 import com.example.openbook.kakaopay.KakaoPay;
 import com.example.openbook.retrofit.MenuListDTO;
 import com.example.openbook.retrofit.RetrofitManager;
@@ -142,14 +143,30 @@ public class Menu extends AppCompatActivity {
                     }
                     dialogManager.positiveBtnDialog(Menu.this, message).show();
                     break;
-                case "CompletePayment" :
-                    boolean isCompletePayment = intent.getBooleanExtra("isCompletePayment", false);
 
-                    if(isCompletePayment){
-                        setUseStop();
+                case "CompletePayment" :
+                    String tid = intent.getStringExtra("tid");
+
+                    if(tid != null && !tid.isEmpty()){
                         clientSocket.quit();
-                        // 채팅 데이터 저장 및 삭제
-                        // 테이블 정보 삭제
+                        String chatMessages = dbHelper.getChatting(myData.getId());
+
+                        TableDataManager tableDataManager = new TableDataManager();
+
+                        tableDataManager.deleteProfile(myData.getId(), service, result ->{
+                            if(result.equals("success")){
+                                tableDataManager.saveChatMessages
+                                        (myData.getId(), chatMessages, service,
+                                                chatResult ->{
+                                            if(chatResult.equals("success")){
+                                                dbHelper.deleteAllChatMessages(); //삭제
+                                                setUseStop();
+                                            }
+                                        });
+
+                            }
+                        });
+
                     }
 
                     break;
@@ -291,6 +308,8 @@ public class Menu extends AppCompatActivity {
                 @Override
                 public void onFailure(@NonNull Call<MenuListDTO> call, @NonNull Throwable t) {
                     Log.d(TAG, "onFailure menu: " + t.getMessage());
+                    progressbar.dismiss();
+                    Toast.makeText(Menu.this, R.string.networkError, Toast.LENGTH_SHORT).show();
                 }
             });
 

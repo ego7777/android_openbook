@@ -215,7 +215,7 @@ public class KakaoPay extends AppCompatActivity {
                                 Intent intent = new Intent(KakaoPay.this, Admin.class);
                                 //가서 해당 tableName sharedPreference 지우기, 테이블 초기화 하기
                                 intent.putExtra("paidTable", tableName);
-                                intent.putExtra("isPayment", true);
+                                intent.putExtra("tid", tid);
                                 startActivity(intent);
 
                             } else {

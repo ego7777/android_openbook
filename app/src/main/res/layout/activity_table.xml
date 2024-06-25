@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/black">
+
+    <include
+        layout="@layout/appbar_menu"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/tableGrid"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="7.5"/>
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_margin="30dp"
+            android:layout_weight="2.5">
+
+            <LinearLayout
+                android:id="@+id/table_sidebar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:visibility="invisible">
+
+                <TextView
+                    android:id="@+id/chatting"
+                    android:layout_width="match_parent"
+                    android:layout_height="60dp"
+                    android:text="채팅하기"
+                    android:autoSizeTextType="uniform"
+                    android:autoSizeMaxTextSize="30sp"
+                    android:gravity="center"
+                    android:background="@color/red_pink"
+                    android:textStyle="bold"
+                    android:textColor="@color/black"/>
+
+                <TextView
+                    android:id="@+id/take_info"
+                    android:layout_width="match_parent"
+                    android:layout_height="60dp"
+                    android:text="정보 보기"
+                    android:autoSizeTextType="uniform"
+                    android:autoSizeMaxTextSize="30sp"
+                    android:gravity="center"
+                    android:layout_marginTop="20dp"
+                    android:background="@color/red_pink"
+                    android:textStyle="bold"
+                    android:textColor="@color/black"/>
+
+
+
+                <TextView
+                    android:id="@+id/send_gift"
+                    android:layout_width="match_parent"
+                    android:layout_height="60dp"
+                    android:text="선물하기"
+                    android:autoSizeTextType="uniform"
+                    android:autoSizeMaxTextSize="30sp"
+                    android:gravity="center"
+                    android:layout_marginTop="20dp"
+                    android:background="@color/red_pink"
+                    android:textStyle="bold"
+                    android:textColor="@color/black"/>
+
+                <TextView
+                    android:id="@+id/buy_another_table"
+                    android:layout_width="match_parent"
+                    android:layout_height="60dp"
+                    android:text="결제하기"
+                    android:autoSizeTextType="uniform"
+                    android:autoSizeMaxTextSize="30sp"
+                    android:gravity="center"
+                    android:layout_marginTop="20dp"
+                    android:background="@color/red_pink"
+                    android:textStyle="bold"
+                    android:textColor="@color/black"/>
+
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/table_document"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:src="@drawable/table_document"/>
+
+        </FrameLayout>
+
+
+
+
+
+
+    </LinearLayout>
+
+
+
+
+</LinearLayout>

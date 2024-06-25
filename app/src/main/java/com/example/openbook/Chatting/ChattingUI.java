@@ -22,6 +22,7 @@ import com.example.openbook.Activity.Table;
 import com.example.openbook.Adapter.ChattingAdapter;
 import com.example.openbook.Activity.Menu;
 import com.example.openbook.Category.ChattingCategory;
+import com.example.openbook.DBHelper;
 import com.example.openbook.Data.MyData;
 import com.example.openbook.Data.TableList;
 import com.example.openbook.DialogManager;
@@ -32,7 +33,6 @@ import com.google.gson.Gson;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class ChattingUI extends AppCompatActivity {
 

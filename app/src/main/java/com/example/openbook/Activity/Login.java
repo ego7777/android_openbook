@@ -15,7 +15,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.example.openbook.Chatting.DBHelper;
+import com.example.openbook.DBHelper;
 import com.example.openbook.Data.AdminData;
 import com.example.openbook.BuildConfig;
 import com.example.openbook.Data.AdminTableList;

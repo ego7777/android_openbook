@@ -1,5 +1,5 @@
 package com.example.openbook;
 
-public interface SendMenuCallback {
+public interface ResultCallback {
     void onResultReceived(String result);
 }

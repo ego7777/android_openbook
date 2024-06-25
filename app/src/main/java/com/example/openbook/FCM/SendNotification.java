@@ -5,7 +5,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.example.openbook.BuildConfig;
-import com.example.openbook.SendMenuCallback;
+import com.example.openbook.ResultCallback;
 import com.example.openbook.retrofit.RetrofitManager;
 import com.example.openbook.retrofit.RetrofitService;
 import com.example.openbook.retrofit.SuccessOrNot;
@@ -51,7 +51,7 @@ public class SendNotification {
     }
 
 
-    public void sendMenu(Map<String, String> orderItems, SendMenuCallback callback) {
+    public void sendMenu(Map<String, String> orderItems, ResultCallback callback) {
         Log.d(TAG, "sendMenu: " + gson.toJson(orderItems));
         Call<SuccessOrNot> call = service.sendRequestFcm("admin", gson.toJson(orderItems));
         call.enqueue(new Callback<>() {

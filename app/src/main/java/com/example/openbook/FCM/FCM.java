@@ -104,7 +104,7 @@ public class FCM extends FirebaseMessagingService {
                 break;
 
             case "CompletePayment":
-                handleCompletePayment();
+                handleCompletePayment(data.get("tid"));
                 break;
 
             case "Order" :
@@ -129,9 +129,9 @@ public class FCM extends FirebaseMessagingService {
 
     }
 
-    public void handleCompletePayment(){
+    public void handleCompletePayment(String tid){
         Intent intent = new Intent("CompletePayment");
-        intent.putExtra("isCompletePayment", true);
+        intent.putExtra("tid", tid);
         LocalBroadcastManager.getInstance(FCM.this).sendBroadcast(intent);
     }
 

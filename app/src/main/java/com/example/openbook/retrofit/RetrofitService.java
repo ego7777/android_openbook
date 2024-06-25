@@ -43,15 +43,15 @@ public interface RetrofitService {
     @FormUrlEncoded
     Call<TableListDTO> setTableList(@Field("table_count") int tableCount);
 
-    @POST("TableInfoCheck.php")
+    @POST("SaveChatting.php")
     @FormUrlEncoded
-    Call<TableInformationDTO> getTableImage(@Field("tableName") String table);
+    Call<SuccessOrNot> saveChatMessages(@Field("tableName") String table,
+                                        @Field("tid") String tid);
 
-    Call<SuccessOrNot> sendGiftOtherTable(@Field("to") String to,
-                                          @Field("from") String from,
-                                          @Field("menuName") String menuName,
-                                          @Field("menuQuantity") int menuQuantity,
-                                          @Field("menuPrice") int menuPrice);
+    @POST("DeleteProfileInformation.php")
+    @FormUrlEncoded
+    Call<SuccessOrNot> deleteProfile(@Field("tableName") String table);
+
 
     @POST("v1/payment/ready")
     @FormUrlEncoded
@@ -77,7 +77,7 @@ public interface RetrofitService {
                                     @Field("token") String token);
     @POST("TableInfoCheck.php")
     @FormUrlEncoded
-    Call<AdminTableDTO> requestTableInfo(@Field("tableName") String tableName);
+    Call<TableInformationDTO> requestTableInfo(@Field("tableName") String tableName);
 
     @POST("SendFcmRequest.php")
     @FormUrlEncoded
