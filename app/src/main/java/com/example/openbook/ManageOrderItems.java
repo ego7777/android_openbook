@@ -9,6 +9,7 @@ import android.util.Log;
 import android.util.Pair;
 
 import com.example.openbook.Category.CartCategory;
+import com.example.openbook.Category.MenuCategory;
 import com.example.openbook.Data.CartList;
 import com.example.openbook.Data.MyData;
 import com.example.openbook.Data.OrderList;
@@ -27,11 +28,12 @@ public class ManageOrderItems {
     SharedPreferences sharedPreferences;
     SharedPreferences.Editor editor;
 
-    public String getMenuItem(String menuName, int menuQuantity, int menuPrice){
+    public String getMenuItem(String menuName, int menuQuantity, int menuPrice, int menuCategory){
         JsonObject menuItem = new JsonObject();
         menuItem.addProperty("menuName", menuName);
         menuItem.addProperty("menuQuantity", menuQuantity);
         menuItem.addProperty("menuPrice", menuPrice);
+        menuItem.addProperty("menuCategory", menuCategory);
 
         JsonArray menuItems = new JsonArray();
         menuItems.add(menuItem);
@@ -69,7 +71,8 @@ public class ManageOrderItems {
             }
 
             if (!found) {
-                orderLists.add(new CartList("프로필 티켓", 2000, 1, 2000, CartCategory.MENU));
+                orderLists.add(new CartList("프로필 티켓", 2000, 1, 2000,
+                        MenuCategory.SIDE.getValue(), CartCategory.MENU));
             }
 
             editor.putString("orderItems", gson.toJson(orderLists));
@@ -77,7 +80,8 @@ public class ManageOrderItems {
 
         } else {
             ArrayList<CartList> orderList = new ArrayList<>();
-            orderList.add(new CartList("프로필 티켓", 2000, 1, 2000, CartCategory.MENU));
+            orderList.add(new CartList("프로필 티켓", 2000, 1, 2000,
+                    MenuCategory.SIDE.getValue(), CartCategory.MENU));
             editor.putString("orderItems", gson.toJson(orderList));
             editor.commit();
         }

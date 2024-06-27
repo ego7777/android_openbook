@@ -31,7 +31,7 @@ public class SendNotification {
 
 
 
-    public void CompletePayment(String to, String request){
+    public void completePayment(String to, String request){
         Call<SuccessOrNot> call = service.sendRequestFcm(to, request);
         call.enqueue(new Callback<>() {
             @Override
@@ -83,7 +83,6 @@ public class SendNotification {
         data.put("tableName", tableName);
         Log.d(TAG, "usingTableUpdate data: " + gson.toJson(data));
 
-
         Call<SuccessOrNot> call = service.sendRequestFcm(to, gson.toJson(data));
         call.enqueue(new Callback<>() {
             @Override
@@ -125,7 +124,6 @@ public class SendNotification {
     }
 
     public void notifyIsGiftAccept(String to, String from, String menuItem, boolean isAccept){
-        //거절했다고 from에게 알려주는 fcm을 호출한다
 
         Map<String, String> data = new HashMap<>();
 

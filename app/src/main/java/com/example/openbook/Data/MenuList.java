@@ -4,23 +4,16 @@ public class MenuList {
     String url;
     String menuName;
     int menuPrice;
-    int viewType;
     int menuType;
 
 
-    public MenuList (String url, String name, int price, int menuType ,int viewType){
+    public MenuList (String url, String name, int price, int menuType){
         this.url = url;
         this.menuName = name;
         this.menuPrice = price;
         this.menuType = menuType;  //1이면 mainMenu, 2면 drink, 3이면 sideMenu
-        this.viewType = viewType;   // 0이면 사진 x, 1이면 사진 o
     }
 
-//    public MenuList(String url, String name, int anInt, int price){
-//        this.url = url;
-//        this.menu_name = name;
-//        this.menu_price = price;
-//    }
 
     public int getMenuPrice() {
         return menuPrice;
@@ -45,14 +38,6 @@ public class MenuList {
 
     public void setMenuName(String menu_name) {
         this.menuName = menu_name;
-    }
-
-    public int getViewType() {
-        return viewType;
-    }
-
-    public void setViewType(int viewType) {
-        this.viewType = viewType;
     }
 
 

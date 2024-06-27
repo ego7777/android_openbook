@@ -57,8 +57,11 @@ public class ClientSocket extends Thread implements Serializable {
                 String message = intent.getStringExtra("sendToServer");
                 Log.d(TAG, "onReceive message: " + message);
 
-                Thread thread = new Thread(() -> sendToServer(message));
-                thread.start();
+                if(message != null){
+                    Thread thread = new Thread(() -> sendToServer(message));
+                    thread.start();
+                }
+
 
             }
         }
@@ -106,6 +109,10 @@ public class ClientSocket extends Thread implements Serializable {
                         Log.d(TAG, "message : welcome");
                         Log.d(TAG, "tableList: " + messageDiv.getFrom());
                         activeTableList(messageDiv.getFrom());
+                        break;
+
+                    case "finish" :
+                        quit(newChat);
                         break;
 
                     default:
@@ -159,6 +166,7 @@ public class ClientSocket extends Thread implements Serializable {
             loop = true;
 
         } catch (IOException e) {
+            Log.d(TAG, "sendToServer e: " + e.getMessage());
             e.printStackTrace();
         }
 
@@ -237,12 +245,11 @@ public class ClientSocket extends Thread implements Serializable {
     }
 
 
-    public void quit() {
+    public void quit(String messageDTO) {
         loop = false;
         try {
             if (socket != null) {
-                MessageDTO messageDTO = new MessageDTO("", id, "finish", "");
-                sendToServer(gson.toJson(messageDTO));
+                sendToServer(messageDTO);
 
                 socket.close();
                 socket = null;

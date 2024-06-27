@@ -168,30 +168,6 @@ public class DBHelper extends SQLiteOpenHelper {
 
     }
 
-    public ArrayList fetchMenuDetails(String tableNumber, ArrayList list) {
-        SQLiteDatabase db = this.getWritableDatabase();
-
-        String query = "SELECT * FROM adminTableList " +
-                "WHERE tableName = '" + tableNumber + "'";
-
-        Cursor cursor = db.rawQuery(query, null);
-
-        while (cursor.moveToNext()) {
-            String menuName = cursor.getString(2);
-            int menuQuantity = cursor.getInt(3);
-            int menuPrice = cursor.getInt(4);
-            int menuCategory = cursor.getInt(5);
-
-            list.add(new OrderList(1, tableNumber, menuName, menuQuantity, menuPrice));
-
-        }
-
-        cursor.close();
-
-        return list;
-
-    }
-
     public ArrayList getTableData(ArrayList list) {
         SQLiteDatabase db = this.getWritableDatabase();
 
@@ -206,7 +182,7 @@ public class DBHelper extends SQLiteOpenHelper {
                 int price = cursor.getInt(1);
                 String image = cursor.getString(2);
                 int type = cursor.getInt(3);
-                list.add(new MenuList(image, name, price, type, 1));
+                list.add(new MenuList(image, name, price, type));
             }
             cursor.close();
         }
@@ -260,7 +236,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public void upDateIsRead(String myTable, String otherTable) {
         SQLiteDatabase db = this.getWritableDatabase();
-        String updateQuery = "UPDATE chattingTable SET read = '' WHERE receiver = '" + otherTable + "' AND sender = '" + myTable + "' AND read = '1'";
+        String updateQuery = "UPDATE chattingTable SET isRead = '' WHERE receiver = '" + otherTable + "' AND sender = '" + myTable + "' AND isRead = '1'";
         Log.d(TAG, "upDateIsRead: ");
         db.execSQL(updateQuery);
         Log.d(TAG, "upDateIsRead: done? ");

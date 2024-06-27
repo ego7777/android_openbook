@@ -113,6 +113,7 @@ public class Menu extends AppCompatActivity {
     DialogManager dialogManager;
     Dialog progressbar;
     Gson gson;
+    TableDataManager tableDataManager;
 
     //액티비티가 onCreate 되면 자동으로 받는거고
     BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
@@ -148,19 +149,18 @@ public class Menu extends AppCompatActivity {
                     String tid = intent.getStringExtra("tid");
 
                     if(tid != null && !tid.isEmpty()){
-                        clientSocket.quit();
-                        String chatMessages = dbHelper.getChatting(myData.getId());
 
-                        TableDataManager tableDataManager = new TableDataManager();
+                        String chatMessages = dbHelper.getChatting(myData.getId());
 
                         tableDataManager.deleteProfile(myData.getId(), service, result ->{
                             if(result.equals("success")){
                                 tableDataManager.saveChatMessages
-                                        (myData.getId(), chatMessages, service,
+                                        (myData.getId(), chatMessages, tid, service,
                                                 chatResult ->{
                                             if(chatResult.equals("success")){
                                                 dbHelper.deleteAllChatMessages(); //삭제
-                                                setUseStop();
+                                                tableDataManager.setUseStop(Menu.this, myData);
+                                                tableDataManager.stopSocket(Menu.this, myData.getId());
                                             }
                                         });
 
@@ -174,12 +174,6 @@ public class Menu extends AppCompatActivity {
         }
     };
 
-    public void setUseStop(){
-        Intent intent = new Intent(Menu.this, PaymentSelect.class);
-        myData.init();
-        intent.putExtra("myData", myData);
-        startActivity(intent);
-    }
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -198,6 +192,8 @@ public class Menu extends AppCompatActivity {
         tableList = (ArrayList<TableList>) getIntent().getSerializableExtra("tableList");
 
         isPayment = getIntent().getBooleanExtra("isPayment", false);
+
+        tableDataManager = new TableDataManager();
 
         sharedPreference = getSharedPreferences("CustomerData", MODE_PRIVATE);
         editor = sharedPreference.edit();
@@ -320,8 +316,8 @@ public class Menu extends AppCompatActivity {
                 menuLists.add(new MenuList(res.getString(3),//img
                         res.getString(1), //name
                         res.getInt(2), //price
-                        res.getInt(4), //menuType
-                        1));
+                        res.getInt(4) //menuType
+                        ));
             }
             menuAdapter.setAdapterItem(menuLists);
         }
@@ -341,19 +337,31 @@ public class Menu extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-
+        //자기가 직접 계산할 때
         if (isPayment) {
             Log.d(TAG, "isPayment: " + isPayment);
-            sendNotification.sendMenu(submitOrder(), result -> {
+            sendNotification.sendMenu(sendOrderToAdmin(), result -> {
+                progressbar = dialogManager.progressDialog(Menu.this);
+                progressbar.show();
                 if (result.equals("success")) {
-                    orderSharedPreference();
+                    saveOrderedItems();
                     successOrder();
+                    progressbar.dismiss();
+                }else{
+                    Toast.makeText(this, getResources().getString(R.string.notOrder), Toast.LENGTH_SHORT).show();
+                    progressbar.dismiss();
                 }
             });
         } else {
             Log.d(TAG, "isPayment: " + isPayment);
         }
 
+    }
+
+    @Override
+    protected void onDestroy() {
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
+        super.onDestroy();
     }
 
 
@@ -369,7 +377,7 @@ public class Menu extends AppCompatActivity {
 
         useStop.setOnClickListener(view -> {
             sendNotification.usingTableUpdate("admin", myData.getId(), "End");
-            setUseStop();
+            tableDataManager.setUseStop(Menu.this, myData);
         });
 
 
@@ -457,7 +465,7 @@ public class Menu extends AppCompatActivity {
             boolean menuExist = false;
 
             @Override
-            public void onItemClick(View view, String name, int price, int position) {
+            public void onItemClick(View view, String name, int price, int category, int position) {
                 //중복되는 메뉴의 포지션 값 get
                 for (int i = 0; i < cartLists.size(); i++) {
                     if (cartLists.get(i).getMenuName().equals(name)) {
@@ -474,7 +482,8 @@ public class Menu extends AppCompatActivity {
                 }
 
                 if (!menuExist) {
-                    cartLists.add(new CartList(name, price, 1, price, CartCategory.MENU));
+                    cartLists.add(new CartList(name, price, 1,
+                            price, category, CartCategory.MENU));
                     cartAdapter.setAdapterItem(cartLists);
                 }
 
@@ -520,20 +529,27 @@ public class Menu extends AppCompatActivity {
             } else {
                 switch (myData.getPaymentCategory()) {
                     case LATER:
-                        sendNotification.sendMenu(submitOrder(), result -> {
+                        progressbar = dialogManager.progressDialog(this);
+                        progressbar.show();
+
+                        sendNotification.sendMenu(sendOrderToAdmin(), result -> {
                             if (result.equals("success")) {
-                                orderSharedPreference();
+                                saveOrderedItems();
                                 successOrder();
+                                progressbar.dismiss();
+
+                                if (clientSocket == null || !clientSocket.isAlive()) {
+                                    clientSocket = new ClientSocket(myData.getId(), Menu.this);
+                                    clientSocket.start();
+                                    Log.d(TAG, "clientSocket Start: " + clientSocket);
+                                }
+
                             } else {
+                                progressbar.dismiss();
                                 Toast.makeText(Menu.this, getResources().getString(R.string.menuOrderError), Toast.LENGTH_SHORT).show();
                             }
                         });
 
-                        if (clientSocket == null || !clientSocket.isAlive()) {
-                            clientSocket = new ClientSocket(myData.getId(), Menu.this);
-                            clientSocket.start();
-                            Log.d(TAG, "clientSocket Start: " + clientSocket);
-                        }
                         break;
 
                     case NOW:
@@ -570,12 +586,11 @@ public class Menu extends AppCompatActivity {
         return orderItemName;
     }
 
-    public Map<String, String> submitOrder() {
+    public Map<String, String> sendOrderToAdmin() {
 
         Map<String, String> request = new HashMap<>();
         request.put("request", "Order");
         request.put("tableName", myData.getId());
-        request.put("orderItemName", getOrderItemName());
         request.put("totalPrice", String.valueOf(totalPrice));
         request.put("items", getCartList());
 
@@ -583,15 +598,15 @@ public class Menu extends AppCompatActivity {
     }
 
 
-    private void orderSharedPreference() {
-        String orderItems = sharedPreference.getString("orderItems", null);
-        Log.d(TAG, "orderSharedPreference: " + orderItems);
+    private void saveOrderedItems() {
+        String orderedItems = sharedPreference.getString("orderedItems", null);
+        Log.d(TAG, "orderedSharedPreference: " + orderedItems);
 
         //shared에 저장된 내용이 있으면 기존값에 추가해서 저장
-        if (orderItems != null && !orderItems.isEmpty()) {
+        if (orderedItems != null && !orderedItems.isEmpty()) {
             Type type = new TypeToken<ArrayList<CartList>>() {
             }.getType();
-            ArrayList<CartList> orderLists = gson.fromJson(orderItems, type);
+            ArrayList<CartList> orderLists = gson.fromJson(orderedItems, type);
 
             boolean found = false;
             for (int i = 0; i < cartLists.size(); i++) {
@@ -617,6 +632,7 @@ public class Menu extends AppCompatActivity {
                             cartItem.getMenuPrice(),
                             cartItem.getMenuQuantity(),
                             cartItem.getOriginalPrice(),
+                            cartItem.getMenuCategory(),
                             cartItem.getCartCategory()));
                 }
                 found = false;
@@ -664,7 +680,7 @@ public class Menu extends AppCompatActivity {
             menuItem.addProperty("menuName", item.getMenuName());
             menuItem.addProperty("menuPrice", String.valueOf(item.getMenuPrice()));
             menuItem.addProperty("menuQuantity", String.valueOf(item.getMenuQuantity()));
-            menuItem.addProperty("menuCategory", item.getCartCategory().getValue());
+            menuItem.addProperty("menuCategory", item.getMenuCategory());
             menuItems.add(menuItem);
         }
 
@@ -682,7 +698,7 @@ public class Menu extends AppCompatActivity {
             int price = menuItem.getMenuPrice();
             int category = menuItem.getMenuCategory();
 
-            menuLists.add(new MenuList(url, menuName, price, category, 1));
+            menuLists.add(new MenuList(url, menuName, price, category));
             dbHelper.insertMenuData(menuName, price, url, category);
 
         }

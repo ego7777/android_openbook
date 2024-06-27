@@ -58,10 +58,10 @@ public class AdminPopUpAdapter extends RecyclerView.Adapter<AdminPopUpAdapter.Vi
 
     class ViewHolder extends RecyclerView.ViewHolder {
 
-        TextView admin_popup_payment;
-        TextView admin_receipt_dialog_item_menuName;
-        TextView admin_receipt_dialog_item_menuCount;
-        TextView admin_receipt_dialog_item_menuPrice;
+        TextView adminPopupPayment;
+        TextView adminReceiptDialogItemMenuName;
+        TextView adminReceiptDialogItemMenuCount;
+        TextView adminReceiptDialogItemMenuPrice;
 
         int position;
         int viewType;
@@ -70,11 +70,11 @@ public class AdminPopUpAdapter extends RecyclerView.Adapter<AdminPopUpAdapter.Vi
             super(itemView);
             this.viewType =viewType;
 
-            admin_popup_payment = itemView.findViewById(R.id.admin_popup_payment_body);
+            adminPopupPayment = itemView.findViewById(R.id.admin_popup_payment_body);
 
-            admin_receipt_dialog_item_menuName = itemView.findViewById(R.id.admin_receipt_dialog_item_menuName);
-            admin_receipt_dialog_item_menuCount = itemView.findViewById(R.id.admin_receipt_dialog_item_menuCount);
-            admin_receipt_dialog_item_menuPrice = itemView.findViewById(R.id.admin_receipt_dialog_item_menuPrice);
+            adminReceiptDialogItemMenuName = itemView.findViewById(R.id.admin_receipt_dialog_item_menuName);
+            adminReceiptDialogItemMenuCount = itemView.findViewById(R.id.admin_receipt_dialog_item_menuCount);
+            adminReceiptDialogItemMenuPrice = itemView.findViewById(R.id.admin_receipt_dialog_item_menuPrice);
 
 
             itemView.setOnClickListener(v -> {
@@ -99,13 +99,13 @@ public class AdminPopUpAdapter extends RecyclerView.Adapter<AdminPopUpAdapter.Vi
         }
 
         void onBindNow(OrderList items){
-            admin_popup_payment.setText(items.getStatement());
+            adminPopupPayment.setText(items.getNotice());
         }
 
         void onBindLater(OrderList items){
-            admin_receipt_dialog_item_menuName.setText(items.getMenu());
-            admin_receipt_dialog_item_menuCount.setText(String.valueOf(items.getQuantity()));
-            admin_receipt_dialog_item_menuPrice.setText(String.valueOf(items.getPrice()));
+            adminReceiptDialogItemMenuName.setText(items.getMenu());
+            adminReceiptDialogItemMenuCount.setText(String.valueOf(items.getQuantity()));
+            adminReceiptDialogItemMenuPrice.setText(String.valueOf(items.getPrice()));
         }
 
     }

@@ -161,6 +161,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder> {
 
         void onBindAdmin(CartList items) {
             menuName.setText(items.getMenuName());
+            menuPrice.setText(String.valueOf(items.getMenuPrice()));
             menuQuantity.setText(String.valueOf(items.getMenuQuantity()));
 
             plus.setVisibility(View.INVISIBLE);

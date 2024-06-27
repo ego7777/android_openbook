@@ -45,6 +45,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import java.lang.reflect.Type;
+import java.nio.file.ClosedFileSystemException;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
@@ -95,12 +96,12 @@ public class Admin extends AppCompatActivity {
                         case "PayLater":
                             updateTable(request, tableName, tableNumber);
                             break;
+
                         case "Order":
                             String items = requestJson.get("items").getAsString();
-                            JsonArray jsonArray = gson.fromJson(items, JsonArray.class);
-                            String orderItemName = requestJson.get("orderItemName").getAsString();
+                            JsonArray itemsArray = gson.fromJson(items, JsonArray.class);
                             int totalPrice = requestJson.get("totalPrice").getAsInt();
-                            orderMenu(tableName, tableNumber, orderItemName, jsonArray, totalPrice);
+                            showOrderedMenu(tableName, tableNumber, itemsArray, totalPrice);
                             break;
 
                         case "GiftMenuOrder":
@@ -131,6 +132,11 @@ public class Admin extends AppCompatActivity {
         Log.d(TAG, "adminData: " + adminData);
         tid = getIntent().getStringExtra("tid");
         paidTable = getIntent().getStringExtra("paidTable");
+        if(paidTable != null){
+            Log.d(TAG, "paidTable: " + paidTable);
+        }else{
+            Log.d(TAG, "paidTable is null");
+        }
 
         adminTableLists = new ArrayList<>();
         orderLists = new ArrayList<>();
@@ -218,7 +224,8 @@ public class Admin extends AppCompatActivity {
         });
 
         if(paidTable != null && tid != null){
-            int paidTableNumber = Integer.parseInt(paidTable.replace("table", ""));
+            Log.d(TAG, "paidTable: " + paidTable);
+            int paidTableNumber = Integer.parseInt(paidTable.replace("table", "")) - 1;
             adminData.getAdminTableLists().get(paidTableNumber).init();
             adapter.notifyItemChanged(paidTableNumber);
 
@@ -230,7 +237,7 @@ public class Admin extends AppCompatActivity {
             jsonObject.addProperty("tid", tid);
 
             SendNotification sendNotification = new SendNotification();
-            sendNotification.CompletePayment(paidTable, jsonObject.toString());
+            sendNotification.completePayment(paidTable, jsonObject.toString());
         }
 
 
@@ -273,7 +280,7 @@ public class Admin extends AppCompatActivity {
                     intent.putExtra("orderItemName", getOrderItemName(tableName));
                     intent.putExtra("totalPrice", totalPrice);
                     intent.putExtra("tableName", tableName);
-                    intent.putExtra("orderItems", getOrderList(position));
+                    intent.putExtra("orderItems", getOrderedItems(position));
                     startActivity(intent);
                 } else {
                     dialogManager.noButtonDialog(Admin.this, getResources().getString(R.string.unusableTable));
@@ -284,12 +291,11 @@ public class Admin extends AppCompatActivity {
 
     }
 
-    public String getOrderList(int position) {
+    public String getOrderedItems(int position) {
         String clickTable = adminTableLists.get(position).getAdminTableNumber();
         String sharedOrderList = sharedPreference.getString(clickTable, null);
 
         if (sharedOrderList != null) {
-
             JsonArray menuItems = gson.fromJson(sharedOrderList, JsonArray.class);
             return gson.toJson(menuItems);
 
@@ -513,14 +519,12 @@ public class Admin extends AppCompatActivity {
 
     }
 
-    public void orderMenu(String tableName,
+    public void showOrderedMenu(String tableName,
                           int tableNumber,
-                          String orderItemName,
                           JsonArray items,
                           int totalPrice) {
 
         ArrayList<OrderList> orderLists = new ArrayList<>();
-        Log.d(TAG, "orderMenu orderItemName: " + orderItemName);
 
         for (int i = 0; i < items.size(); i++) {
             JsonObject item = items.get(i).getAsJsonObject();
@@ -572,6 +576,7 @@ public class Admin extends AppCompatActivity {
                 String menuName = item.get("menuName").getAsString();
                 int menuQuantity = item.get("menuQuantity").getAsInt();
                 int menuPrice = item.get("menuPrice").getAsInt();
+                int menuCategory = item.get("menuCategory").getAsInt();
 
                 for (int j = 0; j < previousOrderList.size(); j++) {
                     CartList orderItem = previousOrderList.get(j);
@@ -591,8 +596,10 @@ public class Admin extends AppCompatActivity {
                 }
 
                 if (!found) {
-                    previousOrderList.add(new CartList(menuName,
-                            menuPrice, menuQuantity, 0, CartCategory.MENU));
+                    previousOrderList.add
+                            (new CartList(menuName,
+                            menuPrice, menuQuantity, 0, menuCategory,
+                                    CartCategory.MENU));
                 }
                 found = false;
             }
@@ -605,8 +612,10 @@ public class Admin extends AppCompatActivity {
                 String menuName = item.get("menuName").getAsString();
                 int menuPrice = item.get("menuPrice").getAsInt();
                 int menuQuantity = item.get("menuQuantity").getAsInt();
+                int menuCategory = item.get("menuCategory").getAsInt();
 
-                previousOrderList.add(new CartList(menuName, menuPrice, menuQuantity, 0, CartCategory.MENU));
+                previousOrderList.add(new CartList
+                        (menuName, menuPrice, menuQuantity, 0, menuCategory, CartCategory.MENU));
             }
 
         }

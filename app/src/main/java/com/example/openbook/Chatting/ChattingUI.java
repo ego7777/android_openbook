@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.openbook.Activity.Table;
 import com.example.openbook.Adapter.ChattingAdapter;
 import com.example.openbook.Activity.Menu;
+import com.example.openbook.BuildConfig;
 import com.example.openbook.Category.ChattingCategory;
 import com.example.openbook.DBHelper;
 import com.example.openbook.Data.MyData;
@@ -28,11 +29,16 @@ import com.example.openbook.Data.TableList;
 import com.example.openbook.DialogManager;
 import com.example.openbook.R;
 import com.example.openbook.Data.ChattingList;
+import com.example.openbook.TableDataManager;
+import com.example.openbook.retrofit.RetrofitManager;
+import com.example.openbook.retrofit.RetrofitService;
 import com.google.gson.Gson;
 
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+
+import retrofit2.Retrofit;
 
 public class ChattingUI extends AppCompatActivity {
 
@@ -88,6 +94,38 @@ public class ChattingUI extends AppCompatActivity {
                         acceptMessage = from + "에서 선물을 거절하였습니다.";
                     }
                     dialogManager.positiveBtnDialog(ChattingUI.this, acceptMessage).show();
+                    break;
+
+                case "CompletePayment":
+                    String tid = intent.getStringExtra("tid");
+
+                    if(tid != null && !tid.isEmpty()){
+
+                        DBHelper dbHelper = new DBHelper(ChattingUI.this);
+                        String chatMessages = dbHelper.getChatting(myData.getId());
+
+                        TableDataManager tableDataManager = new TableDataManager();
+
+                        RetrofitManager retrofitManager = new RetrofitManager();
+                        Retrofit retrofit = retrofitManager.getRetrofit(BuildConfig.SERVER_IP);
+                        RetrofitService service = retrofit.create(RetrofitService.class);
+
+                        tableDataManager.deleteProfile(myData.getId(), service, result -> {
+                            if (result.equals("success")) {
+                                tableDataManager.saveChatMessages
+                                        (myData.getId(), chatMessages, tid, service,
+                                                chatResult -> {
+                                                    if (chatResult.equals("success")) {
+                                                        dbHelper.deleteAllChatMessages(); //삭제
+                                                        tableDataManager.setUseStop(ChattingUI.this, myData);
+                                                        tableDataManager.stopSocket(ChattingUI.this, myData.getId());
+                                                    }
+                                                });
+
+                            }
+                        });
+
+                    }
                     break;
             }
         }

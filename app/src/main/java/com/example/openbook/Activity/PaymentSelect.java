@@ -38,7 +38,7 @@ public class PaymentSelect extends AppCompatActivity {
 
         SharedPreferences.Editor editor = pref.edit();
 
-        editor.remove("orderItems");
+        editor.remove("orderedItems");
         editor.remove("cartItems");
         editor.remove("activeTableList");
         editor.commit();

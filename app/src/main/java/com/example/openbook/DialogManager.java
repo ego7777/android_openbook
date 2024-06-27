@@ -327,6 +327,7 @@ public class DialogManager {
                 Glide.with(context).clear(tableInfoImg);
                 Glide.with(context)
                         .load(imageUrl)
+                        .placeholder(getProgress(tableInfoImg.getContext()))
                         .override(Target.SIZE_ORIGINAL)
                         .diskCacheStrategy(DiskCacheStrategy.NONE)
                         .skipMemoryCache(true)
@@ -354,6 +355,9 @@ public class DialogManager {
     public Dialog buyProfileTicketDialog(Context context, String from, String to) {
         Dialog dialog = new Dialog(context);
         dialog.setContentView(R.layout.popup);
+
+        ImageView image = dialog.findViewById(R.id.popup_image);
+        image.setVisibility(View.GONE);
 
         TextView title = dialog.findViewById(R.id.popup_title);
         title.setText("프로필 티켓 구매");
@@ -413,6 +417,7 @@ public class DialogManager {
                     editor.commit();
                 }
                 dialog.dismiss();
+                successOrder(context).show();
             });
 
         });
@@ -457,7 +462,7 @@ public class DialogManager {
         final ArrayList<MenuList> menuLists = dbHelper.getTableData(new ArrayList());
         menuAdapter.setAdapterItem(menuLists);
 
-        menuAdapter.setOnItemClickListener((view, name, price, position) -> {
+        menuAdapter.setOnItemClickListener((view, name, price, category, position) -> {
             dialog.dismiss();
 
             MenuList menuItem = menuLists.get(position);
@@ -517,9 +522,8 @@ public class DialogManager {
             JsonObject jsonObject = new JsonObject();
             jsonObject.addProperty("menuName", menuItem.getMenuName());
             jsonObject.addProperty("menuPrice", menuItem.getMenuPrice());
-            jsonObject.addProperty("menuType", menuItem.getMenuType());
+            jsonObject.addProperty("menuCategory", menuItem.getMenuType());
             jsonObject.addProperty("imageUrl", menuItem.getUrl());
-            jsonObject.addProperty("menuType", menuItem.getMenuType());
 
             JsonArray jsonArray = new JsonArray();
             jsonArray.add(jsonObject);
@@ -551,12 +555,13 @@ public class DialogManager {
         String menuName =  item.get("menuName").getAsString();
         int menuPrice =  item.get("menuPrice").getAsInt();
         String url = item.get("imageUrl").getAsString();
+        int menuCategory = item.get("menuCategory").getAsInt();
 
-        Glide.with(context).load(url).into(image);
+        Glide.with(image.getContext()).load(url).into(image);
 
         String message;
 
-        if (item.get("menuType").getAsInt() == MenuCategory.DRINK.getValue()) {
+        if (menuCategory == MenuCategory.DRINK.getValue()) {
             message = from + " 에서 " + menuName + " " + count + "병을 선물하였습니다.";
         } else {
             message = from + " 에서 " + menuName + " " + count + "개를 선물하였습니다.";
@@ -568,8 +573,11 @@ public class DialogManager {
         String fromMenuName = menuName + "(" + to + ")";
         String toMenuName = menuName + "(" + from + ")";
 
-        String fromMenuItem = manageOrderItems.getMenuItem(fromMenuName, Integer.parseInt(count), menuPrice);
-        String toMenuItem = manageOrderItems.getMenuItem(toMenuName, Integer.parseInt(count), 0);
+        String fromMenuItem = manageOrderItems.getMenuItem
+                (fromMenuName, Integer.parseInt(count), menuPrice, menuCategory);
+
+        String toMenuItem = manageOrderItems.getMenuItem
+                (toMenuName, Integer.parseInt(count), 0, menuCategory);
 
         sendNotification = new SendNotification();
 

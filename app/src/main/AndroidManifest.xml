@@ -7,6 +7,9 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <queries>
+        <package android:name="com.samsung.android.svoiceime"/>
+    </queries>
 
     <application
         android:name=".MyApplication"
@@ -77,19 +80,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".Activity.PopUpChatting"
-            android:theme="@android:style/Theme.Dialog" />
-        <activity
-            android:name=".Activity.PopUpProfile"
-            android:theme="@android:style/Theme.Dialog" />
-        <activity
-            android:name=".Activity.PopUpGift"
-            android:theme="@android:style/Theme.Dialog" />
-        <activity
             android:name=".Activity.AdminModifyTableQuantity"
-            android:theme="@android:style/Theme.Dialog" />
-        <activity
-            android:name=".Activity.AdminPaymentLaterPopup"
             android:theme="@android:style/Theme.Dialog" />
        
         <activity android:name=".Activity.AdminSales" />

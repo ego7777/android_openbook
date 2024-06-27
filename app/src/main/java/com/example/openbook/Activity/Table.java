@@ -25,6 +25,7 @@ import androidx.recyclerview.widget.SimpleItemAnimator;
 import com.example.openbook.Adapter.TableAdapter;
 import com.example.openbook.BuildConfig;
 import com.example.openbook.Chatting.ChattingUI;
+import com.example.openbook.DBHelper;
 import com.example.openbook.Data.MyData;
 import com.example.openbook.Data.OrderList;
 import com.example.openbook.DialogManager;
@@ -33,6 +34,7 @@ import com.example.openbook.ManageOrderItems;
 import com.example.openbook.R;
 import com.example.openbook.Data.TableList;
 import com.example.openbook.Category.TableCategory;
+import com.example.openbook.TableDataManager;
 import com.example.openbook.retrofit.RetrofitManager;
 import com.example.openbook.retrofit.RetrofitService;
 import com.example.openbook.retrofit.TableInformationDTO;
@@ -108,13 +110,43 @@ public class Table extends AppCompatActivity {
                     from = intent.getStringExtra("from");
                     boolean isAccept = intent.getBooleanExtra("isAccept", false);
                     String message;
-                    if(isAccept){
+                    if (isAccept) {
                         message = from + "에서 선물을 수락하였습니다.";
                         //여기서 메뉴 주문 메뉴 저장하기
-                    }else{
+                    } else {
                         message = from + "에서 선물을 거절하였습니다.";
                     }
                     dialogManager.positiveBtnDialog(Table.this, message).show();
+                    break;
+
+                case "CompletePayment":
+                    String tid = intent.getStringExtra("tid");
+
+                    if (tid != null && !tid.isEmpty()) {
+                        DBHelper dbHelper = new DBHelper(Table.this);
+                        String chatMessages = dbHelper.getChatting(myData.getId());
+                        Log.d(TAG, "CompletePayment chatMessage: " + chatMessages);
+
+                        TableDataManager tableDataManager = new TableDataManager();
+
+                        tableDataManager.deleteProfile(myData.getId(), service, result -> {
+                            if (result.equals("success")) {
+                                tableDataManager.saveChatMessages
+                                        (myData.getId(), chatMessages, tid, service,
+                                                chatResult -> {
+                                                    if (chatResult.equals("success")) {
+                                                        dbHelper.deleteAllChatMessages(); //삭제
+                                                        tableDataManager.setUseStop(Table.this, myData);
+                                                        tableDataManager.stopSocket(Table.this, myData.getId());
+                                                    }
+                                                });
+
+                            }
+                        });
+
+                    }
+
+
                     break;
             }
         }
@@ -130,12 +162,14 @@ public class Table extends AppCompatActivity {
 
         overridePendingTransition(0, 0);
 
+
         myData = (MyData) getIntent().getSerializableExtra("myData");
         Log.d(TAG, "myData IsOrder: " + myData.isOrder());
         myTable = Integer.parseInt(myData.getId().replace("table", ""));
         Log.d(TAG, "myTable: " + myTable);
 
         tableList = (ArrayList<TableList>) getIntent().getSerializableExtra("tableList");
+
 
         customerDataSp = getSharedPreferences("CustomerData", MODE_PRIVATE);
         String activeTable = customerDataSp.getString("activeTableList", null);
@@ -203,6 +237,11 @@ public class Table extends AppCompatActivity {
 
     } //onCreate
 
+    @Override
+    protected void onDestroy() {
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
+        super.onDestroy();
+    }
 
     @Override
     protected void onResume() {
@@ -231,12 +270,12 @@ public class Table extends AppCompatActivity {
         adapter.setOnItemClickListener((view, position) -> {
 
             clickTable = position + 1;
-            if(previousClickTable == clickTable){
+            if (previousClickTable == clickTable) {
                 tableSidebar.setVisibility(View.INVISIBLE);
                 tableDocument.setVisibility(View.VISIBLE);
                 previousClickTable = -1;
                 adapter.setLastClickedPosition(position, false);
-            }else{
+            } else {
                 tableSidebar.setVisibility(View.VISIBLE);
                 tableDocument.setVisibility(View.INVISIBLE);
                 previousClickTable = clickTable;
@@ -279,30 +318,30 @@ public class Table extends AppCompatActivity {
 
 
         checkInformation.setOnClickListener(view -> {
-            if(!myData.isOrder()){
+            if (!myData.isOrder()) {
                 dialogManager.positiveBtnDialog
                         (Table.this,
-                        getResources().getString(R.string.notOrder)).show();
+                                getResources().getString(R.string.notOrder)).show();
 
-            }else if(tableList.get(clickTable - 1).getCategory() == TableCategory.OTHER){
+            } else if (tableList.get(clickTable - 1).getCategory() == TableCategory.OTHER) {
                 dialogManager.positiveBtnDialog(Table.this,
                         getResources().getString(R.string.unusableTable)).show();
-            }else{
+            } else {
                 requestTableInfo();
             }
 
         });
 
         sendGift.setOnClickListener(v -> {
-            if(!myData.isOrder()){
+            if (!myData.isOrder()) {
                 dialogManager.positiveBtnDialog
                         (Table.this,
                                 getResources().getString(R.string.notOrder)).show();
 
-            }else if(tableList.get(clickTable - 1).getCategory() == TableCategory.OTHER){
+            } else if (tableList.get(clickTable - 1).getCategory() == TableCategory.OTHER) {
                 dialogManager.positiveBtnDialog(Table.this,
                         getResources().getString(R.string.unusableTable)).show();
-            }else{
+            } else {
                 dialogManager.giftSelectDialog(Table.this, myData.getId(), "table" + clickTable).show();
             }
         });
@@ -325,7 +364,7 @@ public class Table extends AppCompatActivity {
                         Log.d(TAG, "profileTicket: " + profileTicket);
                         Boolean ticket = false;
 
-                        if(profileTicket != null){
+                        if (profileTicket != null) {
                             gson = new Gson();
                             profileTicketMap = gson.fromJson(profileTicket, HashMap.class);
 
@@ -351,8 +390,6 @@ public class Table extends AppCompatActivity {
             }
         });
     }
-
-
 
 
     public void moveToMenu(View view) {

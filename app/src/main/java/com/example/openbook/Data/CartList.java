@@ -2,6 +2,7 @@ package com.example.openbook.Data;
 
 
 import com.example.openbook.Category.CartCategory;
+import com.example.openbook.Category.MenuCategory;
 
 public class CartList {
 
@@ -9,14 +10,15 @@ public class CartList {
     int menuPrice;
     int menuQuantity;
     CartCategory cartCategory;
-
+    int menuCategory;
     int originalPrice;
 
-    public CartList(String name, int price, int quantity, int originalPrice, CartCategory cartCategory) {
+    public CartList(String name, int price, int quantity, int originalPrice, int menuCategory, CartCategory cartCategory) {
         this.menuName = name;
         this.menuPrice = price;
         this.menuQuantity = quantity;
         this.originalPrice = originalPrice;
+        this.menuCategory = menuCategory;
         this.cartCategory = cartCategory;
     }
 
@@ -60,4 +62,11 @@ public class CartList {
         this.menuQuantity = menuQuantity;
     }
 
+    public int getMenuCategory() {
+        return menuCategory;
+    }
+
+    public void setMenuCategory(int menuCategory) {
+        this.menuCategory = menuCategory;
+    }
 }

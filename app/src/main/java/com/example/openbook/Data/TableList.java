@@ -12,7 +12,6 @@ public class TableList implements Serializable {
     String tableGender;
     String tableGuestNum;
     TableCategory category;
-
     String myTable;
 
 

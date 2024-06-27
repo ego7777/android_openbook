@@ -25,7 +25,7 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
      * 커스텀 리스너 인터페이스 정의
      */
     public interface OnItemClickListener {
-        void onItemClick(View view, String name, int price, int position);
+        void onItemClick(View view, String name, int price, int category, int position);
 
     }
 
@@ -35,6 +35,7 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
         this.myListener = listener;
     }
 
+
     @NonNull
     @Override
     /**
@@ -42,10 +43,9 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
      * 실체화를 해주는 아이가 Inflater
      * **/
     public MenuAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).
-                inflate(getViewSrc(viewType), parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_menu, parent, false);
 
-        return new ViewHolder(view, viewType);
+        return new MenuAdapter.ViewHolder(view);
     }
 
     /**
@@ -78,81 +78,38 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
 
         ImageView menuImage;
         TextView menuName, menuPrice;
-        private int viewType;
 
-        public ViewHolder(@NonNull View itemView, int viewType) {
+        public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            this.viewType = viewType;
 
-            if (viewType == TYPE_YES) {
+            menuImage = itemView.findViewById(R.id.menu_image);
+            menuName = itemView.findViewById(R.id.menu_name);
+            menuPrice = itemView.findViewById(R.id.menu_price);
 
-                menuImage = itemView.findViewById(R.id.menu_image);
-                menuName = itemView.findViewById(R.id.menu_name);
-                menuPrice = itemView.findViewById(R.id.menu_price);
-                /**
-                 * 아이템뷰 클릭
-                 */
-                itemView.setOnClickListener(view -> {
-                    int position = getAdapterPosition();
-                    String name = menuItem.get(position).getMenuName();
-                    int price = menuItem.get(position).getMenuPrice();
+            itemView.setOnClickListener(view -> {
+                int position = getAdapterPosition();
+                String name = menuItem.get(position).getMenuName();
+                int price = menuItem.get(position).getMenuPrice();
+                int category = menuItem.get(position).getMenuType();
 
-                    if (position != RecyclerView.NO_POSITION) {
-                        if (myListener != null) {
-                            myListener.onItemClick(view, name, price, position);
-                        }
+                if (position != RecyclerView.NO_POSITION) {
+                    if (myListener != null) {
+                        myListener.onItemClick(view, name, price, category, position);
                     }
-                });
-            }
+                }
+            });
 
 
         }
 
-        void onBind(MenuList item, Context context) {
-            if (viewType == TYPE_NO) {
-                onBindNo(item);
-            } else if (viewType == TYPE_YES) {
-                onBindYes(item, context);
-            }
-        }
-
-        void onBindYes(MenuList items, Context context) {
+        void onBind(MenuList items, Context context) {
             Glide.with(context).load(items.getUrl()).into(menuImage);
             menuName.setText(items.getMenuName());
             menuPrice.setText(String.valueOf(items.getMenuPrice()));
-
-        }
-
-        void onBindNo(MenuList items) {
-//            ImageView tempImg = itemView.findViewById(R.id.temp_img);
-            TextView tempName = itemView.findViewById(R.id.temp_name);
-
-            tempName.setText(items.getMenuName());
         }
 
     }
 
-    // view type
-    private final int TYPE_NO = 101;
-    private final int TYPE_YES = 102;
-
-
-    private int getViewSrc(int viewType) {
-        if (viewType == TYPE_NO) {
-            return R.layout.menu_gridview_item_empty;
-        } else {
-            return R.layout.item_menu;
-        }
-    }
-
-    @Override
-    public int getItemViewType(int position) {
-        if (menuItem.get(position).getViewType() == 0) {
-            return TYPE_NO;
-        } else {
-            return TYPE_YES;
-        }
-    }
 
 }
 

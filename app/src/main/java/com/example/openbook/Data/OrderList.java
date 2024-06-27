@@ -4,11 +4,11 @@ package com.example.openbook.Data;
 public class OrderList {
 
     String tableName, menu;
-    int quantity, price, identifier;
+    int quantity, price;
 
-    String statement;
+    String notice;
 
-    int paymentType; // 0->in/out, 1->menu
+    int paymentType;
 
 
     public OrderList(int paymentType, String tableName, String menu, int quantity, int price){
@@ -19,12 +19,19 @@ public class OrderList {
         this.price = price;
     }
 
-    public OrderList(int paymentType,String tableName, String statement){
+    public OrderList(int paymentType,String tableName, String notice){
         this.paymentType = paymentType;
         this.tableName = tableName;
-        this.statement = statement;
+        this.notice = notice;
     }
 
+    public String getNotice() {
+        return notice;
+    }
+
+    public void setNotice(String notice) {
+        this.notice = notice;
+    }
 
     public int getPaymentType(){
         return paymentType;
@@ -32,14 +39,6 @@ public class OrderList {
 
     public void setPaymentType(int paymentType) {
         this.paymentType = paymentType;
-    }
-
-    public String getStatement(){
-        return statement;
-    }
-
-    public void setStatement(String statement){
-        this.statement = statement;
     }
 
     public String getTableName() {

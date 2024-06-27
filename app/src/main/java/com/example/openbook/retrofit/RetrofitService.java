@@ -46,6 +46,7 @@ public interface RetrofitService {
     @POST("SaveChatting.php")
     @FormUrlEncoded
     Call<SuccessOrNot> saveChatMessages(@Field("tableName") String table,
+                                        @Field("chatMessage") String chatMessage,
                                         @Field("tid") String tid);
 
     @POST("DeleteProfileInformation.php")
