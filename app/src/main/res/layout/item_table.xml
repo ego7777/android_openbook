@@ -11,7 +11,7 @@
     android:orientation="vertical">
 
     <TextView
-        android:id="@+id/table_grid_chat"
+        android:id="@+id/item_table_chat"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:background="@drawable/chat_heart"
@@ -27,7 +27,7 @@
 
 
     <TextView
-        android:id="@+id/tableNum"
+        android:id="@+id/item_table_number"
         android:layout_width="150dp"
         android:layout_height="wrap_content"
         android:autoSizeMaxTextSize="23sp"
@@ -45,7 +45,7 @@
         android:orientation="horizontal">
 
         <TextView
-            android:id="@+id/table_grid_gender"
+            android:id="@+id/item_table_gender"
             android:layout_width="75dp"
             android:layout_height="wrap_content"
             android:gravity="center"
@@ -55,7 +55,7 @@
             android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/table_grid_guestNum"
+            android:id="@+id/item_table_guestNum"
             android:layout_width="75dp"
             android:layout_height="wrap_content"
             android:gravity="center"

@@ -62,35 +62,35 @@ public class ChattingUI extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
 
-            switch (intent.getAction()){
-                case "newChatArrived" :
+            switch (intent.getAction()) {
+                case "newChatArrived":
                     String message = intent.getStringExtra("chat");
                     Log.d(TAG, "onReceive message: " + message);
                     chattingUpdate(message);
                     break;
 
-                case "isReadArrived" :
+                case "isReadArrived":
                     String readTable = intent.getStringExtra("readTable");
                     Log.d(TAG, "onReceive isRead: " + readTable);
                     isReadUpdate(readTable);
                     break;
 
-                case "giftArrived" :
+                case "giftArrived":
                     String from = intent.getStringExtra("from");
                     String menuItem = intent.getStringExtra("menuItem");
                     String count = intent.getStringExtra("count");
 
-                    dialogManager.giftReceiveDialog(ChattingUI.this, myData.getId(),from, menuItem, count).show();
+                    dialogManager.giftReceiveDialog(ChattingUI.this, myData.getId(), from, menuItem, count).show();
                     break;
 
                 case "isGiftAccept":
                     from = intent.getStringExtra("from");
                     boolean isAccept = intent.getBooleanExtra("isAccept", false);
                     String acceptMessage;
-                    if(isAccept){
+                    if (isAccept) {
                         acceptMessage = from + "에서 선물을 수락하였습니다.";
                         //여기서 메뉴 주문 메뉴 저장하기
-                    }else{
+                    } else {
                         acceptMessage = from + "에서 선물을 거절하였습니다.";
                     }
                     dialogManager.positiveBtnDialog(ChattingUI.this, acceptMessage).show();
@@ -99,7 +99,7 @@ public class ChattingUI extends AppCompatActivity {
                 case "CompletePayment":
                     String tid = intent.getStringExtra("tid");
 
-                    if(tid != null && !tid.isEmpty()){
+                    if (tid != null && !tid.isEmpty()) {
 
                         DBHelper dbHelper = new DBHelper(ChattingUI.this);
                         String chatMessages = dbHelper.getChatting(myData.getId());
@@ -110,20 +110,16 @@ public class ChattingUI extends AppCompatActivity {
                         Retrofit retrofit = retrofitManager.getRetrofit(BuildConfig.SERVER_IP);
                         RetrofitService service = retrofit.create(RetrofitService.class);
 
-                        tableDataManager.deleteProfile(myData.getId(), service, result -> {
-                            if (result.equals("success")) {
-                                tableDataManager.saveChatMessages
-                                        (myData.getId(), chatMessages, tid, service,
-                                                chatResult -> {
-                                                    if (chatResult.equals("success")) {
-                                                        dbHelper.deleteAllChatMessages(); //삭제
-                                                        tableDataManager.setUseStop(ChattingUI.this, myData);
-                                                        tableDataManager.stopSocket(ChattingUI.this, myData.getId());
-                                                    }
-                                                });
+                        tableDataManager.saveChatMessages
+                                (myData.getId(), chatMessages, tid, service,
+                                        chatResult -> {
+                                            if (chatResult.equals("success")) {
+                                                dbHelper.deleteAllChatMessages(); //삭제
+                                                tableDataManager.setUseStop(ChattingUI.this, myData);
+                                                tableDataManager.stopSocket(ChattingUI.this, myData.getId());
+                                            }
+                                        });
 
-                            }
-                        });
 
                     }
                     break;
@@ -225,7 +221,7 @@ public class ChattingUI extends AppCompatActivity {
         });
     }
 
-    public void notifyRead(){
+    public void notifyRead() {
         Log.d(TAG, "notifyRead 호출");
         Intent intent = new Intent("SendChattingData");
         MessageDTO message = new MessageDTO
@@ -237,7 +233,7 @@ public class ChattingUI extends AppCompatActivity {
         LocalBroadcastManager.getInstance(ChattingUI.this).sendBroadcast(intent);
     }
 
-    public ArrayList<ChattingList> initChattingList(Cursor res){
+    public ArrayList<ChattingList> initChattingList(Cursor res) {
         chatLists = new ArrayList<>();
 
         if (res.getCount() > 0) {
@@ -298,7 +294,7 @@ public class ChattingUI extends AppCompatActivity {
         if (tableNumber == fromTable) {
 
             for (int i = 0; i < chatLists.size(); i++) {
-                if(chatLists.get(i).getRead().equals("1")){
+                if (chatLists.get(i).getRead().equals("1")) {
                     chatLists.get(i).setRead("");
                 }
             }
@@ -319,5 +315,11 @@ public class ChattingUI extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         //안드로이드 백버튼 막기
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
     }
 }

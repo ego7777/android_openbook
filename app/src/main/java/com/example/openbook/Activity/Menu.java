@@ -23,7 +23,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -136,39 +135,34 @@ public class Menu extends AppCompatActivity {
                     boolean isAccept = intent.getBooleanExtra("isAccept", false);
                     String message;
 
-                    if(isAccept){
+                    if (isAccept) {
                         message = from + "에서 선물을 수락하였습니다.";
                         //여기서 메뉴 주문 메뉴 저장하기
-                    }else{
+                    } else {
                         message = from + "에서 선물을 거절하였습니다.";
                     }
                     dialogManager.positiveBtnDialog(Menu.this, message).show();
                     break;
 
-                case "CompletePayment" :
+                case "CompletePayment":
                     String tid = intent.getStringExtra("tid");
 
-                    if(tid != null && !tid.isEmpty()){
+                    if (tid != null && !tid.isEmpty()) {
 
                         String chatMessages = dbHelper.getChatting(myData.getId());
 
-                        tableDataManager.deleteProfile(myData.getId(), service, result ->{
-                            if(result.equals("success")){
-                                tableDataManager.saveChatMessages
-                                        (myData.getId(), chatMessages, tid, service,
-                                                chatResult ->{
-                                            if(chatResult.equals("success")){
+                        tableDataManager.saveChatMessages
+                                (myData.getId(),
+                                        chatMessages,
+                                        tid, service,
+                                        chatResult -> {
+                                            if (chatResult.equals("success")) {
                                                 dbHelper.deleteAllChatMessages(); //삭제
                                                 tableDataManager.setUseStop(Menu.this, myData);
                                                 tableDataManager.stopSocket(Menu.this, myData.getId());
                                             }
                                         });
-
-                            }
-                        });
-
                     }
-
                     break;
             }
         }
@@ -199,8 +193,7 @@ public class Menu extends AppCompatActivity {
         editor = sharedPreference.edit();
 
         if (!myData.isFcmExist()) {
-            FCM fcm = new FCM();
-            fcm.getToken(myData.getIdentifier());
+            tableDataManager.setFcmService(myData.getIdentifier());
             myData.setFcmExist(true);
 
             editor.putBoolean("isFcmExist", true);
@@ -317,7 +310,7 @@ public class Menu extends AppCompatActivity {
                         res.getString(1), //name
                         res.getInt(2), //price
                         res.getInt(4) //menuType
-                        ));
+                ));
             }
             menuAdapter.setAdapterItem(menuLists);
         }
@@ -347,7 +340,7 @@ public class Menu extends AppCompatActivity {
                     saveOrderedItems();
                     successOrder();
                     progressbar.dismiss();
-                }else{
+                } else {
                     Toast.makeText(this, getResources().getString(R.string.notOrder), Toast.LENGTH_SHORT).show();
                     progressbar.dismiss();
                 }
@@ -359,11 +352,10 @@ public class Menu extends AppCompatActivity {
     }
 
     @Override
-    protected void onDestroy() {
+    protected void onStop() {
+        super.onStop();
         LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
-        super.onDestroy();
     }
-
 
     @Override
     protected void onResume() {
@@ -638,10 +630,10 @@ public class Menu extends AppCompatActivity {
                 found = false;
             }
 
-            editor.putString("orderItems", gson.toJson(orderLists));
+            editor.putString("orderedItems", gson.toJson(orderLists));
             editor.commit();
         } else {
-            editor.putString("orderItems", gson.toJson(cartLists));
+            editor.putString("orderedItems", gson.toJson(cartLists));
             editor.commit();
         }
 

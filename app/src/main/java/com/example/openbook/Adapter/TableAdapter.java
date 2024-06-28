@@ -48,7 +48,7 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> 
     public TableAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
 
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.table_gridview_item, parent, false);
+                .inflate(R.layout.item_table, parent, false);
 
         return new TableAdapter.ViewHolder(view);
     }
@@ -94,18 +94,16 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> 
 
 
     class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tableNum;
-        TextView tableGridGender;
-        TextView tableGridGuestNum;
+        TextView itemTableChat, itemTableNumber, itemTableGender, itemTableGuestNum;
 
         int position;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-
-            tableNum = itemView.findViewById(R.id.tableNum);
-            tableGridGender = itemView.findViewById(R.id.table_grid_gender);
-            tableGridGuestNum = itemView.findViewById(R.id.table_grid_guestNum);
+            itemTableChat = itemView.findViewById(R.id.item_table_chat);
+            itemTableNumber = itemView.findViewById(R.id.item_table_number);
+            itemTableGender = itemView.findViewById(R.id.item_table_gender);
+            itemTableGuestNum = itemView.findViewById(R.id.item_table_guestNum);
 
             itemView.setOnClickListener(view -> {
                 position = getAdapterPosition();
@@ -133,17 +131,18 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> 
             }
 
         }
+        //샥 들어오면 itemTableChat에 setText하고 샥
 
         void onBindOthers(TableList items) {
-            tableNum.setText(String.valueOf(items.getTableNumber()));
-            tableGridGender.setText(items.getTableGender());
-            tableGridGuestNum.setText(items.getTableGuestNum());
+            itemTableNumber.setText(String.valueOf(items.getTableNumber()));
+            itemTableGender.setText(items.getTableGender());
+            itemTableGuestNum.setText(items.getTableGuestNum());
         }
 
         void onBindMine(TableList items) {
-            tableNum.setText(items.getMyTable());
-            tableGridGender.setText(items.getTableGender());
-            tableGridGuestNum.setText(items.getTableGuestNum());
+            itemTableNumber.setText(items.getMyTable());
+            itemTableGender.setText(items.getTableGender());
+            itemTableGuestNum.setText(items.getTableGuestNum());
 
         }
 

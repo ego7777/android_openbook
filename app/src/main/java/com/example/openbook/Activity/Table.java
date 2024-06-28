@@ -129,24 +129,18 @@ public class Table extends AppCompatActivity {
 
                         TableDataManager tableDataManager = new TableDataManager();
 
-                        tableDataManager.deleteProfile(myData.getId(), service, result -> {
-                            if (result.equals("success")) {
-                                tableDataManager.saveChatMessages
-                                        (myData.getId(), chatMessages, tid, service,
-                                                chatResult -> {
-                                                    if (chatResult.equals("success")) {
-                                                        dbHelper.deleteAllChatMessages(); //삭제
-                                                        tableDataManager.setUseStop(Table.this, myData);
-                                                        tableDataManager.stopSocket(Table.this, myData.getId());
-                                                    }
-                                                });
+                        tableDataManager.saveChatMessages
+                                (myData.getId(), chatMessages, tid, service,
+                                        chatResult -> {
+                                            if (chatResult.equals("success")) {
+                                                dbHelper.deleteAllChatMessages(); //삭제
+                                                tableDataManager.setUseStop(Table.this, myData);
+                                                tableDataManager.stopSocket(Table.this, myData.getId());
+                                            }
+                                        });
 
-                            }
-                        });
 
                     }
-
-
                     break;
             }
         }
@@ -235,12 +229,12 @@ public class Table extends AppCompatActivity {
         Retrofit retrofit = retrofitManager.getRetrofit(BuildConfig.SERVER_IP);
         service = retrofit.create(RetrofitService.class);
 
-    } //onCreate
+    }
 
     @Override
-    protected void onDestroy() {
+    protected void onStop() {
+        super.onStop();
         LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
-        super.onDestroy();
     }
 
     @Override
@@ -339,8 +333,13 @@ public class Table extends AppCompatActivity {
                                 getResources().getString(R.string.notOrder)).show();
 
             } else if (tableList.get(clickTable - 1).getCategory() == TableCategory.OTHER) {
+
                 dialogManager.positiveBtnDialog(Table.this,
                         getResources().getString(R.string.unusableTable)).show();
+
+            } else if(clickTable == myTable){
+                dialogManager.positiveBtnDialog(Table.this,
+                        getResources().getString(R.string.myTable)).show();
             } else {
                 dialogManager.giftSelectDialog(Table.this, myData.getId(), "table" + clickTable).show();
             }

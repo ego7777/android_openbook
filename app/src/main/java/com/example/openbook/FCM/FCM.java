@@ -35,8 +35,6 @@ import retrofit2.Retrofit;
 public class FCM extends FirebaseMessagingService {
 
     String TAG = "FcmTAG";
-    int identifier;
-    int requestCode;
 
     RetrofitService service;
     Gson gson = new Gson();

@@ -14,6 +14,7 @@ import com.example.openbook.Activity.PaymentSelect;
 import com.example.openbook.Chatting.ChattingUI;
 import com.example.openbook.Chatting.MessageDTO;
 import com.example.openbook.Data.MyData;
+import com.example.openbook.FCM.FCM;
 import com.example.openbook.retrofit.RetrofitService;
 import com.example.openbook.retrofit.SuccessOrNot;
 import com.google.gson.Gson;
@@ -25,6 +26,12 @@ import retrofit2.Response;
 public class TableDataManager {
 
     String TAG = "TableDataManagerTAG";
+    FCM fcm;
+
+    public void setFcmService(int identifier){
+        fcm = new FCM();
+        fcm.getToken(identifier);
+    }
 
     public void deleteProfile(String tableName, RetrofitService service, ResultCallback callback){
         Call<SuccessOrNot> call =service.deleteProfile(tableName);

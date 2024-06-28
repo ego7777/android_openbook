@@ -29,6 +29,7 @@ import com.example.openbook.BuildConfig;
 import com.example.openbook.Data.CartList;
 import com.example.openbook.Category.PaymentCategory;
 import com.example.openbook.FCM.SendNotification;
+import com.example.openbook.TableDataManager;
 import com.example.openbook.kakaopay.KakaoPay;
 import com.example.openbook.Data.AdminTableList;
 import com.example.openbook.Data.OrderList;
@@ -132,11 +133,6 @@ public class Admin extends AppCompatActivity {
         Log.d(TAG, "adminData: " + adminData);
         tid = getIntent().getStringExtra("tid");
         paidTable = getIntent().getStringExtra("paidTable");
-        if(paidTable != null){
-            Log.d(TAG, "paidTable: " + paidTable);
-        }else{
-            Log.d(TAG, "paidTable is null");
-        }
 
         adminTableLists = new ArrayList<>();
         orderLists = new ArrayList<>();
@@ -225,19 +221,27 @@ public class Admin extends AppCompatActivity {
 
         if(paidTable != null && tid != null){
             Log.d(TAG, "paidTable: " + paidTable);
-            int paidTableNumber = Integer.parseInt(paidTable.replace("table", "")) - 1;
-            adminData.getAdminTableLists().get(paidTableNumber).init();
-            adapter.notifyItemChanged(paidTableNumber);
+            TableDataManager tableDataManager = new TableDataManager();
+            tableDataManager.deleteProfile(paidTable, service, result -> {
+                if(result.equals("success")){
+                    int paidTableNumber = Integer.parseInt(paidTable.replace("table", "")) - 1;
+                    adminData.getAdminTableLists().get(paidTableNumber).init();
+                    adapter.notifyItemChanged(paidTableNumber);
 
-            editor.putString("adminTableList", gson.toJson(adminData.getAdminTableLists()));
-            editor.commit();
+                    editor.putString("adminTableList", gson.toJson(adminData.getAdminTableLists()));
+                    editor.commit();
 
-            JsonObject jsonObject = new JsonObject();
-            jsonObject.addProperty("request", "CompletePayment");
-            jsonObject.addProperty("tid", tid);
+                    JsonObject jsonObject = new JsonObject();
+                    jsonObject.addProperty("request", "CompletePayment");
+                    jsonObject.addProperty("tid", tid);
 
-            SendNotification sendNotification = new SendNotification();
-            sendNotification.completePayment(paidTable, jsonObject.toString());
+                    SendNotification sendNotification = new SendNotification();
+                    sendNotification.completePayment(paidTable, jsonObject.toString());
+                }else{
+                    Toast.makeText(this, "결제 테이블의 프로필 삭제를 실패하였습니다.", Toast.LENGTH_SHORT).show();
+                }
+            });
+
         }
 
 
