@@ -84,17 +84,20 @@ public class Table extends AppCompatActivity {
             switch (intent.getAction()) {
                 case "updateNewTable":
                     int newTableNumber = intent.getIntExtra("newTable", 1000);
-                    String activeTableList = intent.getStringExtra("activeTableList");
+                    String existingTables = intent.getStringExtra("existingTables");
+                    int disconnectTable = intent.getIntExtra("disconnectTable", 1000);
 
                     if (newTableNumber != 1000) {
                         Log.d(TAG, "newTableNumber: " + newTableNumber);
                         updateNewTable(newTableNumber);
 
-                    } else if (activeTableList != null) {
-                        Log.d(TAG, "activeTableList: " + activeTableList);
-                        activeTableUpdate(activeTableList);
-                    } else {
-                        Log.d(TAG, "updateNewTable nothing");
+                    } else if (existingTables != null) {
+                        Log.d(TAG, "existingTables: " + existingTables);
+                        updateExistingTable(existingTables);
+
+                    } else if(disconnectTable != 1000){
+                        Log.d(TAG, "disconnectTable: " + disconnectTable);
+                        updateDisconnectTable(disconnectTable);
                     }
                     break;
 
@@ -128,24 +131,25 @@ public class Table extends AppCompatActivity {
                         Log.d(TAG, "CompletePayment chatMessage: " + chatMessages);
 
                         TableDataManager tableDataManager = new TableDataManager();
-
-                        tableDataManager.saveChatMessages
-                                (myData.getId(), chatMessages, tid, service,
-                                        chatResult -> {
-                                            if (chatResult.equals("success")) {
-                                                dbHelper.deleteAllChatMessages(); //삭제
-                                                tableDataManager.setUseStop(Table.this, myData);
-                                                tableDataManager.stopSocket(Table.this, myData.getId());
-                                            }
-                                        });
-
-
+                        if(chatMessages != null && !chatMessages.isBlank()){
+                            tableDataManager.saveChatMessages
+                                    (myData.getId(), chatMessages, tid, service,
+                                            chatResult -> {
+                                                if (chatResult.equals("success")) {
+                                                    dbHelper.deleteAllChatMessages(); //삭제
+                                                    tableDataManager.setUseStop(Table.this, myData);
+                                                    tableDataManager.stopSocket(Table.this, myData.getId());
+                                                }
+                                            });
+                        }else{
+                            tableDataManager.setUseStop(Table.this, myData);
+                            tableDataManager.stopSocket(Table.this, myData.getId());
+                        }
                     }
                     break;
             }
         }
     };
-
 
     int tablePosition;
 
@@ -213,7 +217,7 @@ public class Table extends AppCompatActivity {
         tableRecyclerview.setAdapter(adapter);
 
         if (activeTable != null && tableList.size() > 0) {
-            activeTableUpdate(activeTable);
+            updateExistingTable(activeTable);
         }
 
 
@@ -411,18 +415,29 @@ public class Table extends AppCompatActivity {
         adapter.notifyItemChanged(newTableNumber - 1);
     }
 
-    public void activeTableUpdate(String activeTableList) {
-        Log.d(TAG, "activeTableUpdate: " + activeTableList);
+    public void updateDisconnectTable(int disconnectTableNumber){
+        Log.d(TAG, "disconnectTableUpdate: " + disconnectTableNumber);
+
+        if(disconnectTableNumber == 1000){
+            Log.d(TAG, "disconnectTableUpdate line null");
+            return;
+        }
+        tableList.get(disconnectTableNumber -1).setCategory(TableCategory.OTHER);
+        adapter.notifyItemChanged(disconnectTableNumber -1);
+    }
+
+    public void updateExistingTable(String existingTableList) {
+        Log.d(TAG, "existingTableUpdate: " + existingTableList);
 
         gson = new Gson();
-        int[] table = gson.fromJson(activeTableList, int[].class);
+        int[] table = gson.fromJson(existingTableList, int[].class);
         Arrays.sort(table);
-        Log.d(TAG, "activeTableUpdate after sort: " + Arrays.toString(table));
+        Log.d(TAG, "existingTableUpdate after sort: " + Arrays.toString(table));
 
         for (int i = 0; i < table.length; i++) {
 
             if (table[i] != myTable) {
-                Log.d(TAG, "activeTableUpdate table: " + table[i]);
+                Log.d(TAG, "existingTableUpdate table: " + table[i]);
                 tablePosition = table[i] - 1;
                 tableList.get(tablePosition).setCategory(TableCategory.ACTIVE);
                 adapter.notifyItemChanged(tablePosition);

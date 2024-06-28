@@ -84,11 +84,11 @@ public class TableDataManager {
     }
 
     public void stopSocket(Context context, String id){
+        Log.d(TAG, "stopSocket 호출");
         Gson gson = new Gson();
         Intent intent = new Intent("SendChattingData");
-        MessageDTO messageDTO = new MessageDTO("", id, "finish", "");
-        intent.putExtra("sendToServer", gson.toJson(messageDTO));
-
+        MessageDTO messageDTO = new MessageDTO("", id, "disconnect", "");
+        intent.putExtra("socketDisconnect", gson.toJson(messageDTO));
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 }

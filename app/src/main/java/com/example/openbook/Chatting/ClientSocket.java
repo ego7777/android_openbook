@@ -53,15 +53,18 @@ public class ClientSocket extends Thread implements Serializable {
     BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (intent.getAction().equals("SendChattingData")) {
+            String action = intent.getAction();
+            if (action.equals("SendChattingData")) {
                 String message = intent.getStringExtra("sendToServer");
                 Log.d(TAG, "onReceive message: " + message);
-
+                String disconnect = intent.getStringExtra("socketDisconnect");
+                Log.d(TAG, "onReceive disconnect: " + disconnect);
                 if(message != null){
-                    Thread thread = new Thread(() -> sendToServer(message));
-                    thread.start();
-                }
+                    new Thread(() -> sendToServer(message)).start();
 
+                }else if(disconnect != null){
+                    quit(disconnect);
+                }
 
             }
         }
@@ -83,7 +86,7 @@ public class ClientSocket extends Thread implements Serializable {
             BufferedReader networkReader = new BufferedReader(
                     new InputStreamReader(socket.getInputStream()));
 
-            MessageDTO messageDTO = new MessageDTO("", id, "add", "");
+            MessageDTO messageDTO = new MessageDTO("", id, "connect", "");
             sendToServer(gson.toJson(messageDTO));
 
             IntentFilter intentFilter = new IntentFilter("SendChattingData");
@@ -105,14 +108,14 @@ public class ClientSocket extends Thread implements Serializable {
                         receiveIsRead(messageDiv.getFrom());
                         break;
 
-                    case "welcome":
-                        Log.d(TAG, "message : welcome");
-                        Log.d(TAG, "tableList: " + messageDiv.getFrom());
-                        activeTableList(messageDiv.getFrom());
+                    case "existingTable":
+                        Log.d(TAG, "existingTable: " + messageDiv.getFrom());
+                        activeExistingTables(messageDiv.getFrom());
                         break;
 
-                    case "finish" :
-                        quit(newChat);
+                    case "disconnect" :
+                        Log.d(TAG, "disconnect: " + messageDiv.getFrom());
+                        updateDisconnectTable(messageDiv.getFrom());
                         break;
 
                     default:
@@ -148,6 +151,32 @@ public class ClientSocket extends Thread implements Serializable {
             }
         }
 
+    }
+
+    private void updateDisconnectTable(String disconnectTable){
+        Log.d(TAG, "updateDisconnectTable: " + disconnectTable);
+
+        SharedPreferences sharedPreferences = context.getSharedPreferences("CustomerData", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        String activeTable = sharedPreferences.getString("activeTableList", null);
+        ArrayList activeTableArray;
+
+        if(activeTable==null){
+            activeTableArray = new ArrayList();
+        }else{
+            activeTableArray = gson.fromJson(activeTable, ArrayList.class);
+        }
+
+        int tableNumber = Integer.parseInt(disconnectTable.replace("table", ""));
+
+        activeTableArray.remove(tableNumber);
+        editor.putString("activeTableList", gson.toJson(activeTableArray));
+        editor.commit();
+
+        Intent intent = new Intent("updateNewTable");
+        intent.putExtra("disconnectTable", tableNumber);
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
     private void sendToServer(String message) {
@@ -200,7 +229,7 @@ public class ClientSocket extends Thread implements Serializable {
 
     }
 
-    private void activeTableList(String activeTableList){
+    private void activeExistingTables(String activeTableList){
 
         SharedPreferences sharedPreferences = context.getSharedPreferences("CustomerData", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -208,9 +237,7 @@ public class ClientSocket extends Thread implements Serializable {
         editor.commit();
 
         Intent intent = new Intent("updateNewTable");
-        intent.putExtra("activeTableList", activeTableList);
-
-        Log.d(TAG, "activeTableList: " + intent.getAction());
+        intent.putExtra("existingTables", activeTableList);
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
@@ -246,18 +273,22 @@ public class ClientSocket extends Thread implements Serializable {
 
 
     public void quit(String messageDTO) {
+        Log.d(TAG, "client socket quit");
         loop = false;
         try {
             if (socket != null) {
-                sendToServer(messageDTO);
-
-                socket.close();
-                socket = null;
-                Log.d(TAG, "quit: ");
+                new Thread(() -> {
+                    sendToServer(messageDTO);
+                    try {
+                        socket.close();
+                        socket = null;
+                    } catch (IOException e) {
+                        Log.d(TAG, "quit: e" + e);
+                    }
+                }).start();
             }
 
-
-        } catch (IOException e) {
+        } catch (Exception e) {
             Log.d(TAG, "quit: e" + e);
         }
     }

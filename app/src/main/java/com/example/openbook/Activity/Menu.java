@@ -151,17 +151,22 @@ public class Menu extends AppCompatActivity {
 
                         String chatMessages = dbHelper.getChatting(myData.getId());
 
-                        tableDataManager.saveChatMessages
-                                (myData.getId(),
-                                        chatMessages,
-                                        tid, service,
-                                        chatResult -> {
-                                            if (chatResult.equals("success")) {
-                                                dbHelper.deleteAllChatMessages(); //삭제
-                                                tableDataManager.setUseStop(Menu.this, myData);
-                                                tableDataManager.stopSocket(Menu.this, myData.getId());
-                                            }
-                                        });
+                        if(chatMessages != null && !chatMessages.isBlank()){
+                            tableDataManager.saveChatMessages
+                                    (myData.getId(),
+                                            chatMessages,
+                                            tid, service,
+                                            chatResult -> {
+                                                if (chatResult.equals("success")) {
+                                                    dbHelper.deleteAllChatMessages(); //삭제
+                                                    tableDataManager.setUseStop(Menu.this, myData);
+                                                    tableDataManager.stopSocket(Menu.this, myData.getId());
+                                                }
+                                            });
+                        }else{
+                            tableDataManager.setUseStop(Menu.this, myData);
+                            tableDataManager.stopSocket(Menu.this, myData.getId());
+                        }
                     }
                     break;
             }

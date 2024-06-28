@@ -228,6 +228,7 @@ public class Admin extends AppCompatActivity {
                     adminData.getAdminTableLists().get(paidTableNumber).init();
                     adapter.notifyItemChanged(paidTableNumber);
 
+                    editor.remove(paidTable);
                     editor.putString("adminTableList", gson.toJson(adminData.getAdminTableLists()));
                     editor.commit();
 

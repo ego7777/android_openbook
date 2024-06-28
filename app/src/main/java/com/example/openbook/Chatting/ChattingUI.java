@@ -110,17 +110,20 @@ public class ChattingUI extends AppCompatActivity {
                         Retrofit retrofit = retrofitManager.getRetrofit(BuildConfig.SERVER_IP);
                         RetrofitService service = retrofit.create(RetrofitService.class);
 
-                        tableDataManager.saveChatMessages
-                                (myData.getId(), chatMessages, tid, service,
-                                        chatResult -> {
-                                            if (chatResult.equals("success")) {
-                                                dbHelper.deleteAllChatMessages(); //삭제
-                                                tableDataManager.setUseStop(ChattingUI.this, myData);
-                                                tableDataManager.stopSocket(ChattingUI.this, myData.getId());
-                                            }
-                                        });
-
-
+                        if(chatMessages != null && !chatMessages.isBlank()){
+                            tableDataManager.saveChatMessages
+                                    (myData.getId(), chatMessages, tid, service,
+                                            chatResult -> {
+                                                if (chatResult.equals("success")) {
+                                                    dbHelper.deleteAllChatMessages(); //삭제
+                                                    tableDataManager.stopSocket(ChattingUI.this, myData.getId());
+                                                    tableDataManager.setUseStop(ChattingUI.this, myData);
+                                                }
+                                            });
+                        }else{
+                            tableDataManager.stopSocket(ChattingUI.this, myData.getId());
+                            tableDataManager.setUseStop(ChattingUI.this, myData);
+                        }
                     }
                     break;
             }

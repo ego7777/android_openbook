@@ -201,37 +201,44 @@ public class DBHelper extends SQLiteOpenHelper {
         // Map to hold receivers and their messages
         Map<String, JSONArray> messagesByReceiver = new HashMap<>();
 
-        while (cursor.moveToNext()) {
-            try {
-                String message = cursor.getString(cursor.getColumnIndexOrThrow("message"));
-                String time = cursor.getString(cursor.getColumnIndexOrThrow("time"));
-                String receiver = cursor.getString(cursor.getColumnIndexOrThrow("receiver"));
+        if(cursor.getCount() == 0){
+            cursor.close();
+            db.close();
+            return null;
+        }else{
+            while (cursor.moveToNext()) {
+                try {
+                    String message = cursor.getString(cursor.getColumnIndexOrThrow("message"));
+                    String time = cursor.getString(cursor.getColumnIndexOrThrow("time"));
+                    String receiver = cursor.getString(cursor.getColumnIndexOrThrow("receiver"));
 
-                JSONObject jsonObject = new JSONObject();
-                jsonObject.put("message", message);
-                jsonObject.put("time", time);
+                    JSONObject jsonObject = new JSONObject();
+                    jsonObject.put("message", message);
+                    jsonObject.put("time", time);
 
-                if (!messagesByReceiver.containsKey(receiver)) {
-                    messagesByReceiver.put(receiver, new JSONArray());
+                    if (!messagesByReceiver.containsKey(receiver)) {
+                        messagesByReceiver.put(receiver, new JSONArray());
+                    }
+                    messagesByReceiver.get(receiver).put(jsonObject);
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-                messagesByReceiver.get(receiver).put(jsonObject);
-            } catch (Exception e) {
-                e.printStackTrace();
             }
-        }
-        cursor.close();
-        db.close();
 
-        // Convert the map to a JSON object
-        JSONObject resultJson = new JSONObject();
-        for (Map.Entry<String, JSONArray> entry : messagesByReceiver.entrySet()) {
-            try {
-                resultJson.put(entry.getKey(), entry.getValue());
-            } catch (Exception e) {
-                e.printStackTrace();
+            cursor.close();
+            db.close();
+
+            // Convert the map to a JSON object
+            JSONObject resultJson = new JSONObject();
+            for (Map.Entry<String, JSONArray> entry : messagesByReceiver.entrySet()) {
+                try {
+                    resultJson.put(entry.getKey(), entry.getValue());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
+            return resultJson.toString();
         }
-        return resultJson.toString();
     }
 
     public void upDateIsRead(String myTable, String otherTable) {
