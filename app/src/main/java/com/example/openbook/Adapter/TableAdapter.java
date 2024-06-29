@@ -137,6 +137,14 @@ public class TableAdapter extends RecyclerView.Adapter<TableAdapter.ViewHolder> 
             itemTableNumber.setText(String.valueOf(items.getTableNumber()));
             itemTableGender.setText(items.getTableGender());
             itemTableGuestNum.setText(items.getTableGuestNum());
+
+            int isNotRead = items.getIsNotRead();
+            if(isNotRead != 1000){
+                itemTableChat.setVisibility(View.VISIBLE);
+                itemTableChat.setText(String.valueOf(isNotRead));
+            }else{
+                itemTableChat.setVisibility(View.INVISIBLE);
+            }
         }
 
         void onBindMine(TableList items) {

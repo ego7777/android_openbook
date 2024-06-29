@@ -13,16 +13,27 @@ public class TableList implements Serializable {
     String tableGuestNum;
     TableCategory category;
     String myTable;
+    int isNotRead;
 
 
-    public TableList(int tableNumber, TableCategory category){
+    public TableList(int tableNumber, TableCategory category, int isNotRead){
         this.tableNumber = tableNumber;
         this.category = category;
+        this.isNotRead = isNotRead;
+
     }
 
     public TableList(String myTable, TableCategory category){
         this.myTable = myTable;
         this.category = category;
+    }
+
+    public void setIsNotRead(int isNotRead) {
+        this.isNotRead = isNotRead;
+    }
+
+    public int getIsNotRead() {
+        return isNotRead;
     }
 
     public String getMyTable() {

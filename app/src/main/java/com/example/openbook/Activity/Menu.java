@@ -17,6 +17,8 @@ import android.os.Looper;
 import android.util.Log;
 import android.util.Pair;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -44,7 +46,6 @@ import com.example.openbook.Data.OrderList;
 import com.example.openbook.Data.SideList;
 import com.example.openbook.Deco.menu_recyclerview_deco;
 import com.example.openbook.DialogManager;
-import com.example.openbook.FCM.FCM;
 import com.example.openbook.FCM.SendNotification;
 import com.example.openbook.Category.PaymentCategory;
 import com.example.openbook.ManageOrderItems;
@@ -91,7 +92,7 @@ public class Menu extends AppCompatActivity {
     SharedPreferences sharedPreference;
     SharedPreferences.Editor editor;
 
-    TextView appbarMenuTable, appbarOrderList, cartOrderTotalPrice;
+    TextView appbarMenuTable, appbarOrderList, cartOrderTotalPrice, menuNewChat;
 
     CartAdapter cartAdapter;
     MenuAdapter menuAdapter;
@@ -113,6 +114,7 @@ public class Menu extends AppCompatActivity {
     Dialog progressbar;
     Gson gson;
     TableDataManager tableDataManager;
+    String newChatTable;
 
     //액티비티가 onCreate 되면 자동으로 받는거고
     BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
@@ -126,6 +128,13 @@ public class Menu extends AppCompatActivity {
                     String count = intent.getStringExtra("count");
 
                     dialogManager.giftReceiveDialog(Menu.this, myData.getId(), from, menuItem, count).show();
+                    break;
+
+                case "newChatArrived" :
+                    newChatTable = intent.getStringExtra("newChatTable");
+                    if(newChatTable!=null){
+                        notifyNewChat(newChatTable);
+                    }
                     break;
 
                 case "isGiftAccept":
@@ -181,6 +190,7 @@ public class Menu extends AppCompatActivity {
 
         overridePendingTransition(0, 0);
 
+
         dialogManager = new DialogManager();
         progressbar = dialogManager.progressDialog(Menu.this);
         progressbar.show();
@@ -193,6 +203,7 @@ public class Menu extends AppCompatActivity {
         isPayment = getIntent().getBooleanExtra("isPayment", false);
 
         tableDataManager = new TableDataManager();
+        tableDataManager.hideSystemUI(this);
 
         sharedPreference = getSharedPreferences("CustomerData", MODE_PRIVATE);
         editor = sharedPreference.edit();
@@ -226,7 +237,7 @@ public class Menu extends AppCompatActivity {
         }
         appbarMenuTable = findViewById(R.id.appbar_menu_table);
         appbarOrderList = findViewById(R.id.appbar_menu_orderList);
-
+        menuNewChat = findViewById(R.id.menu_new_chat);
 
         RecyclerView cartRecyclerview = findViewById(R.id.menu_cart_recyclerview);
         cartRecyclerview.setLayoutManager(new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
@@ -356,6 +367,14 @@ public class Menu extends AppCompatActivity {
 
     }
 
+    public void notifyNewChat(String tableName){
+        Animation shakeAndTranslate = AnimationUtils.loadAnimation(this, R.anim.up_and_shake);
+        String notify = tableName + "\n채팅 알림";
+        menuNewChat.setText(notify);
+        menuNewChat.setVisibility(View.VISIBLE);
+        menuNewChat.startAnimation(shakeAndTranslate);
+    }
+
     @Override
     protected void onStop() {
         super.onStop();
@@ -370,6 +389,7 @@ public class Menu extends AppCompatActivity {
         intentFilter.addAction("giftArrived");
         intentFilter.addAction("isGiftAccept");
         intentFilter.addAction("CompletePayment");
+        intentFilter.addAction("newChatArrived");
         LocalBroadcastManager.getInstance(Menu.this).registerReceiver(broadcastReceiver, intentFilter);
 
         useStop.setOnClickListener(view -> {
@@ -379,10 +399,7 @@ public class Menu extends AppCompatActivity {
 
 
         appbarMenuTable.setOnClickListener(view -> {
-            Intent intent = new Intent(Menu.this, Table.class);
-            intent.putExtra("myData", myData);
-            intent.putExtra("tableList", tableList);
-            startActivity(intent);
+            moveToOtherActivity(Table.class);
         });
 
 
@@ -508,10 +525,7 @@ public class Menu extends AppCompatActivity {
                     menuRecyclerview.smoothScrollToPosition(12);
                     break;
                 case "직원호출":
-                    Intent intent = new Intent(Menu.this, CallServer.class);
-                    intent.putExtra("myData", myData);
-                    intent.putExtra("tableList", tableList);
-                    startActivity(intent);
+                    moveToOtherActivity(CallServer.class);
                     break;
             }
 
@@ -570,7 +584,19 @@ public class Menu extends AppCompatActivity {
         if (!myData.getId().equals("구글로그인")) {
             myTable = Integer.parseInt(myData.getId().replace("table", ""));
         }
-    } // onResume
+
+        menuNewChat.setOnClickListener(view ->{
+            menuNewChat.setVisibility(View.GONE);
+            int newChatTableNumber = Integer.parseInt(newChatTable.replace("table", ""));
+            newChatTable = null;
+
+            Intent intent = new Intent(Menu.this, ChattingUI.class);
+            intent.putExtra("myData", myData);
+            intent.putExtra("tableList", tableList);
+            intent.putExtra("tableNumber", newChatTableNumber);
+            startActivity(intent);
+        });
+    }
 
     public String getOrderItemName() {
 
@@ -738,6 +764,13 @@ public class Menu extends AppCompatActivity {
             return null;
         }
         return totalPrice;
+    }
+
+    public void moveToOtherActivity(Class<?> activity){
+        Intent intent = new Intent(Menu.this, activity);
+        intent.putExtra("myData", myData);
+        intent.putExtra("tableList", tableList);
+        startActivity(intent);
     }
 
 

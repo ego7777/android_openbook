@@ -1,10 +1,11 @@
-package com.example.openbook.Chatting;
+package com.example.openbook.Activity;
 
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.util.Log;
@@ -18,11 +19,10 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.openbook.Activity.Table;
 import com.example.openbook.Adapter.ChattingAdapter;
-import com.example.openbook.Activity.Menu;
 import com.example.openbook.BuildConfig;
 import com.example.openbook.Category.ChattingCategory;
+import com.example.openbook.Chatting.MessageDTO;
 import com.example.openbook.DBHelper;
 import com.example.openbook.Data.MyData;
 import com.example.openbook.Data.TableList;
@@ -50,13 +50,15 @@ public class ChattingUI extends AppCompatActivity {
     ChattingAdapter chattingAdapter;
     RecyclerView chattingRecyclerView;
     EditText chattingEditText;
-
+    SharedPreferences sharedPreferences;
+    SharedPreferences.Editor editor;
     DBHelper dbHelper;
     ArrayList<TableList> tableList;
 
     MyData myData;
     Gson gson = new Gson();
     DialogManager dialogManager;
+    TableDataManager tableDataManager;
 
     BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -104,8 +106,6 @@ public class ChattingUI extends AppCompatActivity {
                         DBHelper dbHelper = new DBHelper(ChattingUI.this);
                         String chatMessages = dbHelper.getChatting(myData.getId());
 
-                        TableDataManager tableDataManager = new TableDataManager();
-
                         RetrofitManager retrofitManager = new RetrofitManager();
                         Retrofit retrofit = retrofitManager.getRetrofit(BuildConfig.SERVER_IP);
                         RetrofitService service = retrofit.create(RetrofitService.class);
@@ -145,6 +145,7 @@ public class ChattingUI extends AppCompatActivity {
     }
 
 
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -152,24 +153,16 @@ public class ChattingUI extends AppCompatActivity {
 
         tableNumber = getIntent().getIntExtra("tableNumber", 0);
         myData = (MyData) getIntent().getSerializableExtra("myData");
+        tableDataManager = new TableDataManager();
+        tableDataManager.hideSystemUI(this);
 
         dialogManager = new DialogManager();
-
-        TextView moveMenu = findViewById(R.id.appbar_menu_menu);
-        moveMenu.setOnClickListener(view -> moveActivity(Menu.class));
-
-        TextView moveTable = findViewById(R.id.appbar_menu_table);
-        moveTable.setOnClickListener(view -> moveActivity(Table.class));
-
-        TextView appbarTableNumber = findViewById(R.id.appbar_menu_table_number);
-        appbarTableNumber.setText(myData.getId());
 
         TextView chatTableNum = findViewById(R.id.chatting_tableNum);
         chatTableNum.setText("Table" + tableNumber);
 
         chattingEditText = findViewById(R.id.chatting_edit);
         TextView chattingSendButton = findViewById(R.id.chatting_sendBtn);
-
 
         chattingRecyclerView = findViewById(R.id.chatting_recyclerview);
         chattingAdapter = new ChattingAdapter();
@@ -323,6 +316,13 @@ public class ChattingUI extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
+
+        sharedPreferences = getSharedPreferences("CustomerData", MODE_PRIVATE);
+        editor = sharedPreferences.edit();
+        String key = "isNotReadtable" + tableNumber;
+        editor.remove(key);
+        editor.commit();
+
         LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
     }
 }

@@ -38,7 +38,6 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_marginTop="10dp"
-
             android:layout_weight="3"
             android:backgroundTint="@color/zxing_transparent"
             android:orientation="vertical">
@@ -63,32 +62,31 @@
                 android:scrollbarFadeDuration="0"
                 android:background="@color/white" />
 
-
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:background="@color/dark_gray" />
+                android:background="@color/light_gray"/>
 
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="100dp"
+                android:layout_marginBottom="30dp"
                 android:background="@color/white"
                 android:orientation="horizontal"
-                android:paddingTop="5dp"
-                android:paddingBottom="5dp">
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp">
 
 
                 <TextView
                     android:id="@+id/cart_order_total_price"
                     android:layout_width="0dp"
-                    android:layout_height="60dp"
-                    android:layout_marginStart="20dp"
+                    android:layout_height="40dp"
                     android:layout_weight="7"
                     android:autoSizeMaxTextSize="20sp"
                     android:autoSizeTextType="uniform"
                     android:gravity="center"
+                    android:layout_gravity="center"
                     android:textColor="@color/black"
                     android:textStyle="bold" />
 
@@ -104,12 +102,27 @@
                     android:background="@drawable/lime_radius_10"
                     android:backgroundTint="@color/blue_purple"
                     android:gravity="center"
+                    android:layout_gravity="center"
                     android:text="주문하기"
                     android:textColor="@color/black"
                     android:textStyle="bold" />
 
-
             </LinearLayout>
+
+            <TextView
+                android:id="@+id/menu_new_chat"
+                android:layout_width="150dp"
+                android:layout_height="150dp"
+                android:background="@drawable/heart"
+                android:layout_gravity="center"
+
+                android:text="table1 \n채팅 알림"
+                android:textColor="@color/black"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:textSize="22sp"
+
+                android:visibility="gone"/>
 
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/menu_close"
@@ -119,6 +132,7 @@
                 android:background="@drawable/white_radius_10_stroke_gray"
                 android:backgroundTint="@color/purple_700"
                 android:text="종료하기"
+                android:visibility="gone"
                 android:textColor="@color/white"
                 android:textSize="30sp"
                 android:textStyle="bold" />

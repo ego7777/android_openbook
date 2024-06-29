@@ -24,7 +24,6 @@ import androidx.recyclerview.widget.SimpleItemAnimator;
 
 import com.example.openbook.Adapter.TableAdapter;
 import com.example.openbook.BuildConfig;
-import com.example.openbook.Chatting.ChattingUI;
 import com.example.openbook.DBHelper;
 import com.example.openbook.Data.MyData;
 import com.example.openbook.Data.OrderList;
@@ -40,9 +39,6 @@ import com.example.openbook.retrofit.RetrofitService;
 import com.example.openbook.retrofit.TableInformationDTO;
 import com.google.gson.Gson;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -77,6 +73,9 @@ public class Table extends AppCompatActivity {
     Gson gson;
     int previousClickTable;
 
+    DBHelper dbHelper;
+    TableDataManager tableDataManager;
+
 
     BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -95,9 +94,16 @@ public class Table extends AppCompatActivity {
                         Log.d(TAG, "existingTables: " + existingTables);
                         updateExistingTable(existingTables);
 
-                    } else if(disconnectTable != 1000){
+                    } else if (disconnectTable != 1000) {
                         Log.d(TAG, "disconnectTable: " + disconnectTable);
                         updateDisconnectTable(disconnectTable);
+                    }
+                    break;
+
+                case "newChatArrived" :
+                    String isNotReadTable = intent.getStringExtra("isNotReadChat");
+                    if(isNotReadTable != null){
+                        updateIsNotRead(isNotReadTable);
                     }
                     break;
 
@@ -126,12 +132,9 @@ public class Table extends AppCompatActivity {
                     String tid = intent.getStringExtra("tid");
 
                     if (tid != null && !tid.isEmpty()) {
-                        DBHelper dbHelper = new DBHelper(Table.this);
                         String chatMessages = dbHelper.getChatting(myData.getId());
                         Log.d(TAG, "CompletePayment chatMessage: " + chatMessages);
-
-                        TableDataManager tableDataManager = new TableDataManager();
-                        if(chatMessages != null && !chatMessages.isBlank()){
+                        if (chatMessages != null && !chatMessages.isBlank()) {
                             tableDataManager.saveChatMessages
                                     (myData.getId(), chatMessages, tid, service,
                                             chatResult -> {
@@ -141,7 +144,7 @@ public class Table extends AppCompatActivity {
                                                     tableDataManager.stopSocket(Table.this, myData.getId());
                                                 }
                                             });
-                        }else{
+                        } else {
                             tableDataManager.setUseStop(Table.this, myData);
                             tableDataManager.stopSocket(Table.this, myData.getId());
                         }
@@ -160,22 +163,19 @@ public class Table extends AppCompatActivity {
 
         overridePendingTransition(0, 0);
 
-
         myData = (MyData) getIntent().getSerializableExtra("myData");
-        Log.d(TAG, "myData IsOrder: " + myData.isOrder());
         myTable = Integer.parseInt(myData.getId().replace("table", ""));
-        Log.d(TAG, "myTable: " + myTable);
 
         tableList = (ArrayList<TableList>) getIntent().getSerializableExtra("tableList");
 
+        tableDataManager = new TableDataManager();
+        tableDataManager.hideSystemUI(this);
 
+        dbHelper = new DBHelper(Table.this);
         customerDataSp = getSharedPreferences("CustomerData", MODE_PRIVATE);
         String activeTable = customerDataSp.getString("activeTableList", null);
-        if (tableList != null) {
 
-            Log.d(TAG, "tableList size: " + tableList.size());
-
-        } else {
+        if (tableList == null) {
             Log.d(TAG, "table is null");
 
             tableList = new ArrayList<>();
@@ -184,9 +184,18 @@ public class Table extends AppCompatActivity {
                 if (i == myTable) {
                     tableList.add(new TableList(myData.getId(), TableCategory.MY));
                 } else {
-                    tableList.add(new TableList(i, TableCategory.OTHER));
+                    tableList.add(new TableList(i, TableCategory.OTHER, 1000));
+
+                    String key = "isNotReadtable" + i + 1;
+                    int isNotRead = customerDataSp.getInt(key, 1000);
+
+                    if(isNotRead != 1000){
+                        tableList.get(i).setIsNotRead(isNotRead);
+                    }
+
                 }
             }
+
         }
 
 
@@ -212,7 +221,6 @@ public class Table extends AppCompatActivity {
             ((SimpleItemAnimator) animator).setSupportsChangeAnimations(false);
         }
 
-        //그리드 레이아웃 설정
         tableRecyclerview.setLayoutManager(new GridLayoutManager(this, 5));
         tableRecyclerview.setAdapter(adapter);
 
@@ -220,8 +228,6 @@ public class Table extends AppCompatActivity {
             updateExistingTable(activeTable);
         }
 
-
-        //오른쪽 사이드 메뉴
         tableSidebar = findViewById(R.id.table_sidebar);
         tableDocument = findViewById(R.id.table_document);
 
@@ -247,7 +253,7 @@ public class Table extends AppCompatActivity {
         //로컬 브로드 캐스트 등록
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction("updateNewTable");
-        intentFilter.addAction("sendChattingData");
+        intentFilter.addAction("newChatArrived");
         intentFilter.addAction("giftArrived");
         intentFilter.addAction("isGiftAccept");
         intentFilter.addAction("CompletePayment");
@@ -341,16 +347,14 @@ public class Table extends AppCompatActivity {
                 dialogManager.positiveBtnDialog(Table.this,
                         getResources().getString(R.string.unusableTable)).show();
 
-            } else if(clickTable == myTable){
+            } else if (clickTable == myTable) {
                 dialogManager.positiveBtnDialog(Table.this,
                         getResources().getString(R.string.myTable)).show();
             } else {
                 dialogManager.giftSelectDialog(Table.this, myData.getId(), "table" + clickTable).show();
             }
         });
-
-
-    } //onResume
+    }
 
     private void requestTableInfo() {
         Call<TableInformationDTO> call = service.requestTableInfo("table" + clickTable);
@@ -394,7 +398,6 @@ public class Table extends AppCompatActivity {
         });
     }
 
-
     public void moveToMenu(View view) {
         Intent intent = new Intent(Table.this, Menu.class);
         intent.putExtra("myData", myData);
@@ -415,15 +418,25 @@ public class Table extends AppCompatActivity {
         adapter.notifyItemChanged(newTableNumber - 1);
     }
 
-    public void updateDisconnectTable(int disconnectTableNumber){
+    public void updateIsNotRead(String tableName){
+        String key = "isNotRead" + tableName;
+        int tableNumber = Integer.parseInt(tableName.replace("table", "")) - 1;
+        int isNotRead = customerDataSp.getInt(key, 1000);
+        if(isNotRead != 1000){
+            tableList.get(tableNumber).setIsNotRead(isNotRead);
+            adapter.notifyItemChanged(tableNumber);
+        }
+    }
+
+    public void updateDisconnectTable(int disconnectTableNumber) {
         Log.d(TAG, "disconnectTableUpdate: " + disconnectTableNumber);
 
-        if(disconnectTableNumber == 1000){
+        if (disconnectTableNumber == 1000) {
             Log.d(TAG, "disconnectTableUpdate line null");
             return;
         }
-        tableList.get(disconnectTableNumber -1).setCategory(TableCategory.OTHER);
-        adapter.notifyItemChanged(disconnectTableNumber -1);
+        tableList.get(disconnectTableNumber - 1).setCategory(TableCategory.OTHER);
+        adapter.notifyItemChanged(disconnectTableNumber - 1);
     }
 
     public void updateExistingTable(String existingTableList) {
@@ -455,28 +468,6 @@ public class Table extends AppCompatActivity {
         Log.d(TAG, "onActivityResult myData Id: " + myData.getId());
         Log.d(TAG, "onActivityResult myData IsOrder: " + myData.isOrder());
 
-    }
-
-    public String sendTicketToAdmin(String whoBuy) {
-        JSONObject jsonObject = new JSONObject();
-
-        try {
-            JSONArray menujArray = new JSONArray();//배열이 필요할때
-            JSONObject object = new JSONObject();
-
-            object.put("menu", "profileTicket");
-            object.put("price", 2000);
-            object.put("quantity", 1);
-            menujArray.put(object);
-
-            jsonObject.put("item", menujArray);
-            jsonObject.put("menuName", "profileTicket");
-            jsonObject.put("tableName", whoBuy);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        return jsonObject.toString();
     }
 
 

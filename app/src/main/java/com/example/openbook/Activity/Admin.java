@@ -134,6 +134,9 @@ public class Admin extends AppCompatActivity {
         tid = getIntent().getStringExtra("tid");
         paidTable = getIntent().getStringExtra("paidTable");
 
+        TableDataManager tableDataManager = new TableDataManager();
+        tableDataManager.hideSystemUI(this);
+
         adminTableLists = new ArrayList<>();
         orderLists = new ArrayList<>();
 

@@ -1,17 +1,15 @@
 package com.example.openbook;
 
-import static androidx.core.content.ContextCompat.startActivity;
-
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
+import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-import com.example.openbook.Activity.Menu;
 import com.example.openbook.Activity.PaymentSelect;
-import com.example.openbook.Chatting.ChattingUI;
 import com.example.openbook.Chatting.MessageDTO;
 import com.example.openbook.Data.MyData;
 import com.example.openbook.FCM.FCM;
@@ -27,6 +25,15 @@ public class TableDataManager {
 
     String TAG = "TableDataManagerTAG";
     FCM fcm;
+
+    public void hideSystemUI(Activity activity){
+        int uiOptions = activity.getWindow().getDecorView().getSystemUiVisibility();
+        int newUiOptions = uiOptions;
+        newUiOptions ^= View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
+        newUiOptions ^= View.SYSTEM_UI_FLAG_FULLSCREEN;
+        newUiOptions ^= View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+        activity.getWindow().getDecorView().setSystemUiVisibility(newUiOptions);
+    }
 
     public void setFcmService(int identifier){
         fcm = new FCM();

@@ -1,6 +1,7 @@
 package com.example.openbook.Adapter;
 
 import android.annotation.SuppressLint;
+import android.icu.text.DecimalFormat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -148,7 +149,8 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder> {
 
         void onBindMenu(CartList items) {
             menuName.setText(items.getMenuName());
-            menuPrice.setText(String.valueOf(items.getMenuPrice()));
+            String addCommasPrice = new DecimalFormat("#,###").format(items.getMenuPrice());
+            menuPrice.setText(addCommasPrice);
             menuQuantity.setText(String.valueOf(items.getMenuQuantity()));
         }
 

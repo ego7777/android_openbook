@@ -2,45 +2,35 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-
     android:layout_height="match_parent">
-
-    <include
-        android:id="@+id/appbar"
-        layout="@layout/appbar_menu"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
-
-    //채팅 상단바
 
     <TextView
         android:id="@+id/chatting_tableNum"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="60dp"
         android:autoSizeMaxTextSize="30sp"
         android:autoSizeTextType="uniform"
         android:background="@color/light_green"
         android:gravity="center"
-        android:padding="20dp"
-        android:text="table number"
+        android:padding="13dp"
+        android:text="table1"
         android:textStyle="bold"
 
         app:layout_constraintBottom_toTopOf="@id/chatting_recyclerview"
         app:layout_constraintEnd_toStartOf="@id/chatting_back"
         app:layout_constraintHorizontal_weight="9"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/appbar" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/chatting_back"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="60dp"
         android:autoSizeMaxTextSize="25sp"
         android:autoSizeTextType="uniform"
         android:background="@color/light_green"
         android:gravity="center"
-        android:padding="20dp"
+        android:padding="10dp"
         android:text="X"
         android:textStyle="bold"
 
@@ -49,10 +39,8 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_weight="1"
         app:layout_constraintStart_toEndOf="@id/chatting_tableNum"
-        app:layout_constraintTop_toBottomOf="@id/appbar" />
+        app:layout_constraintTop_toTopOf="parent" />
 
-
-    //2번째는 recyclerview
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/chatting_recyclerview"

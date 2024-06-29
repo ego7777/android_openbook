@@ -36,11 +36,13 @@ public class ClientSocket extends Thread implements Serializable {
     final int connectionTimeout = 999999;
     BufferedWriter networkWrite;
     String id;
-
     public Socket socket;
     boolean loop;
     Context context;
     Gson gson = new Gson();
+    DBHelper dbHelper;
+    SharedPreferences sharedPreferences;
+    SharedPreferences.Editor editor;
 
     public ClientSocket(String id, Context context) {
         this.id = id;
@@ -92,6 +94,9 @@ public class ClientSocket extends Thread implements Serializable {
             IntentFilter intentFilter = new IntentFilter("SendChattingData");
             LocalBroadcastManager.getInstance(context).registerReceiver(broadcastReceiver, intentFilter);
 
+            dbHelper = new DBHelper(context);
+            sharedPreferences = context.getSharedPreferences("CustomerData", Context.MODE_PRIVATE);
+            editor = sharedPreferences.edit();
 
             while (loop) {
 
@@ -156,9 +161,6 @@ public class ClientSocket extends Thread implements Serializable {
     private void updateDisconnectTable(String disconnectTable){
         Log.d(TAG, "updateDisconnectTable: " + disconnectTable);
 
-        SharedPreferences sharedPreferences = context.getSharedPreferences("CustomerData", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-
         String activeTable = sharedPreferences.getString("activeTableList", null);
         ArrayList activeTableArray;
 
@@ -173,6 +175,8 @@ public class ClientSocket extends Thread implements Serializable {
         activeTableArray.remove(tableNumber);
         editor.putString("activeTableList", gson.toJson(activeTableArray));
         editor.commit();
+
+        dbHelper.deleteCompletedTableChatMessage(disconnectTable);
 
         Intent intent = new Intent("updateNewTable");
         intent.putExtra("disconnectTable", tableNumber);
@@ -205,9 +209,6 @@ public class ClientSocket extends Thread implements Serializable {
     private void updateNewTable(String newTable) {
         Log.d(TAG, "updateNewTable: " + newTable);
 
-        SharedPreferences sharedPreferences = context.getSharedPreferences("CustomerData", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-
         String activeTable = sharedPreferences.getString("activeTableList", null);
         ArrayList activeTableArray;
 
@@ -231,8 +232,6 @@ public class ClientSocket extends Thread implements Serializable {
 
     private void activeExistingTables(String activeTableList){
 
-        SharedPreferences sharedPreferences = context.getSharedPreferences("CustomerData", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString("activeTableList", activeTableList);
         editor.commit();
 
@@ -254,8 +253,23 @@ public class ClientSocket extends Thread implements Serializable {
                 id,
                 "1");
 
+        String key = "isNotRead"  + messageDiv.getFrom();
+        int isNotRead = sharedPreferences.getInt(key, 1000);
+
+        if(isNotRead != 1000){
+            isNotRead +=1;
+        }else{
+            isNotRead = 1;
+        }
+        editor.putInt(key, isNotRead);
+        editor.commit();
+
+        //여기서 쉐어드에 하트를 저장하자! 꺼내서 있으면 더해서 저장, 없으면 그냥 1저장!!!해서 onCreate가 테이블에서 되면! 꺼내서 붙이자!
+
         Intent intent = new Intent("newChatArrived");
         intent.putExtra("chat", newChat);
+        intent.putExtra("isNotReadChat", messageDiv.getFrom());
+        intent.putExtra("newChatTable", messageDiv.getFrom());
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
 
     }
@@ -263,7 +277,6 @@ public class ClientSocket extends Thread implements Serializable {
     private void receiveIsRead(String from) {
         Log.d(TAG, "receiveIsRead: ");
 
-        DBHelper dbHelper = new DBHelper(context);
         dbHelper.upDateIsRead(id, from);
 
         Intent intent = new Intent("isReadArrived");

@@ -256,6 +256,13 @@ public class DBHelper extends SQLiteOpenHelper {
         db.close();
     }
 
+    public void deleteCompletedTableChatMessage(String tableName){
+        SQLiteDatabase db = this.getWritableDatabase();
+        String sql = "DELETE FROM chattingTable WHERE sender = ?";
+        db.execSQL(sql, new String[]{tableName});
+        db.close();
+    }
+
 
     public Cursor getTableData(String tableName) {
         if(isExistTable(tableName)){

@@ -30,6 +30,7 @@ import com.example.openbook.DialogManager;
 import com.example.openbook.R;
 import com.example.openbook.Data.CartList;
 import com.example.openbook.Data.RequestList;
+import com.example.openbook.TableDataManager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -82,6 +83,9 @@ public class CallServer extends AppCompatActivity {
 
         myData = (MyData) getIntent().getSerializableExtra("myData");
         tableLists = (ArrayList<TableList>) getIntent().getSerializableExtra("tableList");
+
+        TableDataManager tableDataManager = new TableDataManager();
+        tableDataManager.hideSystemUI(this);
 
         dialogManager = new DialogManager();
 
