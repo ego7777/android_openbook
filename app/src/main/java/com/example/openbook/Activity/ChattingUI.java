@@ -91,7 +91,6 @@ public class ChattingUI extends AppCompatActivity {
                     String acceptMessage;
                     if (isAccept) {
                         acceptMessage = from + "에서 선물을 수락하였습니다.";
-                        //여기서 메뉴 주문 메뉴 저장하기
                     } else {
                         acceptMessage = from + "에서 선물을 거절하였습니다.";
                     }

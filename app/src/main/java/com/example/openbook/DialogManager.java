@@ -33,6 +33,7 @@ import com.example.openbook.Adapter.AdminPopUpAdapter;
 import com.example.openbook.Adapter.MenuAdapter;
 import com.example.openbook.Category.CartCategory;
 import com.example.openbook.Category.MenuCategory;
+import com.example.openbook.Data.CartList;
 import com.example.openbook.Data.MenuList;
 import com.example.openbook.Data.OrderList;
 import com.example.openbook.Deco.menu_recyclerview_deco;
@@ -44,6 +45,8 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
+
+import org.checkerframework.checker.units.qual.A;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -369,7 +372,6 @@ public class DialogManager {
         yesButton.setText("확인");
 
         yesButton.setOnClickListener(view -> {
-            //노티피케이션으로 티켓 구매 알리고, 나한테도 주문 내역에 들어가야함!!
 
             gson = new Gson();
             JsonObject menuItem = new JsonObject();
@@ -398,7 +400,11 @@ public class DialogManager {
                 }else{
                     //성공하면 클라이언트 주문 내역에 저장
                     manageOrderItems = new ManageOrderItems();
-                    manageOrderItems.orderSharedPreference(context);
+                    ArrayList<CartList> cartList= new ArrayList<>();
+                    cartList.add(new CartList("프로필 티켓", 2000, 1, 2000,
+                            MenuCategory.SIDE.getValue(), CartCategory.MENU));
+
+                    manageOrderItems.saveOrderedItems(context, cartList);
 
                     //프로필 티켓도 업데이트
                     sharedPreferences = context.getSharedPreferences("CustomerData", Context.MODE_PRIVATE);

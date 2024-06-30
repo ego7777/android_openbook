@@ -41,52 +41,57 @@ public class ManageOrderItems {
         return gson.toJson(menuItems);
     }
 
-    public void orderSharedPreference(Context context) {
+    public void saveOrderedItems(Context context, ArrayList<CartList> cartLists) {
         sharedPreferences = context.getSharedPreferences("CustomerData", MODE_PRIVATE);
         editor = sharedPreferences.edit();
 
-        String orderItems = sharedPreferences.getString("orderItems", null);
-        Log.d(TAG, "orderSharedPreference: " + orderItems);
+        String orderedItems = sharedPreferences.getString("orderItems", null);
 
-        if (orderItems != null && !orderItems.isEmpty()) {
+        //shared에 저장된 내용이 있으면 기존값에 추가해서 저장
+        if (orderedItems != null && !orderedItems.isEmpty()) {
             Type type = new TypeToken<ArrayList<CartList>>() {
             }.getType();
-            ArrayList<CartList> orderLists = gson.fromJson(orderItems, type);
+            ArrayList<CartList> orderLists = gson.fromJson(orderedItems, type);
 
             boolean found = false;
+            for (int i = 0; i < cartLists.size(); i++) {
+                CartList cartItem = cartLists.get(i);
 
-            for (int j = 0; j < orderLists.size(); j++) {
-                if (orderLists.get(j).getMenuName().equals("프로필 티켓")) {
+                for (int j = 0; j < orderLists.size(); j++) {
+                    if (orderLists.get(j).getMenuName().equals(cartItem.getMenuName())) {
 
-                    int oldQuantity = orderLists.get(j).getMenuQuantity();
-                    int newQuantity = oldQuantity + 1;
-                    orderLists.get(j).setMenuQuantity(newQuantity);
+                        int oldQuantity = orderLists.get(j).getMenuQuantity();
+                        int newQuantity = oldQuantity + cartItem.getMenuQuantity();
+                        orderLists.get(j).setMenuQuantity(newQuantity);
 
-                    int oldPrice = orderLists.get(j).getMenuPrice();
-                    int newPrice = oldPrice + 2000;
-                    orderLists.get(j).setMenuPrice(newPrice);
-                    found = true;
-                    break;
+                        int oldPrice = orderLists.get(j).getMenuPrice();
+                        int newPrice = oldPrice + cartItem.getMenuPrice();
+                        orderLists.get(j).setMenuPrice(newPrice);
+                        found = true;
+                        break;
+                    }
                 }
+
+                if (!found) {
+                    orderLists.add(new CartList(cartItem.getMenuName(),
+                            cartItem.getMenuPrice(),
+                            cartItem.getMenuQuantity(),
+                            cartItem.getOriginalPrice(),
+                            cartItem.getMenuCategory(),
+                            cartItem.getCartCategory()));
+                }
+                found = false;
             }
 
-            if (!found) {
-                orderLists.add(new CartList("프로필 티켓", 2000, 1, 2000,
-                        MenuCategory.SIDE.getValue(), CartCategory.MENU));
-            }
-
-            editor.putString("orderItems", gson.toJson(orderLists));
+            editor.putString("orderedItems", gson.toJson(orderLists));
             editor.commit();
-
         } else {
-            ArrayList<CartList> orderList = new ArrayList<>();
-            orderList.add(new CartList("프로필 티켓", 2000, 1, 2000,
-                    MenuCategory.SIDE.getValue(), CartCategory.MENU));
-            editor.putString("orderItems", gson.toJson(orderList));
+            editor.putString("orderedItems", gson.toJson(cartLists));
             editor.commit();
         }
 
     }
+
 
     public Pair<ArrayList<OrderList>, String> getReceiptData(Context context, MyData myData) {
 
@@ -95,7 +100,7 @@ public class ManageOrderItems {
 
         ArrayList<OrderList> orderLists = new ArrayList<>();
 
-        String sharedOrderList = sharedPreferences.getString("orderItems", null);
+        String sharedOrderList = sharedPreferences.getString("orderedItems", null);
         Log.d(TAG, "showReceiptDialog orderList: " + sharedOrderList);
         int price = 0;
 

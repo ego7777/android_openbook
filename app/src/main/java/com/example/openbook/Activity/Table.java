@@ -25,6 +25,7 @@ import androidx.recyclerview.widget.SimpleItemAnimator;
 import com.example.openbook.Adapter.TableAdapter;
 import com.example.openbook.BuildConfig;
 import com.example.openbook.DBHelper;
+import com.example.openbook.Data.CartList;
 import com.example.openbook.Data.MyData;
 import com.example.openbook.Data.OrderList;
 import com.example.openbook.DialogManager;
@@ -37,9 +38,11 @@ import com.example.openbook.TableDataManager;
 import com.example.openbook.retrofit.RetrofitManager;
 import com.example.openbook.retrofit.RetrofitService;
 import com.example.openbook.retrofit.TableInformationDTO;
+import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -75,6 +78,7 @@ public class Table extends AppCompatActivity {
 
     DBHelper dbHelper;
     TableDataManager tableDataManager;
+    ManageOrderItems manageOrderItems;
 
 
     BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
@@ -118,6 +122,7 @@ public class Table extends AppCompatActivity {
                 case "isGiftAccept":
                     from = intent.getStringExtra("from");
                     boolean isAccept = intent.getBooleanExtra("isAccept", false);
+
                     String message;
                     if (isAccept) {
                         message = from + "에서 선물을 수락하였습니다.";
@@ -127,6 +132,7 @@ public class Table extends AppCompatActivity {
                     }
                     dialogManager.positiveBtnDialog(Table.this, message).show();
                     break;
+
 
                 case "CompletePayment":
                     String tid = intent.getStringExtra("tid");
@@ -170,6 +176,8 @@ public class Table extends AppCompatActivity {
 
         tableDataManager = new TableDataManager();
         tableDataManager.hideSystemUI(this);
+
+        manageOrderItems = new ManageOrderItems();
 
         dbHelper = new DBHelper(Table.this);
         customerDataSp = getSharedPreferences("CustomerData", MODE_PRIVATE);
@@ -262,7 +270,6 @@ public class Table extends AppCompatActivity {
         appbarMenu.setOnClickListener(this::moveToMenu);
 
         appbarOrderList.setOnClickListener(v -> {
-            ManageOrderItems manageOrderItems = new ManageOrderItems();
             Pair<ArrayList<OrderList>, String> pair = manageOrderItems.getReceiptData(this, myData);
             dialogManager.showReceiptDialog(this, pair.first, pair.second).show();
         });

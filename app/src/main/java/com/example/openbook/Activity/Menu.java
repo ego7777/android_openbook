@@ -115,6 +115,7 @@ public class Menu extends AppCompatActivity {
     Gson gson;
     TableDataManager tableDataManager;
     String newChatTable;
+    ManageOrderItems manageOrderItems;
 
     //액티비티가 onCreate 되면 자동으로 받는거고
     BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
@@ -142,11 +143,10 @@ public class Menu extends AppCompatActivity {
                     from = intent.getStringExtra("from");
 
                     boolean isAccept = intent.getBooleanExtra("isAccept", false);
-                    String message;
 
+                    String message;
                     if (isAccept) {
                         message = from + "에서 선물을 수락하였습니다.";
-                        //여기서 메뉴 주문 메뉴 저장하기
                     } else {
                         message = from + "에서 선물을 거절하였습니다.";
                     }
@@ -204,6 +204,8 @@ public class Menu extends AppCompatActivity {
 
         tableDataManager = new TableDataManager();
         tableDataManager.hideSystemUI(this);
+
+        manageOrderItems = new ManageOrderItems();
 
         sharedPreference = getSharedPreferences("CustomerData", MODE_PRIVATE);
         editor = sharedPreference.edit();
@@ -353,7 +355,7 @@ public class Menu extends AppCompatActivity {
                 progressbar = dialogManager.progressDialog(Menu.this);
                 progressbar.show();
                 if (result.equals("success")) {
-                    saveOrderedItems();
+                    manageOrderItems.saveOrderedItems(Menu.this, cartLists);
                     successOrder();
                     progressbar.dismiss();
                 } else {
@@ -398,14 +400,12 @@ public class Menu extends AppCompatActivity {
         });
 
 
-        appbarMenuTable.setOnClickListener(view -> {
-            moveToOtherActivity(Table.class);
-        });
+        appbarMenuTable.setOnClickListener(view -> moveToOtherActivity(Table.class));
 
 
         appbarOrderList.setOnClickListener(view -> {
-            ManageOrderItems manageOrderItems = new ManageOrderItems();
             Pair<ArrayList<OrderList>, String> pair = manageOrderItems.getReceiptData(this, myData);
+            Log.d(TAG, "orderItem: " + pair.second);
             dialogManager.showReceiptDialog(this, pair.first, pair.second).show();
         });
 
@@ -545,7 +545,7 @@ public class Menu extends AppCompatActivity {
 
                         sendNotification.sendMenu(sendOrderToAdmin(), result -> {
                             if (result.equals("success")) {
-                                saveOrderedItems();
+                                manageOrderItems.saveOrderedItems(Menu.this, cartLists);
                                 successOrder();
                                 progressbar.dismiss();
 
@@ -620,55 +620,6 @@ public class Menu extends AppCompatActivity {
         return request;
     }
 
-
-    private void saveOrderedItems() {
-        String orderedItems = sharedPreference.getString("orderedItems", null);
-        Log.d(TAG, "orderedSharedPreference: " + orderedItems);
-
-        //shared에 저장된 내용이 있으면 기존값에 추가해서 저장
-        if (orderedItems != null && !orderedItems.isEmpty()) {
-            Type type = new TypeToken<ArrayList<CartList>>() {
-            }.getType();
-            ArrayList<CartList> orderLists = gson.fromJson(orderedItems, type);
-
-            boolean found = false;
-            for (int i = 0; i < cartLists.size(); i++) {
-                CartList cartItem = cartLists.get(i);
-
-                for (int j = 0; j < orderLists.size(); j++) {
-                    if (orderLists.get(j).getMenuName().equals(cartItem.getMenuName())) {
-
-                        int oldQuantity = orderLists.get(j).getMenuQuantity();
-                        int newQuantity = oldQuantity + cartItem.getMenuQuantity();
-                        orderLists.get(j).setMenuQuantity(newQuantity);
-
-                        int oldPrice = orderLists.get(j).getMenuPrice();
-                        int newPrice = oldPrice + cartItem.getMenuPrice();
-                        orderLists.get(j).setMenuPrice(newPrice);
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found) {
-                    orderLists.add(new CartList(cartItem.getMenuName(),
-                            cartItem.getMenuPrice(),
-                            cartItem.getMenuQuantity(),
-                            cartItem.getOriginalPrice(),
-                            cartItem.getMenuCategory(),
-                            cartItem.getCartCategory()));
-                }
-                found = false;
-            }
-
-            editor.putString("orderedItems", gson.toJson(orderLists));
-            editor.commit();
-        } else {
-            editor.putString("orderedItems", gson.toJson(cartLists));
-            editor.commit();
-        }
-
-    }
 
     public void setCartItems() {
 

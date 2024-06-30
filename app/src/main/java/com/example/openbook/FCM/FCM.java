@@ -11,18 +11,24 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.example.openbook.Activity.Admin;
 
+import com.example.openbook.Activity.Table;
 import com.example.openbook.BuildConfig;
+import com.example.openbook.Data.CartList;
+import com.example.openbook.ManageOrderItems;
 import com.example.openbook.retrofit.RetrofitManager;
 import com.example.openbook.retrofit.RetrofitService;
 import com.example.openbook.retrofit.SuccessOrNot;
 
 
+import com.google.common.reflect.TypeToken;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 import com.google.gson.Gson;
 
 
+import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -140,7 +146,12 @@ public class FCM extends FirebaseMessagingService {
 
         if(isAccept){
             intent.putExtra("isAccept", true);
-            intent.putExtra("menuItem", menuItem);
+            Type type = new TypeToken<ArrayList<CartList>>() {
+            }.getType();
+            ArrayList<CartList> orderedList= gson.fromJson(menuItem, type);
+            ManageOrderItems manageOrderItems = new ManageOrderItems();
+            manageOrderItems.saveOrderedItems(getApplicationContext(), orderedList);
+
         }else{
             intent.putExtra("isAccept", false);
         }
