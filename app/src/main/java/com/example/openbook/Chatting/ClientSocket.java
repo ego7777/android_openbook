@@ -173,6 +173,7 @@ public class ClientSocket extends Thread implements Serializable {
         int tableNumber = Integer.parseInt(disconnectTable.replace("table", ""));
 
         activeTableArray.remove(tableNumber);
+        Log.d(TAG, "updateDisconnectTable: " +gson.toJson(activeTableArray));
         editor.putString("activeTableList", gson.toJson(activeTableArray));
         editor.commit();
 
@@ -221,6 +222,7 @@ public class ClientSocket extends Thread implements Serializable {
         int tableNumber = Integer.parseInt(newTable.replace("table", ""));
 
         activeTableArray.add(tableNumber);
+        Log.d(TAG, "updateNewTable add new table: " + gson.toJson(activeTableArray));
         editor.putString("activeTableList", gson.toJson(activeTableArray));
         editor.commit();
 
@@ -231,7 +233,7 @@ public class ClientSocket extends Thread implements Serializable {
     }
 
     private void activeExistingTables(String activeTableList){
-
+        Log.d(TAG, "activeExistingTables: " + activeTableList);
         editor.putString("activeTableList", activeTableList);
         editor.commit();
 

@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.openbook.Data.MyData;
 import com.example.openbook.Category.PaymentCategory;
 import com.example.openbook.R;
+import com.example.openbook.TableDataManager;
 import com.example.openbook.retrofit.TableListDTO;
 import com.example.openbook.TableQuantity;
 
@@ -31,12 +32,13 @@ public class PaymentSelect extends AppCompatActivity {
         setContentView(R.layout.payment_select_activity);
 
         myData = (MyData) getIntent().getSerializableExtra("myData");
-        Log.d(TAG, "myData id: " + myData.getId());
-        Log.d(TAG, "myData table: " + myData.getTableFromDB());
 
         SharedPreferences pref = getSharedPreferences("CustomerData", MODE_PRIVATE);
 
         SharedPreferences.Editor editor = pref.edit();
+
+        TableDataManager tableDataManager = new TableDataManager();
+        tableDataManager.hideSystemUI(this);
 
         editor.remove("orderedItems");
         editor.remove("cartItems");
@@ -58,19 +60,19 @@ public class PaymentSelect extends AppCompatActivity {
 
     public void getTableFromDB(){
         TableQuantity tableQuantity = new TableQuantity();
-        tableQuantity.getTableQuantity(new Callback<TableListDTO>() {
+        tableQuantity.getTableQuantity(new Callback<>() {
             @Override
             public void onResponse(Call<TableListDTO> call, Response<TableListDTO> response) {
-                if(response.isSuccessful()){
-                    switch (response.body().getResult()){
-                        case "success" :
+                if (response.isSuccessful()) {
+                    switch (response.body().getResult()) {
+                        case "success":
                             int tableFromDB = response.body().getTableCount();
                             myData.setTableFromDB(tableFromDB);
                             break;
-                        case "failed" :
+                        case "failed":
                             Log.d(TAG, "onResponse table failed: ");
                     }
-                }else{
+                } else {
                     Log.d(TAG, "onResponse table isNotSuccessful");
                 }
             }

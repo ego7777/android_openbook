@@ -404,9 +404,14 @@ public class Menu extends AppCompatActivity {
 
 
         appbarOrderList.setOnClickListener(view -> {
-            Pair<ArrayList<OrderList>, String> pair = manageOrderItems.getReceiptData(this, myData);
-            Log.d(TAG, "orderItem: " + pair.second);
-            dialogManager.showReceiptDialog(this, pair.first, pair.second).show();
+            if(myData.isOrder()){
+                Pair<ArrayList<OrderList>, String> pair = manageOrderItems.getReceiptData(this, myData);
+                Log.d(TAG, "orderItem: " + pair.second);
+                dialogManager.showReceiptDialog(this, pair.first, pair.second).show();
+            }else{
+                Toast.makeText(this, "주문 내역이 없습니다.", Toast.LENGTH_SHORT).show();
+            }
+
         });
 
 

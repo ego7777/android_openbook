@@ -10,9 +10,11 @@
 
     <!-- 흔들리는 애니메이션 -->
     <rotate
-        android:duration="500"
-        android:fromDegrees="0"
-        android:toDegrees="10"
+        android:duration="200"
+        android:fromDegrees="-20"
+        android:pivotX="50%"
+        android:pivotY="50%"
+        android:toDegrees="20"
         android:repeatMode="reverse"
         android:repeatCount="infinite" />
 
