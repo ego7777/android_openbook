@@ -123,7 +123,7 @@ public class SendNotification {
         });
     }
 
-    public void notifyIsGiftAccept(String to, String from, String menuItem, boolean isAccept){
+    public void notifyIsGiftAccept(String to, String from, String menuItem , String count, boolean isAccept){
 
         Map<String, String> data = new HashMap<>();
 
@@ -131,6 +131,7 @@ public class SendNotification {
             data.put("tableName", from);
             data.put("request", "IsGiftAccept");
             data.put("menuItem", menuItem);
+            data.put("count", count);
             data.put("isAccept", "true");
         }else{
             data.put("tableName", from);

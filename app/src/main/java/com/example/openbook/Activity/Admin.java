@@ -45,8 +45,8 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
+
 import java.lang.reflect.Type;
-import java.nio.file.ClosedFileSystemException;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
@@ -163,9 +163,14 @@ public class Admin extends AppCompatActivity {
 
         } else {
             adminTableLists = loadAdminTableList();
-            adminData.setAdminTableLists(adminTableLists);
-            adapter.setAdapterItem(adminTableLists);
-            Log.d(TAG, "loadAdminTableList Adapter");
+            try{
+                adminData.setAdminTableLists(adminTableLists);
+                adapter.setAdapterItem(adminTableLists);
+                Log.d(TAG, "loadAdminTableList Adapter");
+            }catch (Exception e){
+                Log.d(TAG, "onCreate: ");
+            }
+
         }
 
         orderLists = loadOrderList();

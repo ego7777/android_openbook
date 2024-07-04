@@ -41,13 +41,13 @@ import com.example.openbook.FCM.SendNotification;
 import com.example.openbook.QRcode.MakeQR;
 import com.example.openbook.retrofit.SalesItemDTO;
 import com.example.openbook.retrofit.TableInformationDTO;
+import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 
-import org.checkerframework.checker.units.qual.A;
-
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -528,6 +528,7 @@ public class DialogManager {
             JsonObject jsonObject = new JsonObject();
             jsonObject.addProperty("menuName", menuItem.getMenuName());
             jsonObject.addProperty("menuPrice", menuItem.getMenuPrice());
+            jsonObject.addProperty("menuQuantity",menuQuantity.getText().toString());
             jsonObject.addProperty("menuCategory", menuItem.getMenuType());
             jsonObject.addProperty("imageUrl", menuItem.getUrl());
 
@@ -558,6 +559,7 @@ public class DialogManager {
         gson = new Gson();
         JsonArray jsonArray = gson.fromJson(menuItem, JsonArray.class);
         JsonObject item = jsonArray.get(0).getAsJsonObject();
+
         String menuName =  item.get("menuName").getAsString();
         int menuPrice =  item.get("menuPrice").getAsInt();
         String url = item.get("imageUrl").getAsString();
@@ -588,9 +590,13 @@ public class DialogManager {
         sendNotification = new SendNotification();
 
         yesButton.setOnClickListener(view -> {
-            //수락했다고 from에게 알려주는 fcm을 호출한다 -> 주문내역에 추가한다
 
-            sendNotification.notifyIsGiftAccept(from, to, menuItem, true);
+            Type type = new TypeToken<ArrayList<CartList>>() {}.getType();
+            ArrayList<CartList> orderedList= gson.fromJson(toMenuItem, type);
+
+            manageOrderItems.saveOrderedItems(context, orderedList);
+
+            sendNotification.notifyIsGiftAccept(from, to, menuItem, count,true);
 
             //admin에게 주문한다
             Map<String, String> request = new HashMap<>();
@@ -611,7 +617,7 @@ public class DialogManager {
 
         noButton.setOnClickListener(view -> {
             Log.d(TAG, "giftReceiveDialog: no");
-            sendNotification.notifyIsGiftAccept(from, to, menuItem, false);
+            sendNotification.notifyIsGiftAccept(from, to, menuItem, count,false);
             dialog.dismiss();
         });
 

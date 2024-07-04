@@ -13,6 +13,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.example.openbook.BuildConfig;
 import com.example.openbook.DBHelper;
+import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 
 import java.io.BufferedReader;
@@ -22,10 +23,13 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Serializable;
+import java.lang.reflect.Type;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 
 public class ClientSocket extends Thread implements Serializable {
@@ -162,19 +166,20 @@ public class ClientSocket extends Thread implements Serializable {
         Log.d(TAG, "updateDisconnectTable: " + disconnectTable);
 
         String activeTable = sharedPreferences.getString("activeTableList", null);
-        ArrayList activeTableArray;
+        Set<Integer> activeTableSet;
 
         if(activeTable==null){
-            activeTableArray = new ArrayList();
+            activeTableSet = new HashSet<>();
         }else{
-            activeTableArray = gson.fromJson(activeTable, ArrayList.class);
+            Type tableType = new TypeToken<Set<Integer>>() {}.getType();
+            activeTableSet = gson.fromJson(activeTable, tableType);
         }
 
         int tableNumber = Integer.parseInt(disconnectTable.replace("table", ""));
 
-        activeTableArray.remove(tableNumber);
-        Log.d(TAG, "updateDisconnectTable: " +gson.toJson(activeTableArray));
-        editor.putString("activeTableList", gson.toJson(activeTableArray));
+        activeTableSet.remove(tableNumber);
+        Log.d(TAG, "updateDisconnectTable: " +gson.toJson(activeTableSet));
+        editor.putString("activeTableList", gson.toJson(activeTableSet));
         editor.commit();
 
         dbHelper.deleteCompletedTableChatMessage(disconnectTable);
@@ -208,22 +213,22 @@ public class ClientSocket extends Thread implements Serializable {
 
 
     private void updateNewTable(String newTable) {
-        Log.d(TAG, "updateNewTable: " + newTable);
 
         String activeTable = sharedPreferences.getString("activeTableList", null);
-        ArrayList activeTableArray;
+        Set<Integer> activeTableSet;
 
         if(activeTable==null){
-            activeTableArray = new ArrayList();
+            activeTableSet = new HashSet<>();
         }else{
-            activeTableArray = gson.fromJson(activeTable, ArrayList.class);
-        }
+            Type tableType = new TypeToken<Set<Integer>>() {}.getType();
+            activeTableSet = gson.fromJson(activeTable, tableType);
 
+        }
         int tableNumber = Integer.parseInt(newTable.replace("table", ""));
 
-        activeTableArray.add(tableNumber);
-        Log.d(TAG, "updateNewTable add new table: " + gson.toJson(activeTableArray));
-        editor.putString("activeTableList", gson.toJson(activeTableArray));
+        activeTableSet.add(tableNumber);
+        Log.d(TAG, "updateNewTable add new table set: " + gson.toJson(activeTableSet));
+        editor.putString("activeTableList", gson.toJson(activeTableSet));
         editor.commit();
 
         Intent intent = new Intent("updateNewTable");

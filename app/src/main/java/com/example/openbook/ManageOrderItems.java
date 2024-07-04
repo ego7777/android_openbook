@@ -42,16 +42,18 @@ public class ManageOrderItems {
     }
 
     public void saveOrderedItems(Context context, ArrayList<CartList> cartLists) {
+        Log.d(TAG, "saveOrderedItems 호출");
         sharedPreferences = context.getSharedPreferences("CustomerData", MODE_PRIVATE);
         editor = sharedPreferences.edit();
 
-        String orderedItems = sharedPreferences.getString("orderItems", null);
+        String orderedItems = sharedPreferences.getString("orderedItems", null);
 
         //shared에 저장된 내용이 있으면 기존값에 추가해서 저장
         if (orderedItems != null && !orderedItems.isEmpty()) {
             Type type = new TypeToken<ArrayList<CartList>>() {
             }.getType();
             ArrayList<CartList> orderLists = gson.fromJson(orderedItems, type);
+            Log.d(TAG, "saveOrderedItems: ");
 
             boolean found = false;
             for (int i = 0; i < cartLists.size(); i++) {

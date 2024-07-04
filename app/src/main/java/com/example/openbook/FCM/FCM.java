@@ -1,6 +1,6 @@
 package com.example.openbook.FCM;
 
-import android.app.PendingIntent;
+
 import android.content.Intent;
 import android.os.Build;
 import android.util.Log;
@@ -9,9 +9,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-import com.example.openbook.Activity.Admin;
-
-import com.example.openbook.Activity.Table;
 import com.example.openbook.BuildConfig;
 import com.example.openbook.Data.CartList;
 import com.example.openbook.ManageOrderItems;
@@ -104,7 +101,8 @@ public class FCM extends FirebaseMessagingService {
             case "PayNow" :
             case "End" :
             case "PayLater":
-                handleAdminPaymentType(data.get("request"), data.get("tableName"));
+                String tableName = data.get("tableName");
+                handleAdminPaymentType(data.get("request"), tableName);
                 break;
 
             case "CompletePayment":
@@ -117,17 +115,24 @@ public class FCM extends FirebaseMessagingService {
                 break;
 
             case "Gift" :
+                tableName = data.get("tableName");
                 handleGiftOtherTable
-                        (data.get("tableName"),
+                        (tableName,
                         data.get("menuItem"),
                         data.get("count"));
                 break;
 
             case "IsGiftAccept" :
+                String menuItem = data.get("menuItem");
+                int count = Integer.parseInt(data.get("count"));
+                boolean isAccept = Boolean.parseBoolean(data.get("isAccept"));
+                tableName = data.get("tableName");
+
                 handleIsGiftAccept
-                        (data.get("tableName"),
-                        Boolean.parseBoolean(data.get("isAccept")),
-                                data.get("meuItem"));
+                        (tableName,
+                        isAccept,
+                        menuItem,
+                        count);
                 break;
         }
 
@@ -139,18 +144,21 @@ public class FCM extends FirebaseMessagingService {
         LocalBroadcastManager.getInstance(FCM.this).sendBroadcast(intent);
     }
 
-    public void handleIsGiftAccept(String from, boolean isAccept, String menuItem){
-        Log.d(TAG, "handleIsGiftAccept 호출");
+    public void handleIsGiftAccept(String from, boolean isAccept, String menuItem, int count){
+
         Intent intent = new Intent("isGiftAccept");
         intent.putExtra("from", from);
 
         if(isAccept){
             intent.putExtra("isAccept", true);
-            Type type = new TypeToken<ArrayList<CartList>>() {
-            }.getType();
+            Type type = new TypeToken<ArrayList<CartList>>() {}.getType();
             ArrayList<CartList> orderedList= gson.fromJson(menuItem, type);
+
+            orderedList.get(0).setMenuQuantity(count);
+            Log.d(TAG, "handleIsGiftAccept orderedList: " + gson.toJson(orderedList));
+
             ManageOrderItems manageOrderItems = new ManageOrderItems();
-            manageOrderItems.saveOrderedItems(getApplicationContext(), orderedList);
+            manageOrderItems.saveOrderedItems(this, orderedList);
 
         }else{
             intent.putExtra("isAccept", false);
@@ -187,16 +195,6 @@ public class FCM extends FirebaseMessagingService {
 
         LocalBroadcastManager.getInstance(FCM.this).sendBroadcast(intent);
 
-    }
-
-
-    @Override
-    public void onNewToken(@NonNull String token) {
-        super.onNewToken(token);
-        Log.d(TAG, "onNewToken: " + token);
-
-        //이 기기의 토큰이 바뀌었을 때 할 작업을 작성,
-        // onNewToken에서는 서버로 변경된 키값을 전달
     }
 
     @Override
