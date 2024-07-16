@@ -16,6 +16,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.util.Pair;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -48,6 +49,7 @@ import com.example.openbook.Deco.menu_recyclerview_deco;
 import com.example.openbook.DialogManager;
 import com.example.openbook.FCM.SendNotification;
 import com.example.openbook.Category.PaymentCategory;
+import com.example.openbook.InactivityManager;
 import com.example.openbook.ManageOrderItems;
 import com.example.openbook.TableDataManager;
 import com.example.openbook.kakaopay.KakaoPay;
@@ -69,6 +71,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.stream.Collectors;
 
 
@@ -116,6 +120,7 @@ public class Menu extends AppCompatActivity {
     TableDataManager tableDataManager;
     String newChatTable;
     ManageOrderItems manageOrderItems;
+    InactivityManager inactivityManager;
 
     //액티비티가 onCreate 되면 자동으로 받는거고
     BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
@@ -394,14 +399,15 @@ public class Menu extends AppCompatActivity {
         intentFilter.addAction("newChatArrived");
         LocalBroadcastManager.getInstance(Menu.this).registerReceiver(broadcastReceiver, intentFilter);
 
+        inactivityManager = new InactivityManager(this, myData, tableList);
+        inactivityManager.startInactivityTimer();
+
         useStop.setOnClickListener(view -> {
             sendNotification.usingTableUpdate("admin", myData.getId(), "End");
             tableDataManager.setUseStop(Menu.this, myData);
         });
 
-
         appbarMenuTable.setOnClickListener(view -> moveToOtherActivity(Table.class));
-
 
         appbarOrderList.setOnClickListener(view -> {
             if(myData.isOrder()){
@@ -595,7 +601,7 @@ public class Menu extends AppCompatActivity {
             int newChatTableNumber = Integer.parseInt(newChatTable.replace("table", ""));
             newChatTable = null;
 
-            Intent intent = new Intent(Menu.this, ChattingUI.class);
+            Intent intent = new Intent(Menu.this, Chatting.class);
             intent.putExtra("myData", myData);
             intent.putExtra("tableList", tableList);
             intent.putExtra("tableNumber", newChatTableNumber);
@@ -701,9 +707,7 @@ public class Menu extends AppCompatActivity {
     }
 
     @Override
-    public void onBackPressed() {
-        //안드로이드 백버튼 막기
-    }
+    public void onBackPressed() {}
 
 
     public String addCommasToNumber(int price, int type) {
@@ -727,7 +731,23 @@ public class Menu extends AppCompatActivity {
         intent.putExtra("myData", myData);
         intent.putExtra("tableList", tableList);
         startActivity(intent);
+        finish();
     }
 
 
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        inactivityManager.resetInactivityTimer();
+        return super.onTouchEvent(event);
+
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if(inactivityManager.inactivityTimer != null){
+            inactivityManager.inactivityTimer.cancel();
+        }
+    }
 }

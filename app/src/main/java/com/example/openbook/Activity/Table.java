@@ -25,7 +25,6 @@ import androidx.recyclerview.widget.SimpleItemAnimator;
 import com.example.openbook.Adapter.TableAdapter;
 import com.example.openbook.BuildConfig;
 import com.example.openbook.DBHelper;
-import com.example.openbook.Data.CartList;
 import com.example.openbook.Data.MyData;
 import com.example.openbook.Data.OrderList;
 import com.example.openbook.DialogManager;
@@ -38,11 +37,9 @@ import com.example.openbook.TableDataManager;
 import com.example.openbook.retrofit.RetrofitManager;
 import com.example.openbook.retrofit.RetrofitService;
 import com.example.openbook.retrofit.TableInformationDTO;
-import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -324,7 +321,7 @@ public class Table extends AppCompatActivity {
                         getResources().getString(R.string.unusableTable)).show();
 
             } else {
-                Intent intent = new Intent(Table.this, ChattingUI.class);
+                Intent intent = new Intent(Table.this, Chatting.class);
                 intent.putExtra("tableNumber", clickTable);
                 intent.putExtra("myData", myData);
                 intent.putExtra("tableList", tableList);
@@ -459,11 +456,11 @@ public class Table extends AppCompatActivity {
         Arrays.sort(table);
         Log.d(TAG, "existingTableUpdate after sort: " + Arrays.toString(table));
 
-        for (int i = 0; i < table.length; i++) {
+        for (int j : table) {
 
-            if (table[i] != myTable) {
-                Log.d(TAG, "existingTableUpdate table: " + table[i]);
-                tablePosition = table[i] - 1;
+            if (j != myTable) {
+                Log.d(TAG, "existingTableUpdate table: " + j);
+                tablePosition = j - 1;
                 tableList.get(tablePosition).setCategory(TableCategory.ACTIVE);
                 adapter.notifyItemChanged(tablePosition);
             }

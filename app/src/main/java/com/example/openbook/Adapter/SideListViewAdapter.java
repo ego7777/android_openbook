@@ -41,7 +41,7 @@ public class SideListViewAdapter extends BaseAdapter {
 
         if(convetView == null){
             LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            convetView = inflater.inflate(R.layout.side_listview_item, viewGroup, false);
+            convetView = inflater.inflate(R.layout.item_side_listview, viewGroup, false);
 
 
             TextView menu_section = convetView.findViewById(R.id.menu_section);

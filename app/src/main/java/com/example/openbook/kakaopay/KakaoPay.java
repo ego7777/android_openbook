@@ -47,7 +47,7 @@ public class KakaoPay extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.kakaopay_activity);
+        setContentView(R.layout.activity_kakaopay);
 
         myData = (MyData) getIntent().getSerializableExtra("myData");
         adminData = getIntent().getParcelableExtra("adminData");

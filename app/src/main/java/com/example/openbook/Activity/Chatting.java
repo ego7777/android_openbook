@@ -9,6 +9,7 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -27,6 +28,7 @@ import com.example.openbook.DBHelper;
 import com.example.openbook.Data.MyData;
 import com.example.openbook.Data.TableList;
 import com.example.openbook.DialogManager;
+import com.example.openbook.InactivityManager;
 import com.example.openbook.R;
 import com.example.openbook.Data.ChattingList;
 import com.example.openbook.TableDataManager;
@@ -37,10 +39,12 @@ import com.google.gson.Gson;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import retrofit2.Retrofit;
 
-public class ChattingUI extends AppCompatActivity {
+public class Chatting extends AppCompatActivity {
 
     String TAG = "chatUI";
 
@@ -59,6 +63,7 @@ public class ChattingUI extends AppCompatActivity {
     Gson gson = new Gson();
     DialogManager dialogManager;
     TableDataManager tableDataManager;
+    InactivityManager inactivityManager;
 
     BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -82,7 +87,7 @@ public class ChattingUI extends AppCompatActivity {
                     String menuItem = intent.getStringExtra("menuItem");
                     String count = intent.getStringExtra("count");
 
-                    dialogManager.giftReceiveDialog(ChattingUI.this, myData.getId(), from, menuItem, count).show();
+                    dialogManager.giftReceiveDialog(Chatting.this, myData.getId(), from, menuItem, count).show();
                     break;
 
                 case "isGiftAccept":
@@ -94,7 +99,7 @@ public class ChattingUI extends AppCompatActivity {
                     } else {
                         acceptMessage = from + "에서 선물을 거절하였습니다.";
                     }
-                    dialogManager.positiveBtnDialog(ChattingUI.this, acceptMessage).show();
+                    dialogManager.positiveBtnDialog(Chatting.this, acceptMessage).show();
                     break;
 
                 case "CompletePayment":
@@ -102,7 +107,7 @@ public class ChattingUI extends AppCompatActivity {
 
                     if (tid != null && !tid.isEmpty()) {
 
-                        DBHelper dbHelper = new DBHelper(ChattingUI.this);
+                        DBHelper dbHelper = new DBHelper(Chatting.this);
                         String chatMessages = dbHelper.getChatting(myData.getId());
 
                         RetrofitManager retrofitManager = new RetrofitManager();
@@ -115,13 +120,13 @@ public class ChattingUI extends AppCompatActivity {
                                             chatResult -> {
                                                 if (chatResult.equals("success")) {
                                                     dbHelper.deleteAllChatMessages(); //삭제
-                                                    tableDataManager.stopSocket(ChattingUI.this, myData.getId());
-                                                    tableDataManager.setUseStop(ChattingUI.this, myData);
+                                                    tableDataManager.stopSocket(Chatting.this, myData.getId());
+                                                    tableDataManager.setUseStop(Chatting.this, myData);
                                                 }
                                             });
                         }else{
-                            tableDataManager.stopSocket(ChattingUI.this, myData.getId());
-                            tableDataManager.setUseStop(ChattingUI.this, myData);
+                            tableDataManager.stopSocket(Chatting.this, myData.getId());
+                            tableDataManager.setUseStop(Chatting.this, myData);
                         }
                     }
                     break;
@@ -139,7 +144,10 @@ public class ChattingUI extends AppCompatActivity {
         intentFilter.addAction("giftArrived");
         intentFilter.addAction("isGiftAccept");
         intentFilter.addAction("CompletePayment");
-        LocalBroadcastManager.getInstance(ChattingUI.this).registerReceiver(broadcastReceiver, intentFilter);
+        LocalBroadcastManager.getInstance(Chatting.this).registerReceiver(broadcastReceiver, intentFilter);
+
+        inactivityManager = new InactivityManager(this, myData, tableList);
+        inactivityManager.startInactivityTimer();
 
     }
 
@@ -165,11 +173,11 @@ public class ChattingUI extends AppCompatActivity {
 
         chattingRecyclerView = findViewById(R.id.chatting_recyclerview);
         chattingAdapter = new ChattingAdapter();
-        chattingRecyclerView.setLayoutManager(new LinearLayoutManager(ChattingUI.this, RecyclerView.VERTICAL, false));
+        chattingRecyclerView.setLayoutManager(new LinearLayoutManager(Chatting.this, RecyclerView.VERTICAL, false));
         chattingRecyclerView.setAdapter(chattingAdapter);
 
 
-        dbHelper = new DBHelper(ChattingUI.this);
+        dbHelper = new DBHelper(Chatting.this);
         Cursor res = dbHelper.getTableData("chattingTable");
 
         chatLists = initChattingList(res);
@@ -180,7 +188,7 @@ public class ChattingUI extends AppCompatActivity {
 
 
         TextView chattingBack = findViewById(R.id.chatting_back);
-        chattingBack.setOnClickListener(view -> moveActivity(Table.class));
+        chattingBack.setOnClickListener(view -> moveToOtherActivity(Table.class));
 
         chattingSendButton.setOnClickListener(view -> {
 
@@ -198,7 +206,7 @@ public class ChattingUI extends AppCompatActivity {
 
                 Intent intent = new Intent("SendChattingData");
                 intent.putExtra("sendToServer", gson.toJson(message));
-                LocalBroadcastManager.getInstance(ChattingUI.this).sendBroadcast(intent);
+                LocalBroadcastManager.getInstance(Chatting.this).sendBroadcast(intent);
 
                 chatLists.add(new ChattingList(message.getMessage(), ChattingCategory.MINE, time, "1"));
 
@@ -225,7 +233,7 @@ public class ChattingUI extends AppCompatActivity {
                         "isRead",
                         "");
         intent.putExtra("sendToServer", gson.toJson(message));
-        LocalBroadcastManager.getInstance(ChattingUI.this).sendBroadcast(intent);
+        LocalBroadcastManager.getInstance(Chatting.this).sendBroadcast(intent);
     }
 
     public ArrayList<ChattingList> initChattingList(Cursor res) {
@@ -300,17 +308,15 @@ public class ChattingUI extends AppCompatActivity {
     }
 
 
-    public void moveActivity(Class activity) {
-        Intent intent = new Intent(ChattingUI.this, activity);
+    public void moveToOtherActivity(Class<?> activity) {
+        Intent intent = new Intent(Chatting.this, activity);
         intent.putExtra("myData", myData);
         intent.putExtra("tableList", tableList);
         startActivity(intent);
     }
 
     @Override
-    public void onBackPressed() {
-        //안드로이드 백버튼 막기
-    }
+    public void onBackPressed() {}
 
     @Override
     protected void onStop() {
@@ -323,5 +329,22 @@ public class ChattingUI extends AppCompatActivity {
         editor.commit();
 
         LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
+    }
+
+
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        inactivityManager.resetInactivityTimer();
+        return super.onTouchEvent(event);
+
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if(inactivityManager.inactivityTimer != null){
+            inactivityManager.inactivityTimer.cancel();
+        }
     }
 }

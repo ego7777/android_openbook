@@ -149,7 +149,7 @@ public class DialogManager {
 
     public Dialog showReceiptDialog(Context context, ArrayList<OrderList> orderLists, String totalPrice) {
         Dialog dialog = new Dialog(context);
-        dialog.setContentView(R.layout.receipt_dialog);
+        dialog.setContentView(R.layout.dialog_receipt);
 
         TextView receiptCancel = dialog.findViewById(R.id.receipt_cancel);
         TextView receiptTotalPrice = dialog.findViewById(R.id.receipt_total_price);
@@ -242,7 +242,7 @@ public class DialogManager {
                                 TableInformationDTO tableDTO,
                                 String id) {
         Dialog dialog = new Dialog(context);
-        dialog.setContentView(R.layout.table_information_dialog);
+        dialog.setContentView(R.layout.dialog_table_information);
         DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
         int width = (int) (displayMetrics.widthPixels * 0.7);  // 화면 너비의 70%로 설정
         dialog.getWindow().setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -296,7 +296,7 @@ public class DialogManager {
 
     public Dialog otherTableDialog(Context context, String id, String table, TableInformationDTO tableDTO, boolean ticket) {
         Dialog dialog = new Dialog(context);
-        dialog.setContentView(R.layout.table_information_dialog);
+        dialog.setContentView(R.layout.dialog_table_information);
         DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
         int width = (int) (displayMetrics.widthPixels * 0.7);  // 화면 너비의 70%로 설정
 
@@ -449,7 +449,7 @@ public class DialogManager {
 
     public Dialog giftSelectDialog(Context context, String from, String to) {
         Dialog dialog = new Dialog(context);
-        dialog.setContentView(R.layout.send_gift_select_dialog);
+        dialog.setContentView(R.layout.dialog_send_gift_select);
 
         RecyclerView sendGiftRecyclerview = dialog.findViewById(R.id.send_gift_select_recyclerview);
         TextView sendGiftCancel = dialog.findViewById(R.id.send_gift_select_cancel);
@@ -481,7 +481,7 @@ public class DialogManager {
 
     public Dialog giftSendDialog(Context context, String to, String from, MenuList menuItem) {
         Dialog dialog = new Dialog(context);
-        dialog.setContentView(R.layout.send_gift_quantity_dialog);
+        dialog.setContentView(R.layout.dialog_send_gift_quantity);
 
         TextView menuName = dialog.findViewById(R.id.send_gift_quantity_menuName);
         TextView menuQuantity = dialog.findViewById(R.id.send_gift_quantity_menuQuantity);
@@ -598,7 +598,6 @@ public class DialogManager {
 
             sendNotification.notifyIsGiftAccept(from, to, menuItem, count,true);
 
-            //admin에게 주문한다
             Map<String, String> request = new HashMap<>();
             request.put("request", "GiftMenuOrder");
             request.put("tableName", to);

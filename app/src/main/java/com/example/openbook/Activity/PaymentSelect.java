@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -29,7 +30,7 @@ public class PaymentSelect extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.payment_select_activity);
+        setContentView(R.layout.activity_payment_select);
 
         myData = (MyData) getIntent().getSerializableExtra("myData");
 
@@ -48,7 +49,7 @@ public class PaymentSelect extends AppCompatActivity {
 
 
         if(myData.getTableFromDB() == 0){
-            Log.d(TAG, "tableFromDB ZERO: ");
+            Log.d(TAG, "tableFromDB ZERO");
             getTableFromDB();
             Log.d(TAG, "tableFromDB: " + myData.getTableFromDB());
         }
@@ -62,7 +63,7 @@ public class PaymentSelect extends AppCompatActivity {
         TableQuantity tableQuantity = new TableQuantity();
         tableQuantity.getTableQuantity(new Callback<>() {
             @Override
-            public void onResponse(Call<TableListDTO> call, Response<TableListDTO> response) {
+            public void onResponse(@NonNull Call<TableListDTO> call, @NonNull Response<TableListDTO> response) {
                 if (response.isSuccessful()) {
                     switch (response.body().getResult()) {
                         case "success":
@@ -71,6 +72,7 @@ public class PaymentSelect extends AppCompatActivity {
                             break;
                         case "failed":
                             Log.d(TAG, "onResponse table failed: ");
+                            break;
                     }
                 } else {
                     Log.d(TAG, "onResponse table isNotSuccessful");
@@ -78,7 +80,7 @@ public class PaymentSelect extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<TableListDTO> call, Throwable t) {
+            public void onFailure(@NonNull Call<TableListDTO> call, @NonNull Throwable t) {
                 Log.d(TAG, "onFailure table: " + t.getMessage());
             }
         });
@@ -88,14 +90,11 @@ public class PaymentSelect extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        paymentSelectLater.setOnClickListener(view ->{
-            startActivityString(PaymentCategory.LATER, myData.getId().hashCode());
-        });
+        paymentSelectLater.setOnClickListener(view -> startActivityString(PaymentCategory.LATER, myData.getId().hashCode()));
 
         paymentSelectNow.setOnClickListener(view ->{
             int identifier = hashCode();
             Log.d(TAG, "identifier: " + identifier);
-
             startActivityString(PaymentCategory.NOW, identifier);
         });
     }

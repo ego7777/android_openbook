@@ -118,7 +118,7 @@ public class AdminPopUpAdapter extends RecyclerView.Adapter<AdminPopUpAdapter.Vi
         if (viewType == TYPE_NOW) {
             return R.layout.admin_popup_enter_out;
         } else {
-            return R.layout.receipt_dialog_item;
+            return R.layout.item_receipt_dialog;
         }
     }
 

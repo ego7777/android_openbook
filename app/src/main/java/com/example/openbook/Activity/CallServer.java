@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,15 +26,16 @@ import com.example.openbook.Adapter.RequestAdapter;
 import com.example.openbook.Category.CartCategory;
 import com.example.openbook.Data.MyData;
 import com.example.openbook.Data.TableList;
-import com.example.openbook.Data.TicketData;
 import com.example.openbook.DialogManager;
+import com.example.openbook.InactivityManager;
 import com.example.openbook.R;
 import com.example.openbook.Data.CartList;
 import com.example.openbook.Data.RequestList;
 import com.example.openbook.TableDataManager;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class CallServer extends AppCompatActivity {
 
@@ -45,7 +47,7 @@ public class CallServer extends AppCompatActivity {
     MyData myData;
     ArrayList<TableList> tableLists;
     DialogManager dialogManager;
-
+    InactivityManager inactivityManager;
 
     //액티비티가 onCreate 되면 자동으로 받는거고
     BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
@@ -91,14 +93,12 @@ public class CallServer extends AppCompatActivity {
 
         TextView close = findViewById(R.id.call_server_close);
         close.setOnClickListener(view -> {
-
-            Intent intent = new Intent(CallServer.this, Menu.class);
+            Intent intent = new Intent(this, Menu.class);
             intent.putExtra("myData", myData);
             intent.putExtra("tableList", tableLists);
-
             startActivity(intent);
+            finish();
         });
-
 
         RecyclerView request = findViewById(R.id.request_item);
         RequestAdapter requestAdapter = new RequestAdapter();
@@ -111,30 +111,17 @@ public class CallServer extends AppCompatActivity {
 
         String[] service = getResources().getStringArray(R.array.service);
 
-
         for (String item : service) {
             requestList.add(new RequestList(item));
         }
 
         requestAdapter.setAdapterItem(requestList);
 
+        TextView callServer = findViewById(R.id.call_server);
+        callServer.setOnClickListener(view -> Toast.makeText(this, "직원을 호출하였습니다.", Toast.LENGTH_LONG).show());
 
-        /**
-         * 직원만 부르기 연결
-         */
-        TextView call_server = findViewById(R.id.call_server);
-        call_server.setOnClickListener(view -> {
-            Toast.makeText(getApplicationContext(), "직원을 호출하였습니다.", Toast.LENGTH_LONG).show();
-            //뭔가 뿅! 하는거
-        });
-
-
-        /**
-         * 요구사항 장바구니
-         */
         DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(this, 1);
         dividerItemDecoration.setDrawable(AppCompatResources.getDrawable(this, R.drawable.divider_gray));
-
 
 
         RecyclerView cart = findViewById(R.id.request_item_cart);
@@ -152,9 +139,6 @@ public class CallServer extends AppCompatActivity {
         cartLists = new ArrayList<>();
 
 
-        /**
-         * 아이템을 클릭하면 장바구니로 넣어진다
-         */
         requestAdapter.setOnItemClickListener((view, position, name) -> {
 
             for(int i=0; i<cartLists.size(); i++){
@@ -175,11 +159,6 @@ public class CallServer extends AppCompatActivity {
             menuExist = false;
 
         });
-
-
-        /**
-         * 장바구니 plus, minus, delete 기능
-         */
 
         cartAdapter.setOnItemClickListener(new CartAdapter.OnItemClickListener() {
             @Override
@@ -207,30 +186,21 @@ public class CallServer extends AppCompatActivity {
                 cartLists.remove(position);
                 cartAdapter.notifyItemRemoved(position);
             }
-
-
         });
 
 
-        /**
-         * 전체 삭제
-         */
-        TextView delete_all = findViewById(R.id.requst_delete_all);
-        delete_all.setOnClickListener(view -> {
+        TextView deleteAll = findViewById(R.id.requst_delete_all);
+        deleteAll.setOnClickListener(view -> {
             cartLists = new ArrayList<>();
             cartAdapter.setAdapterItem(cartLists);
-
         });
 
 
-        /**
-         * 요청하기
-         */
         TextView please = findViewById(R.id.please);
         please.setOnClickListener(view -> {
             cartLists = new ArrayList<>();
             cartAdapter.setAdapterItem(cartLists);
-            Toast.makeText(getApplicationContext(), "요청이 완료되었습니다. ", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "요청이 완료되었습니다. ", Toast.LENGTH_LONG).show();
         });
 
 
@@ -239,12 +209,30 @@ public class CallServer extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction("giftArrived");
         intentFilter.addAction("isGiftAccept");
         intentFilter.addAction("CompletePayment");
         LocalBroadcastManager.getInstance(CallServer.this).registerReceiver(broadcastReceiver, intentFilter);
 
+        inactivityManager = new InactivityManager(this, myData, tableLists);
+        inactivityManager.startInactivityTimer();
+    }
+
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        inactivityManager.resetInactivityTimer();
+        return super.onTouchEvent(event);
+
+    }
+
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if(inactivityManager.inactivityTimer != null){
+            inactivityManager.inactivityTimer.cancel();
+        }
     }
 }

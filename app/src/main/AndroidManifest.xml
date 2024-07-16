@@ -67,7 +67,7 @@
         </activity>
         <activity android:name=".Activity.CallServer" />
         <activity
-            android:name=".Activity.ChattingUI"
+            android:name=".Activity.Chatting"
             android:exported="true">
             <intent-filter>
                 <action android:name="chattingDataArrived" />
