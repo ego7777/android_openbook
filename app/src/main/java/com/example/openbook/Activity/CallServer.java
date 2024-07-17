@@ -57,9 +57,9 @@ public class CallServer extends AppCompatActivity {
                 case "giftArrived":
                     String from = intent.getStringExtra("from");
                     String menuItem = intent.getStringExtra("menuItem");
-                    String count = intent.getStringExtra("count");
+//                    String count = intent.getStringExtra("count");
 
-                    dialogManager.giftReceiveDialog(CallServer.this, myData.getId(), from, menuItem, count).show();
+                    dialogManager.giftReceiveDialog(CallServer.this, myData.getId(), from, menuItem).show();
                     break;
 
                 case "isGiftAccept":
@@ -227,12 +227,15 @@ public class CallServer extends AppCompatActivity {
 
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+       inactivityManager.stopTimer();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
+    }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if(inactivityManager.inactivityTimer != null){
-            inactivityManager.inactivityTimer.cancel();
-        }
     }
 }

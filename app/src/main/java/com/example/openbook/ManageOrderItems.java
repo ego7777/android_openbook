@@ -13,6 +13,7 @@ import com.example.openbook.Category.MenuCategory;
 import com.example.openbook.Data.CartList;
 import com.example.openbook.Data.MyData;
 import com.example.openbook.Data.OrderList;
+import com.example.openbook.retrofit.MenuListDTO;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -39,6 +40,27 @@ public class ManageOrderItems {
         menuItems.add(menuItem);
 
         return gson.toJson(menuItems);
+    }
+
+    public void updateProfileGift(Context context, String profileName){
+        sharedPreferences = context.getSharedPreferences("CustomerData", MODE_PRIVATE);
+        editor = sharedPreferences.edit();
+
+        String orderedItems = sharedPreferences.getString("orderedItems", null);
+        ArrayList<CartList> previousOrderList;
+
+        if(orderedItems != null && !orderedItems.isEmpty()){
+            Type type = new TypeToken<ArrayList<CartList>>() {
+            }.getType();
+            previousOrderList = gson.fromJson(orderedItems, type);
+        }else{
+            previousOrderList = new ArrayList<>();
+        }
+
+        previousOrderList.add(new CartList(profileName, 2000, 1, 0, MenuCategory.SIDE.getValue(), CartCategory.MENU));
+
+        editor.putString("orderedItems", gson.toJson(previousOrderList));
+        editor.commit();
     }
 
     public void saveOrderedItems(Context context, ArrayList<CartList> cartLists) {
@@ -129,15 +151,20 @@ public class ManageOrderItems {
                     "주문 내역이 없습니다."));
         }
 
-        String totalPrice = addCommasToNumber(price);
+        String totalPrice = addCommasToNumber(price, 101);
 
         return Pair.create(orderLists, totalPrice);
     }
 
-    public String addCommasToNumber(int price) {
+    public String addCommasToNumber(int price, int type) {
         DecimalFormat decimalFormat = new DecimalFormat("#,###");
-        String totalPrice = decimalFormat.format(price) + "원";
 
-        return totalPrice;
+        if(type == 0){
+            String totalPrice = decimalFormat.format(price) + "원";
+            return "총 금액 : " + totalPrice;
+        }else if(price == 0){
+            return "";
+        }
+        return null;
     }
 }

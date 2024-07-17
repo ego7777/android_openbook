@@ -97,13 +97,13 @@ public class SendNotification {
         });
     }
 
-    public void sendGift(String to, String from, String menuItem, String count){
+    public void sendGift(String to, String from, String menuItem){
         Log.d(TAG, "sendGift to: " + to);
         Map<String, String> data = new HashMap<>();
         data.put("tableName", from);
         data.put("request", "Gift");
         data.put("menuItem", menuItem);
-        data.put("count", count);
+//        data.put("count", count);
 
         Log.d(TAG, "sendGift: " + gson.toJson(data));
 
@@ -123,20 +123,22 @@ public class SendNotification {
         });
     }
 
-    public void notifyIsGiftAccept(String to, String from, String menuItem , String count, boolean isAccept){
+    public void notifyIsGiftAccept(String to, String from, String menuItem , boolean profile, boolean isAccept){
 
         Map<String, String> data = new HashMap<>();
+        data.put("tableName", from);
+        data.put("request", "IsGiftAccept");
 
         if(isAccept){
-            data.put("tableName", from);
-            data.put("request", "IsGiftAccept");
             data.put("menuItem", menuItem);
-            data.put("count", count);
             data.put("isAccept", "true");
         }else{
-            data.put("tableName", from);
-            data.put("request", "IsGiftAccept");
             data.put("isAccept", "false");
+        }
+
+        if(profile){
+            String profileName = "프로필 티켓(" + to + ")";
+            data.put("profile", profileName);
         }
 
 

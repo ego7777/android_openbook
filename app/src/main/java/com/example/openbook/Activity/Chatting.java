@@ -85,9 +85,9 @@ public class Chatting extends AppCompatActivity {
                 case "giftArrived":
                     String from = intent.getStringExtra("from");
                     String menuItem = intent.getStringExtra("menuItem");
-                    String count = intent.getStringExtra("count");
+//                    String count = intent.getStringExtra("count");
 
-                    dialogManager.giftReceiveDialog(Chatting.this, myData.getId(), from, menuItem, count).show();
+                    dialogManager.giftReceiveDialog(Chatting.this, myData.getId(), from, menuItem).show();
                     break;
 
                 case "isGiftAccept":
@@ -328,6 +328,7 @@ public class Chatting extends AppCompatActivity {
         editor.remove(key);
         editor.commit();
 
+        inactivityManager.stopTimer();
         LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
     }
 
@@ -343,8 +344,5 @@ public class Chatting extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if(inactivityManager.inactivityTimer != null){
-            inactivityManager.inactivityTimer.cancel();
-        }
     }
 }

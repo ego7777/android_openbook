@@ -58,7 +58,6 @@ public class FCM extends FirebaseMessagingService {
     }
 
 
-
     public void saveToken(int identifier, String token) {
 
         RetrofitManager retrofitManager = new RetrofitManager();
@@ -97,9 +96,9 @@ public class FCM extends FirebaseMessagingService {
 
     private void handleDataMessage(Map<String, String> data) {
 
-        switch (data.get("request")){
-            case "PayNow" :
-            case "End" :
+        switch (data.get("request")) {
+            case "PayNow":
+            case "End":
             case "PayLater":
                 String tableName = data.get("tableName");
                 handleAdminPaymentType(data.get("request"), tableName);
@@ -109,64 +108,70 @@ public class FCM extends FirebaseMessagingService {
                 handleCompletePayment(data.get("tid"));
                 break;
 
-            case "Order" :
+            case "Order":
             case "GiftMenuOrder":
                 handleAdminTableMenu(data);
                 break;
 
-            case "Gift" :
+            case "Gift":
                 tableName = data.get("tableName");
                 handleGiftOtherTable
                         (tableName,
-                        data.get("menuItem"),
-                        data.get("count"));
+                                data.get("menuItem"),
+                                data.get("count"));
                 break;
 
-            case "IsGiftAccept" :
+            case "IsGiftAccept":
                 String menuItem = data.get("menuItem");
-                int count = Integer.parseInt(data.get("count"));
                 boolean isAccept = Boolean.parseBoolean(data.get("isAccept"));
+                String profileName = data.get("profileName");
                 tableName = data.get("tableName");
 
-                handleIsGiftAccept
-                        (tableName,
+                handleIsGiftAccept(
+                        tableName,
                         isAccept,
                         menuItem,
-                        count);
+                        profileName);
                 break;
         }
 
     }
 
-    public void handleCompletePayment(String tid){
+    public void handleCompletePayment(String tid) {
         Intent intent = new Intent("CompletePayment");
         intent.putExtra("tid", tid);
         LocalBroadcastManager.getInstance(FCM.this).sendBroadcast(intent);
     }
 
-    public void handleIsGiftAccept(String from, boolean isAccept, String menuItem, int count){
+    public void handleIsGiftAccept(String from, boolean isAccept, String menuItem, String profileName) {
+        ManageOrderItems manageOrderItems;
 
         Intent intent = new Intent("isGiftAccept");
         intent.putExtra("from", from);
 
-        if(isAccept){
+        if (isAccept) {
             intent.putExtra("isAccept", true);
-            Type type = new TypeToken<ArrayList<CartList>>() {}.getType();
-            ArrayList<CartList> orderedList= gson.fromJson(menuItem, type);
-
-            orderedList.get(0).setMenuQuantity(count);
+            Type type = new TypeToken<ArrayList<CartList>>() {
+            }.getType();
+            ArrayList<CartList> orderedList = gson.fromJson(menuItem, type);
             Log.d(TAG, "handleIsGiftAccept orderedList: " + gson.toJson(orderedList));
 
-            ManageOrderItems manageOrderItems = new ManageOrderItems();
+            manageOrderItems = new ManageOrderItems();
             manageOrderItems.saveOrderedItems(this, orderedList);
 
-        }else{
+        } else {
             intent.putExtra("isAccept", false);
         }
+
+        if(profileName != null){
+            manageOrderItems = new ManageOrderItems();
+            manageOrderItems.updateProfileGift(this, profileName);
+        }
+
         LocalBroadcastManager.getInstance(FCM.this).sendBroadcast(intent);
     }
 
-    public void handleGiftOtherTable(String from, String menuItem, String count){
+    public void handleGiftOtherTable(String from, String menuItem, String count) {
         Log.d(TAG, "handleGiftOtherTable 호출");
         Intent intent = new Intent("giftArrived");
         intent.putExtra("from", from);
@@ -178,7 +183,6 @@ public class FCM extends FirebaseMessagingService {
 
 
     public void handleAdminTableMenu(Map<String, String> data) {
-
         Intent intent = new Intent("tableRequest");
         intent.putExtra("fcmData", gson.toJson(data));
 

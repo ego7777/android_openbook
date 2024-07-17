@@ -111,14 +111,14 @@ public class Table extends AppCompatActivity {
                 case "giftArrived":
                     String from = intent.getStringExtra("from");
                     String menuItem = intent.getStringExtra("menuItem");
-                    String count = intent.getStringExtra("count");
 
-                    dialogManager.giftReceiveDialog(Table.this, myData.getId(), from, menuItem, count).show();
+                    dialogManager.giftReceiveDialog(Table.this, myData.getId(), from, menuItem).show();
                     break;
 
                 case "isGiftAccept":
                     from = intent.getStringExtra("from");
                     boolean isAccept = intent.getBooleanExtra("isAccept", false);
+                    boolean profile = intent.getBooleanExtra("profile", false);
 
                     String message;
                     if (isAccept) {
@@ -333,14 +333,13 @@ public class Table extends AppCompatActivity {
         checkInformation.setOnClickListener(view -> {
             if (!myData.isOrder()) {
                 dialogManager.positiveBtnDialog
-                        (Table.this,
-                                getResources().getString(R.string.notOrder)).show();
+                        (Table.this, getResources().getString(R.string.notOrder)).show();
 
             } else if (tableList.get(clickTable - 1).getCategory() == TableCategory.OTHER) {
                 dialogManager.positiveBtnDialog(Table.this,
                         getResources().getString(R.string.unusableTable)).show();
             } else {
-                requestTableInfo();
+                requestTableInformation();
             }
 
         });
@@ -348,8 +347,7 @@ public class Table extends AppCompatActivity {
         sendGift.setOnClickListener(v -> {
             if (!myData.isOrder()) {
                 dialogManager.positiveBtnDialog
-                        (Table.this,
-                                getResources().getString(R.string.notOrder)).show();
+                        (Table.this, getResources().getString(R.string.notOrder)).show();
 
             } else if (tableList.get(clickTable - 1).getCategory() == TableCategory.OTHER) {
 
@@ -365,7 +363,7 @@ public class Table extends AppCompatActivity {
         });
     }
 
-    private void requestTableInfo() {
+    private void requestTableInformation() {
         Call<TableInformationDTO> call = service.requestTableInfo("table" + clickTable);
         call.enqueue(new Callback<>() {
             @Override

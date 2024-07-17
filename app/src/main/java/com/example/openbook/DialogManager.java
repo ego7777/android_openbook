@@ -15,6 +15,7 @@ import android.view.Window;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -280,7 +281,8 @@ public class DialogManager {
 
             tableInfoStatement.setText(tableDTO.getStatement());
             tableInfoGender.setText(tableDTO.getGender());
-            tableInfoMember.setText(tableDTO.getGuestNumber() + "명");
+            String guestNumber = tableDTO.getGuestNumber() + "명";
+            tableInfoMember.setText(guestNumber);
 
             tableInfoImg.setOnClickListener(view -> {
                 tableInfoImg.setImageBitmap(new MakeQR().clientQR(id));
@@ -298,7 +300,7 @@ public class DialogManager {
         Dialog dialog = new Dialog(context);
         dialog.setContentView(R.layout.dialog_table_information);
         DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
-        int width = (int) (displayMetrics.widthPixels * 0.7);  // 화면 너비의 70%로 설정
+        int width = (int) (displayMetrics.widthPixels * 0.7);
 
         dialog.getWindow().setLayout(width, ViewGroup.LayoutParams.MATCH_PARENT);
 
@@ -322,7 +324,8 @@ public class DialogManager {
 
             tableInfoStatement.setText(tableDTO.getStatement());
             tableInfoGender.setText(tableDTO.getGender());
-            tableInfoMember.setText(tableDTO.getGuestNumber() + "명");
+            String guestNumber = tableDTO.getGuestNumber() + "명";
+            tableInfoMember.setText(guestNumber);
 
             if (ticket) {
                 tableInfoText.setVisibility(View.GONE);
@@ -342,7 +345,7 @@ public class DialogManager {
                         .apply(RequestOptions.bitmapTransform(new BlurTransformation(25, 3)))
                         .into(tableInfoImg);
 
-                tableInfoImg.setOnClickListener(view ->{
+                tableInfoImg.setOnClickListener(view -> {
                     dialog.dismiss();
                     buyProfileTicketDialog(context, id, table).show();
                 });
@@ -378,14 +381,13 @@ public class DialogManager {
             menuItem.addProperty("menuName", "프로필 티켓");
             menuItem.addProperty("menuPrice", 2000);
             menuItem.addProperty("menuQuantity", 1);
-            menuItem.addProperty("menuCategory",CartCategory.MENU.getValue());
+            menuItem.addProperty("menuCategory", CartCategory.MENU.getValue());
 
             JsonArray menuItems = new JsonArray();
             menuItems.add(menuItem);
 
             Log.d(TAG, "buyProfileTicketDialog menuItems: " + gson.toJson(menuItems));
 
-            //admin에게 주문한다
             Map<String, String> request = new HashMap<>();
             request.put("request", "Order");
             request.put("tableName", from);
@@ -397,10 +399,10 @@ public class DialogManager {
             sendNotification.sendMenu(request, result -> {
                 if (result.equals("failed")) {
                     Toast.makeText(context, context.getResources().getString(R.string.menuOrderError), Toast.LENGTH_SHORT).show();
-                }else{
+                } else {
                     //성공하면 클라이언트 주문 내역에 저장
                     manageOrderItems = new ManageOrderItems();
-                    ArrayList<CartList> cartList= new ArrayList<>();
+                    ArrayList<CartList> cartList = new ArrayList<>();
                     cartList.add(new CartList("프로필 티켓", 2000, 1, 2000,
                             MenuCategory.SIDE.getValue(), CartCategory.MENU));
 
@@ -413,10 +415,10 @@ public class DialogManager {
                     String profileTicket = sharedPreferences.getString("profileTicket", null);
                     HashMap<String, Boolean> profileTicketMap = gson.fromJson(profileTicket, HashMap.class);
 
-                    if(profileTicketMap == null) {
+                    if (profileTicketMap == null) {
                         profileTicketMap = new HashMap<>();
-
                     }
+
                     profileTicketMap.put(to, true);
 
                     editor.putString("profileTicket", gson.toJson(profileTicketMap));
@@ -483,6 +485,12 @@ public class DialogManager {
         Dialog dialog = new Dialog(context);
         dialog.setContentView(R.layout.dialog_send_gift_quantity);
 
+        DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
+        int width = (int) (displayMetrics.widthPixels * 0.5);
+        int height = (int) (displayMetrics.heightPixels * 0.6);
+
+        dialog.getWindow().setLayout(width, height);
+
         TextView menuName = dialog.findViewById(R.id.send_gift_quantity_menuName);
         TextView menuQuantity = dialog.findViewById(R.id.send_gift_quantity_menuQuantity);
         TextView menuPrice = dialog.findViewById(R.id.send_gift_quantity_price);
@@ -490,6 +498,7 @@ public class DialogManager {
         TextView plus = dialog.findViewById(R.id.send_gift_quantity_plus);
         Button minus = dialog.findViewById(R.id.send_gift_quantity_minus);
         Button cancel = dialog.findViewById(R.id.send_gift_quantity_cancel);
+        CheckBox checkBox = dialog.findViewById(R.id.send_gift_profile_checkbox);
 
         cancel.setOnClickListener(v -> dialog.dismiss());
 
@@ -522,21 +531,25 @@ public class DialogManager {
         });
 
         sendGiftButton.setOnClickListener(v -> {
-            String quantity = menuQuantity.getText().toString();
-            gson = new Gson();
+
+            int quantity = Integer.parseInt(menuQuantity.getText().toString());
 
             JsonObject jsonObject = new JsonObject();
             jsonObject.addProperty("menuName", menuItem.getMenuName());
             jsonObject.addProperty("menuPrice", menuItem.getMenuPrice());
-            jsonObject.addProperty("menuQuantity",menuQuantity.getText().toString());
-            jsonObject.addProperty("menuCategory", menuItem.getMenuType());
+            jsonObject.addProperty("menuQuantity", quantity);
+            jsonObject.addProperty("menuCategory", menuItem.getMenuCategory());
             jsonObject.addProperty("imageUrl", menuItem.getUrl());
+
+            if(checkBox.isChecked()){
+                jsonObject.addProperty("profile", true);
+            }
 
             JsonArray jsonArray = new JsonArray();
             jsonArray.add(jsonObject);
 
             sendNotification = new SendNotification();
-            sendNotification.sendGift(to, from, jsonArray.toString(), quantity);
+            sendNotification.sendGift(to, from, jsonArray.toString());
             dialog.dismiss();
         });
 
@@ -544,7 +557,9 @@ public class DialogManager {
 
     }
 
-    public Dialog giftReceiveDialog(Context context, String to, String from, String menuItem, String count) {
+
+
+    public Dialog giftReceiveDialog(Context context, String to, String from, String menuItem) {
         Dialog dialog = new Dialog(context);
         dialog.setContentView(R.layout.popup);
 
@@ -557,46 +572,55 @@ public class DialogManager {
         title.setText("선물 도착");
 
         gson = new Gson();
+
         JsonArray jsonArray = gson.fromJson(menuItem, JsonArray.class);
         JsonObject item = jsonArray.get(0).getAsJsonObject();
 
-        String menuName =  item.get("menuName").getAsString();
-        int menuPrice =  item.get("menuPrice").getAsInt();
+        String menuName = item.get("menuName").getAsString();
+        int menuPrice = item.get("menuPrice").getAsInt();
+        int menuQuantity = item.get("menuQuantity").getAsInt();
         String url = item.get("imageUrl").getAsString();
         int menuCategory = item.get("menuCategory").getAsInt();
+        boolean profile = item.get("profile").getAsBoolean();
 
         Glide.with(image.getContext()).load(url).into(image);
 
         String message;
 
         if (menuCategory == MenuCategory.DRINK.getValue()) {
-            message = from + " 에서 " + menuName + " " + count + "병을 선물하였습니다.";
+            message = from + " 에서 " + menuName + " " + menuQuantity + "병을 선물하였습니다.";
         } else {
-            message = from + " 에서 " + menuName + " " + count + "개를 선물하였습니다.";
+            message = from + " 에서 " + menuName + " " + menuQuantity + "개를 선물하였습니다.";
         }
+
+        if(profile){
+            message = message + "(프로필 티켓 동봉)";
+        }
+
         body.setText(message);
 
-       manageOrderItems = new ManageOrderItems();
+        manageOrderItems = new ManageOrderItems();
 
         String fromMenuName = menuName + "(" + to + ")";
         String toMenuName = menuName + "(" + from + ")";
 
         String fromMenuItem = manageOrderItems.getMenuItem
-                (fromMenuName, Integer.parseInt(count), menuPrice, menuCategory);
+                (fromMenuName, menuQuantity, menuPrice, menuCategory);
 
         String toMenuItem = manageOrderItems.getMenuItem
-                (toMenuName, Integer.parseInt(count), 0, menuCategory);
+                (toMenuName, menuQuantity, 0, menuCategory);
 
         sendNotification = new SendNotification();
 
         yesButton.setOnClickListener(view -> {
 
-            Type type = new TypeToken<ArrayList<CartList>>() {}.getType();
-            ArrayList<CartList> orderedList= gson.fromJson(toMenuItem, type);
+            Type orderType = new TypeToken<ArrayList<CartList>>() {}.getType();
+            ArrayList<CartList> orderedList = gson.fromJson(toMenuItem, orderType);
 
             manageOrderItems.saveOrderedItems(context, orderedList);
 
-            sendNotification.notifyIsGiftAccept(from, to, menuItem, count,true);
+            sendNotification.notifyIsGiftAccept(from, to, fromMenuItem, profile,true);
+
 
             Map<String, String> request = new HashMap<>();
             request.put("request", "GiftMenuOrder");
@@ -605,18 +629,38 @@ public class DialogManager {
             request.put("fromMenuItem", fromMenuItem);
             request.put("toMenuItem", toMenuItem);
 
+            if(profile){
+                //프로필 티켓도 업데이트
+                request.put("profile", "true");
+
+                sharedPreferences = context.getSharedPreferences("CustomerData", Context.MODE_PRIVATE);
+                editor = sharedPreferences.edit();
+
+                String profileTicket = sharedPreferences.getString("profileTicket", null);
+                HashMap<String, Boolean> profileTicketMap = gson.fromJson(profileTicket, HashMap.class);
+
+                if (profileTicketMap == null) {
+                    profileTicketMap = new HashMap<>();
+                }
+
+                profileTicketMap.put(from, true);
+
+                editor.putString("profileTicket", gson.toJson(profileTicketMap));
+                editor.commit();
+            }
+
+
             sendNotification.sendMenu(request, result -> {
                 if (result.equals("failed")) {
                     Toast.makeText(context, context.getResources().getString(R.string.menuOrderError), Toast.LENGTH_SHORT).show();
                 }
                 dialog.dismiss();
             });
-
         });
 
         noButton.setOnClickListener(view -> {
             Log.d(TAG, "giftReceiveDialog: no");
-            sendNotification.notifyIsGiftAccept(from, to, menuItem, count,false);
+            sendNotification.notifyIsGiftAccept(from, to, menuItem, profile,false);
             dialog.dismiss();
         });
 

@@ -24,6 +24,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.openbook.Adapter.AdminTableAdapter;
 import com.example.openbook.Category.CartCategory;
+import com.example.openbook.Category.MenuCategory;
 import com.example.openbook.Data.AdminData;
 import com.example.openbook.BuildConfig;
 import com.example.openbook.Data.CartList;
@@ -106,7 +107,6 @@ public class Admin extends AppCompatActivity {
                             break;
 
                         case "GiftMenuOrder":
-                            Log.d(TAG, "onReceive: ");
                             String fromMenuItem = requestJson.get("fromMenuItem").getAsString();
                             JsonArray fromJsonArray = gson.fromJson(fromMenuItem, JsonArray.class);
                             String from = requestJson.get("fromTable").getAsString();
@@ -114,7 +114,9 @@ public class Admin extends AppCompatActivity {
                             String toMenuItem = requestJson.get("toMenuItem").getAsString();
                             JsonArray toJsonArray = gson.fromJson(toMenuItem, JsonArray.class);
 
-                            orderGiftMenu(tableName, tableNumber,toJsonArray,from, fromJsonArray);
+                            boolean profile = requestJson.get("profile").getAsBoolean();
+
+                            orderGiftMenu(tableName, toJsonArray,from, fromJsonArray, profile);
                             break;
                     }
                 }
@@ -487,9 +489,8 @@ public class Admin extends AppCompatActivity {
         }
     }
 
-    public void orderGiftMenu(String to, int tableNumber,
-                              JsonArray toMenuArray,
-                              String from, JsonArray fromMenuArray){
+    public void orderGiftMenu(String to, JsonArray toMenuArray,
+                              String from, JsonArray fromMenuArray, boolean profile){
 
         ArrayList<OrderList> orderLists = new ArrayList<>();
         JsonObject toItem = toMenuArray.get(0).getAsJsonObject();
@@ -498,11 +499,15 @@ public class Admin extends AppCompatActivity {
         int menuQuantity = toItem.get("menuQuantity").getAsInt();
 
         JsonObject fromItem = fromMenuArray.get(0).getAsJsonObject();
-        int menuPrice = fromItem.get("menuPrice").getAsInt();
+        int menuPrice = fromItem.get("menuPrice").getAsInt(); // from 테이블의 메뉴 가격
 
         orderLists.add(new OrderList
                 (PaymentCategory.LATER.getValue(),
                 to, toMenuName, menuQuantity, 0));
+
+        if(profile){
+            orderLists.add(new OrderList(PaymentCategory.LATER.getValue(), to, "프로필 티켓", 1, 0));
+        }
 
         popUpDialog = dialogManager.popUpAdmin(this, orderLists);
         popUpDialog.show();
@@ -515,8 +520,16 @@ public class Admin extends AppCompatActivity {
         if (oldPrice != null) {
             int newPrice = removeCommas(oldPrice) + menuPrice;
             Log.d(TAG, "orderGiftMenu newPrice: " + newPrice);
+
+            if(profile){
+                newPrice +=2000;
+            }
+
             adminData.getAdminTableLists().get(fromTableNumber).setAdminTablePrice(addCommasToNumber(newPrice));
         } else {
+            if(profile){
+                menuPrice +=2000;
+            }
             adminData.getAdminTableLists().get(fromTableNumber).setAdminTablePrice(addCommasToNumber(menuPrice));
         }
 
@@ -529,6 +542,11 @@ public class Admin extends AppCompatActivity {
 
         updateOrderList(from, fromMenuArray);
         updateOrderList(to, toMenuArray);
+
+        if(profile){
+            updateProfileGift(from, "프로필 티켓(" + to + ")", 2000);
+            updateProfileGift(to, "프로필 티켓(" + from + ")", 0);
+        }
 
     }
 
@@ -571,6 +589,25 @@ public class Admin extends AppCompatActivity {
 
         updateOrderList(tableName, items);
 
+    }
+
+    public void updateProfileGift(String tableName, String menuName, int menuPrice){
+        String orderItems = sharedPreference.getString(tableName, null);
+
+        ArrayList<CartList> previousOrderList;
+
+        if(orderItems != null && !orderItems.isEmpty()){
+            Type type = new TypeToken<ArrayList<CartList>>() {
+            }.getType();
+            previousOrderList = gson.fromJson(orderItems, type);
+        }else{
+            previousOrderList = new ArrayList<>();
+        }
+
+        previousOrderList.add(new CartList(menuName, menuPrice, 1, 0, MenuCategory.SIDE.getValue(), CartCategory.MENU));
+
+        editor.putString(tableName, gson.toJson(previousOrderList));
+        editor.commit();
     }
 
     public void updateOrderList(String tableName, JsonArray newOrder) {

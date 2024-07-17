@@ -10,7 +10,6 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 
 import android.database.sqlite.SQLiteDatabase;
-import android.icu.text.DecimalFormat;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -71,8 +70,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.stream.Collectors;
 
 
@@ -122,7 +119,6 @@ public class Menu extends AppCompatActivity {
     ManageOrderItems manageOrderItems;
     InactivityManager inactivityManager;
 
-    //액티비티가 onCreate 되면 자동으로 받는거고
     BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -131,14 +127,14 @@ public class Menu extends AppCompatActivity {
                     Log.d(TAG, "onReceive: " + intent.getAction());
                     String from = intent.getStringExtra("from");
                     String menuItem = intent.getStringExtra("menuItem");
-                    String count = intent.getStringExtra("count");
+//                    String count = intent.getStringExtra("count");
 
-                    dialogManager.giftReceiveDialog(Menu.this, myData.getId(), from, menuItem, count).show();
+                    dialogManager.giftReceiveDialog(Menu.this, myData.getId(), from, menuItem).show();
                     break;
 
-                case "newChatArrived" :
+                case "newChatArrived":
                     newChatTable = intent.getStringExtra("newChatTable");
-                    if(newChatTable!=null){
+                    if (newChatTable != null) {
                         notifyNewChat(newChatTable);
                     }
                     break;
@@ -165,7 +161,7 @@ public class Menu extends AppCompatActivity {
 
                         String chatMessages = dbHelper.getChatting(myData.getId());
 
-                        if(chatMessages != null && !chatMessages.isBlank()){
+                        if (chatMessages != null && !chatMessages.isBlank()) {
                             tableDataManager.saveChatMessages
                                     (myData.getId(),
                                             chatMessages,
@@ -177,7 +173,7 @@ public class Menu extends AppCompatActivity {
                                                     tableDataManager.stopSocket(Menu.this, myData.getId());
                                                 }
                                             });
-                        }else{
+                        } else {
                             tableDataManager.setUseStop(Menu.this, myData);
                             tableDataManager.stopSocket(Menu.this, myData.getId());
                         }
@@ -194,7 +190,6 @@ public class Menu extends AppCompatActivity {
         setContentView(R.layout.activity_menu);
 
         overridePendingTransition(0, 0);
-
 
         dialogManager = new DialogManager();
         progressbar = dialogManager.progressDialog(Menu.this);
@@ -353,7 +348,7 @@ public class Menu extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        //자기가 직접 계산할 때
+
         if (isPayment) {
             Log.d(TAG, "isPayment: " + isPayment);
             sendNotification.sendMenu(sendOrderToAdmin(), result -> {
@@ -374,7 +369,7 @@ public class Menu extends AppCompatActivity {
 
     }
 
-    public void notifyNewChat(String tableName){
+    public void notifyNewChat(String tableName) {
         Animation shakeAndTranslate = AnimationUtils.loadAnimation(this, R.anim.up_and_shake);
         String notify = tableName + "\n채팅 알림";
         menuNewChat.setText(notify);
@@ -385,6 +380,7 @@ public class Menu extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
+        inactivityManager.stopTimer();
         LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
     }
 
@@ -410,11 +406,11 @@ public class Menu extends AppCompatActivity {
         appbarMenuTable.setOnClickListener(view -> moveToOtherActivity(Table.class));
 
         appbarOrderList.setOnClickListener(view -> {
-            if(myData.isOrder()){
+            if (myData.isOrder()) {
                 Pair<ArrayList<OrderList>, String> pair = manageOrderItems.getReceiptData(this, myData);
                 Log.d(TAG, "orderItem: " + pair.second);
                 dialogManager.showReceiptDialog(this, pair.first, pair.second).show();
-            }else{
+            } else {
                 Toast.makeText(this, "주문 내역이 없습니다.", Toast.LENGTH_SHORT).show();
             }
 
@@ -434,7 +430,7 @@ public class Menu extends AppCompatActivity {
                 cartLists.get(position).setMenuPrice(newPrice);
 
                 totalPrice = totalPrice + newPrice;
-                addCommasToNumber(totalPrice, 0);
+                cartOrderTotalPrice.setText(manageOrderItems.addCommasToNumber(totalPrice, 0));
 
                 cartAdapter.notifyItemChanged(position);
 
@@ -462,7 +458,7 @@ public class Menu extends AppCompatActivity {
                 }
 
                 totalPrice = totalPrice - originalPrice;
-                addCommasToNumber(totalPrice, 0);
+                cartOrderTotalPrice.setText(manageOrderItems.addCommasToNumber(totalPrice, 0));
 
                 editor.putString("cartItems", gson.toJson(cartLists));
                 editor.commit();
@@ -475,7 +471,7 @@ public class Menu extends AppCompatActivity {
 
                 totalPrice = totalPrice - deletePrice;
 
-                addCommasToNumber(totalPrice, 0);
+                cartOrderTotalPrice.setText(manageOrderItems.addCommasToNumber(totalPrice, 0));
 
                 cartLists.remove(position);
                 cartAdapter.notifyItemRemoved(position);
@@ -515,7 +511,7 @@ public class Menu extends AppCompatActivity {
                 menuExist = false;
 
                 totalPrice = totalPrice + price;
-                addCommasToNumber(totalPrice, 0);
+                cartOrderTotalPrice.setText(manageOrderItems.addCommasToNumber(totalPrice, 0));
 
                 editor.putString("cartItems", gson.toJson(cartLists));
                 editor.commit();
@@ -596,7 +592,7 @@ public class Menu extends AppCompatActivity {
             myTable = Integer.parseInt(myData.getId().replace("table", ""));
         }
 
-        menuNewChat.setOnClickListener(view ->{
+        menuNewChat.setOnClickListener(view -> {
             menuNewChat.setVisibility(View.GONE);
             int newChatTableNumber = Integer.parseInt(newChatTable.replace("table", ""));
             newChatTable = null;
@@ -648,7 +644,7 @@ public class Menu extends AppCompatActivity {
                     Log.d(TAG, "shared price: " + totalPrice);
                     menu.setMenuPrice(price);
                 }
-                addCommasToNumber(totalPrice, 0);
+                cartOrderTotalPrice.setText(manageOrderItems.addCommasToNumber(totalPrice, 0));
                 cartAdapter.setAdapterItem(cartLists);
             }
         }
@@ -707,33 +703,17 @@ public class Menu extends AppCompatActivity {
     }
 
     @Override
-    public void onBackPressed() {}
-
-
-    public String addCommasToNumber(int price, int type) {
-        DecimalFormat decimalFormat = new DecimalFormat("#,###");
-        String totalPrice = decimalFormat.format(price) + "원";
-
-        int CART = 0;
-        if (type == CART) {
-            if (price == 0) {
-                cartOrderTotalPrice.setText("");
-            } else {
-                cartOrderTotalPrice.setText("총 금액 : " + totalPrice);
-            }
-            return null;
-        }
-        return totalPrice;
+    public void onBackPressed() {
     }
 
-    public void moveToOtherActivity(Class<?> activity){
+
+    public void moveToOtherActivity(Class<?> activity) {
         Intent intent = new Intent(Menu.this, activity);
         intent.putExtra("myData", myData);
         intent.putExtra("tableList", tableList);
         startActivity(intent);
         finish();
     }
-
 
 
     @Override
@@ -746,8 +726,5 @@ public class Menu extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if(inactivityManager.inactivityTimer != null){
-            inactivityManager.inactivityTimer.cancel();
-        }
     }
 }

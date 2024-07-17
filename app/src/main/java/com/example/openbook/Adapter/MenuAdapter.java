@@ -90,7 +90,7 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
                 int position = getAdapterPosition();
                 String name = menuItem.get(position).getMenuName();
                 int price = menuItem.get(position).getMenuPrice();
-                int category = menuItem.get(position).getMenuType();
+                int category = menuItem.get(position).getMenuCategory();
 
                 if (position != RecyclerView.NO_POSITION) {
                     if (myListener != null) {

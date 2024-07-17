@@ -15,12 +15,4 @@
         <item name="android:windowFullscreen">true</item>
     </style>
 
-    <style name="Theme.Openbook.NoActionBar">
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
-    </style>
-
-    <style name="Theme.Openbook.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
-
-    <style name="Theme.Openbook.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 </resources>
