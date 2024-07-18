@@ -58,7 +58,6 @@ public class Login extends AppCompatActivity {
 
     ArrayList<AdminTableList> adminTableList;
     int tableFromDB;
-
     RetrofitService service;
     Dialog progress;
 
@@ -68,10 +67,6 @@ public class Login extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-
-        /**
-         * 아이디, 비밀번호
-         */
         EditText idEditText = findViewById(R.id.login_editText_id);
         EditText pwEditText = findViewById(R.id.login_editText_pw);
         Button loginButton = findViewById(R.id.login_button);
@@ -86,10 +81,6 @@ public class Login extends AppCompatActivity {
         DBHelper dbHelper = new DBHelper(Login.this);
         dbHelper.dropTable("menuListTable");
 
-
-        /**
-         * 로그인
-         */
         loginButton.setOnClickListener(view -> {
             String id = idEditText.getText().toString().trim();
             String password = pwEditText.getText().toString().trim();
@@ -100,7 +91,7 @@ public class Login extends AppCompatActivity {
                 progress.show();
 
                 Call<LoginResponseModel> call = service.requestLogin(id.hashCode(), password.hashCode());
-                call.enqueue(new Callback<LoginResponseModel>() {
+                call.enqueue(new Callback<>() {
                     @Override
                     public void onResponse(@NonNull Call<LoginResponseModel> call, @NonNull Response<LoginResponseModel> response) {
                         if (response.isSuccessful()) {
@@ -140,20 +131,12 @@ public class Login extends AppCompatActivity {
         });
 
 
-        /**
-         * 회원가입
-         */
         Button signup = findViewById(R.id.signup_button);
         signup.setOnClickListener(view -> {
             Intent intent = new Intent(Login.this, SignUp.class);
             startActivity(intent);
             overridePendingTransition(0, 0);
         });
-
-
-        /**
-         * 구글 로그인
-         */
 
         googleSignInOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
@@ -190,7 +173,7 @@ public class Login extends AppCompatActivity {
                 googleIdentifier = googleSignInAccount.getId();
 
                 Call<SuccessOrNot> checkIdCall = service.requestIdDuplication(googleIdentifier.hashCode());
-                checkIdCall.enqueue(new Callback<SuccessOrNot>() {
+                checkIdCall.enqueue(new Callback<>() {
                     @Override
                     public void onResponse(@NonNull Call<SuccessOrNot> call, @NonNull Response<SuccessOrNot> response) {
                         if (response.isSuccessful()) {
@@ -210,6 +193,7 @@ public class Login extends AppCompatActivity {
 
                     @Override
                     public void onFailure(@NonNull Call<SuccessOrNot> call, @NonNull Throwable t) {
+                        Toast.makeText(Login.this, R.string.networkError, Toast.LENGTH_SHORT).show();
                         Log.d(TAG, "onFailure google checkID: " + t.getMessage());
                     }
                 });
@@ -227,7 +211,7 @@ public class Login extends AppCompatActivity {
         Call<SuccessOrNot> call = service.requestSignUp(googleId,
                 googleIdentifier.hashCode(),
                 0000, "000-0000-0000", googleEmail);
-        call.enqueue(new Callback<SuccessOrNot>() {
+        call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<SuccessOrNot> call, @NonNull Response<SuccessOrNot> response) {
                 Log.d(TAG, "onResponse google: " + response.body());
@@ -251,6 +235,7 @@ public class Login extends AppCompatActivity {
 
             @Override
             public void onFailure(@NonNull Call<SuccessOrNot> call, @NonNull Throwable t) {
+                Toast.makeText(Login.this, R.string.networkError, Toast.LENGTH_SHORT).show();
                 Log.d(TAG, "onFailure google: " + t.getMessage());
             }
         });
@@ -258,7 +243,7 @@ public class Login extends AppCompatActivity {
 
 
     // 문자열 인텐트 전달 함수
-    public void startActivityCustomer(Class c, String name, String sendString) {
+    public void startActivityCustomer(Class<?> c, String name, String sendString) {
         Intent intent = new Intent(getApplicationContext(), c);
         MyData myData = new MyData(sendString,
                 tableFromDB,
@@ -272,7 +257,7 @@ public class Login extends AppCompatActivity {
         overridePendingTransition(0, 0);
     }
 
-    public void startActivityAdmin(Class c, String id) {
+    public void startActivityAdmin(Class<?> c, String id) {
         Intent intent = new Intent(getApplicationContext(), c);
         AdminData adminData = new AdminData(id, adminTableList, false);
 
@@ -280,10 +265,11 @@ public class Login extends AppCompatActivity {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         Gson gson = new Gson();
 
+        editor.clear();
+
         editor.putString("id", id);
         editor.putBoolean("isFcmExist", false);
         editor.putString("adminTableList", gson.toJson(adminTableList));
-        Log.d(TAG, "startActivityAdmin: " + gson.toJson(adminTableList));
         editor.apply();
 
         intent.putExtra("adminTableList", adminTableList);
@@ -302,7 +288,7 @@ public class Login extends AppCompatActivity {
             adminTableList = new ArrayList<>();
 
             TableQuantity tableQuantity = new TableQuantity();
-            tableQuantity.getTableQuantity(new Callback<TableListDTO>() {
+            tableQuantity.getTableQuantity(new Callback<>() {
                 @Override
                 public void onResponse(@NonNull Call<TableListDTO> call, @NonNull Response<TableListDTO> response) {
 
