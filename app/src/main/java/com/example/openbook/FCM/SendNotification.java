@@ -98,12 +98,10 @@ public class SendNotification {
     }
 
     public void sendGift(String to, String from, String menuItem){
-        Log.d(TAG, "sendGift to: " + to);
         Map<String, String> data = new HashMap<>();
         data.put("tableName", from);
         data.put("request", "Gift");
         data.put("menuItem", menuItem);
-//        data.put("count", count);
 
         Log.d(TAG, "sendGift: " + gson.toJson(data));
 
@@ -137,10 +135,9 @@ public class SendNotification {
         }
 
         if(profile){
-            String profileName = "프로필 티켓(" + to + ")";
+            String profileName = "프로필 티켓(" + from + ")";
             data.put("profile", profileName);
         }
-
 
         Call<SuccessOrNot> call = service.sendRequestFcm(to, gson.toJson(data));
         call.enqueue(new Callback<>() {

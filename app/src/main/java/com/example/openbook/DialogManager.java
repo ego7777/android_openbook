@@ -173,7 +173,7 @@ public class DialogManager {
                                        String header) {
         Dialog dialog = new Dialog(context);
         dialog.setContentView(R.layout.admin_sales_items_dialog);
-        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        Objects.requireNonNull(dialog.getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
 
         ImageView dialogCancel = dialog.findViewById(R.id.sales_items_dialog_cancel);
         TextView dialogHeader = dialog.findViewById(R.id.sales_items_dialog_header);
@@ -226,7 +226,7 @@ public class DialogManager {
     public Dialog addMenu(Context context) {
         Dialog dialog = new Dialog(context);
         dialog.setContentView(R.layout.admin_modify_menu);
-        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        Objects.requireNonNull(dialog.getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
 
         TextView cancel = dialog.findViewById(R.id.admin_modify_menu_cancel);
         ImageView qrCode = dialog.findViewById(R.id.admin_modify_menu_qrCode);
@@ -246,7 +246,7 @@ public class DialogManager {
         dialog.setContentView(R.layout.dialog_table_information);
         DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
         int width = (int) (displayMetrics.widthPixels * 0.7);  // 화면 너비의 70%로 설정
-        dialog.getWindow().setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT);
+        Objects.requireNonNull(dialog.getWindow()).setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT);
 
         TextView tableInfoTitle = dialog.findViewById(R.id.table_info_title);
         ImageView tableInfoImg = dialog.findViewById(R.id.table_info_img);
@@ -302,7 +302,7 @@ public class DialogManager {
         DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
         int width = (int) (displayMetrics.widthPixels * 0.7);
 
-        dialog.getWindow().setLayout(width, ViewGroup.LayoutParams.MATCH_PARENT);
+        Objects.requireNonNull(dialog.getWindow()).setLayout(width, ViewGroup.LayoutParams.MATCH_PARENT);
 
         TextView tableTitle = dialog.findViewById(R.id.table_info_title);
         ImageView tableInfoImg = dialog.findViewById(R.id.table_info_img);
@@ -489,7 +489,7 @@ public class DialogManager {
         int width = (int) (displayMetrics.widthPixels * 0.5);
         int height = (int) (displayMetrics.heightPixels * 0.6);
 
-        dialog.getWindow().setLayout(width, height);
+        Objects.requireNonNull(dialog.getWindow()).setLayout(width, height);
 
         TextView menuName = dialog.findViewById(R.id.send_gift_quantity_menuName);
         TextView menuQuantity = dialog.findViewById(R.id.send_gift_quantity_menuQuantity);
@@ -540,10 +540,7 @@ public class DialogManager {
             jsonObject.addProperty("menuQuantity", quantity);
             jsonObject.addProperty("menuCategory", menuItem.getMenuCategory());
             jsonObject.addProperty("imageUrl", menuItem.getUrl());
-
-            if(checkBox.isChecked()){
-                jsonObject.addProperty("profile", true);
-            }
+            jsonObject.addProperty("profile", checkBox.isChecked());
 
             JsonArray jsonArray = new JsonArray();
             jsonArray.add(jsonObject);
@@ -594,7 +591,7 @@ public class DialogManager {
         }
 
         if(profile){
-            message = message + "(프로필 티켓 동봉)";
+            message = message + "\n(프로필 티켓 동봉)";
         }
 
         body.setText(message);
@@ -613,14 +610,12 @@ public class DialogManager {
         sendNotification = new SendNotification();
 
         yesButton.setOnClickListener(view -> {
-
             Type orderType = new TypeToken<ArrayList<CartList>>() {}.getType();
             ArrayList<CartList> orderedList = gson.fromJson(toMenuItem, orderType);
 
             manageOrderItems.saveOrderedItems(context, orderedList);
 
             sendNotification.notifyIsGiftAccept(from, to, fromMenuItem, profile,true);
-
 
             Map<String, String> request = new HashMap<>();
             request.put("request", "GiftMenuOrder");
@@ -632,6 +627,10 @@ public class DialogManager {
             if(profile){
                 //프로필 티켓도 업데이트
                 request.put("profile", "true");
+
+                String ticket = "프로필 티켓(" + from + ")";
+
+                manageOrderItems.updateProfileGift(context, ticket, 0);
 
                 sharedPreferences = context.getSharedPreferences("CustomerData", Context.MODE_PRIVATE);
                 editor = sharedPreferences.edit();
@@ -647,6 +646,8 @@ public class DialogManager {
 
                 editor.putString("profileTicket", gson.toJson(profileTicketMap));
                 editor.commit();
+            }else{
+                request.put("profile", "false");
             }
 
 

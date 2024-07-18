@@ -42,7 +42,7 @@ public class ManageOrderItems {
         return gson.toJson(menuItems);
     }
 
-    public void updateProfileGift(Context context, String profileName){
+    public void updateProfileGift(Context context, String profileName, int price){
         sharedPreferences = context.getSharedPreferences("CustomerData", MODE_PRIVATE);
         editor = sharedPreferences.edit();
 
@@ -57,7 +57,7 @@ public class ManageOrderItems {
             previousOrderList = new ArrayList<>();
         }
 
-        previousOrderList.add(new CartList(profileName, 2000, 1, 0, MenuCategory.SIDE.getValue(), CartCategory.MENU));
+        previousOrderList.add(new CartList(profileName, price, 1, 2000, MenuCategory.SIDE.getValue(), CartCategory.MENU));
 
         editor.putString("orderedItems", gson.toJson(previousOrderList));
         editor.commit();

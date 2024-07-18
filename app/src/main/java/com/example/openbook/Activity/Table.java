@@ -118,12 +118,10 @@ public class Table extends AppCompatActivity {
                 case "isGiftAccept":
                     from = intent.getStringExtra("from");
                     boolean isAccept = intent.getBooleanExtra("isAccept", false);
-                    boolean profile = intent.getBooleanExtra("profile", false);
 
                     String message;
                     if (isAccept) {
                         message = from + "에서 선물을 수락하였습니다.";
-                        //여기서 메뉴 주문 메뉴 저장하기
                     } else {
                         message = from + "에서 선물을 거절하였습니다.";
                     }

@@ -115,23 +115,16 @@ public class FCM extends FirebaseMessagingService {
 
             case "Gift":
                 tableName = data.get("tableName");
-                handleGiftOtherTable
-                        (tableName,
-                                data.get("menuItem"),
-                                data.get("count"));
+                handleGiftOtherTable(tableName, data.get("menuItem"));
                 break;
 
             case "IsGiftAccept":
                 String menuItem = data.get("menuItem");
                 boolean isAccept = Boolean.parseBoolean(data.get("isAccept"));
-                String profileName = data.get("profileName");
+                String profileName = data.get("profile");
                 tableName = data.get("tableName");
 
-                handleIsGiftAccept(
-                        tableName,
-                        isAccept,
-                        menuItem,
-                        profileName);
+                handleIsGiftAccept(tableName, isAccept, menuItem, profileName);
                 break;
         }
 
@@ -151,34 +144,28 @@ public class FCM extends FirebaseMessagingService {
 
         if (isAccept) {
             intent.putExtra("isAccept", true);
-            Type type = new TypeToken<ArrayList<CartList>>() {
-            }.getType();
+            Type type = new TypeToken<ArrayList<CartList>>() {}.getType();
             ArrayList<CartList> orderedList = gson.fromJson(menuItem, type);
-            Log.d(TAG, "handleIsGiftAccept orderedList: " + gson.toJson(orderedList));
 
             manageOrderItems = new ManageOrderItems();
             manageOrderItems.saveOrderedItems(this, orderedList);
+
+            if(profileName != null && !profileName.isBlank()){
+                manageOrderItems.updateProfileGift(this, profileName, 2000);
+            }
 
         } else {
             intent.putExtra("isAccept", false);
         }
 
-        if(profileName != null){
-            manageOrderItems = new ManageOrderItems();
-            manageOrderItems.updateProfileGift(this, profileName);
-        }
-
         LocalBroadcastManager.getInstance(FCM.this).sendBroadcast(intent);
     }
 
-    public void handleGiftOtherTable(String from, String menuItem, String count) {
-        Log.d(TAG, "handleGiftOtherTable 호출");
+    public void handleGiftOtherTable(String from, String menuItem) {
         Intent intent = new Intent("giftArrived");
         intent.putExtra("from", from);
         intent.putExtra("menuItem", menuItem);
-        intent.putExtra("count", count);
         LocalBroadcastManager.getInstance(FCM.this).sendBroadcast(intent);
-
     }
 
 
