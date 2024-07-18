@@ -1,1 +1,7 @@
 /build
+
+# Google Services JSON
+/google-services.json
+
+# Log files
+*.log
