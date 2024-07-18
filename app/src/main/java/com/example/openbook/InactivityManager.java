@@ -44,7 +44,8 @@ public class InactivityManager {
             public void run() {
                 new Handler(Looper.getMainLooper()).post(() -> showCountdownDialog());
             }
-        }, 2000);
+        }, 20000);
+
         inactivityTimer.schedule(new TimerTask() {
             @Override
             public void run() {
@@ -52,7 +53,6 @@ public class InactivityManager {
             }
         }, 30000);
 
-        showCountdownDialog();
     }
 
     public void resetInactivityTimer() {
@@ -71,7 +71,7 @@ public class InactivityManager {
             countDownTimer.cancel();
         }
 
-        if (dialog != null || dialog.isShowing()) {
+        if (dialog != null && dialog.isShowing()) {
             dialog.dismiss();
         }
     }
@@ -114,6 +114,8 @@ public class InactivityManager {
                 dialog.dismiss();
             }
         };
+
+        dialog.show();
 
         dialog.setOnDismissListener(dialogInterface -> {
             if (countDownTimer != null) {
